@@ -1,2 +1,2 @@
 # seqpac
-Group based analysis of sequencing data (sncRNA)
+Group based analysis of small RNA sequencing data
