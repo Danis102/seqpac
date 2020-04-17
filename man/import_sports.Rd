@@ -20,7 +20,7 @@ The function will search the Sports output directory (path) for all files
   threads on the computer. Do not exceed the number of available threads!
 }
 \description{
-\code{read.sports} uses parallel processing to read Sports result files and
+\code{import_sports} uses parallel processing to read Sports result files and
 store them in a list of dataframes.
 }
 \details{
@@ -40,7 +40,7 @@ fastq file (input file for Sports). Files will be imported
   updates on the current package.
 
 Other PAC generation: \code{\link{make_anno}},
-  \code{\link{make_countTable}}, \code{\link{make_pheno}},
+  \code{\link{make_counts}}, \code{\link{make_pheno}},
   \code{\link{progress_report}}
 }
 \concept{PAC generation}

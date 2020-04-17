@@ -44,6 +44,7 @@ bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_t
   package.
 
 Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{import_reanno}}
+  \code{\link{import_reanno}}, \code{\link{make_reanno}},
+  \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

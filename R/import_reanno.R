@@ -28,32 +28,58 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names.
+#'   
 #' @param bowtie_path Path to a directory where bowtie output files can be
 #'   found.
-#' @param report Character vector "biotype" or "all"
-#'
+#'   
+#' @param report Character vector indicating what to report "minimum" or "full"
+#'   (default="minimum")
+#'  
+#' @param reduce Character indicating a reference name (without file type
+#'   extension) that should be exempted from report="full" and instead will
+#'   generate a minimum report.
+#'   
 #' @param threads Integer stating the number of parallell jobs.
 #'
-#' @return Data.frame with additional information from reannotation using
-#'   bowtie. If \emph{report="biotype"}, the function will report biotype as the
-#'   file basename of a given reference used in the bowtie reannotation. If
-#'   \emph{report="all"} will give the annotation as full names used in the
-#'   fasta file used as reference in the bowtie reannotation. Caution:
-#'   References with lots of redudancy, such as piRBase fasta files, will
-#'   automatically run with \emph{report="biotype}).
+#' @return List of data frames with additional information from reannotation
+#'   files generated with bowtie -v -a. If \emph{report="minimum"}, the function
+#'   will report each hit only as the number of mismatches for a given reference
+#'   file. If \emph{report="full"} the full annotation reported in the fasta
+#'   file used as reference in the bowtie reannotation will be reported. If a
+#'   reference name is speficied in \emph{reduce}, this reference is excempted
+#'   from \emph{report="full"} and is instead reported as
+#'   \emph{report="minimum"}
+#'   
+#'   Caution: Large references with lots of redudancy (such as pirBase in some
+#'   species) will case massive character strings if \emph{report="full"} with
+#'   no restrictions. Specifing such references in
+#'   \emph{reduce=<reference_names>} will circumvent this problem.
 #'
+#'   
+#'   
 #' @examples
-#' reanno <- import_reanno(bowtie_path, threads=8)
-#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
-#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Pipeline_3.1_11-11-19/R_files"
+#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Diet_4_6_2019/Processed_Pipeline31_10-03-20/R_files"
+#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
+
+#' reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+#' reanno2 <- import_reanno(bowtie_path, report="full",  threads=10)
+#' reanno3 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=1)
+#' reanno4 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=8)
+#' reanno5 <- import_reanno(bowtie_path, report="minimum")
+#' 
+#' lapply(reanno5, head)
+#' lapply(reanno5, names)
+#' 
 #' @export
-import_reanno <- function(bowtie_path, base="*.txt", threads=1, report="biotype"){
+  
+import_reanno <- function(bowtie_path, threads=1, report="minimum", reduce="piRNA"){
                             require(data.table)
                             require(parallel)
-                            require(pbmcapply)
                             require(plyr)
                             require(stringr)
+                            base <- ".txt"
                             files <- list.files(bowtie_path, pattern = base, full.names=TRUE)
+                            options(scipen=999)
                           ## Check bowtie format (8 columns; "IIIIIII" present in column 6; column 4 is an integer)
                                       row1 <- lapply(as.list(files), function(f){
                                                     x <- try(read.delim(f, nrows=1, header=FALSE), silent = TRUE)
@@ -70,37 +96,87 @@ import_reanno <- function(bowtie_path, base="*.txt", threads=1, report="biotype"
                           ## Give some feedback
                             cat("\nFound ", length(files), " files of which ", sum(do.call("c", form_logi)), " had the correct bowtie format.\n")
                                   if(any(do.call("c", lapply(row1, function(x){as.character(x[1,1]) == "No_hits"})))){warning("Some bowtie outputs were empty indicating no hits at all.\n  These will be missing in the result.")}
-                            cat("Now importing bowtie files to R (may take some time) ...\n")
-                          ## Read files iver
+                          ## Read files
                             files <- files[do.call("c", form_logi)]
-                            bowtie_out <- parallel::mclapply(as.list(files), mc.cores = threads, function(x){
-                                                                            data.table::setDTthreads(threads=1)
-                                                                            bow_out <- data.table::fread(x, header=FALSE, select = c(3,5,8), data.table=FALSE)
-                                                                            bow_out$V8 <- as.character(bow_out$V8)
-                                                                            bow_out$V8[nchar(as.character(bow_out$V8)) ==0] <- NA
-                                                                            if(grepl("piRBase", x)|nrow(bow_out)>10000000|report=="biotype"){
-                                                                                                    if(grepl("piRBase", x)|nrow(bow_out)>10000000){
-                                                                                                      warning("The bowtie mapping was done against piRBase or was extraordinary large.\nDue to extreme redudancy risk, only the biotype category will be reported, not individual reference ids.")}
-                                                                                                    uni  <- unique(bow_out$V5)
-                                                                                                    mis <- unique(bow_out$V8)
-                                                                                                    if(any(is.na(uni))){
-                                                                                                        mis <- paste0("_(NA)")
-                                                                                                    }else{
-                                                                                                        mis <- stringr::str_count(mis, ":")
-                                                                                                        mis <- as.character(unique(mis))
-                                                                                                        stopifnot(length(mis)=="1")
-                                                                                                        mis <- paste0("_(mis", mis, ")")
-                                                                                                        }
-                                                                                                    bow_out <- data.frame(seq=uni, ref_hits= mis)
-                                                                            }else{
-                                                                                                    bow_out <- data.frame(seq=bow_out$V5 , ref_hits=paste0(bow_out$V3, "_(", bow_out$V8, ")"))
-                                                                                                    bow_out <- plyr::ddply(bow_out, .(seq), function(x) paste(unique(x[,"ref_hits"]), collapse="; "))
-                                                                                                    }
-                                                                            colnames(bow_out)[2] <- "ref_hits"
-                                                                            return(bow_out)}
-                                                                            )
-                            names(bowtie_out) <- gsub(paste0(base), "",  basename(files))
-                            names(bowtie_out) <- gsub("Re-anno_", "", names(bowtie_out))
-                            return(bowtie_out)
-}
-
+                            data.table::setDTthreads(threads)
+                            bowtie_out_lst <- list(NA)
+                            for (i in 1:length(files)){
+                                                    cat(paste0("\nImport and reorganize ", basename(files)[i], "\n"))
+                                                    nam <- gsub(paste0(base, "|_piRBase"), "",  basename(files)[i])
+                                                    file_len <- R.utils::countLines(files[i])[[1]] 
+                                                    if(file_len>1000000){
+                                                                  cat("\n|-------> Large file may take a bit longer ...\n") 
+                                                                  chunk_lens <- lapply(as.list(1:ceiling(file_len/1000000)), function(x){  
+                                                                                          fin <- 1000000*x
+                                                                                          if(fin<=file_len){return(c(nrow=1000000, skip=(fin-1000000)))}
+                                                                                          if(fin>file_len){
+                                                                                                           nrw <- 1000000-(fin-file_len)
+                                                                                                           skp <- file_len-nrw
+                                                                                                           return(c(nrow=nrw, skip=skp))}
+                                                                                          })
+                                                                  read_lst <- list(NA)
+                                                                  for(it in 1:length(chunk_lens)){
+                                                                          bow <- data.table::fread(files[i], header=FALSE, select = c(3,5,8), data.table=TRUE, nrow = chunk_lens[[it]][1], skip= chunk_lens[[it]][2])
+                                                                          bow$V8 <- as.character(bow$V8)
+                                                                          read_lst[[it]] <- bow
+                                                                          rm(bow)
+                                                                          gc()
+                                                                          Sys.sleep(0.001)
+                                                                          cat(paste0("\r|-------> Reading chunks ", round(it/length(chunk_lens)*100), "%"))
+                                                                          flush.console()
+                                                                          }
+                                                                  
+                                                                  bow_out <- data.table::rbindlist(read_lst)
+                                                                  rm(read_lst)
+                                                   }else{
+                                                                  bow_out <- data.table::fread(files[i], header=FALSE, select = c(3,5,8), data.table=TRUE)
+                                                                  bow_out$V8 <- as.character(bow_out$V8)
+                                                                  }
+                                                    stopifnot(nrow(bow_out)==file_len)              
+                                                    uni  <- unique(bow_out$V5)
+                                                    mis <- unique(bow_out$V8)
+                                                    n_mis <- stringr::str_count(mis, ":")
+                                                    n_mis <- as.character(unique(n_mis))
+                                                    if(is.na(n_mis)){n_mis <- 0}
+                                                    stopifnot(length(n_mis)=="1")
+                                                    n_mis <- paste0("mis", n_mis)
+                 
+                                                if(report=="minimum"){
+                                                                bowtie_out_lst[[i]] <- data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
+                                                                names(bowtie_out_lst)[i] <- nam
+                                                                }
+                                                    
+                                                if(report=="full"){
+                                                            if(nam %in% reduce){
+                                                                cat(paste0("\n|-------> ", nam, " was specified as reduced; minimum information will be extracted ..."))
+                                                                bowtie_out_lst[[i]] <- data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
+                                                                names(bowtie_out_lst)[i] <- nam
+                                                            }else{
+                                                                bow_splt <- split(bow_out, bow_out$V5) 
+                                                                cat("\n|-------> Compiling data ...")
+                                                                gc(reset=TRUE)
+                                                                compile_lst <- lapply(bow_splt, function(x){
+                                                                                      uni_mis <- unique(x$V8)
+                                                                                      uni_mis <- unique(do.call("c", stringr::str_split(uni_mis, ",")))
+                                                                                      uni_mis <- uni_mis[order(as.integer(gsub( ":.*$", "", uni_mis )))]
+                                                                                      if(is.na(uni_mis)){uni_mis <- "mis0"}
+                                                                                      uni_mis <- paste(uni_mis, collapse="|")
+                                                                                      hits <- paste(unique(x$V3), collapse=";")
+                                                                                      fin <- data.table::data.table(mis_n=n_mis, mis_where=uni_mis, ref_hits=hits)
+                                                                                      return(fin)
+                                                                                      })
+                                                                 rm(bow_splt)
+                                                                 bow_fin <- data.table::rbindlist(compile_lst, idcol=TRUE)
+                                                                 colnames(bow_fin)[1] <- "seq" 
+                                                                 stopifnot(any(bow_fin$seq %in% uni))
+                                                                 bowtie_out_lst[[i]] <- bow_fin 
+                                                                 names(bowtie_out_lst)[i] <- nam
+                                                            }
+                                                          }
+                                          cat(paste0("\n|-------> Done ", nam, "!\n"))
+                                          cat(paste0("\n---------------------------------------"))
+                                          }
+                            return(bowtie_out_lst)
+                            cat("All done!")
+                                  }
+                          

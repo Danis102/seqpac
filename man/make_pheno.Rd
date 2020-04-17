@@ -4,14 +4,23 @@
 \alias{make_pheno}
 \title{Make Phenotype File}
 \usage{
-make_pheno(pheno_file_path, countTable = NULL, progress_report = NULL)
+make_pheno(pheno_file_path, type = "manual", countTable = NULL,
+  progress_report = report)
 }
 \arguments{
 \item{pheno_file_path}{Character vector with the path to a .csv file.}
 
+\item{type}{Character indicating what type to file to expect. If
+\emph{type="basespace"} the function will attempt to read nd join
+information from 'SampleSheetUsed.csv' and 'Samples_stat.txt' in
+pheno_file_path that have been downloaded from Illumina Basespace. If
+type="manual", the function will attempt to read a file named 'pheno.csv',
+in which the first column has been named 'Sample_ID' containing the exact
+sample names matching basenames of the fastq sample files.}
+
 \item{countTable}{Data.frame object with the same column names as in Sample_ID column of the .csv file.}
 
-\item{countTable}{Data.frame object with progress report.}
+\item{progress_report}{Data.frame object with progress report.}
 }
 \value{
 data.frame
@@ -38,8 +47,20 @@ provided with a Sports progress_report object (see \code{progress_report} the
 script will attempt to add this data to the Pheno data.frame.
 }
 \examples{
-report <- make_pheno(<your_path_to_sports_output_directory>)
-pheno <- make_pheno(pheno_file_path, countTable=countTable, progress_report=report)
+path_sport <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20"
+
+sports_lst <- import_sports("/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20", threads=8)
+
+anno <- make_anno(sports_lst = sports_lst, threads = 10, filt = 2, stat = TRUE)
+counts <- make_counts(sports_lst = sports_lst, anno = anno, threads = 10)
+report <- progress_report(path_sport)
+
+pheno <- make_pheno(<your_path_to_sports_output_directory>)                       
+
+pheno_path <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/summary"
+pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type="manual")
+
+
 
 }
 \seealso{
@@ -48,7 +69,7 @@ pheno <- make_pheno(pheno_file_path, countTable=countTable, progress_report=repo
   updates on the current package.
 
 Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_anno}}, \code{\link{make_countTable}},
+  \code{\link{make_anno}}, \code{\link{make_counts}},
   \code{\link{progress_report}}
 }
 \concept{PAC generation}

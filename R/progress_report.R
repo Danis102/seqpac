@@ -35,7 +35,7 @@ progress_report <- function(path){
                         ### Get paths and sample names for output
                         meta_files <- list.files(paste0(path, "/processing_report"), pattern ="*.txt", full.names=TRUE)
                         meta_files_nams <- list.files(paste0(path, "/processing_report"), full.names=FALSE)
-                        meta_files_nams <- gsub("\\<1_|_merge.txt", "", meta_files_nams)
+                        meta_files_nams <- gsub("\\<1_|_merged|_merge|.txt", "", meta_files_nams)
                         meta_files_nams <- gsub("-", "_", meta_files_nams)
                         ### Generate colnames in output from first file
                         colnam <- readLines(meta_files[[1]]) # Look in one to find out column numbers
@@ -46,7 +46,7 @@ progress_report <- function(path){
                         rownames(df) <- meta_files_nams
                         colnames(df) <-  colnam
                         for (i in 1:length(meta_files)){
-                                lines <- readLines(meta_files[[i]])
+                                lines <- readLines(meta_files[[i]], n=300)
                                 nam <-  meta_files[[i]]
                                 fact <- cumsum(!nzchar(lines)) # Cumulativly/progressively sums TRUE argumentsfor for empty lines
                                 split_lst <- split(lines, fact)

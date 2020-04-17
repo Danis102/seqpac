@@ -75,7 +75,7 @@ make_anno <- function(sports_lst, threads=1, filt=2, stat=TRUE){
                         setTxtProgressBar(pb,i)
                         }
                         seq <- list(NA)
-                        cat("\n\nPlease wait while making covarage tables for output files ... \n")
+                        cat("\n\nPlease wait while making coverage tables for output files ... \n")
                         seq[[1]] <- do.call("c", seq_lst)
                         rm(seq_lst)
                         uni_seq <- list(unique(seq[[1]]))

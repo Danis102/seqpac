@@ -4,8 +4,8 @@
 \alias{import_reanno}
 \title{Imports annotation from reannotation mapping}
 \usage{
-import_reanno(bowtie_path, base = "*.txt", threads = 1,
-  report = "biotype")
+import_reanno(bowtie_path, threads = 1, report = "minimum",
+  reduce = "piRNA")
 }
 \arguments{
 \item{bowtie_path}{Path to a directory where bowtie output files can be
@@ -13,19 +13,30 @@ found.}
 
 \item{threads}{Integer stating the number of parallell jobs.}
 
-\item{report}{Character vector "biotype" or "all"}
+\item{report}{Character vector indicating what to report "minimum" or "full"
+(default="minimum")}
+
+\item{reduce}{Character indicating a reference name (without file type
+extension) that should be exempted from report="full" and instead will
+generate a minimum report.}
 
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
 row names.}
 }
 \value{
-Data.frame with additional information from reannotation using
-  bowtie. If \emph{report="biotype"}, the function will report biotype as the
-  file basename of a given reference used in the bowtie reannotation. If
-  \emph{report="all"} will give the annotation as full names used in the
-  fasta file used as reference in the bowtie reannotation. Caution:
-  References with lots of redudancy, such as piRBase fasta files, will
-  automatically run with \emph{report="biotype}).
+List of data frames with additional information from reannotation
+  files generated with bowtie -v -a. If \emph{report="minimum"}, the function
+  will report each hit only as the number of mismatches for a given reference
+  file. If \emph{report="full"} the full annotation reported in the fasta
+  file used as reference in the bowtie reannotation will be reported. If a
+  reference name is speficied in \emph{reduce}, this reference is excempted
+  from \emph{report="full"} and is instead reported as
+  \emph{report="minimum"}
+  
+  Caution: Large references with lots of redudancy (such as pirBase in some
+  species) will case massive character strings if \emph{report="full"} with
+  no restrictions. Specifing such references in
+  \emph{reduce=<reference_names>} will circumvent this problem.
 }
 \description{
 \code{import_reanno} imports bowtie reannotation files.
@@ -50,9 +61,17 @@ object.
 }
 
 \examples{
-reanno <- import_reanno(bowtie_path, threads=8)
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Diet_4_6_2019/Processed_Sports_09-10-19/R_files"
+bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Diet_4_6_2019/Processed_Pipeline31_10-03-20/R_files"
+bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
+reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+reanno2 <- import_reanno(bowtie_path, report="full",  threads=10)
+reanno3 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=1)
+reanno4 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=8)
+reanno5 <- import_reanno(bowtie_path, report="minimum")
+
+lapply(reanno5, head)
+lapply(reanno5, names)
+
 }
 \seealso{
 \url{https://github.com/junchaoshi/sports1.0} for download and
@@ -62,6 +81,7 @@ bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Di
   package.
 
 Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{check_reanno}}
+  \code{\link{check_reanno}}, \code{\link{make_reanno}},
+  \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

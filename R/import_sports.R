@@ -1,6 +1,6 @@
 #' Imports Sports Output Files Into R
 #'
-#' \code{read.sports} uses parallel processing to read Sports result files and
+#' \code{import_sports} uses parallel processing to read Sports result files and
 #' store them in a list of dataframes.
 #'
 #' Given the path to Sports output directory, this function will import all
@@ -39,7 +39,7 @@ import_sports <- function(path, threads=1){
                         count_files <- list.files(path, pattern ="*_output.txt", full.names=TRUE, recursive=TRUE)
                         count_files_nams <- list.files(path, pattern ="*_output.txt", full.names=FALSE, recursive=TRUE)
                         count_files_nams <- do.call("rbind", strsplit(count_files_nams, "/"))[,1]
-                        count_files_nams <- gsub("\\<1_|_merge\\>", "", count_files_nams)
+                        count_files_nams <- gsub("\\<1_|_merge.\\>", "", count_files_nams)
                         count_files_nams <- gsub("-", "_", count_files_nams)
                         ## Read Sport output files
                         cat("Now reading sports output files using ", threads, " parallel threaded processes of", paste0(detectCores(logical = FALSE)), "possible threads\n")

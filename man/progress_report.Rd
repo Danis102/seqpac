@@ -40,7 +40,7 @@ report <- progress_report(path=path)
   updates on the current package.
 
 Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_anno}}, \code{\link{make_countTable}},
+  \code{\link{make_anno}}, \code{\link{make_counts}},
   \code{\link{make_pheno}}
 }
 \concept{PAC generation}
