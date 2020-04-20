@@ -104,7 +104,7 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                             if(!identical(rownames(PAC$Anno), rownames(df))){stop("\nError: Not matching rownames in input files! (Anno vs data)")}
                                             if(!identical(rownames(PAC$Pheno), colnames(df))){stop("\nError: Not matching rownames in input files!")}
                                							
-                                            ### Create rpm filter
+                                            ### Create filter
                                             idx_filt <- data.frame(rowSums(df >= threshold)) >= round(ncol(df)*(coverage*0.01))
                                             idx_tab <- as.data.frame(table(idx_filt))
 
@@ -146,9 +146,10 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                               if(type=="rpm"){ 
                                       							cat(paste0("\nThe chosen filters will retain: ", idx_tab[idx_tab[,1]==TRUE, 2], " of ", strt, " seqs\n"))                                               
                                                     if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[idx_filt,]})}
-                                                    PAC$Counts  <- PAC$Counts[idx_filt,] 
-                                                    PAC$Anno  <- PAC$Anno[idx_filt,]
-                                              }
+                                                    }
+                                              PAC$Counts  <- PAC$Counts[idx_filt,] 
+                                              PAC$Anno  <- PAC$Anno[idx_filt,]
+                                              
                                             }
                                             ## Double check
                                                    if(!identical(rownames(PAC$Anno), rownames(PAC$Counts))){stop("Error: Not matching rownames in input files! (Anno vs Counts)")}
