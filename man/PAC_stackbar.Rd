@@ -39,45 +39,33 @@ in Counts or norm.
 }
 \examples{
 
-### Load data ###
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/R_analysis_full/"
+path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
 load(file=paste0(path, "PAC_all.Rdata"))
 
-### Generate rpm values ###
-PAC_all <- PAC_rpm(PAC_all)
 
-### Filter PAC file ###
-PAC_filt <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 50, type = "rpm", stat = TRUE, pheno_target = list("Method", c("IOR1_proto", "IOR1_tgirt")), anno_target = NULL)
-PAC_filt <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 10, type = "rpm", stat = TRUE, pheno_target = NULL, anno_target = NULL)
+PAC_filt <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+PAC_filt <- PAC_rpm(PAC_filt)
+PAC_filt <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
 
-### Generate hierachy of simplified biotypes ###
-unique(do.call("c", strsplit(as.character(PAC_filt$Anno$mis0), ";|\\\\|")))
-
-hierachy = list( rRNA="rRNA",
+hierachy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
                  Mt_tRNA= "tRNA_mt-tRNA",
                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-                 miRNA="^miRNA|Ensembl_miRNA",
-                 pre_miRNA="Ensembl_pre_miRNA",
-                 snoRNA="snoRNA",
-                 snRNA="snRNA",
-                 lincRNA="lincRNA",
+                 miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
                  piRNA="piRNA")
-                 
-PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes", PAC_merge=TRUE)
 
-### Plot stacked bargraphs
-table(PAC_filt$Anno$Biotypes)
-unique(PAC_filt$Anno$Biotypes)
-biotypes_ord <- c("rRNA", "tRNA", "Mt_tRNA", "miRNA", "piRNA", "snoRNA", "snRNA", "lincRNA", "no_anno")
+PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes_1", PAC_merge = TRUE)
+
+PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
 
 
-PAC_filt$Pheno$Method_Tag <- gsub("__", "", paste(PAC_filt$Pheno$Method, PAC_filt$Pheno$Tag, sep="_"))
-table(PAC_filt$Pheno$Method_Tag)
-unique(PAC_filt$Pheno$Method_Tag)
-method_ord <- c("R2_R2R","IOR1_proto","IOR1_tgirt","IOR2_Long_proto_Tag","IOR2_Short_proto_Tag", "IOR2_Long_proto_No_Tag", "IOR2_Short_proto_No_Tag")
+biotypes_ord <- c("rRNA","Mt_rRNA", "tRNA", "Mt_tRNA", "miRNA", "piRNA","other", "no_anno")
+method_ord <- c("Sep_Proto_Reg__", "Sep_TGIRT_Reg__", "Sep_Proto_IOR__", "Jan_Proto_IOR__", 
+                "Sep_Proto_Long_Tag", "Sep_Proto_Short_Tag", "Jan_Proto_Long_Tag", "Jan_Proto_Short_Tag",
+                "Sep_Proto_Long_No_Tag", "Sep_Proto_Short_No_Tag", "Jan_Proto_Long_No_Tag", "Jan_Proto_Short_No_Tag",
+                "Sep_TGIRT_IOR__", "Jan_TGIRT_IOR__", "Jan_R2_R2R_TGIRT_R2_R2R__")
 
-
-plot  <- PAC_stackbar(PAC_filt, anno_target = list("Biotypes", biotypes_ord), pheno_target = list("Method_Tag", method_ord), width=1, no_anno=TRUE)  
+plot  <- PAC_stackbar(PAC_filt, anno_target = list("Biotypes_1", biotypes_ord), pheno_target = list("Groups", method_ord), width=1, no_anno=TRUE)  
 
 
 table(PAC_IOR1$Anno$Biotypes_simpl)
@@ -93,6 +81,7 @@ Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
   \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
   \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_summary}}
+  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
+  \code{\link{PAC_summary}}
 }
 \concept{PAC analysis}

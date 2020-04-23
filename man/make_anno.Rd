@@ -70,7 +70,7 @@ for all imported output files.
   updates on the current package.
 
 Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_counts}}, \code{\link{make_pheno}},
-  \code{\link{progress_report}}
+  \code{\link{make_counts2}}, \code{\link{make_counts}},
+  \code{\link{make_pheno}}, \code{\link{progress_report}}
 }
 \concept{PAC generation}

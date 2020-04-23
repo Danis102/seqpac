@@ -35,14 +35,14 @@ sequence order as in the original PAC master file.
 }
 \examples{
 
-reanno_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_26-02-20/R_files/"
+reanno_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Double/Long/Processed_Pipeline31_23-03-20/R_files/"
 load(paste0(reanno_path, "PAC_master.Rdata"))
 reanno <- make_reanno(reanno_path, PAC=PAC_master, mis_fasta_check = TRUE, threads=6)    # Complete use
 
 bio_search <- list(
                  Ensembl=c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"),
                  miRNA="dme-",
-                 piRNA = "piR-dme",
+                 piRNA = "piR-dme|piRNA",
                  rRNA =c("12S", "16S", "18S", "28S", "5.8S", "5S", "pre_S45", "Other"),  
                  tRNA =c("^tRNA", "mt-tRNA")
                  )

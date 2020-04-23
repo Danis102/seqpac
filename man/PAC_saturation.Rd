@@ -53,10 +53,11 @@ original dataset.
 }
 \examples{
 
-load(file="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline3_02-01-20/R_files/PAC_master_reanno.Rdata")
-PAC <- PAC_master_reanno
+library(seqpac)
+path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
+load(file=paste0(path, "PAC_all.Rdata"))
 
-plot_lst  <- PAC_diversity(PAC, resample=10, steps=10, thresh=c(1,500), cumulative=TRUE, start_perc=1, threads=8)
+plot_lst  <- PAC_saturation(PAC, resample=10, steps=10, thresh=c(1,500), cumulative=TRUE, start_perc=1, threads=8)
 cowplot::plot_grid(plot_lst$A,plot_lst$B)
 
 }
@@ -69,6 +70,7 @@ Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
   \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
   \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}}
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
+  \code{\link{PAC_summary}}
 }
 \concept{PAC analysis}

@@ -116,7 +116,7 @@
 #'  Ph_grps$Tag_type <- ifelse(grepl("Long", Ph_grps$Method), "Long", 
 #'                              ifelse(grepl("Short", Ph_grps$Method), "Short", NA))
 #'  
-#'  input <-  "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130"
+#'  input <-  "/data/Data_analysis/Projects/Drosophila/Other/IOR/"
 #'  parse = "cutadapt -j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 5 -m 5"
 #'  type="fastq"
 #'  cutadpt =TRUE
@@ -133,6 +133,9 @@
 #'  test <- make_counts2(input, type=type, threads=threads, par_type=par_type, anno=NULL, cutadpt=cutadpt, parse=parse, tag=tag, parse_tag=parse_tag, target_tag=target_tag)
 #'  
 #' @export
+#' 
+
+
 make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NULL, cutadpt=FALSE, parse=NULL, tag=FALSE, parse_tag=NULL, target_tag=NULL){
                           require(foreach)
                           ### Sports as input
@@ -156,7 +159,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                           
                           ### fastq as input
                           if(type=="fastq"){
-                                    
+                                    cat("Started at ", paste0(Sys.time()), "\n")
                                     ## Parallel setup
                                     gc(reset=TRUE)
                                     cl <- parallel::makeCluster(threads, type = par_type)
@@ -172,15 +175,33 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                     
                                     ## Read and trim fastq files
                                     if(cutadpt==TRUE){
-                                            cat("\n\nAdaptor trimming was specified.")
+                                            cat("\nAdaptor trimming was specified.")
                                             cat("\nThis will work unless cutadapt and fastq_quality_filter have not been installed correctly.")
                                             system("cutadapt --version", intern=TRUE)
                                             system("cutadapt --version", intern=TRUE)
-                                            cat(paste0("\nParsing fastq-files into cutadapt and then fastq_quality_filter using ", threads, " workers (this may take several minutes) ..."))
+
+                                            ## Tagging check
+                                            if(tag==TRUE){
+                                                                if(is.null(target_tag)){stop("You have to specify the names of the samples that are tagged in target_tag!\n       (Hint: If all samples are tagged, add all samples names to target_tag)")}
+                                                                if(length(target_tag[[1]])<1){stop("You have to specify the names of the samples that are tagged in target_tag!\n       (Hint: If all samples are tagged, add all sample names to target_tag)")}
+                                                                if(!class(target_tag) == "list"){ target_tag <- list(target_tag)
+                                                                                                  names(target_tag) <- names(parse_tag)
+                                                                                                  warning("Your target_tag was not a list. Will try to automatically make it to a list and match the object names with parse_tag names.")}
+                                                                chk_nam <- grepl(paste0(do.call("c", target_tag), collapse="|"), count_files_nams)
+                                                                stopifnot(sum(as.numeric(chk_nam)) == length(do.call("c", target_tag)))
+                                                                cat("\n\n5' tagging was specified and sample names were sum checked againts samples in input path, but please double check.")
+                                                                cat("\nTagged samples:\n")
+                                                                print(count_files[chk_nam])
+                                            }
+
+                                            cat(paste0("\nParsing fastq-files into cutadapt and then fastq_quality_filter using ", threads, " workers (this may take some time) ..."))
+                                            cat(paste0("\n(Hint: You can follow the progress in the /tmp/seqpac folder.)"))
                                             suppressWarnings(dir.create("/tmp/seqpac"))
                                             fn <- list.files("/tmp/seqpac", full.names=TRUE, recursive=TRUE)
                                             if(any(file.exists(fn))){file.remove(fn)}
 
+
+                                            ## cutadapt and fastq_quality_filter
                                             foreach::foreach(i=1:length(count_files), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(count_files); return(x)}) %dopar% {
                                                                 system(paste0(parse, " -o /tmp/seqpac/temp", i, ".fastq ", count_files[i]), ignore.stdout = TRUE)
 
@@ -192,7 +213,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
 
                                                             ## Tagging
                                                                 if(tag==TRUE){
-                                                                      if(is.null(target_tag)){stop("You have to specify the names of the samples that are tagged in target_tag!\n       Hint: If all samples are tagged, add all samples names to target_tag")}
+
                                                                       spl_nam <- basename(count_files[i])
                                                                       if(grepl(paste0(do.call("c", target_tag), collapse="|"), spl_nam)){
                                                                                       parse_tag_logi <- do.call("c", lapply(target_tag, function(x){grepl(paste(x, collapse="|"), spl_nam)}))
@@ -210,22 +231,22 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                                                 }
 
                                             }
-                                      cat("\nFinished generating trimmed temporary files.")
-                                     }
+                                            parallel::stopCluster(cl)
+                                            gc(reset=TRUE)
+                                            cat("\nFinished generating trimmed temporary files.")
+                                          }
                                       ## Read trimmed files
-                                      cat("\nIdentifying unique sequences in trimmed fastq files...")
+                                      cat("\n\nIdentifying unique sequences in trimmed fastq files...")
                                       if(cutadpt==FALSE){fls <- count_files}
-                                      if(cutadpt==TRUE){fls <- list.files("/tmp/seqpac", pattern=".fastq.gz\\>", full.names=TRUE, recursive=FALSE)}
-                                      cat("\n")
-
-                                      save.image(file="/tmp/seqpac/temp.Rdata")
-                                      .rs.restartR()  
-                                      load(file="/tmp/seqpac/temp.Rdata")
-                                      gc(reset=TRUE)
-                                      seq_lst   <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(count_files); return(x)}) %dopar% {
+                                      if(cutadpt==TRUE){fls <- list.files("/tmp/seqpac/", pattern=".fastq.gz\\>", full.names=TRUE, recursive=FALSE)}
+                                      cl <- parallel::makeCluster(threads, type = par_type)
+                                      doParallel::registerDoParallel(cl)
+                                      seq_lst   <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
                                                               fstq <- ShortRead::readFastq(fls[[i]])
                                                               return(unique(paste0(ShortRead::sread(fstq))))
                                                               }
+                                      parallel::stopCluster(cl)
+                                      gc(reset=TRUE)
                                       cat("\nCompiling...")
                                       seqs <- do.call("c", seq_lst)
                                       rm(seq_lst)
@@ -234,22 +255,26 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
 
                                       ## Make count table
                                       cat("\nNow making a count table with sequences appearing in at least 2 independent samples...")
-                                      reads_lst <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
-                                                                fstq <- ShortRead::readFastq(paste0(fls[i]))
+                                      cl <- parallel::makeCluster(threads, type = par_type)
+                                      doParallel::registerDoParallel(cl)
+                                      reads_lst <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"),.final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+                                                                fstq <- ShortRead::readFastq(fls[i])
                                                                 reads <- paste0(ShortRead::sread(fstq))
                                                                 rm(fstq)
                                                                 reads_dup <- reads[reads %in% seqs_dup]
                                                                 rm(reads)
-                                                                n_reads <- data.table::as.data.table(table(reads_dup))
+                                                                n_reads <- as.data.frame(table(reads_dup))
                                                                 n_reads_mtch <- n_reads[match(seqs_dup, n_reads$reads_dup),]
                                                                 rm(n_reads)
                                                                 rownames(n_reads_mtch) <- seqs_dup
-                                                                n_reads_mtch$N[is.na(n_reads_mtch$N)] <- 0 
+                                                                n_reads_mtch$Freq[is.na(n_reads_mtch$Freq)] <- 0 
                                                                 stopifnot(identical(as.character(n_reads_mtch$reads_dup[!is.na(n_reads_mtch$reads_dup)]), as.character(rownames(n_reads_mtch)[!is.na(n_reads_mtch$reads_dup)])))
-                                                                dt <- n_reads_mtch[,2]
+                                                                dt <- data.frame(N=n_reads_mtch[,2])
                                                                 rownames(dt) <- rownames(n_reads_mtch)
                                                                 return(dt)
-                                                          }
+                                      }
+                                      parallel::stopCluster(cl)
+                                      gc(reset=TRUE)
                                       cat("\nFinalizing...")
                                       sampl_nam <- gsub("_merge|\\.fastq|\\.gz", "", count_files_nams)
                                       sampl_nam <- gsub("-", "_", sampl_nam)
@@ -257,13 +282,15 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                                         temp_num <- stringr::str_extract(temp_nams, "\\-*\\d+\\.*\\d*")
                                                         new_temp_nams <- sampl_nam[as.integer(temp_num)]
                                                         names(reads_lst) <- paste0(new_temp_nams, gsub("temp|\\d*", "", temp_nams))
-                                                        fn <- list.files("/tmp/seqpac", full.names=TRUE, recursive=FALSE)
-                                                        if(any(file.exists(fn))){file.remove(fn)}
+                                                        ans <- readline("Would you like to delete temporary files in /tmp/seqpac [y/n]?")
+                                                        if(ans %in% c("Y", "y")){ fn <- list.files("/tmp/seqpac", full.names=TRUE, recursive=FALSE)
+                                                                                  if(any(file.exists(fn))){file.remove(fn)}
+                                                              }
                                                           }
                                       ordCount_df <- as.data.frame(do.call("cbind", reads_lst))
-                                      colnames(ordCount_df) <- gsub("\\.N\\>", "", colnames(ordCount_df))
-                                      rownames(ordCount_df) <- rownames(reads_lst[[1]])
-                                      parallel::stopCluster(cl)
+                                      colnames(ordCount_df) <- names(reads_lst)
+                                      stopifnot(!any(!do.call("c", lapply(reads_lst, function(x){identical(rownames(ordCount_df), rownames(x))}))))
+                                      cat("Finished at ", paste0(Sys.time()), "\n")
                                       }
                           return(ordCount_df)
                           }

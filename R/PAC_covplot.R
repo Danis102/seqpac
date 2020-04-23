@@ -44,35 +44,35 @@
 #' @examples
 #' 
 #' ### Load data ###
-#' reanno_path="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20/R_files/"
-#' load(file=paste0(reanno_path, "PAC_filt_rpm10in25.Rdata"))
+#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
+#' load(file=paste0(path, "PAC_all.Rdata"))
 #' 
-#' ## Filter out biotype of interest
-#' table(PAC_filt$Anno$Biotypes_tRNA)
-#' PAC_filt_tRNA <- PAC_filter(PAC_filt, anno_target=list("Biotypes_tRNA", c("Mt_tRNA", "tRNA")), subset_only=TRUE)
-#' table(PAC_filt_tRNA$Anno$Biotypes_tRNA)
+#' PAC_filt <- PAC_filter(PAC_all, size=c(16,70), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' PAC_filt <- PAC_rpm(PAC_filt)
+#' PAC_filt <- PAC_filter(PAC_filt, size=c(16,70), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' 
+#' ## Remove corrupt samples and make means 
+#' Ph_trg <- as.character(PAC_filt$Pheno$Sample[!PAC_filt$Pheno$Sample %in% "Inx24_200130_S12"])
+#' PAC_filt <- PAC_filter(PAC_filt, pheno_target= list("Sample", Ph_trg))
+#' 
+#' PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
+#' 
+#' ## Make summaries
+#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))
 #' 
 #' ## Mapping
-#' ref_path <- "/data/Data_analysis/Genomes/Pigs/Sports/Sus_scrofa/tRNA_reanno/tRNA_mature.fa"
-#' PAC_map <- PAC_mapper(PAC=PAC_filt_tRNA, ref_path, threads=8, mismatches=0)
-#' table(rownames(PAC_filt_tRNA$Anno) %in%  unique(do.call("c", lapply(PAC_map, function(x){ rownames(x[[2]])}))))
+#' map_rRNA <- PAC_mapper(PAC_filt, ref_path="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
 #' 
-#' ## Make summary
-#' PAC_filt_tRNA <- PAC_summary(PAC_filt_tRNA, norm = "rpm", type = "means", pheno_target=list("Index", unique(PAC_filt_tRNA$Pheno$Index)))
-#' 
-#' PAC_filt_tRNA <- PAC_summary(PAC_filt_tRNA, norm = "rpm", type = "se", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
-#' 
-#' plot_lst <- PAC_covplot(PAC_filt_tRNA, PAC_map, summary_target = list("means_[Index]", NULL), xseq=TRUE, style="line", colour=c("black", "red", "grey", "blue"))
-#' plot_lst <- PAC_covplot(PAC_filt_tRNA, PAC_map, summary_target = list("means_[Index]", NULL), xseq=FALSE, style="line", colour=c("black", "red", "grey", "blue"))
-
-#' names(plot_lst)[grepl("Arg", names(plot_lst))]
-#' names(plot_lst)[grepl("LeuCAA", names(plot_lst))]
+#' All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", colour="red")})
+#'
+#' cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
+#'                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],
+#'                   All_plots[[7]][[7]], All_plots[[8]][[7]], All_plots[[9]][[7]], 
+#'                   All_plots[[10]][[7]], All_plots[[11]][[7]], All_plots[[12]][[7]],
+#'                   All_plots[[13]][[7]], All_plots[[14]][[7]], All_plots[[15]][[7]],
+#'                   nrow = 5, ncol = 3)
 #' 
 #' 
-#' sub_plots_lst <- plot_lst[grepl("Arg", names(plot_lst))]
-#' sub_plots_lst <- plot_lst[grepl("LeuCAA", names(plot_lst))]
-#' 
-#' cowplot::plot_grid(sub_plots_lst[[1]],sub_plots_lst[[2]],sub_plots_lst[[3]],sub_plots_lst[[4]],sub_plots_lst[[5]], sub_plots_lst[[6]])
 #'
 #' 
 #' @export
