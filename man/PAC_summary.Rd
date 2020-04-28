@@ -4,7 +4,7 @@
 \alias{PAC_summary}
 \title{Summarizes PAC objects}
 \usage{
-PAC_summary(PAC, norm = "raw", type = "log2FC", pheno_target)
+PAC_summary(PAC, norm = "raw", type = "means", pheno_target = NULL)
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno dataframe with samples as row names,
@@ -36,12 +36,19 @@ Given a PAC object this function summarize data in Counts or in the norm
 list-folder according to a grouping variable in Pheno.
 }
 \examples{
-reanno_path="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20/R_files/"
-load(file=paste0(reanno_path, "PAC_filt_rpm10in25.Rdata"))
+load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+
+
+
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
 
 PAC_test <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "means", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "se", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
+
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+
+
 
 
 }
@@ -52,9 +59,9 @@ package.
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
   \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}
+  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}}
 }
 \concept{PAC analysis}

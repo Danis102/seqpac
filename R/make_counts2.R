@@ -275,7 +275,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                       }
                                       parallel::stopCluster(cl)
                                       gc(reset=TRUE)
-                                      cat("\nFinalizing...")
+                                      cat("\nFinalizing at ", paste0(Sys.time()), "\n")
                                       sampl_nam <- gsub("_merge|\\.fastq|\\.gz", "", count_files_nams)
                                       sampl_nam <- gsub("-", "_", sampl_nam)
                                       if(cutadpt==TRUE){temp_nams <- do.call("rbind", strsplit(names(reads_lst), "\\."))[,1]
@@ -290,7 +290,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                       ordCount_df <- as.data.frame(do.call("cbind", reads_lst))
                                       colnames(ordCount_df) <- names(reads_lst)
                                       stopifnot(!any(!do.call("c", lapply(reads_lst, function(x){identical(rownames(ordCount_df), rownames(x))}))))
-                                      cat("Finished at ", paste0(Sys.time()), "\n")
+                                      
                                       }
                           return(ordCount_df)
                           }

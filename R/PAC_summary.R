@@ -31,17 +31,24 @@
 #'   pheno_target, type and norm input.
 #'
 #' @examples
-#' reanno_path="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20/R_files/"
-#' load(file=paste0(reanno_path, "PAC_filt_rpm10in25.Rdata"))
+#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' 
+#' 
+#'
+#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
 #' 
 #' PAC_test <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 #' PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "means", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 #' PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "se", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 #' 
+#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+#' 
+#' 
+#' 
 #' 
 #' @export
 #' 
-PAC_summary <- function(PAC, norm="raw", type="log2FC", pheno_target){
+PAC_summary <- function(PAC, norm="raw", type="means", pheno_target=NULL){
 
                               ### Extract data ###
                                     if(norm=="raw"){
@@ -49,9 +56,12 @@ PAC_summary <- function(PAC, norm="raw", type="log2FC", pheno_target){
                                     }else{
                                             data <- PAC$norm[[norm]]
                                     }
-
+                              
                               ### Subset dataset ###
                                     pheno <- PAC$Pheno
+                                    pheno$All <- "All"
+                                    if(is.null(pheno_target)){pheno_target<- list("All","All")}
+                                    if(length(pheno_target)==1){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]]) }
                                     indx <- pheno[, pheno_target[[1]]] %in% pheno_target[[2]]
                                     pheno <- pheno[indx,]
                                     data <- data[,indx]
@@ -61,8 +71,12 @@ PAC_summary <- function(PAC, norm="raw", type="log2FC", pheno_target){
                                     sub_data_lst <- lapply(start_lst, function(x){ y <- data[, pheno[, pheno_target[[1]]] == x]; return(y)})
 
                               ### Create pairwise combinations of pheno_target###
-                                    combn_lst <- as.list(data.frame(combn(1:length(sub_data_lst), m=2)))
-                                    PAC$summary$new <- list(NULL)
+                                    
+                                    if(length(sub_data_lst)>1){
+                                              combn_lst <- as.list(data.frame(combn(1:length(sub_data_lst), m=2)))
+                                              }
+
+                                              PAC$summary$new <- list(NULL)
                               ### Apply log2FC to all pairwise combinations ###        
                                     if(type=="log2FC"){
                                               group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})

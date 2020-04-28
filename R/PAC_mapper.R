@@ -71,19 +71,17 @@
 #' #-------------------------------------------------------------------------#
 #' #' ### For mismap ###
 #' #-------------------------------------------------------------------------#
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
 #' 
+#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 #' 
 #' ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
 #' full <- Biostrings::readDNAStringSet(ref_path)
-#' 
 #' ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
 #' 
 #' 
-#' PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)
+#' #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
 #' 
-#' map_refs <- PAC_mapper(PAC_all, ref=ref, threads=1, mismatches=3)
+#' map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 #' 
 #' 
 #'
@@ -92,19 +90,15 @@
 #' @export
 
 PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
-                          require(plyr)
-                          require(doParallel)
                           require(foreach)
-                          require(Biostrings)
-                          require(stringr)
-
+                          
                           # Setup
-                          Anno_frag  <- PAC$Anno
-                          query_strings <- as.list(as.character(rownames(Anno_frag)))
+                          Anno_frag  <- Biostrings::DNAStringSet(rownames(PAC$Anno))
+                          query_strings <- as.list(as.character(rownames(PAC$Anno)))
 
                           # Read files
                           if(class(ref)=="character"){
-                                          cat("Reading full length rRNA from file ...", paste(Sys.time()), "\n\n")
+                                          cat("Reading full length rRNA from file ...")
                                           full <- Biostrings::readDNAStringSet(ref)
                                           }else{full <- ref}  
                           nams_full <- names(full) # Names are lost in the next step
@@ -112,7 +106,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                           names(full) <- nams_full
 
                           ## Aligning using parallel processing
-                          cat("Now aligning", nrow(Anno_frag), "fragments over", length(full), "reference sequences using", length(cl), "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n\n")
+                          cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n\n")
                           len <- length(full)
                           
                           cl <- parallel::makeCluster(threads, type = par_type)
@@ -146,30 +140,27 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                           ## Parallelize sequences 
                           fin_lst <- list(NA)
                           for(i in 1:length(full)){ 
-
+                                    cat(paste0("\n\nAligning against:\n ", names(ref)[i], "\n Start ", Sys.time()))
                                     seq_ref <- full[i]
-                                    hits_vec <- do.call("c", lapply(query_strings, function(x){grepl(x, seq_ref)}))
-                                    aligned_lst <- list(NA)
-
-                                    aligned_lst <- foreach(t=1:length(query_strings), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- rownames(Anno_frag); return(x)}) %dopar% {
-                                                      if(t %in% which(hits_vec)){
-                                                                      y <- as.data.frame(vmatchPattern(query_strings[[t]],  seq_ref, max.mismatch=mismatches, fixed=FALSE))
-                                                                      y <- y[,c(1,3:5)]
+                                    aligned_lst <- foreach(t=1:length(query_strings), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- paste0(Anno_frag); return(x)}) %dopar% {
+                                                      y <- as.data.frame(Biostrings::vmatchPattern(query_strings[[t]],  seq_ref, max.mismatch=mismatches, fixed=FALSE))
+                                                      
+                                                      if(!nrow(y)< 1){
+                                                        y <- y[,c(1,3:5)]
+                                                        y$group <- nrow(y)
+                                                        colnames(y) <- c("n_hits", "Align_start", "Align_end", "Align_width")
+                                                        return(y)
                                                       }else{
-                                                                      y <-data.frame(group=NA, start=NA, end=NA, width=NA)
-                                                                      y$group <- nrow(y)
-                                                                   }
-                                                      colnames(y) <- c("n_hits", "Align_start", "Align_end", "Align_width")
-                                                      names(y) <- query_strings[[t]] 
-                                                      return(y)
-                                                      }
-                                  	 target_lst  <- list(Ref_seq=seq_ref, Alignments=do.call("rbind", aligned_lst))
-                                  	 target_lst[[2]] <- target_lst[[2]][!is.na(target_lst[[2]]$Align_start),]
-                                  	 if(nrow(target_lst[[2]])<1){ target_lst[[2]][1,]  <- rep("no_hits", each=4)}
-                                     aligned_lst[[i]] <- target_lst
+                                                        return(NULL)}
+                                      }
+                                    aligned   <- do.call("rbind", aligned_lst[unlist(lapply(aligned_lst, function(x){!is.null(x)}))])                  
+                                  	target_lst  <- list(Ref_seq=seq_ref, Alignments=aligned)
+                                  	if(nrow(target_lst[[2]])<1){target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", Align_end="no_hits", Align_width="no_hits")}
+                                    fin_lst[[i]] <- target_lst
+                                    names(fin_lst)[i] <- names(ref)[i]
+                                    cat(paste0("\n Done ", Sys.time()))
                           }
 
-                          cat("Finished at", paste(Sys.time()), "\n\n")
-                          stopCluster(cl)
+                          parallel::stopCluster(cl)
                           return(fin_lst)
                           }

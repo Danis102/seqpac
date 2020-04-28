@@ -14,7 +14,7 @@
 #'   row names and a Counts table with raw counts or reads per million (rpm).
 #'   
 #' @param size Integer vector giving the size interval, as c(min,max), that
-#'   should be saved (default=c(16,45)).
+#'   should be saved (default=c(min,max)).
 #'   
 #' @param treshold Integer giving the threshold in rpm or counts that needs to
 #'   be reached for a sequence to be included (default=10).
@@ -59,7 +59,9 @@
 #' 
 #' @export
 
-PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="counts", subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
+
+
+PAC_filter <- function(PAC, size=NULL, threshold=10, coverage=100, type="counts", subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
                                             library(ggplot2, quietly=TRUE)
                                             options(scipen=999)
                                             strt <- nrow(PAC$Counts)
@@ -77,8 +79,8 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                             if(!is.null(anno_target)){
                                               sub_anno <- as.character(PAC$Anno[, anno_target[[1]]]) %in% anno_target[[2]]
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_anno,]})}
-                                              PAC$Counts  <- PAC$Counts[sub_anno,]
-                                              PAC$Anno  <- PAC$Anno[sub_anno,]
+                                              PAC$Counts  <- PAC$Counts[sub_anno,, drop=FALSE]
+                                              PAC$Anno  <- PAC$Anno[sub_anno,, drop=FALSE]
                                               tab_anno <- as.data.frame(table(sub_anno))
                                               cat(paste0("\nAnno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs\n"))                                                ### Subset data by groups
                                             }  
@@ -87,14 +89,14 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                             }else{
                                             
                                               ### Subset data by Size
-                                            if(!is.null(size)){
-                                              sub_size <- PAC$Anno$Length >= size[1] & PAC$Anno$Length <= size[2] 
-                                              if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_size,]})}
-                                              PAC$Counts  <- PAC$Counts[sub_size,] 
-                                              PAC$Anno  <- PAC$Anno[sub_size,]
-                                              tab_anno <- as.data.frame(table(sub_size))
-                                              cat(paste0("\nSize filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_size), " seqs\n"))                                                ### Subset data by groups
-                                            }
+                                            if(is.null(size)){size <- c(min(PAC$Anno$Length), max(PAC$Anno$Length))}
+                                            sub_size <- PAC$Anno$Length >= size[1] & PAC$Anno$Length <= size[2] 
+                                            if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_size,]})}
+                                            PAC$Counts  <- PAC$Counts[sub_size, , drop=FALSE] 
+                                            PAC$Anno  <- PAC$Anno[sub_size, , drop=FALSE]
+                                            tab_anno <- as.data.frame(table(sub_size))
+                                            cat(paste0("\nSize filter will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_size), " seqs\n"))                                                ### Subset data by groups
+                                            
                                               
                                               ### Extract essential information 
                                             if(type=="rpm"){ df <- PAC$norm$rpm; cat("\nRPM filter was specified\n")}
@@ -145,10 +147,10 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                             ### Apply rpm filter
                                               if(type=="rpm"){ 
                                       							cat(paste0("\nThe chosen filters will retain: ", idx_tab[idx_tab[,1]==TRUE, 2], " of ", strt, " seqs\n"))                                               
-                                                    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[idx_filt,]})}
+                                                    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[idx_filt,, drop=FALSE]})}
                                                     }
-                                              PAC$Counts  <- PAC$Counts[idx_filt,] 
-                                              PAC$Anno  <- PAC$Anno[idx_filt,]
+                                              PAC$Counts  <- PAC$Counts[idx_filt,, drop=FALSE] 
+                                              PAC$Anno  <- PAC$Anno[idx_filt,, drop=FALSE]
                                               
                                             }
                                             ## Double check
@@ -159,5 +161,5 @@ PAC_filter <- function(PAC, size=c(16,45), threshold=10, coverage=100, type="cou
                                                    if(!any(do.call("c", lapply(as.list(PAC$norm), function(x){identical(colnames(PAC$Counts), colnames(x))})))){stop("Error: Not matching rownames/colnames in input files! (Pheno vs RPM)")}
                                               }
                                     if(!subset_only==TRUE){return(PAC)}
-                                      }      
+                                      }        
 

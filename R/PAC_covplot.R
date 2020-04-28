@@ -82,7 +82,8 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                             require("ggplot2")
                             require("stringr")
                             if(is.null(summary_target[[1]])){stop("Error: You need to specify a target list in PAC$summary using summary_target.")}
-                            if(is.null(summary_target[[2]])){summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])}
+                            if(is.null(names(PAC$summary[[summary_target[[1]]]]))){stop("You need to specify a valid summary_target.\n(Hint: Double check correct object name in PAC$summary or rerun the 'PAC_summary' function.)")}
+                            if(length(summary_target)==1){summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])}
                             if(is.null(map_target)){map_target <- names(map)}
 
                             ## Subsetting data

@@ -30,9 +30,9 @@ the same rownames as in the original PAC object
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
   \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}
+  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
+  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}}
 }
 \concept{PAC analysis}

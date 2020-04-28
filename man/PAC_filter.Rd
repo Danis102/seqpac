@@ -4,7 +4,7 @@
 \alias{PAC_filter}
 \title{Filter a PAC object on sequence size and covarage}
 \usage{
-PAC_filter(PAC, size = c(16, 45), threshold = 10, coverage = 100,
+PAC_filter(PAC, size = NULL, threshold = 10, coverage = 100,
   type = "counts", subset_only = FALSE, stat = FALSE,
   pheno_target = NULL, anno_target = NULL)
 }
@@ -13,7 +13,7 @@ PAC_filter(PAC, size = c(16, 45), threshold = 10, coverage = 100,
 row names and a Counts table with raw counts or reads per million (rpm).}
 
 \item{size}{Integer vector giving the size interval, as c(min,max), that
-should be saved (default=c(16,45)).}
+should be saved (default=c(min,max)).}
 
 \item{coverage}{Integer giving the percent of independent samples that need
 to reach the threshold for a sequence to be included (default=100).}
@@ -72,10 +72,10 @@ test <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=50, type="coun
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}
+  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
+  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
+  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
+  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
+  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}}
 }
 \concept{PAC analysis}

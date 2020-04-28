@@ -76,19 +76,17 @@ cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]]
 #-------------------------------------------------------------------------#
 #' ### For mismap ###
 #-------------------------------------------------------------------------#
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-load(file=paste0(path, "PAC_all.Rdata"))
 
+load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 
 ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
 full <- Biostrings::readDNAStringSet(ref_path)
-
 ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
 
 
-PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)
+#PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
 
-map_refs <- PAC_mapper(PAC_all, ref=ref, threads=1, mismatches=3)
+map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 
 
 
@@ -101,10 +99,10 @@ map_refs <- PAC_mapper(PAC_all, ref=ref, threads=1, mismatches=3)
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}
+  \code{\link{PAC_jitter}}, \code{\link{PAC_mismap}},
+  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
+  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
+  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
+  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}}
 }
 \concept{PAC analysis}
