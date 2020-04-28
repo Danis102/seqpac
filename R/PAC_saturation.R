@@ -1,4 +1,4 @@
-#' Filter a PAC object on sequence size and covarage
+#' Filter a PAC object on sequence size and coverage
 #'
 #' \code{PAC_saturation} Perfoms an sequence diversity/saturation analysis on a
 #' PAC objects.
@@ -62,7 +62,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,500), cumulati
                               if(cumulative==FALSE){
                                           ## Permuting over x_vect using thresh
                                               cat(paste0("\nPermutations will be generated using ", threads, " of ", parallel::detectCores(), " available core workers.")) 
-                                              cat(paste0("\nMaking ", resample, " permutations at ", steps," equally destributed sequence depths."))
+                                              cat(paste0("\nMaking ", resample, " permutations at ", steps," equally distributed sequence depths."))
                                               cat(paste0("\nData will be saved for two coverage thresholds at >= ", thresh[1], " counts and >= ", thresh[2], " counts\n")) 
                                               pb = txtProgressBar(min = 0, max = length(x_vect), initial = 0,  style = 3, width=40)
                                               permuted_data <- list(NULL)  
@@ -96,7 +96,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,500), cumulati
               ###################### Generate cumulative new sequences from a start point depth ######################
                               if(cumulative==TRUE){
                                           cat(paste0("\nPermutations will be generated using ", threads, " of ", parallel::detectCores(), " available core workers.")) 
-                                          cat(paste0("\nMaking ", resample, " permutations at ", steps," equally destributed sequence depths."))
+                                          cat(paste0("\nMaking ", resample, " permutations at ", steps," equally distributed sequence depths."))
                                           cat(paste0("\nData will be saved for two coverage thresholds at >= ", thresh[1], " counts and >= ", thresh[2], " counts\n")) 
                                           permuted_data <- list(NULL)
                                           pb = txtProgressBar(min = 0, max = length(x_vect), initial = 0,  style = 3, width=40)
