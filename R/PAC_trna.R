@@ -52,7 +52,7 @@
 #' 
 #' ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
 #' full <- Biostrings::readDNAStringSet(ref_path)
-#' ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
+#' ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 |Arg-CCT-1-1", names(full))]
 #'
 #' map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=12, mismatches=0)
 #' 
@@ -70,7 +70,7 @@
 #' plot_lst$Data
 #'
 #' 
-#' 
+#' Hello world
 #'
 #' 
 #' @export
