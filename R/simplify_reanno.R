@@ -1,4 +1,4 @@
-#'Generates one-hit hierachial biotype annotation
+#'Generates one-hit hierarchial biotype annotation
 #'
 #'\code{simplify_reanno} adds biotypes from reannotation to PAC.
 #'
@@ -7,7 +7,7 @@
 #'mis1, mis2 etc) created by \emph{add_reanno} and usually added to the Anno
 #'dataframe of a PAC object (colnames: mis0, mis1, mis2 etc) , the function will
 #'generated a one-hit biotype vector according to a user-defined biotype
-#'hierachy.
+#'hierarchy.
 #'
 #'@family PAC reannotation
 #'
@@ -20,14 +20,14 @@
 #'  \emph{add_reanno}. A PAC-list object can also be provided here where the
 #'  Anno dataframe will be used as input.
 #'
-#'@param hierachy List with character vectors as biotype search vectors that
+#'@param hierarchy List with character vectors as biotype search vectors that
 #'  will be parsed to grepl() and searched for in the mismatch/biotype
-#'  reannotation matrix. Important \emph{hierachy} is order sensitive. For
-#'  example if \emph{hierachy} is defined as list(rRNA="rRNA", miRNA="miRNA",
+#'  reannotation matrix. Important \emph{hierarchy} is order sensitive. For
+#'  example if \emph{hierarchy} is defined as list(rRNA="rRNA", miRNA="miRNA",
 #'  piRNA="piRNA") a sequence annotated with 0 mismatches to all three biotypes
 #'  will only reported once as rRNA (one-hit) since this biotype was put first
 #'  in the list Sequences annotated to neither of the biotypes listed in
-#'  \emph{hierachy} but still is annotated to something will be asigned as
+#'  \emph{hierarchy} but still is annotated to something will be asigned as
 #'  "other". Sequences without an annotation at the allowed mismatch level will
 #'  be asigned as "no_anno".
 #'
@@ -37,7 +37,7 @@
 #'
 #'@param bio_name Character naming the final biotype column (default="Biotype")
 #'
-#'@param PAC_merge Logical whether simplyfied annotation vector should
+#'@param PAC_merge Logical whether simplified annotation vector should
 #'  automatically be added to Anno object if a PAC list object were given as
 #'  input (default=FALSE)
 #'
@@ -55,12 +55,12 @@
 #'
 
 #'                  
-#' PAC_output <- simplify_reanno(PAC_IOR1, hierachy=hierachy, mismatches=0, bio_name="Biotypes_simpl", PAC_merge=TRUE)
+#' PAC_output <- simplify_reanno(PAC_IOR1, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_simpl", PAC_merge=TRUE)
 #' 
 #' @export
 
 
-simplify_reanno <- function(input, hierachy, mismatches=2, bio_name="Biotypes", PAC_merge=FALSE){
+simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes", PAC_merge=FALSE){
                             
                             ### Prepare:
                                 if(!any(!names(input)[1:3] == c("Pheno", "Anno", "Counts"))){anno <- input$Anno
@@ -75,7 +75,7 @@ simplify_reanno <- function(input, hierachy, mismatches=2, bio_name="Biotypes", 
                             ### Report the results:   
                                 anno_vect_uni <- unique(do.call("c", strsplit(anno_vect, ";|\\|")))
                                 cat(paste0("\nBiotypes will be asigned as follows:\n"))
-                                catg <- do.call("rbind", lapply(hierachy, function(x){paste(anno_vect_uni[grepl(x, anno_vect_uni)], collapse=", ")}))
+                                catg <- do.call("rbind", lapply(hierarchy, function(x){paste(anno_vect_uni[grepl(x, anno_vect_uni)], collapse=", ")}))
                                 colnames(catg) <- "Original_biotypes"
                                 other <- anno_vect_uni[!anno_vect_uni %in% c(do.call("c", strsplit(catg[,1], ", ")), "_")]
                                 if(length(other) == 0){ other <- "<NA>"}
