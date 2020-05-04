@@ -100,14 +100,19 @@
 
 PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target=NULL,  threads=1, par_type="PSOCK", xseq=TRUE, col_vect=NULL){
                             require("ggplot2")
-
+                            require("foreach")
                             if(is.null(summary_target[[1]])){stop("Error: You need to specify a target list in PAC$summary using summary_target.")}
                             if(is.null(names(PAC$summary[[summary_target[[1]]]]))){stop("You need to specify a valid summary_target.\n(Hint: Double check correct object name in PAC$summary or rerun the 'PAC_summary' function.)")}
                             if(length(summary_target)==1){summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])}
                             if(is.null(map_target)){map_target <- names(map)}
                             
+                            #### Check and subset if necessary
                             map <- map[names(map) %in%  map_target]
-  
+                            uni_map <- unique(do.call("c", lapply(map, function(x){rownames(x$Alignments)})))
+                            PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
+                            map  <- lapply(map, function(x){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]; return(x)})
+                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
+                              
                             cl <- parallel::makeCluster(threads, type = par_type)
                             doParallel::registerDoParallel(cl)
                             
@@ -179,8 +184,8 @@ PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target
                                                          x_lab <- unlist(strsplit(as.character(lst[[1]]$ref_nt), ""))
                                                          tcks <- element_line()
                                                   }else{x_lab<-NULL; tcks <- element_blank()}
-                                                  
-                                                  lapply(seq_along(lst), function(q){ # Use seq_along to grab names
+                                            
+                                                  plts <- lapply(seq_along(lst), function(q){ # Use seq_along to grab names
                                                           df <- lst[[q]]
                                                           nam2 <- names(lst)[q]
                                                           
@@ -198,7 +203,10 @@ PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target
                                                                         theme_classic()+
                                                         							  theme(axis.ticks.x=tcks, axis.text.x = element_text(size=8), plot.title = element_text(size=10))
                                                           })
+                                                  names(plts) <- names(lst)
+                                                  return(plts)
                                                       })
+                              names(plot_lst) <-names(plt_data)
                               parallel::stopCluster(cl)
                               return(list(Plots=plot_lst, Data=fin_lst))                                    
                             }

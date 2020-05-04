@@ -90,8 +90,24 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                             smry <- PAC$summary[[summary_target[[1]]]]
                             data <- smry[,summary_target[[2]], drop=FALSE]
                             data$empty_ <- 0 # Avoids problems with automatic vectorization
+                            
+                            
                             sub_map <- map[names(map) %in% map_target]
                             if(length(sub_map)==1){sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]}
+                            uni_map <- unique(do.call("c", lapply(sub_map, function(x){rownames(x$Alignments)})))
+                            PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
+                            sub_map  <- lapply(sub_map, function(x){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]; return(x)})
+                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
+
+                             #### Check and subset if necessary
+                            map <- map[names(map) %in%  map_target]
+                            uni_map <- unique(do.call("c", lapply(map, function(x){rownames(x$Alignments)})))
+                            PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
+                            map  <- lapply(map, function(x){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]; return(x)})
+                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
+                              
+                            
+                            
                             
                             ## Remove empty references
                             rm_filt <- !do.call("c", lapply(sub_map, function(x){as.character(x$Alignments[1,1]) == "no_hits"}))

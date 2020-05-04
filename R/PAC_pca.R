@@ -65,7 +65,7 @@
 #' ggbiplot::ggbiplot(pcobj = pca_all_rpm, choices=c(1,3), scale = 0, obs.scale = 0, var.scale = 0, groups = groups, labels=labs, labels.size=5, ellipse = FALSE, var.axes = FALSE)
 #' ggbiplot::ggbiplot(pcobj = pca_all_rpm, choices=c(2,3), scale = 0, obs.scale = 0, var.scale = 0, groups = groups, labels=labs, labels.size=5, ellipse = FALSE, var.axes = FALSE)
 #'
-#'@export
+#' @export
 
 PAC_pca <- function(PAC, type="counts", pheno_target=NULL, anno_target=NULL){
                                       if(type=="counts"){ data <- PAC$Counts }
