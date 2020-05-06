@@ -70,12 +70,19 @@
 #' plot_lst$Data
 #'
 #' 
-#' Hello world
+#'PAC=PAC_filt
+#'map=map_refs
+#'ss=NULL
+#'summary_target=NULL
+#'map_target=NULL 
+#'threads=8
+#'par_type="PSOCK" 
+#'col_vect=NULL
 #'
 #' 
 #' @export
 
-PAC_trna <- function(PAC, map, ss=NULL, summary_target=NULL, map_target=NULL,  threads=1, par_type="PSOCK", col_vect=NULL)
+PAC_trna <- function(PAC, map, ss=NULL, summary_target=NULL, map_target=NULL,  threads=1, par_type="PSOCK", col_vect=NULL){
                             require("ggplot2")
                             require("foreach")
                             if(is.null(summary_target[[1]])){stop("Error: You need to specify a target list in PAC$summary using summary_target.")}
@@ -97,7 +104,7 @@ PAC_trna <- function(PAC, map, ss=NULL, summary_target=NULL, map_target=NULL,  t
                             lst <- lapply(map, function(x){ 
                                             x[[1]] -> ref
                                             x[[2]] -> algn
-                                            n_ref <- str_count(as.character(ref))
+                                            n_ref <- nchar(as.character(ref))
                                             algn_lst <- split(algn, factor(row.names(algn), levels=row.names(algn)))
                                             positions_lst <- foreach(j=1:length(algn_lst), .final=function(y){names(y) <- names(algn_lst);return(y)})  %dopar% {
                                                                     ref=ref
@@ -110,61 +117,59 @@ PAC_trna <- function(PAC, map, ss=NULL, summary_target=NULL, map_target=NULL,  t
                                             }) 
                             
                             ### Add ss info
-                            if(!is.null(ss)){
-                                    ss_anno <- readLines(ss)
-                                    seqs <- ss_anno[grepl("\\<Seq: ", ss_anno)]
-                                    seqs <- gsub("Seq: ", "", seqs)
-                                    str <- ss_anno[grepl("\\<Str: ", ss_anno)]
-                                    str <- gsub("Str: ", "", str)
-                                    tpe <- ss_anno[grepl("\\<Type: ", ss_anno)]
-                                    tpe <- gsub("Type: ", "", tpe)
-                                    
-                                    sb <- ss_anno[!grepl("\\<Type: |\\<Str: |\\<Seq: |      |\\<HMM ", ss_anno)]
-                                    
-                                    ss_anno[seq(1, length(ss_anno), 7)]
-                                    data.frame(
-                                    
-                                    
-                                    }
-                            
+                            # if(!is.null(ss)){
+                            #         ss_anno <- readLines(ss)
+                            #         seqs <- ss_anno[grepl("\\<Seq: ", ss_anno)]
+                            #         seqs <- gsub("Seq: ", "", seqs)
+                            #         str <- ss_anno[grepl("\\<Str: ", ss_anno)]
+                            #         str <- gsub("Str: ", "", str)
+                            #         tpe <- ss_anno[grepl("\\<Type: ", ss_anno)]
+                            #         tpe <- gsub("Type: ", "", tpe)
+                            #         
+                            #         sb <- ss_anno[!grepl("\\<Type: |\\<Str: |\\<Seq: |      |\\<HMM ", ss_anno)]
+                            #         
+                            #         ss_anno[seq(1, length(ss_anno), 7)]
+                            #         data.frame(
+                            #         
+                            #         
+                            # }
+                      }
 
                             
+
                             
                             
                             
-                                                                        
-                                                    }
-                            map
-
-
-DNA_strings <- DNAStringSet(master_list_cut$Anno$tRF_sequence)
-names(DNA_strings) <- row.names(master_list_cut$Anno)
-all_tRNA <- read.delim("D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/List_of_availble_tRNs.txt", header=TRUE)
-df_align <- data.frame(matrix(NA, nrow=1, ncol=8))
-colnames(df_align) <- c("tRF_names", "Full_tRNA_names", "tRF_Align_start", "tRF_Align_end", "tRF_Align_width", "Full_tRNA_width", "Seq_tRF", "Seq_tRNA")
-
-for(i in 1:nrow(all_tRNA)){
-	nam <- as.character(all_tRNA[i,])
-	tRNAs <-  full_tRNAs[grepl(nam, rownames(as.data.frame(full_tRNAs)))]
-	tRFs <- DNA_strings[grepl(nam, master_list_cut$Anno$tRNA_full),]
-		for(k in 1:length(tRNAs)){
-			target_tRNA <-	tRNAs[k]
-				for(t in 1:length(tRFs)){
-					align <- vmatchPattern(as.character(tRFs[t]), target_tRNA, max.mismatch=0, fixed=FALSE)
-					if (length(align[[1]])>0) {
-					align_string <- paste(strrep("-", times=(start(align[[1]])-1)), as.character(tRFs[t]), strrep("-", times= (str_count(as.character(target_tRNA))-(end(align[[1]])))), sep="")
-					df <- data.frame(tRF_names=names(tRFs[t]), Full_tRNA_names=names(target_tRNA), tRF_Align_start=start(align[[1]]), tRF_Align_end=end(align[[1]]), tRF_Align_width=width(align[[1]]), Full_tRNA_width=str_count(as.character(target_tRNA)), Seq_tRF=align_string, Seq_tRNA=as.data.frame(target_tRNA)[1,1])
-					df_align <- rbind(df_align, df)
-					}}}
-	Sys.sleep(0.1)
-	cat("\n", nam,' ended ', as.character(Sys.time()), " on row: ", nrow(df_align))} # Takes approx. 2h.
-
-
-df_align -> sav
-df_align[2:nrow(df_align),] -> df_align2
-table(duplicated(paste(df_align2$tRF_names, df_align2$Full_tRNA_names, df_align2$Seq_tRF)))
-df_align3 <- df_align2[!duplicated(paste(df_align2$tRF_names, df_align2$Full_tRNA_names, df_align2$Seq_tRF)),]
-
-save(df_align2, file="D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/tRNA_align_MINT_GtRNAdb_Best_hit.Rdata")
-# write.table(df_align3, "D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/Anno_cutsite_All_tRNA.xls", sep="\t", row.names=F)
-write.table(df_align3, "D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/Anno_cutsite_All_16-45_tRNA.xls", sep="\t", row.names=F)
+# 
+# 
+# DNA_strings <- DNAStringSet(master_list_cut$Anno$tRF_sequence)
+# names(DNA_strings) <- row.names(master_list_cut$Anno)
+# all_tRNA <- read.delim("D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/List_of_availble_tRNs.txt", header=TRUE)
+# df_align <- data.frame(matrix(NA, nrow=1, ncol=8))
+# colnames(df_align) <- c("tRF_names", "Full_tRNA_names", "tRF_Align_start", "tRF_Align_end", "tRF_Align_width", "Full_tRNA_width", "Seq_tRF", "Seq_tRNA")
+# 
+# for(i in 1:nrow(all_tRNA)){
+# 	nam <- as.character(all_tRNA[i,])
+# 	tRNAs <-  full_tRNAs[grepl(nam, rownames(as.data.frame(full_tRNAs)))]
+# 	tRFs <- DNA_strings[grepl(nam, master_list_cut$Anno$tRNA_full),]
+# 		for(k in 1:length(tRNAs)){
+# 			target_tRNA <-	tRNAs[k]
+# 				for(t in 1:length(tRFs)){
+# 					align <- vmatchPattern(as.character(tRFs[t]), target_tRNA, max.mismatch=0, fixed=FALSE)
+# 					if (length(align[[1]])>0) {
+# 					align_string <- paste(strrep("-", times=(start(align[[1]])-1)), as.character(tRFs[t]), strrep("-", times= (str_count(as.character(target_tRNA))-(end(align[[1]])))), sep="")
+# 					df <- data.frame(tRF_names=names(tRFs[t]), Full_tRNA_names=names(target_tRNA), tRF_Align_start=start(align[[1]]), tRF_Align_end=end(align[[1]]), tRF_Align_width=width(align[[1]]), Full_tRNA_width=str_count(as.character(target_tRNA)), Seq_tRF=align_string, Seq_tRNA=as.data.frame(target_tRNA)[1,1])
+# 					df_align <- rbind(df_align, df)
+# 					}}}
+# 	Sys.sleep(0.1)
+# 	cat("\n", nam,' ended ', as.character(Sys.time()), " on row: ", nrow(df_align))} # Takes approx. 2h.
+# 
+# 
+# df_align -> sav
+# df_align[2:nrow(df_align),] -> df_align2
+# table(duplicated(paste(df_align2$tRF_names, df_align2$Full_tRNA_names, df_align2$Seq_tRF)))
+# df_align3 <- df_align2[!duplicated(paste(df_align2$tRF_names, df_align2$Full_tRNA_names, df_align2$Seq_tRF)),]
+# 
+# save(df_align2, file="D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/tRNA_align_MINT_GtRNAdb_Best_hit.Rdata")
+# # write.table(df_align3, "D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/Anno_cutsite_All_tRNA.xls", sep="\t", row.names=F)
+# write.table(df_align3, "D:/DanielAnalys/-Anita_human_sperm/R/MINTmap/Anno_cutsite_All_16-45_tRNA.xls", sep="\t", row.names=F)

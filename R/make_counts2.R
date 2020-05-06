@@ -168,6 +168,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                     ## Read file system
                                     path <- input
                                     count_files <- list.files(path, pattern ="fastq.gz\\>|fastq\\>", full.names=TRUE, recursive=TRUE)
+                                    count_files <- count_files[!grepl("Undetermined_", count_files)]
                                     count_files_nams <- basename(count_files)
                                     cat("\nInput type was set to fastq.\n")
                                     cat("The following fastq files were found in the path:\n")
@@ -203,30 +204,32 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
 
                                             ## cutadapt and fastq_quality_filter
                                             foreach::foreach(i=1:length(count_files), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(count_files); return(x)}) %dopar% {
-                                                                system(paste0(parse, " -o /tmp/seqpac/temp", i, ".fastq ", count_files[i]), ignore.stdout = TRUE)
+                                                                spl_nam <- basename(count_files[i])
+                                                                log1 <-system(paste0(parse, " -o /tmp/seqpac/temp_", spl_nam, ".fastq ", count_files[i]), intern = TRUE)
 
                                                             ## No tagging
                                                                 if(tag==FALSE){
-                                                                    system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp", i, ".fastq -o /tmp/seqpac/temp", i, ".fastq.gz -z"), ignore.stdout = TRUE)
-                                                                    file.remove(paste0("/tmp/seqpac/temp", i, ".fastq"))
+                                                                    log2 <- system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp_", spl_nam, ".fastq -o /tmp/seqpac/temp_", spl_nam, ".fastq.gz -z"), intern = TRUE)
+                                                                    writeLines(c(log1,"________\n________",log2), con = paste0("/tmp/seqpac/", spl_nam, "_log.txt"))
+                                                                    file.remove(paste0("/tmp/seqpac/temp_", spl_nam, ".fastq"))
                                                                     }
 
                                                             ## Tagging
                                                                 if(tag==TRUE){
-
-                                                                      spl_nam <- basename(count_files[i])
                                                                       if(grepl(paste0(do.call("c", target_tag), collapse="|"), spl_nam)){
                                                                                       parse_tag_logi <- do.call("c", lapply(target_tag, function(x){grepl(paste(x, collapse="|"), spl_nam)}))
                                                                                       parse_tag_nam <- names(parse_tag_logi)[parse_tag_logi==TRUE]
-                                                                                      system(paste0(parse_tag[parse_tag_nam]," -o /tmp/seqpac/temp", i, "_tag.fastq --untrimmed-output /tmp/seqpac/temp", i, "_notag.fastq /tmp/seqpac/temp", i, ".fastq"), ignore.stdout = TRUE)
-                                                                                      system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp", i, "_tag.fastq -o /tmp/seqpac/temp", i, "_tag.fastq.gz -z"), ignore.stdout = TRUE)
-                                                                                      system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp", i, "_notag.fastq -o /tmp/seqpac/temp", i, "_notag.fastq.gz -z"), ignore.stdout = TRUE)
-                                                                                      file.remove(paste0("/tmp/seqpac/temp", i, ".fastq"))
-                                                                                      file.remove(paste0("/tmp/seqpac/temp", i, "_tag.fastq"))
-                                                                                      file.remove(paste0("/tmp/seqpac/temp", i, "_notag.fastq"))
+                                                                                      log2 <- system(paste0(parse_tag[parse_tag_nam]," -o /tmp/seqpac/temp_", spl_nam, "_tag.fastq --untrimmed-output /tmp/seqpac/temp_", spl_nam, "_notag.fastq /tmp/seqpac/temp_", spl_nam, ".fastq"), intern = TRUE)
+                                                                                      log3 <- system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp_", spl_nam, "_tag.fastq -o /tmp/seqpac/temp_", spl_nam, "_tag.fastq.gz -z"), intern = TRUE)
+                                                                                      log4 <- system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp_", spl_nam, "_notag.fastq -o /tmp/seqpac/temp_", spl_nam, "_notag.fastq.gz -z"), intern = TRUE)
+                                                                                      writeLines(c(log1,"________\n________", log2, "________\n________", log3, "________\n________", log4), con = paste0("/tmp/seqpac/", spl_nam, "_log.txt"))
+                                                                                      file.remove(paste0("/tmp/seqpac/temp_", spl_nam, ".fastq"))
+                                                                                      file.remove(paste0("/tmp/seqpac/temp_", spl_nam, "_tag.fastq"))
+                                                                                      file.remove(paste0("/tmp/seqpac/temp_", spl_nam, "_notag.fastq"))
                                                                       }else{
-                                                                                      system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp", i, ".fastq -o /tmp/seqpac/temp", i, ".fastq.gz -z"), ignore.stdout = TRUE)
-                                                                                      file.remove(paste0("/tmp/seqpac/temp", i, ".fastq"))
+                                                                                      log2 <- system(paste0("fastq_quality_filter -q 20 -p 80 -v -i /tmp/seqpac/temp_", spl_nam, ".fastq -o /tmp/seqpac/temp_", spl_nam, ".fastq.gz -z"), intern = TRUE)
+                                                                                      writeLines(c(log1,"________\n________",log2), con = paste0("/tmp/seqpac/", spl_nam, "_log.txt"))
+                                                                                      file.remove(paste0("/tmp/seqpac/temp_", spl_nam, ".fastq"))
                                                                                       }
                                                                 }
 
@@ -236,7 +239,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                             cat("\nFinished generating trimmed temporary files.")
                                           }
                                       ## Read trimmed files
-                                      cat("\n\nIdentifying unique sequences in trimmed fastq files...")
+                                      cat("\n\nIdentifying unique sequences in trimmed fastq files ...")
                                       if(cutadpt==FALSE){fls <- count_files}
                                       if(cutadpt==TRUE){fls <- list.files("/tmp/seqpac/", pattern=".fastq.gz\\>", full.names=TRUE, recursive=FALSE)}
                                       cl <- parallel::makeCluster(threads, type = par_type)
@@ -247,14 +250,14 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                                               }
                                       parallel::stopCluster(cl)
                                       gc(reset=TRUE)
-                                      cat("\nCompiling...")
+                                      cat("\nCompiling unique sequences ...")
                                       seqs <- do.call("c", seq_lst)
                                       rm(seq_lst)
                                       seqs_dup <- unique(as.character(seqs[duplicated(seqs)]))
                                       rm(seqs)
 
                                       ## Make count table
-                                      cat("\nNow making a count table with sequences appearing in at least 2 independent samples...")
+                                      cat("\nNow making a count table with sequences appearing in at least 2 independent samples ...")
                                       cl <- parallel::makeCluster(threads, type = par_type)
                                       doParallel::registerDoParallel(cl)
                                       reads_lst <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"),.final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
@@ -276,12 +279,15 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                       parallel::stopCluster(cl)
                                       gc(reset=TRUE)
                                       cat("\nFinalizing at ", paste0(Sys.time()), "\n")
-                                      sampl_nam <- gsub("_merge|\\.fastq|\\.gz", "", count_files_nams)
-                                      sampl_nam <- gsub("-", "_", sampl_nam)
-                                      if(cutadpt==TRUE){temp_nams <- do.call("rbind", strsplit(names(reads_lst), "\\."))[,1]
-                                                        temp_num <- stringr::str_extract(temp_nams, "\\-*\\d+\\.*\\d*")
-                                                        new_temp_nams <- sampl_nam[as.integer(temp_num)]
-                                                        names(reads_lst) <- paste0(new_temp_nams, gsub("temp|\\d*", "", temp_nams))
+                                      names(reads_lst) <- gsub("_merge|.fastq.gz|fastq.gz|temp_", "", names(reads_lst))
+                                      names(reads_lst) <- gsub("-", "_", names(reads_lst))
+                                      if(cutadpt==TRUE){
+                                                        ## Gather logs
+                                                        logs_path <- list.files("/tmp/seqpac", pattern="log.txt", full.names=TRUE, recursive=FALSE)
+                                                        log_lst <- lapply(as.list(logs_path), function(x){data.frame(header=readLines(x))})
+                                                        names(log_lst) <- gsub("_merge.fastq.gz_log.txt", "", basename(logs_path))
+                                                        names(log_lst) <- gsub("-", "_", names(log_lst))
+                                                        ## Clean up
                                                         ans <- readline("Would you like to delete temporary files in /tmp/seqpac [y/n]?")
                                                         if(ans %in% c("Y", "y")){ fn <- list.files("/tmp/seqpac", full.names=TRUE, recursive=FALSE)
                                                                                   if(any(file.exists(fn))){file.remove(fn)}
@@ -291,6 +297,7 @@ make_counts2 <- function(input, type="fastq", threads, par_type="PSOCK", anno=NU
                                       colnames(ordCount_df) <- names(reads_lst)
                                       stopifnot(!any(!do.call("c", lapply(reads_lst, function(x){identical(rownames(ordCount_df), rownames(x))}))))
                                       
-                                      }
-                          return(ordCount_df)
+                                    }
+                          if(cutadpt==FALSE){log_lst<-"no_trimming_was_done"}
+                          return(list(counts=ordCount_df, logs=log_lst))
                           }

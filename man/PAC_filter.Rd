@@ -4,8 +4,8 @@
 \alias{PAC_filter}
 \title{Filter a PAC object on sequence size and covarage}
 \usage{
-PAC_filter(PAC, size = NULL, threshold = 10, coverage = 100,
-  type = "counts", subset_only = FALSE, stat = FALSE,
+PAC_filter(PAC, size = NULL, threshold = 0, coverage = 0,
+  type = NULL, subset_only = FALSE, stat = FALSE,
   pheno_target = NULL, anno_target = NULL)
 }
 \arguments{
@@ -55,14 +55,19 @@ interval and percent coverage across independent samples.
 }
 \examples{
 
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/R_analysis_full/"
-load(file=paste0(path, "PAC_all.Rdata"))
-PAC_all <- PAC_rpm(PAC_all)
-pheno_target = list("Method", c("IOR1_proto", "IOR1_tgirt"))
+load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+test1 <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
+
+PAC_filt <- PAC_rpm(PAC_filt)
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means",  pheno_target=list("Method"))
+
+test2 <- PAC_filter(PAC_filt, size=c(16,45), threshold=5, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
+
+test3 <- PAC_filter(PAC_filt, pheno_target=list("Unn_Sample_ID", c("A", "B")), subset_only=TRUE)   # Removes individual samples based on information in Pheno - Since summary has already been generated, throws a warnings message.
+
+test4 <- PAC_filter(PAC_filt, size=c(16,30))   # Further filter on fragment lengths 
 
 
-test <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=50, type="rpm", stat=TRUE, pheno_target=pheno_target, anno_target=NULL)
-test <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=50, type="counts", stat=TRUE, pheno_target=pheno_target, anno_target=NULL)
 
 
 }
@@ -76,6 +81,7 @@ Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
   \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
   \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}}
+  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}},
+  \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}

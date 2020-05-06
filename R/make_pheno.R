@@ -25,51 +25,55 @@
 #'   documentation about running Sports. \url{https://github.com/Danis102} for
 #'   updates on the current package.
 #'
-#' @param pheno_file_path Character vector with the path to a .csv file.
+#' @param pheno_input Character vector with the path to a .csv file or a
+#'   dataframe with rownames as sample names.
 #'
 #' @param type Character indicating what type to file to expect. If
 #'   \emph{type="basespace"} the function will attempt to read nd join
 #'   information from 'SampleSheetUsed.csv' and 'Samples_stat.txt' in
-#'   pheno_file_path that have been downloaded from Illumina Basespace. If
+#'   pheno_input that have been downloaded from Illumina Basespace. If
 #'   type="manual", the function will attempt to read a file named 'pheno.csv',
 #'   in which the first column has been named 'Sample_ID' containing the exact
 #'   sample names matching basenames of the fastq sample files.
 #'
-#' @param countTable Data.frame object with the same column names as in Sample_ID column of the .csv file.
+#' @param countTable Data.frame object with the same column names as in
+#'   Sample_ID column of the .csv file.
 #'
 #' @param progress_report Data.frame object with progress report.
-#' 
+#'
 #'
 #' @return data.frame
 #'
 #' @examples
-#' path_sport <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20"
-#' 
+#'
+#' ### Sports input
+#'   path_sport <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20"
+#'
 #' sports_lst <- import_sports("/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20", threads=8)
-#' 
+#'
 #' anno <- make_anno(sports_lst = sports_lst, threads = 10, filt = 2, stat = TRUE)
 #' counts <- make_counts(sports_lst = sports_lst, anno = anno, threads = 10)
 #' report <- progress_report(path_sport)
-#' 
-#' pheno <- make_pheno(<your_path_to_sports_output_directory>)                       
-#' 
-#' pheno_path <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/summary"
+#'
+#' pheno <- make_pheno(<your_path_to_sports_output_directory>)
+#'
+#' pheno_input <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/summary"
 #' pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type="manual")
 #'
-#'
+#' ### Simple manual
 #'
 #' @export
-make_pheno<- function(pheno_file_path, type="manual", countTable=NULL, progress_report=report){
+make_pheno<- function(pheno_input, type="manual", countTable=NULL, progress_report=NULL){
                             
                             ### Read using basespace download files
                             if(type=="basespace"){
-                                  path <- list.files(pheno_file_path, pattern="*.csv", full.names = TRUE)
+                                  path <- list.files(pheno_input, pattern="*.csv", full.names = TRUE)
                                   if(length(path) > 1){stop("Error! There are more than one .csv file to choose between in the specified folder.")}
                                   if(grepl("SampleSheetUsed.csv", path)){
                                             lines <- readLines(path, n=20)
                                             header <- which(grepl("\\<Sample_ID", lines))
                                             if(!length(header) == 1){stop("Error! Cannot find comma seperated header with first column named 'Sample_ID'")}
-                                            pheno <- read.delim(paste0(pheno_file_path, "/SampleSheetUsed.csv"), skip= header-1,  header=TRUE, sep=",")
+                                            pheno <- read.delim(paste0(pheno_input, "/SampleSheetUsed.csv"), skip= header-1,  header=TRUE, sep=",")
                                             cat("Illumina type SampleSheetUsed.csv file was found.\n")
                                             colnames(pheno)[colnames(pheno) == "BASESPACE_ONLY_ORIGINAL_SAMPLE_NUMBER"] <- "Sample_number"
                                             pheno$Sample_number <- paste0("S", pheno$Sample_number)
@@ -79,9 +83,9 @@ make_pheno<- function(pheno_file_path, type="manual", countTable=NULL, progress_
                                             pheno  <- cbind(data.frame(Sample = paste(pheno$Sample_Name, pheno$Sample_number, sep="_")), pheno)
                                             rownames(pheno) <-  pheno$Sample
                                             ## Try to add Illumina stat
-                                            path_stat <- list.files(pheno_file_path, pattern=".txt", full.names = TRUE)
+                                            path_stat <- list.files(pheno_input, pattern=".txt", full.names = TRUE)
                                             if(length(path_stat) == 1){
-                                                          stat <- read.delim(paste0(pheno_file_path, "/Samples_stat.txt"), header=TRUE, sep="\t")
+                                                          stat <- read.delim(paste0(pheno_input, "/Samples_stat.txt"), header=TRUE, sep="\t")
                                                           stopifnot(any(as.character(pheno$Sample_ID) %in% as.character(stat$SampleId)))
                                                           pheno <- cbind(pheno, stat[match(as.character(pheno$Sample_ID), as.character(stat$SampleId)), !colnames(stat) %in% c("SampleId", "Name", "Index")])
                                             }
@@ -94,13 +98,16 @@ make_pheno<- function(pheno_file_path, type="manual", countTable=NULL, progress_
   
                             ### Read using manual pheno.txt file
                             if(type=="manual"){
-                                  path <- list.files(pheno_file_path, pattern="pheno.csv|Pheno.csv|pheno.txt|Pheno.txt", full.names = TRUE)
-                                  if(length(path) > 1){stop("Error! There are more than one file named pheno to choose between in the specified folder.")}
+                                  if(is.data.frame(pheno_input)){pheno <- pheno_input
+                                  }else{
+                                  path <- list.files(pheno_input, pattern="pheno.csv|Pheno.csv|pheno.txt|Pheno.txt", full.names = TRUE)
+                                  if(length(path) > 1){stop("Error! There are more than one files named pheno to choose between in the specified folder.")}
                                   lines <- readLines(path, n=20)
                                   header <- which(grepl("\\<Sample_ID", lines))
                                   if(!length(header) == 1){stop("Error! Cannot find comma seperated header with first column named 'Sample_ID'")}
                                   pheno <- read.delim(path,  header=TRUE, sep=",")
                                   rownames(pheno) <- pheno$Sample_ID
+                                  }
                                 }
 
                                 ## Order as countTable
