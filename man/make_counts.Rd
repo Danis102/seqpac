@@ -52,7 +52,6 @@ this function will generate a raw countTable (columns=sample, rows=sequence).
 
 Other PAC generation: \code{\link{import_sports}},
   \code{\link{make_PAC}}, \code{\link{make_anno}},
-  \code{\link{make_counts2}}, \code{\link{make_pheno}},
-  \code{\link{progress_report}}
+  \code{\link{make_pheno}}, \code{\link{progress_report}}
 }
 \concept{PAC generation}

@@ -26,7 +26,7 @@ List of dataframes with additional information from reannotation
   so that no sequences are missing before and after reannotation.
 }
 \description{
-\code{import_reanno} makes a reannotation list.
+\code{make_reanno} makes a reannotation list.
 }
 \details{
 Given the path to the imported R reannotation files
@@ -35,10 +35,11 @@ summarize the reannotation files into one output that matches the order of
 sequences in a PAC object.
 }
 \examples{
-reanno_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_26-02-20/R_files/"
+reanno_path  <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
 
-load(paste0(reanno_path, "PAC_master.Rdata"))
-Full_anno <- make_reanno(reanno_path, PAC=PAC_master, mis_fasta_check=TRUE, threads=10)    # Complete use
+load(file="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_hifilt.Rdata")
+
+Full_anno <- make_reanno(reanno_path, PAC=PAC_hifilt, mis_fasta_check=TRUE, threads=10)    # Complete use
 identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview)) 
 
 
@@ -52,6 +53,6 @@ identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview))
 
 Other PAC reannotation: \code{\link{add_reanno}},
   \code{\link{check_reanno}}, \code{\link{import_reanno}},
-  \code{\link{simplify_reanno}}
+  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

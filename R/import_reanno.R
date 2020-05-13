@@ -58,7 +58,7 @@
 #'   
 #'   
 #' @examples
-#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Diet_4_6_2019/Processed_Pipeline31_10-03-20/R_files"
+#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
 #' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
 
 #' reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
@@ -159,7 +159,7 @@ import_reanno <- function(bowtie_path, threads=1, report="minimum", reduce="piRN
                                                                                       uni_mis <- unique(x$V8)
                                                                                       uni_mis <- unique(do.call("c", stringr::str_split(uni_mis, ",")))
                                                                                       uni_mis <- uni_mis[order(as.integer(gsub( ":.*$", "", uni_mis )))]
-                                                                                      if(is.na(uni_mis)){uni_mis <- "mis0"}
+                                                                                      if(any(is.na(uni_mis))){uni_mis <- "mis0"}
                                                                                       uni_mis <- paste(uni_mis, collapse="|")
                                                                                       hits <- paste(unique(x$V3), collapse=";")
                                                                                       fin <- data.table::data.table(mis_n=n_mis, mis_where=uni_mis, ref_hits=hits)

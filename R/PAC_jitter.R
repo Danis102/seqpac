@@ -38,69 +38,117 @@
 #'
 #' @examples
 #' 
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/R_analysis_full/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
-#' PAC_all <- PAC_rpm(PAC_all)
-#' pheno_target = list("Method", c("IOR1_proto", "IOR1_tgirt"))
+#' library(seqpac)
+#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 #' 
-#' PAC_IOR1 <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 50, type = "rpm", stat = TRUE, pheno_target = pheno_target, anno_target = NULL)
+#' PAC_filt <- PAC_rpm(PAC_filt)
 #' 
-#'
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method"))
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "percentgrand", pheno_target=list("Method"))
 #' 
-#' PAC <- PAC_summary(PAC, norm = "rpm", type = "log2FC", pheno_target=list("Adapt", unique(PAC$Pheno$Adapt)))
-#' plot_lst <- PAC_jitter(PAC, summary_target=list(", anno_target=, limits, ypos_n, colors="Black"
+#' 
+#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+#'                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
+#'                 Mt_tRNA= "tRNA_mt-tRNA",
+#'                tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
+#'                miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+#'                piRNA="piRNA")
 #'
-#'
-#' (import_lst$Sports_filtered$Calc$mean_Log2FC, FC_col="mean_FC", feat_col="Biotype", limits=c(-1.1, 1.05), Ypos_n=1.05, colors=rgb_vec_sports
-#'
-#'plot_lst  <- PAC_diversity(PAC, resample=10, steps=10, thresh=c(1,500), cumulative=TRUE, start_perc=1, threads=8)
-#' cowplot::plot_grid(plot_lst$A,plot_lst$B)
+#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
+#' 
+#' 
+#' plots_FC <- PAC_jitter(PAC_filt, summary_target=list("Log2FC_Method"), anno_target=list("Biotypes_mis0"))
+#' plots_FCgrand <- PAC_jitter(PAC_filt, summary_target=list("Percdiffgrand_Method"), anno_target=list("Biotypes_mis0"))
+#' 
+#' 
+#' plots_FC[[1]]
+#' cowplot::plot_grid(plotlist=plots_FCgrand[1:9],nrow = 3, ncol = 3)
 #'
 #' @export
 #'
-PAC_jitter <- function(input, summary_target, anno_target, limits, ypos_n, colors="Black"){
+PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colvec=NULL, box=TRUE){
                                         					require(ggplot2)
-                                                  if(class(input)=="data.frame"){df <- input}
-                                                  if(class(input)=="list"){ 
-                                                                              
-                                                                            df <- data.frame(Anno==PAC$Anno[,anno_target])
-                                                    
-                                                    
-                                                    input <- list(input=input)}
-                                        					plot_lst <- list(NA)
-                                        					for(i in 1:length(input)){
-                                        							exp <- names(input)[i]
-                                        							input[[i]] <- input[[i]][!is.na(input[[i]][, colnames(input[[i]])==FC_col]),]
-                                        							if(i==length(input)){
-                                        							  perc_up_agg <- aggregate(input[[i]][,FC_col], list(as.character(input[[i]][,feat_col])), function(x){ sum(as.numeric(x > 0))/length(x)})
-                                        							  perc_up <- round(perc_up_agg$x, digits=3)*100
-                                        							  perc_up <-  perc_up[match(as.character(levels(input[[i]][,feat_col])), as.character(perc_up_agg$Group.1))]
-                                        								plot_lst[[i]] <- ggplot(input[[i]], aes_string(x=feat_col, y=FC_col, col=feat_col, fill=feat_col))+
-                                        								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
-                                        								        geom_jitter(position=position_jitter(0.2), cex=1.5)+
-                                        	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +								  			
-                                        								        geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)+
-                                        												geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up, "%")), size=5, y=ypos_n, col="Black") +
-                                        												labs(title=paste0(exp) , x="Biotype" , y = paste0(FC_col)) +
-                                        												theme_classic()+
-                                        												scale_y_continuous(limits =limits) +
-                                        												theme(legend.position="none", axis.text.x = element_text(angle = 45, hjust = 0.95), axis.text.y = element_text(size=15), axis.title.y= element_blank())+
-                                        												scale_color_manual(values=colors)
-                                        								        #coord_flip()
-                                        								names(plot_lst)[i] <- exp
-                                        								} else {
-                                        								plot_lst[[i]] <- ggplot(input[[i]], aes_string(x=feat_col, y=FC_col, fill=feat_col))+
-                                        												geom_violin (width=0.9, trim=FALSE, scale="width")+
-                                        												geom_boxplot(width=0.2, fill="white", outlier.shape = NA)+
-                                        												geom_text(stat="count", aes(label=paste0("n=",..count..)), size=5, y=ypos_n) +
-                                        												labs(title=paste0(exp) , x="Biotype" , y = paste0(FC_col)) +
-                                        												geom_hline(yintercept=0)+
-                                        												theme_classic()+
-                                        												scale_y_continuous(limits = limits) +
-                                        												theme(legend.position="none", axis.text.x = element_text(angle = 45, hjust = 0.95), axis.text.y = element_text(size=15), axis.title.y= element_blank())+
-                                        												coord_flip()
-                                        								names(plot_lst)[i] <- exp
-                                        								}
-                                        					}
-                                        				return(plot_lst)
-                                }
+                                                  if(!PAC_check(PAC)){stop("Input was not a PAC object.")}
+  
+                                                  if(is.null(summary_target[[1]])){stop("Error: You need to specify a target in PAC$summary with summary_target.")}
+                                                  if(is.null(names(PAC$summary[[summary_target[[1]]]]))){stop("You need to specify a valid summary_target.\n(Hint: Double check correct object name in PAC$summary or rerun the 'PAC_summary' function.)")}
+                                                  if(length(summary_target)==1){summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])}
+                                                  
+                                                  ann <- PAC$Anno
+                                                  if(is.null(anno_target[[1]])){
+                                                          warning("No anno_target was specified.\nJitter plot will not be devided into biotypes.")
+                                                          ann$All <- "All"
+                                                          anno_target <- list("All", "All")}
+                                                  if(length(colnames(PAC$Anno)[anno_target[[1]]]) <1){stop("You need to specify a valid anno_target.\n(Hint: Double check correct column name in PAC$Anno.)")}
+                                                  if(length(anno_target) ==1){anno_target[[2]] <- unique(PAC$Anno[,anno_target[[1]]])}
+                                                  ann_filt <- ann[,anno_target[[1]]] %in% anno_target[[2]]
+                                                  df <- PAC$summary[[summary_target[[1]]]]
+                                                  df <- df[,colnames(df) %in% summary_target[[2]],drop=FALSE]
+                                                  df <- df[ann_filt,,drop=FALSE]
+                                                  ann <- ann[,anno_target[[1]], drop=FALSE]
+                                                  ann <- ann[ann_filt,,drop=FALSE]
+                                                  stopifnot(identical(rownames(ann), rownames(df))) 
+
+                                        					if(grepl("percent", summary_target[[1]])){cutoff <- 100} else {cutoff <- 0}
+                                                  perc_up <- aggregate(df, list(as.character(ann[,1])), function(x){ perc_up <- sum(as.numeric(x > 0))/length(x)
+                                        							                                                                   perc_up <- round(perc_up, digits=3)*100
+                                        							                                                                   return(perc_up)
+                                        							                                                                  })
+                                                  perc_up <-  perc_up[match(as.character(anno_target[[2]]), as.character(perc_up$Group.1)),]
+                                        				## Make graphs
+                                                    if(is.null(colvec)){
+                                                          bio <- as.character(unique(ann[,1]))
+                                                          n_extra  <- sum(bio %in% c("no_anno", "other"))
+                                                          colfunc <- colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
+                                                          if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
+                                                          if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
+                                                          if(n_extra==0){colvec <- colfunc(length(bio))}
+                                                    }
+                                        				   plt_lst <- as.list(1:ncol(df))
+                                        				   names(plt_lst) <- colnames(df)
+                                        				   plt_lst <- plt_lst[match(summary_target[[2]], names(plt_lst))]
+                                        					 plot_lst <- lapply(plt_lst, function(num){ 
+                                                                  data <- data.frame(biotype=ann[,1], values=df[,num])
+                                                                  data$biotype <- factor(data$biotype, levels=anno_target[[2]])
+                                                                  mima  <- c(min(data$values), max(data$values))
+                                                                  max_lim <- max(sqrt(mima^2))*1.4
+                                                                  if(is.null(ypos_n)){ypos_n <- max(sqrt(mima^2))*1.35}
+                                                                  if(is.null(limits)){limits <- c((mima[1]*1.2),  max_lim)}
+                                                                  if(is.null(limits)){limits <- c((mima[1]*1.2),  max_lim)}
+                                                                  
+                                                							    if(type=="jitter"){
+                                                                  p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
+                                                								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
+                                                								        geom_jitter(position=position_jitter(0.2), cex=1.5)+
+                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                												geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
+                                                												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
+                                                												theme_classic()+
+                                                												scale_y_continuous(limits =limits) +
+                                                												theme(legend.position="none", axis.title.x = element_text(size=15), axis.text.x = element_text(angle = 45, hjust = 0.95, size=13), axis.title.y = element_text(size=15) ,  axis.text.y = element_text(size=13))+
+                                                												scale_color_manual(values=colvec)
+                                                								        #coord_flip()
+                                                                  if(box==TRUE){
+                                                                        p <- p+geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
+
+                                                							    }
+                                                                  if(type=="violin"){
+                                                                  p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
+                                                								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
+                                                								        geom_violin (width=0.9, trim=TRUE, scale="width", color="black")+
+                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                                        geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
+                                                												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
+                                                												theme_classic()+
+                                                												scale_y_continuous(limits =limits) +
+                                                												theme(legend.position="none", axis.title.x = element_text(size=15), axis.text.x = element_text(angle = 45, hjust = 0.95, size=13), axis.title.y = element_text(size=15) ,  axis.text.y = element_text(size=13))+
+                                                												scale_fill_manual(values=colvec)
+                                                								        #coord_flip() 
+                                                                  if(box==TRUE){
+                                                                        p <- p+geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
+                                                							    
+                                                                      }
+                                                                return(p)
+                                        					            })
+                                            return(plot_lst)
+                                         }

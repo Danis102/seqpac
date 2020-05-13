@@ -60,6 +60,6 @@ PAC_master$Anno <- cbind(PAC_master$Anno, New_anno)
 
 Other PAC reannotation: \code{\link{check_reanno}},
   \code{\link{import_reanno}}, \code{\link{make_reanno}},
-  \code{\link{simplify_reanno}}
+  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

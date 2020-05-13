@@ -31,6 +31,8 @@ object.
 }
 \examples{
 reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, threads=8)
+reanno <- import_reanno(bowtie_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno", threads=8)
+
 bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
 }
 \seealso{
@@ -45,6 +47,6 @@ bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_t
 
 Other PAC reannotation: \code{\link{add_reanno}},
   \code{\link{import_reanno}}, \code{\link{make_reanno}},
-  \code{\link{simplify_reanno}}
+  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

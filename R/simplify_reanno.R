@@ -45,17 +45,24 @@
 #'  
 #' @examples
 #'
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/R_analysis_full/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
-#' PAC_all <- PAC_rpm(PAC_all)
-#' pheno_target = list("Method", c("IOR1_proto", "IOR1_tgirt"))
-#' PAC_IOR1 <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 50, type = "rpm", stat = TRUE, pheno_target = pheno_target, anno_target = NULL)
-#'
-#' unique(do.call("c", strsplit(as.character(PAC_IOR1$Anno$mis0), ";|\\|")))
-#'
 
-#'                  
-#' PAC_output <- simplify_reanno(PAC_IOR1, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_simpl", PAC_merge=TRUE)
+#-------------------------------------------------------------------------------------------------#
+# Simplify and make hierarchy of reannotation 
+#-------------------------------------------------------------------------------------------------#
+#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#'
+#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+#'                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
+#'                 Mt_tRNA= "tRNA_mt-tRNA",
+#'                tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
+#'                miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+#'                piRNA="piRNA")
+#'
+#'PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
+#'PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", PAC_merge=TRUE)
+#'
+#'PAC_check(PAC_filt)
+#'
 #' 
 #' @export
 

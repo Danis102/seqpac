@@ -36,7 +36,7 @@
 #'   in which the first column has been named 'Sample_ID' containing the exact
 #'   sample names matching basenames of the fastq sample files.
 #'
-#' @param countTable Data.frame object with the same column names as in
+#' @param counts Data.frame object with the same column names as in
 #'   Sample_ID column of the .csv file.
 #'
 #' @param progress_report Data.frame object with progress report.
@@ -63,7 +63,7 @@
 #' ### Simple manual
 #'
 #' @export
-make_pheno<- function(pheno_input, type="manual", countTable=NULL, progress_report=NULL){
+make_pheno<- function(pheno_input, type="manual", counts=NULL, progress_report=NULL){
                             
                             ### Read using basespace download files
                             if(type=="basespace"){
@@ -110,21 +110,22 @@ make_pheno<- function(pheno_input, type="manual", countTable=NULL, progress_repo
                                   }
                                 }
 
-                                ## Order as countTable
-                                if(!is.null(countTable)){
+                                ## Order as counts
+                                if(!is.null(counts)){
+                                    if(any(!is.na(suppressWarnings(as.numeric(rownames(pheno)))))){stop("Row names are missing or corrupt in pheno_input.")}   
                                     pheno_lst <- lapply(as.list(rownames(pheno)), function(x){
-                                                                                    colnams <- colnames(countTable)[grepl(x, colnames(countTable))]
+                                                                                    colnams <- colnames(counts)[grepl(x, colnames(counts))]
                                                                                     lst <- as.list(colnams)
                                                                                     names(lst) <- colnams
                                                                                     p_line <- pheno[x == rownames(pheno),]
                                                                                     pheno_rep <- do.call("rbind", lapply(lst, function(y){ y <- p_line; return(y)}))
                                                                                     return(pheno_rep)})
                                     pheno <- do.call("rbind", pheno_lst)
-                                    pheno <- pheno[match(colnames(countTable), rownames(pheno)),]
-                                    stopifnot(identical(rownames(pheno), colnames(countTable)))
-                                    cat("Of", length(colnames(countTable)), "sample names in countTable,", sum(as.numeric(rownames(pheno) %in% colnames(countTable))), "were found in pheno file path.\n")
+                                    pheno <- pheno[match(colnames(counts), rownames(pheno)),]
+                                    stopifnot(identical(rownames(pheno), colnames(counts)))
+                                    cat("Of", length(colnames(counts)), "sample names in counts,", sum(as.numeric(rownames(pheno) %in% colnames(counts))), "were found in pheno file path.\n")
                                     cat("\n")
-                                    print(data.frame(pheno=rownames(pheno), countTable=colnames(countTable)))
+                                    print(data.frame(pheno=rownames(pheno), counts=colnames(counts)))
                                 }else{warning("\nNo counTable was specified; Final Pheno will be unordered!\n")}
 
                                 if(!is.null(progress_report)){

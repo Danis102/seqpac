@@ -39,8 +39,15 @@ list-folder according to a grouping variable in Pheno.
 load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 
 
+PAC_check(PAC_filt) # TRUE
 
-PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+PAC_filt <- PAC_rpm(PAC_filt)
+
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method", NULL))
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method", NULL))
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand", pheno_target=list("Method"))
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand")
+
 
 PAC_test <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "means", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))

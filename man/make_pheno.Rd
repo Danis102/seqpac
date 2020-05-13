@@ -4,7 +4,7 @@
 \alias{make_pheno}
 \title{Make Phenotype File}
 \usage{
-make_pheno(pheno_input, type = "manual", countTable = NULL,
+make_pheno(pheno_input, type = "manual", counts = NULL,
   progress_report = NULL)
 }
 \arguments{
@@ -19,7 +19,7 @@ type="manual", the function will attempt to read a file named 'pheno.csv',
 in which the first column has been named 'Sample_ID' containing the exact
 sample names matching basenames of the fastq sample files.}
 
-\item{countTable}{Data.frame object with the same column names as in
+\item{counts}{Data.frame object with the same column names as in
 Sample_ID column of the .csv file.}
 
 \item{progress_report}{Data.frame object with progress report.}
@@ -74,7 +74,6 @@ pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type=
 
 Other PAC generation: \code{\link{import_sports}},
   \code{\link{make_PAC}}, \code{\link{make_anno}},
-  \code{\link{make_counts2}}, \code{\link{make_counts}},
-  \code{\link{progress_report}}
+  \code{\link{make_counts}}, \code{\link{progress_report}}
 }
 \concept{PAC generation}

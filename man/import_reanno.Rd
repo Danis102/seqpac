@@ -61,7 +61,7 @@ object.
 }
 
 \examples{
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Mar_Diet_4_6_2019/Processed_Pipeline31_10-03-20/R_files"
+bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
 bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
 reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 reanno2 <- import_reanno(bowtie_path, report="full",  threads=10)
@@ -82,6 +82,6 @@ lapply(reanno5, names)
 
 Other PAC reannotation: \code{\link{add_reanno}},
   \code{\link{check_reanno}}, \code{\link{make_reanno}},
-  \code{\link{simplify_reanno}}
+  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
 }
 \concept{PAC reannotation}

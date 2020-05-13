@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_saturation.R
 \name{PAC_saturation}
 \alias{PAC_saturation}
-\title{Filter a PAC object on sequence size and covarage}
+\title{Filter a PAC object on sequence size and coverage}
 \usage{
 PAC_saturation(PAC, resample = 10, steps = 10, thresh = c(1, 500),
   cumulative = FALSE, start_perc = 1, threads = 8)

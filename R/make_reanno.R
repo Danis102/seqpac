@@ -31,12 +31,14 @@
 #'   so that no sequences are missing before and after reannotation.
 #'
 #' @examples
-#' reanno_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_26-02-20/R_files/"
+#' reanno_path  <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
 #' 
-#' load(paste0(reanno_path, "PAC_master.Rdata"))
-#' Full_anno <- make_reanno(reanno_path, PAC=PAC_master, mis_fasta_check=TRUE, threads=10)    # Complete use
+#' load(file="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_hifilt.Rdata")
+#' 
+#' Full_anno <- make_reanno(reanno_path, PAC=PAC_hifilt, mis_fasta_check=TRUE, threads=10)    # Complete use
 #' identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview)) 
-#'
+#' 
+
 #'
 #' @export
 
@@ -47,21 +49,58 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
                   for(i in 1:length(files)){load(files[i])
                                             reanno_lst[[i]] <- reanno
                                             names(reanno_lst)[i] <- paste0("mis", seqs[i])
-                                            }
-              cat("\nReorganizing and matching reannotation files with PAC ...\n")
+                        }
+                  
+                  
+                  cat("\nReorganizing and matching reannotation files with PAC ...\n")
                   PAC_seq <- rownames(PAC$Anno)
                   reanno_lst_match <- lapply(reanno_lst, function(x){
-                                        match_lst  <- parallel::mclapply(x,  mc.cores=threads, function(y){
+                                        # match_lst  <- parallel::mclapply(x,  mc.cores=threads, function(y){
+                                        #                       y$seq <- as.character(y$seq)
+                                        #                       y$ref_hits <- as.character(y$ref_hits)
+                                        #                       anno_match <- y[match(PAC_seq, y$seq), ]
+                                        #                       anno_match$seq[is.na(anno_match$seq)] <- PAC_seq[is.na(anno_match$seq)]
+                                        #                       #anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
+                                        #                       stopifnot(identical(PAC_seq, anno_match$seq))
+                                        #                       return(anno_match)
+                                        #                       })
+                                        match_lst  <- lapply(x,  function(y){
                                                               y$seq <- as.character(y$seq)
                                                               y$ref_hits <- as.character(y$ref_hits)
                                                               anno_match <- y[match(PAC_seq, y$seq), ]
                                                               anno_match$seq[is.na(anno_match$seq)] <- PAC_seq[is.na(anno_match$seq)]
-                                                              anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
+                                                              #anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
                                                               stopifnot(identical(PAC_seq, anno_match$seq))
                                                               return(anno_match)
                                                               })
                                         return(match_lst)
                                         })
+                  
+                  ## Check and fix missing references
+                  NA_check <- unlist(lapply(reanno_lst, function(x){identical(names(reanno_lst[[1]]),  names(x))}))
+                  if(any(!NA_check)){
+                          NA_which <- lapply(reanno_lst, function(x){which(!names(reanno_lst[[1]]) %in% names(x))})
+                          warning(paste( "Missing references in Reanno file(s):\n", 
+                                         paste(basename(files)[!NA_check], collapse="\n "), 
+                                         "\nMissing ref(s): ",  
+                                         paste(names(reanno_lst[[1]])[unlist(NA_which)], collapse=" "), 
+                                        "\nProbable reason: No sequences mapped to reference(s)."))
+                           
+                          for(j in 1:length(NA_which)){
+                                          if(length(NA_which[[j]]) >0){
+                                                empt <- reanno_lst_match[[1]][[1]]
+                                                empt[,2:4] <- NA
+                                                stopifnot(!any(!is.na(empt[,2:4])))
+                                                for(g in 1:length(NA_which[[j]])){
+                                                           ps <- length(reanno_lst_match[[j]]) + g
+                                                           reanno_lst_match[[j]][[ps]] <- empt
+                                                           names(reanno_lst_match[[j]])[ps] <- names(reanno_lst_match[[1]])[NA_which[[j]]]
+                                                            }
+                                                reanno_lst_match[[j]] <- reanno_lst_match[[j]][match(names(reanno_lst_match[[1]]), names(reanno_lst_match[[j]]))]
+                                          }
+                          }
+                  }
+
               cat("\nGenerating the overview file ...\n")
                   stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){identical(names(reanno_lst_match[[1]]), names(t))}))))
                   stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){  do.call("c", lapply(t, function(g){identical(reanno_lst_match[[1]][[1]]$seq, g$seq)}))}))))

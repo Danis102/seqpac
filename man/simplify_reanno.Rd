@@ -2,20 +2,20 @@
 % Please edit documentation in R/simplify_reanno.R
 \name{simplify_reanno}
 \alias{simplify_reanno}
-\title{Generates one-hit hierachial biotype annotation}
+\title{Generates one-hit hierarchial biotype annotation}
 \usage{
-simplify_reanno(input, hierachy, mismatches = 2, bio_name = "Biotypes",
-  PAC_merge = FALSE)
+simplify_reanno(input, hierarchy, mismatches = 2,
+  bio_name = "Biotypes", PAC_merge = FALSE)
 }
 \arguments{
-\item{hierachy}{List with character vectors as biotype search vectors that
+\item{hierarchy}{List with character vectors as biotype search vectors that
 will be parsed to grepl() and searched for in the mismatch/biotype
-reannotation matrix. Important \emph{hierachy} is order sensitive. For
-example if \emph{hierachy} is defined as list(rRNA="rRNA", miRNA="miRNA",
+reannotation matrix. Important \emph{hierarchy} is order sensitive. For
+example if \emph{hierarchy} is defined as list(rRNA="rRNA", miRNA="miRNA",
 piRNA="piRNA") a sequence annotated with 0 mismatches to all three biotypes
 will only reported once as rRNA (one-hit) since this biotype was put first
 in the list Sequences annotated to neither of the biotypes listed in
-\emph{hierachy} but still is annotated to something will be asigned as
+\emph{hierarchy} but still is annotated to something will be asigned as
 "other". Sequences without an annotation at the allowed mismatch level will
 be asigned as "no_anno".}
 
@@ -25,7 +25,7 @@ used in the reannotation workflow (default=0).}
 
 \item{bio_name}{Character naming the final biotype column (default="Biotype")}
 
-\item{PAC_merge}{Logical whether simplyfied annotation vector should
+\item{PAC_merge}{Logical whether simplified annotation vector should
 automatically be added to Anno object if a PAC list object were given as
 input (default=FALSE)}
 
@@ -45,7 +45,7 @@ multimapping. Given a mismatch/biotype reannotation matrix (colnames: mis0,
 mis1, mis2 etc) created by \emph{add_reanno} and usually added to the Anno
 dataframe of a PAC object (colnames: mis0, mis1, mis2 etc) , the function will
 generated a one-hit biotype vector according to a user-defined biotype
-hierachy.
+hierarchy.
 }
 \examples{
 
@@ -58,7 +58,7 @@ PAC_IOR1 <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 50,
 unique(do.call("c", strsplit(as.character(PAC_IOR1$Anno$mis0), ";|\\\\|")))
 
                  
-PAC_output <- simplify_reanno(PAC_IOR1, hierachy=hierachy, mismatches=0, bio_name="Biotypes_simpl", PAC_merge=TRUE)
+PAC_output <- simplify_reanno(PAC_IOR1, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_simpl", PAC_merge=TRUE)
 
 }
 \seealso{
@@ -69,6 +69,6 @@ PAC_output <- simplify_reanno(PAC_IOR1, hierachy=hierachy, mismatches=0, bio_nam
 
 Other PAC reannotation: \code{\link{add_reanno}},
   \code{\link{check_reanno}}, \code{\link{import_reanno}},
-  \code{\link{make_reanno}}
+  \code{\link{make_reanno}}, \code{\link{map_reanno}}
 }
 \concept{PAC reannotation}

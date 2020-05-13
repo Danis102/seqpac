@@ -52,6 +52,8 @@ pheno_input=pheno
 anno_input=anno
 counts_input=counts[[1]]
 
+
+
 }
 \seealso{
 \url{https://github.com/junchaoshi/sports1.0} for download and
@@ -59,8 +61,7 @@ counts_input=counts[[1]]
   updates on the current package.
 
 Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_anno}}, \code{\link{make_counts2}},
-  \code{\link{make_counts}}, \code{\link{make_pheno}},
-  \code{\link{progress_report}}
+  \code{\link{make_anno}}, \code{\link{make_counts}},
+  \code{\link{make_pheno}}, \code{\link{progress_report}}
 }
 \concept{PAC generation}

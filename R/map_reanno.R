@@ -15,10 +15,12 @@
 #'   Bowtie \url{https://github.com/Danis102} for updates on the current
 #'   package.
 #'
-#' @param reanno_path Path to a directory where reannotation .Rdata files can be
-#'   found.
+
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names.
+
+#' @param type Character indicating if mapping should be performed by bowtie or 
+#'   
 #' @param mis_fasta_check Logical TRUE/FALSE if checking against anno_misX.fa
 #'   should be done availble in the same folder as the reannoration files.
 #'
@@ -33,95 +35,96 @@
 #' @examples
 #' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 #' 
+#' #' #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' 
+#' 
 #' ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
 #'                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
 #'                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
 #'                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa",
 #'                   piRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa")
 #' 
-#' 
-#' 
-#' #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' 
 #'
 #' PAC = PAC_filt
-#' output_path= "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis"
+#' output_path= "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno/"
 #' mismatches=3
 #' threads=10
 #' par_type="PSOCK"
-#'
-#' # @export
+#' parse_bowtie <- "bowtie -a --norc -f"   
+#' 
+#' reanno <- map_reanno(PAC_filt, output_path= output_path, ref_paths=ref_paths,  mismatches=3, threads=10)
+#' 
+#' @export
 
-# map_reanno <- function(PAC, type="seqpac", output_path, ref_paths, mismatches=3, mis_fasta_check=FALSE, threads=1, par_type="PSOCK"){
-#             stopifnot(PAC_check(PAC))
-# 
-#             if(type=="seqpac"){
-#                   cl <- parallel::makeCluster(threads, type = par_type)
-#                   doParallel::registerDoParallel(cl)
-#                   miss_lst <- as.list(0:mismatches)
-#                   names(miss_lst) <- paste0("mis", 0:mismatches)
-#                   for (j in 1:length(ref_paths)){
-#                             lapply(miss_lst, function(x){
-#                                               map_ref <- PAC_mapper(PAC, ref=ref_paths[[j]], mismatches = x, threads = threads, par_type=par_type)
-#                                               fl_nam <- paste0(names(ref_paths)[j], "_mis", x, ")
-#                                               save(
-#                                                 
-# 
-# 
-#             if(type=="bowtie"){
-#                   system("bowtie --version", intern=TRUE)
-#                   
-#                   
-# 
-#                   reanno_lst <- list(NA)
-#                   for(i in 1:length(files)){load(files[i])
-#                                             reanno_lst[[i]] <- reanno
-#                                             names(reanno_lst)[i] <- paste0("mis", seqs[i])
-#                                             }
-#               cat("\nReorganizing and matching reannotation files with PAC ...\n")
-#                   PAC_seq <- rownames(PAC$Anno)
-#                   reanno_lst_match <- lapply(reanno_lst, function(x){
-#                                         match_lst  <- parallel::mclapply(x,  mc.cores=threads, function(y){
-#                                                               y$seq <- as.character(y$seq)
-#                                                               y$ref_hits <- as.character(y$ref_hits)
-#                                                               anno_match <- y[match(PAC_seq, y$seq), ]
-#                                                               anno_match$seq[is.na(anno_match$seq)] <- PAC_seq[is.na(anno_match$seq)]
-#                                                               anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
-#                                                               stopifnot(identical(PAC_seq, anno_match$seq))
-#                                                               return(anno_match)
-#                                                               })
-#                                         return(match_lst)
-#                                         })
-#               cat("\nGenerating the overview file ...\n")
-#                   stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){identical(names(reanno_lst_match[[1]]), names(t))}))))
-#                   stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){  do.call("c", lapply(t, function(g){identical(reanno_lst_match[[1]][[1]]$seq, g$seq)}))}))))
-#                   bio_cat <- length(reanno_lst_match[[1]])
-#                   df_fin <- data.frame(matrix(NA, ncol=bio_cat, nrow=length(PAC_seq)), row.names=PAC_seq)
-#                   for (bio in 1:bio_cat){
-#                                 df <- do.call("cbind", lapply(reanno_lst_match, function(x){return(x[[bio]]$mis_n)}))
-#                                 vect <- apply(df, 1, function(x){ return(gsub("NA", "", paste(x, collapse="")))})
-#                                 df_fin[, bio] <- vect
-#                                 }
-#                   colnames(df_fin) <- names(reanno_lst_match[[1]])
-#                   df_fin[df_fin == ""] <- "_"
-#                   vect_mis <- do.call("paste", as.list(df_fin))
-#                   df_fin$Any_hit <- ifelse(vect_mis == paste0(rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit")
-#                   df_fin$Mis0_hit <- ifelse(grepl("mis0", vect_mis) , "Hit", "No_hit")
-#               if(mis_fasta_check==TRUE){
-#                   cat("\nChecking the anno_mis_fasta file was specified by user.\n")
-#                   cat("Will try to read this file from same directory as the reannotion files.\n")
-#                   anno_mis_fls <- list.files(reanno_path, pattern = "anno_mis\\d.fa")
-#                   ns <- max(as.integer(gsub("anno_mis|.fa", "", anno_mis_fls)))
-#                   file_nam <- paste0("anno_mis", ns, ".fa")
-#                   noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", file_nam))
-#                   logi_no_anno <- df_fin$Any_hit=="No_anno"
-#                   logi_olap <-  rownames(df_fin)[df_fin$Any_hit=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
-#                   cat("Of the ", length(logi_no_anno[logi_no_anno==TRUE]), "missing sequences in the reannotation files\n")
-#                   cat(paste0(length(logi_olap[logi_olap==TRUE]), " (", round(length(logi_olap[logi_olap==TRUE])  / length(logi_no_anno[logi_no_anno==TRUE])*100, digits=2), "%) were found in ", file_nam, ".\n"))
-#                         if(!length(logi_no_anno[logi_no_anno==TRUE])-length(logi_no_anno[logi_no_anno==TRUE])==0){warning(paste0("Not all missing annotations were found in ", file_nam, ". This indicates that something has went wrong in the reannotation workflow.\n"))
-#                         }else{cat("Good! This is how it should be...\n")}
-#                   }
-#               return(list(Overview=df_fin, Full_anno=reanno_lst_match))
-#               cat("Done!\n")
-#               }
+map_reanno <- function(PAC, type="bowtie", output_path, ref_paths, mismatches=3, mis_fasta_check=FALSE, threads=1, par_type="PSOCK", parse_bowtie = "bowtie -a --norc -f"){
+            
+            ## setup
+            stopifnot(PAC_check(PAC))
+            mis_lst <- as.list(0:mismatches)
+            names(mis_lst) <- paste0("mis", 0:mismatches)
+            ref_paths <- lapply(ref_paths, function(x){gsub("\\>.fa", "", x)})
+            seq_fst <- Biostrings::DNAStringSet(rownames(PAC$Anno))
+            names(seq_fst) <- paste(seq_fst)
+            
+            ## make check reanno function
+            check_reanno_wrap <- function(R_file_path, suffix){
+                                    if(suffix=="mis0"){anno_path <- list.files(output_path, pattern = "anno_mis0.fa", full.names=TRUE)}
+                                    if(suffix=="mis1"){anno_path <- list.files(output_path, pattern = "anno_mis1.fa", full.names=TRUE)}
+                                    if(suffix=="mis2"){anno_path <- list.files(output_path, pattern = "anno_mis2.fa", full.names=TRUE)}
+                                    if(suffix=="mis3"){anno_path <- list.files(output_path, pattern = "anno_mis3.fa", full.names=TRUE)}
+                                    anno <- Biostrings::readDNAStringSet(anno_path)
+                                    logi <- check_reanno(anno, reanno, threads)
+                                    return(anno[!logi])
+                                    }
+            
+            ## in R
+            if(type=="seqpac"){
+                  cat("R internal mapping using seqpac are not yet available, but will be in the future.\nPlease try PAC_mapper for smaller tasks.")
+                  # cl <- parallel::makeCluster(threads, type = par_type)
+                  # doParallel::registerDoParallel(cl)
+                  # for (j in 1:length(ref_paths)){
+                  #           
+                  #           lapply(miss_lst, function(x){
+              }           
+            ## using bowtie
+            if(type=="bowtie"){
+              
+                  ## Check bowtie and setup path
+                  system("bowtie --version", intern=TRUE)
+                  if(!dir.exists(output_path)){suppressWarnings(dir.create(output_path))} 
+                  Biostrings::writeXStringSet(seq_fst, filepath=paste0(output_path, "/anno_mis0.fa"), format="fasta")
+                  
+                  ## Run bowtie and reanno workflow
+                  for(x in 1:length(mis_lst)){
+                            cat("Bowtie mapping please wait\n")  
+                            for (j in 1:length(ref_paths)){
+                                        cat(paste0(names(ref_paths)[j], "... "))
+                                        write(paste0("##--- ", names(ref_paths)[j], " --- ", mis_lst[[x]], " mismatches ------------------##"), file=paste0(output_path, "/bowtie_log.txt"), append=TRUE)
+                                        system(paste0(parse_bowtie, " -v ", mis_lst[[x]], " -p ", threads, " ", ref_paths[[j]], " ", output_path, "/anno_mis", mis_lst[[x]], ".fa ", output_path, "/", names(ref_paths)[j], ".txt 2>> ", paste0(output_path, "/bowtie_log.txt")), intern=TRUE, ignore.stderr=FALSE)
+                                        write("\n", file=paste0(output_path, "/bowtie_log.txt"), append=TRUE)
+                            }
+                            cat("\n")
+                            reanno <- import_reanno(bowtie_path=output_path, threads=threads, report="full", reduce="piRNA")
+                            suffix <- paste0("mis", mis_lst[[x]])
+                            output <- check_reanno_wrap(output_path, suffix)
+                            
+                            # Write new anno.fa
+                            if(suffix=="mis0"){Biostrings::writeXStringSet(output, filepath=paste0(output_path, "/anno_mis1.fa"), format="fasta")}
+                            if(suffix=="mis1"){Biostrings::writeXStringSet(output, filepath=paste0(output_path, "/anno_mis2.fa"), format="fasta")}
+                            if(suffix=="mis2"){Biostrings::writeXStringSet(output, filepath=paste0(output_path, "/anno_mis3.fa"), format="fasta")}
+                            if(suffix=="mis3"){Biostrings::writeXStringSet(output, filepath=paste0(output_path, "/anno_mis4.fa"), format="fasta")}
+
+                            # Save full anno
+                            if(suffix=="mis0"){save(reanno, file= paste0(output_path, "/Full_reanno_mis0.Rdata"))}
+                            if(suffix=="mis1"){save(reanno, file= paste0(output_path, "/Full_reanno_mis1.Rdata"))}
+                            if(suffix=="mis2"){save(reanno, file= paste0(output_path, "/Full_reanno_mis2.Rdata"))}
+                            if(suffix=="mis3"){save(reanno, file= paste0(output_path, "/Full_reanno_mis3.Rdata"))}
+                            
+                            cat(paste0("\n####################################################\n"))  
+                            cat(paste0("########|--- Mismatch ", mis_lst[[x]], " finished -----|#############\n")) 
+                            cat(paste0("####################################################\n"))  
+                  }
+                }
+              }
+
 
