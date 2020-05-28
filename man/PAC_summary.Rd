@@ -4,7 +4,8 @@
 \alias{PAC_summary}
 \title{Summarizes PAC objects}
 \usage{
-PAC_summary(PAC, norm = "raw", type = "means", pheno_target = NULL)
+PAC_summary(PAC, norm = "raw", type = "means", pheno_target = NULL,
+  rev = FALSE)
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno dataframe with samples as row names,
@@ -22,6 +23,9 @@ data.}
 \item{pheno_target}{List with: 1st object being a character vector
 of target column in Pheno 2nd object being a character vector of the target
 group(s) in the target Pheno column (1st object).}
+
+\item{rev}{Logical whether pairwise comparisions should be reversed
+(default=FALSE).}
 }
 \value{
 A PAC object with a pheno_summary folder containing the summarized
@@ -47,7 +51,7 @@ PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=lis
 PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method", NULL))
 PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand", pheno_target=list("Method"))
 PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand")
-
+PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "percentgrand")
 
 PAC_test <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
 PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "means", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
@@ -65,11 +69,11 @@ package.
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_trna}}
+  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
+  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
+  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
+  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
+  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
+  \code{\link{PAC_stackbar}}, \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}

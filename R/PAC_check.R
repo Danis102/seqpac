@@ -65,6 +65,16 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
                     seqs <-  "Please make sure that all sequences are represented, named and ordered the correct way in both tables."
                     if(!identical(rownames(PAC$Pheno), colnames(PAC$Counts))){stop(paste0("\n  Sample names in Pheno (row names) and Counts (column names) are not identical.\n  ", sampl))}
                     if(!identical(rownames(PAC$Anno), rownames(PAC$Counts))){stop(paste0("\n  Sequence names in Anno (row names) and Counts (row names) are not identical.\n  ", seqs))}
+                    if(length(PAC$norm) > 0){ 
+                                            norm_logi_row  <- any(!unlist(lapply(lapply(PAC$norm, rownames), function(x){identical(rownames(PAC$Counts), x)})))
+                                            norm_logi_col  <- any(!unlist(lapply(lapply(PAC$norm, colnames), function(x){identical(colnames(PAC$Counts), x)})))
+                                            if(norm_logi_row){stop("Row names in normalized tables of PAC$norm are not identical with row names in Counts.")}
+                                            if(norm_logi_col){stop("Column names in normalized tables of PAC$norm are not identical with column names in Counts.")}
+                                            }
+                    if(length(PAC$summary) > 0){ 
+                                            sum_logi_row  <- any(!unlist(lapply(lapply(PAC$summary, rownames), function(x){identical(rownames(PAC$Counts), x)})))
+                                            if(norm_logi_row){stop("Row names in summary tables of PAC$summary are not identical with row names in Counts.")}
+                                            } 
                     res <- NULL
                     ### sample_check #############################################################          
                     if(!is.null(sample_check)){

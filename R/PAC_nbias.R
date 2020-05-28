@@ -25,6 +25,14 @@
 #'                          1st object being character vector of target column(s) in Pheno, 
 #'                          2nd object being a character vector of the target group(s) in the target column (1st object).
 #'                          (default=NULL)
+#'                          
+#' @param summary_target List with: 
+#'                          1st object being character vector of target object in PAC$summary, 
+#'                          2nd object being a character vector of the target column(s) in the target summary object (1st object).
+#'                          (default=NULL)
+#'
+#' @param colors Character vector with color codes to be parsed to ggplot2.
+#'
 #'
 #' @return A list of objects: 
 #'               1st object (Histograms::Samples): Individual histograms showing the nucleotide ratios per sample over the specified range.   
@@ -35,69 +43,87 @@
 #' @examples
 #' 
 #' library(seqpac)
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
-#'
-#' ### First apply shallow counts filter, and then generate rpm on which rpm filter is applied.  
-#' PAC_filt <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' 
 #' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
 #'
-#' hierachy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
 #'                  rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
 #'                  Mt_tRNA= "tRNA_mt-tRNA",
 #'                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
 #'                  miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
 #'                  piRNA="piRNA")
 #'
-#' PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes_1", PAC_merge = TRUE)
+#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge = TRUE)
 #'
-#' PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
+#' ### Plot using raw counts and order samples using pheno_target:
+#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", c("TGIRT", "Proto")))
+#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", "Proto"))    
+#' cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
 #' 
-#' ## Plot only histograms
-#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, pheno_target=list("Groups", NULL))   
-#' filt1 <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_Reg__","Jan_Proto_Long_Tag","Jan_Proto_Short_Tag") 
-#' cowplot::plot_grid(plotlist=nbias_result[[1]][filt1], nrow = 3, ncol = 3)
-#' 
-#' ## Generate graphs for a specific biotype 
-#' nbias_result2 <- PAC_nbias(PAC=PAC_filt, position=1, anno_target=list("Biotypes_1", "piRNA"), pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))   
 
-#' cowplot::plot_grid(plotlist=nbias_result2[[1]][1:9], nrow = 3, ncol = 3)
-#' cowplot::plot_grid(plotlist=nbias_result2[[1]][10:18], nrow = 3, ncol = 3)
-#' cowplot::plot_grid(plotlist=nbias_result2[[1]][19:27], nrow = 3, ncol = 3)
-#' cowplot::plot_grid(plotlist=nbias_result2[[1]][28:36], nrow = 3, ncol = 3)
-#' cowplot::plot_grid(plotlist=nbias_result2[[1]][37:45], nrow = 3, ncol = 3)
+
+
+#' ### Plot using rpm counts and order samples using pheno_target:
+#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="rpm") 
 #' 
-#' ## Get group based plots
-#' nbias_result2 <- PAC_nbias(PAC=PAC_filt, position=1, pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))   
-#' 
+#' ### Plot using summarized data in summary_target: 
+#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, summary_target=list("rpmMeans_Method")) 
 #' 
 #' 
+#' cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
 #' 
-#' names(nbias_result[[3]])
 #' 
 #' @export
 
-PAC_nbias <- function(PAC, position=1, range=NULL, anno_target=NULL, pheno_target=NULL){
-										cat(paste0("Started: ", Sys.time(),"\n"))
-										PAC -> PAC_work
-										if(is.null(range)){range <- c(min(PAC_work$Anno$Length), max(PAC_work$Anno$Length))}
-										cat(paste0("Filtering out position ", position , " in fragments ranging between ", range[1], "-", range[2], "bp.\n")) 
-										filt <- PAC_work$Anno$Length >= range[1] & PAC_work$Anno$Length <= range[2] 
-							      if(!is.null(anno_target)){
-										              bio_anno <- as.character(PAC_work$Anno[, anno_target[[1]]])
-										              filt_bio <- bio_anno %in% anno_target[[2]]
-										              filt <- filt_bio + filt == 2
-										              }
-                    PAC_work$Anno <- PAC_work$Anno[filt,]
-										PAC_work$Counts <- PAC_work$Counts[filt,]
+PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, pheno_target=NULL, summary_target=NULL, colors=NULL){
+										## Organize input
+                    anno <- PAC$Anno
+										if(!is.null(norm)){
+										    if(norm=="raw"){data <- PAC$Counts; labl <- "rawCounts"
+										    }else{
+										      if(is.null(summary_target)){ data <- PAC$norm[[norm]]; labl <- norm}}
+										}else{data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0(summary_target[[1]])}
+                    
+                    if(length(summary_target)==1){summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
+                    if(!is.null(summary_target)){data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
+
+										## Add range filter
+										if(is.null(range)){range <- c(min(anno$Length), max(anno$Length))}
+										filt <- anno$Length >= range[1] & anno$Length <= range[2] 
+							      anno <- anno[filt,]
+										data <- data[filt,]
+										
+										## Reomve unwanted biotypes
+										if(!is.null(anno_target)){ 
+										if(length(anno_target)==1){ anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))}
+										filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
+							      anno <- anno[filt2,]
+										data <- data[filt2,]}
+										
+										## Remove unwanted samples
+										if(!is.null(pheno_target)){ 
+										if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
+										filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
+										data <- data[,filt3,drop=FALSE]
+										ph <- PAC$Pheno[filt3,,drop=FALSE]
+										match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
+										data <- data[,match_pfilt,drop=FALSE]
+										ph <- ph[match_pfilt,,drop=FALSE]
+										}else{ 
+										if(!is.null(summary_target)){ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
+										  
+
+										stopifnot(identical(colnames(data), rownames(ph)))
+										stopifnot(identical(rownames(data), rownames(anno)))          
 										
 										#### Counting nucs
-										PAC_work$Anno$nuc_bias <- substr(rownames(PAC_work$Anno), start=position, stop=position)
+										anno$nuc_bias <- substr(rownames(anno), start=position, stop=position)
                     cat(paste0("Counting nucleotides"))
                     combin <- c(paste0(range[1]:range[2], "_A"), paste0(range[1]:range[2], "_T"), paste0(range[1]:range[2], "_C"), paste0(range[1]:range[2], "_G"), paste0(range[1]:range[2], "_N"))
-										nuc_lst <- lapply(as.list(PAC_work$Counts), function(x){
-										                          nuc_agg <- aggregate(x, list(factor(paste(PAC_work$Anno$Length, PAC_work$Anno$nuc_bias, sep="_"))), sum)
+										nuc_lst <- lapply(as.list(data), function(x){
+										                          nuc_agg <- aggregate(x, list(factor(paste(anno$Length, anno$nuc_bias, sep="_"))), sum)
 										                          colnames(nuc_agg) <- c("position_nuc", "counts")
 										                          nuc_agg <- rbind(nuc_agg, data.frame(position_nuc=combin[!combin %in% as.character(nuc_agg$position_nuc)], counts=0))
 										                          nuc_agg_ord <- nuc_agg[match(combin, nuc_agg$position_nuc),]
@@ -114,23 +140,26 @@ PAC_nbias <- function(PAC, position=1, range=NULL, anno_target=NULL, pheno_targe
                             require(ggthemes)
                             require(cowplot)
                             require(extrafont)
-                            ###############################################################################################################
-                            #### Set up colors colors ###
+                    #### Set up colors colors ###
+                            if(is.null(colors)){
                                       colfunc_sports <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
-                                      rgb_vec_sports <- colfunc_sports(5)
+                                      colors <- colfunc_sports(5)}
+                              
+                                      
 										require(ggplot2)   
 										histo_lst <- list(NA)
+										if(is.null(pheno_target)){samp <- rownames(ph)}else{samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph))}
 										for(i in 1:length(nuc_lst)){
-										                          nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, levels=c("A","T","C","G","N"))
-										                          if(is.null(pheno_target)){ph <- "NA"} else {ph <- PAC_work$Pheno[,pheno_target[[1]]]}
-										                          if(!is.null(pheno_target[[2]])){ph <- ph[ph %in% pheno_target[[2]]]}                        
+										                          nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, levels=c("N","C","G","A","T"))
+										                          uni_chr_len <- as.integer(unique(nuc_lst[[i]]$length))
+										                          nuc_lst[[i]]$length <- factor(nuc_lst[[i]]$length, levels=uni_chr_len[order(uni_chr_len)] )
  										                          histo_lst[[i]] <- ggplot(nuc_lst[[i]], aes(x=length, y=counts, fill=nucleotide))+
                                                               	    geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
                                                               	    geom_hline(yintercept=0, col="azure4")+
-                                                                  	xlab("Length (bp)")+
- 										                                                ylab("Nucleotide counts")+
-                                                                    labs(subtitle = ph[i])+
-                                                                  	scale_fill_manual(values=rgb_vec_sports)+
+                                                                  	xlab("Size (nt)")+
+ 										                                                ylab(paste(labl))+
+                                                                    labs(subtitle = samp[i])+
+                                                                  	scale_fill_manual(values=colors)+
                                                                   	#coord_cartesian(ylim=c(0,10000))+
                                                                   	#scale_y_continuous(breaks = seq(0, 10000, 2500))+
  										                                                #ggthemes::geom_rangeframe(aes(x=range))+   

@@ -24,6 +24,12 @@
 #'                          1st object being character vector of target column(s) in Pheno, 
 #'                          2nd object being a character vector of the target group(s) in the target column (1st object).
 #'                          (default=NULL)
+#'                          
+#' @param summary_target List with: 
+#'                          1st object being character target object in PAC$summary, 
+#'                          2nd object being a character vector of the target columns(s) in the target object (1st object).
+#'                          (default=NULL)
+#'                          
 #'
 #' @return A list of objects: 
 #'               1st object (Histograms::Samples): Individual histograms showing the nucleotide ratios per sample over the specified range.   
@@ -33,83 +39,87 @@
 #'
 #' @examples
 #' 
+#'
 #' library(seqpac)
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
-#'
-#' ### First apply shallow counts filter, and then generate rpm on which rpm filter is applied.  
-#' PAC_filt <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' 
 #' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+#' 
+#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+#'                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
+#'                 Mt_tRNA= "tRNA_mt-tRNA",
+#'                tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
+#'                miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+#'                piRNA="piRNA")
+#' hierarchy <- hierarchy[c(5,1,2,3,4,6)]          
+#' as.data.frame(names(hierarchy))              
 #'
-#' hierachy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-#'                  rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-#'                  Mt_tRNA= "tRNA_mt-tRNA",
-#'                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-#'                  miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                  piRNA="piRNA")
-#'                  
-#' hierachy <- list(miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                  Mt_rRNA= "12S|16S|Mt_rRNA",
-#'                  rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-#'                  Mt_tRNA= "tRNA_mt-tRNA",
-#'                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-#'                  piRNA="piRNA")
-#'                  
-#'
-#' PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes_1", PAC_merge = TRUE)
-#'
-#' PAC_filt$Pheno$Groups <- paste(PAC_filt$Pheno$Batch, PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
+#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
 #' 
+#' ord <- c("no_anno", "other", "miRNA", "tRNA", "Mt_tRNA", "rRNA", "Mt_rRNA",  "piRNA")
 #' 
-#' ## Plot only histograms
-#' sizedist_result <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_1", c("no_anno", "other", "miRNA", "tRNA", "Mt_tRNA", "rRNA", "Mt_rRNA",  "piRNA")), 
-#' pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))
+#' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("rpmMeans_Method"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 1)
 #' 
-#' sizedist_result <- PAC_sizedist(PAC=PAC_filt, anno_target=list("Biotypes_1"))
-#'       
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_POOH__","Sep_Proto_Long_POOH_tag","Sep_Proto_Short_POOH_tag") 
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_POOH__","Jan_Proto_Long_POOH_tag","Jan_Proto_Short_POOH_tag")
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_IOR__","Jan_Proto_IOR__","Sep_TGIRT_POOH__")
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_Long_IOR_notag","Jan_Proto_Long_IOR_notag","Sep_Proto_Short_IOR_notag") 
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_Short_IOR_notag","Jan_TGIRT_IOR__","Sep_TGIRT_IOR__") 
-#' filt <- PAC_filt$Pheno$Groups %in% c("Sep_Proto_Short_IOR_notag","Sep_TGIRT_POOH__","Jan_R2_R2R_TGIRT_R2_R2R__") 
-#' 
-#' cowplot::plot_grid(plotlist=sizedist_result[[1]][filt], nrow = 3, ncol = 3)
-#' 
-#' cowplot::plot_grid(plotlist=sizedist_result[[1]][37:45], nrow = 3, ncol = 3)
-#' 
+#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="raw", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
 #' 
 #' 
 #' @export
 
-PAC_sizedist <- function(PAC, range=NULL, anno_target, pheno_target=NULL, colvect=NULL){
+PAC_sizedist <- function(PAC, norm=NULL, range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
+                   
+                    ## Organize input
                     anno <- PAC$Anno
-										counts <- PAC$Counts 		  
+										if(!is.null(norm)){
+										    if(norm=="raw"){data <- PAC$Counts; labl <- "rawCounts"
+										    }else{
+										      if(is.null(summary_target)){ data <- PAC$norm[[norm]]; labl <- norm}}
+										}else{data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0("mean_", summary_target[[1]])}
                     
+                    if(length(summary_target)==1){summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
+                    if(!is.null(summary_target)){data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
+
 										## Add range filter
 										if(is.null(range)){range <- c(min(anno$Length), max(anno$Length))}
 										filt <- anno$Length >= range[1] & anno$Length <= range[2] 
 							      anno <- anno[filt,]
-										counts <- counts[filt,]
+										data <- data[filt,]
 										
 										## Reomve unwanted biotypes
 										if(length(anno_target)==1){ anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))}
 										filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
 							      anno <- anno[filt2,]
-										counts <- counts[filt2,]
+										data <- data[filt2,]
+										
+										## Remove unwanted samples
+										if(!is.null(pheno_target)){ 
+										if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
+										filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
+										data <- data[,filt3,drop=FALSE]
+										ph <- PAC$Pheno[filt3,,drop=FALSE]
+										match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
+										data <- data[,match_pfilt,drop=FALSE]
+										ph <- ph[match_pfilt,,drop=FALSE]
+										}else{ 
+										if(!is.null(summary_target)){ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
+										
+										stopifnot(identical(colnames(data), rownames(ph)))
+										stopifnot(identical(rownames(data), rownames(anno)))    
+										
 										
 										#### Summarize over size and biotype
 										
 										bio_fact <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
 										seq_range <- seq(range[1], range[2])
 										size_fact <- factor(anno$Length, levels=seq_range)
-                    size_lst <- lapply(as.list(counts), function(x){
+                    size_lst <- lapply(as.list(data), function(x){
                                               bio_agg <- aggregate(x, list(bio_fact, size_fact), sum)
-                                              colnames(bio_agg) <- c("biotype", "size", "counts")
+                                              colnames(bio_agg) <- c("biotype", "size", "data")
                                               bio_agg_lst <- lapply(split(bio_agg, bio_agg$biotype), function(y){
                                                                   if(any(!seq_range %in% y$size )){
-                                                                  y <- rbind(y, data.frame(biotype=as.character(unique(y$biotype)), size=seq_range[!seq_range %in% as.character(y$size)], counts=0))
+                                                                  y <- rbind(y, data.frame(biotype=as.character(unique(y$biotype)), size=seq_range[!seq_range %in% as.character(y$size)], data=0))
                                                                   }
                                                                   fin <- y[order(y$size),]  
                                                                   stopifnot(identical(as.character(fin$size), as.character(seq_range)))
@@ -127,7 +137,7 @@ PAC_sizedist <- function(PAC, range=NULL, anno_target, pheno_target=NULL, colvec
                     require(extrafont)
                     require(ggplot2)  
                     #### Set up colors colors ###
-                    if(is.null(colvect)){
+                    if(is.null(colors)){
                               colfunc <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
                               rgb <- colfunc(sum(!anno_target[[2]] %in% c("other", "no_anno")))
                               rgb_vec <- NULL
@@ -137,18 +147,20 @@ PAC_sizedist <- function(PAC, range=NULL, anno_target, pheno_target=NULL, colvec
                                                   if(anno_target[[2]][i] == "no_anno"){rgb_vec[i] <- "#C0C0C0";  cnt <- cnt+1}
                                                   if(!anno_target[[2]][i] %in% c("other","no_anno")){rgb_vec[i] <- rgb[i-cnt]}
                               }
-                    }else{rgb_vec <- colvect}
+                    }else{rgb_vec <- colors}
                     #### Plot individual plots ###
 										histo_lst <- list(NA)
+										if(is.null(pheno_target)){samp <- rownames(ph)} 
+										else {samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) }
 										for(i in 1:length(size_lst)){
-										                          if(is.null(pheno_target)){ph <- names(size_lst)[i]} 
-										                          else {ph <- paste(PAC$Pheno[,pheno_target[[1]]][i], names(size_lst)[i])}
- 										                          histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=counts, fill=biotype))+
+										                          # if(is.null(pheno_target)){ph <- names(size_lst)[i]} 
+										                          # else {ph <- paste(PAC$Pheno[,pheno_target[[1]]][i], names(size_lst)[i])}
+ 										                          histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
                                                               	    geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
                                                               	    geom_hline(yintercept=0, col="azure4")+
                                                                   	xlab("Length (bp)")+
- 										                                                ylab("Counts")+
-                                                                    labs(subtitle = ph)+
+ 										                                                ylab(paste0(labl))+
+                                                                    labs(subtitle = samp[i])+
                                                                   	scale_fill_manual(values=rgb_vec)+
                                                                   	#coord_cartesian(ylim=c(0,10000))+
                                                                   	#scale_y_continuous(breaks = seq(0, 10000, 2500))+

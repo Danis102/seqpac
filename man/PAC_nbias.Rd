@@ -4,8 +4,9 @@
 \alias{PAC_nbias}
 \title{Generates a nucleotide bias analysis from sequences and counts in a PAC object}
 \usage{
-PAC_nbias(PAC, position = 1, range = NULL, anno_target = NULL,
-  pheno_target = NULL)
+PAC_nbias(PAC, position = 1, norm = NULL, range = NULL,
+  anno_target = NULL, pheno_target = NULL, summary_target = NULL,
+  colors = NULL)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
@@ -24,6 +25,13 @@ row names and a count table with raw counts.}
 1st object being character vector of target column(s) in Pheno, 
 2nd object being a character vector of the target group(s) in the target column (1st object).
 (default=NULL)}
+
+\item{summary_target}{List with: 
+1st object being character vector of target object in PAC$summary, 
+2nd object being a character vector of the target column(s) in the target summary object (1st object).
+(default=NULL)}
+
+\item{colors}{Character vector with color codes to be parsed to ggplot2.}
 }
 \value{
 A list of objects: 
@@ -43,45 +51,34 @@ in relation to the sequence counts in Counts.
 \examples{
 
 library(seqpac)
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-load(file=paste0(path, "PAC_all.Rdata"))
+load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 
-### First apply shallow counts filter, and then generate rpm on which rpm filter is applied.  
-PAC_filt <- PAC_filter(PAC_all, size=c(16,45), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
 PAC_filt <- PAC_rpm(PAC_filt)
-PAC_filt <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
 
-hierachy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
                  rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
                  Mt_tRNA= "tRNA_mt-tRNA",
                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
                  miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
                  piRNA="piRNA")
 
-PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes_1", PAC_merge = TRUE)
+PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge = TRUE)
 
-PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
+### Plot using raw counts and order samples using pheno_target:
+nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", c("TGIRT", "Proto")))
+nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", "Proto"))    
+cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
 
-## Plot only histograms
-nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, pheno_target=list("Groups", NULL))   
-filt1 <- PAC_filt$Pheno$Groups \%in\% c("Sep_Proto_Reg__","Jan_Proto_Long_Tag","Jan_Proto_Short_Tag") 
-cowplot::plot_grid(plotlist=nbias_result[[1]][filt1], nrow = 3, ncol = 3)
+### Plot using rpm counts and order samples using pheno_target:
+nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="rpm") 
 
-## Generate graphs for a specific biotype 
-nbias_result2 <- PAC_nbias(PAC=PAC_filt, position=1, anno_target=list("Biotypes_1", "piRNA"), pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))   
-cowplot::plot_grid(plotlist=nbias_result2[[1]][1:9], nrow = 3, ncol = 3)
-cowplot::plot_grid(plotlist=nbias_result2[[1]][10:18], nrow = 3, ncol = 3)
-cowplot::plot_grid(plotlist=nbias_result2[[1]][19:27], nrow = 3, ncol = 3)
-cowplot::plot_grid(plotlist=nbias_result2[[1]][28:36], nrow = 3, ncol = 3)
-cowplot::plot_grid(plotlist=nbias_result2[[1]][37:45], nrow = 3, ncol = 3)
-
-## Get group based plots
-nbias_result2 <- PAC_nbias(PAC=PAC_filt, position=1, pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))   
+### Plot using summarized data in summary_target: 
+nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, summary_target=list("rpmMeans_Method")) 
 
 
+cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
 
-
-names(nbias_result[[3]])
 
 }
 \seealso{
@@ -90,11 +87,11 @@ names(nbias_result[[3]])
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}},
-  \code{\link{PAC_trna}}
+  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
+  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
+  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}

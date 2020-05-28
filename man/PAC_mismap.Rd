@@ -108,11 +108,11 @@ cowplot::plot_grid(plot_lst[[1]][[2]][[1]],
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}},
-  \code{\link{PAC_trna}}
+  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
+  \code{\link{PAC_mapper}}, \code{\link{PAC_nbias}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
+  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}

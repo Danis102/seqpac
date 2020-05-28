@@ -5,7 +5,8 @@
 \title{Plots jitter plot from PAC object}
 \usage{
 PAC_jitter(PAC, summary_target = NULL, anno_target = NULL,
-  type = "jitter", limits = NULL, ypos_n = NULL, colvec = NULL)
+  type = "jitter", limits = NULL, ypos_n = NULL, colvec = NULL,
+  box = TRUE)
 }
 \arguments{
 \item{summary_target}{List with: 1st object being a character vector of the
@@ -50,14 +51,25 @@ load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pi
 PAC_filt <- PAC_rpm(PAC_filt)
 
 PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method"))
-PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "log2FCgrand", pheno_target=list("Method"))
+PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "percentgrand", pheno_target=list("Method"))
 
 
-plots_FC <- PAC_jitter(PAC_filt, summary_target=list("Log2FC_Method"), anno_target=NULL)
-plots_FCgrand <- PAC_jitter(PAC_filt, summary_target=list("Log2FCgrand_Method"), anno_target=NULL)
+hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
+                rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
+                Mt_tRNA= "tRNA_mt-tRNA",
+               tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
+               miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+               piRNA="piRNA")
+
+PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
 
 
-cowplot::plot_grid(plot_lst$A,plot_lst$B)
+plots_FC <- PAC_jitter(PAC_filt, summary_target=list("Log2FC_Method"), anno_target=list("Biotypes_mis0"))
+plots_FCgrand <- PAC_jitter(PAC_filt, summary_target=list("Percdiffgrand_Method"), anno_target=list("Biotypes_mis0"))
+
+
+plots_FC[[1]]
+cowplot::plot_grid(plotlist=plots_FCgrand[1:9],nrow = 3, ncol = 3)
 
 }
 \seealso{
@@ -66,11 +78,11 @@ cowplot::plot_grid(plot_lst$A,plot_lst$B)
 
 Other PAC analysis: \code{\link{PAC_covplot}},
   \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}},
-  \code{\link{PAC_trna}}
+  \code{\link{PAC_filtsep}}, \code{\link{PAC_mapper}},
+  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
+  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}

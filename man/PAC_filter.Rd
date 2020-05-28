@@ -34,8 +34,9 @@ generated or not (default=FALSE).}
 (default=NULL)}
 
 \item{anno_target}{(optional) List with: 
-1st object being a character vector of target column in Anno, 
-2nd object being a character vector of the target type/biotypes(s) in the target Anno column (1st object).
+1st object being a character vector of target column in Anno, 2nd
+object being a character vector of the target type/biotypes(s) in
+the target Anno column (1st object).
 (default=NULL)}
 
 \item{treshold}{Integer giving the threshold in rpm or counts that needs to
@@ -63,7 +64,7 @@ PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means",  pheno_target=li
 
 test2 <- PAC_filter(PAC_filt, size=c(16,45), threshold=5, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
 
-test3 <- PAC_filter(PAC_filt, pheno_target=list("Unn_Sample_ID", c("A", "B")), subset_only=TRUE)   # Removes individual samples based on information in Pheno - Since summary has already been generated, throws a warnings message.
+test3 <- PAC_filter(PAC_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 
 test4 <- PAC_filter(PAC_filt, size=c(16,30))   # Further filter on fragment lengths 
 
@@ -76,12 +77,12 @@ test4 <- PAC_filter(PAC_filt, size=c(16,30))   # Further filter on fragment leng
   package.
 
 Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_summary}},
-  \code{\link{PAC_trna}}
+  \code{\link{PAC_deseq}}, \code{\link{PAC_filtsep}},
+  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
+  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
+  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
+  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
+  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
+  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
 }
 \concept{PAC analysis}
