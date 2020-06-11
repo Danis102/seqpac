@@ -5,7 +5,7 @@
 \title{Plot sequence covarage over a reference}
 \usage{
 PAC_covplot(PAC, map, summary_target = names(PAC), map_target = NULL,
-  style = "line", xseq = TRUE, colour = c("black", "red", "grey",
+  style = "line", xseq = TRUE, color = c("black", "red", "grey",
   "blue"))
 }
 \arguments{
@@ -31,7 +31,7 @@ names(<PAC_mapping object>)). (default=NULL)}
 the x-axis. Plotting long references with xseq=FALSE will increase
 script performance. (default=TRUE).}
 
-\item{colour}{Character vector indicating the rgb colors to be parsed to
+\item{color}{Character vector indicating the rgb colors to be parsed to
 ggplot2 for plotting the covarage lines  (default = c("black", "red",
 "grey", "blue"))}
 
@@ -70,7 +70,7 @@ PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=lis
 ## Mapping
 map_rRNA <- PAC_mapper(PAC_filt, ref_path="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
 
-All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", colour="red")})
+All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", color="red")})
 
 cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],

@@ -12,8 +12,6 @@
 #'
 #' @param PAC PAC-list object.
 #'
-#' @param mismatches=0
-#'
 #' @param ref Character indicating the path to the fasta (.fa) reference
 #'   file or a DNAStringSet with already loaded reference sequences.
 #'
@@ -140,7 +138,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                           ## Parallelize sequences 
                           fin_lst <- list(NA)
                           for(i in 1:length(full)){ 
-                                    cat(paste0("\n\nAligning against:\n ", names(ref)[i], "\n Start ", Sys.time()))
+                                    cat(paste0("\n\nAligning against:\n ", names(full)[i], "\n Start ", Sys.time()))
                                     seq_ref <- full[i]
                                     aligned_lst <- foreach(t=1:length(query_strings), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- paste0(Anno_frag); return(x)}) %dopar% {
                                                       y <- as.data.frame(Biostrings::vmatchPattern(query_strings[[t]],  seq_ref, max.mismatch=mismatches, fixed=FALSE))
@@ -155,9 +153,9 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                                       }
                                     aligned   <- do.call("rbind", aligned_lst[unlist(lapply(aligned_lst, function(x){!is.null(x)}))])                  
                                   	target_lst  <- list(Ref_seq=seq_ref, Alignments=aligned)
-                                  	if(nrow(target_lst[[2]])<1){target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", Align_end="no_hits", Align_width="no_hits")}
+                                  	if(is.null(target_lst[[2]])){target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", Align_end="no_hits", Align_width="no_hits")}
                                     fin_lst[[i]] <- target_lst
-                                    names(fin_lst)[i] <- names(ref)[i]
+                                    names(fin_lst)[i] <- names(full)[i]
                                     cat(paste0("\n Done ", Sys.time()))
                           }
 

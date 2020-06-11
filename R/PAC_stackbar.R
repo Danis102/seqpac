@@ -104,6 +104,7 @@ PAC_stackbar <- function(PAC, anno_target=list("Biotypes", NULL), pheno_target=N
                                                         stopifnot(any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE)
                                                         sampl_ord <- do.call("c", split(rownames(PAC$Pheno), factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])))
                                                         data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(sampl_ord))
+                                                        data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
                                                 }
                                                 
                                                 ## Add total counts
@@ -120,7 +121,7 @@ PAC_stackbar <- function(PAC, anno_target=list("Biotypes", NULL), pheno_target=N
                                                 if(is.null(colvec)){
                                                           bio <- as.character(unique(data_long_perc$Biotype))
                                                           n_extra  <- sum(bio %in% c("no_anno", "other"))
-                                                          colfunc <- colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
+                                                          colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
                                                           if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
                                                           if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
                                                           if(n_extra==0){colvec <- colfunc(length(bio))}

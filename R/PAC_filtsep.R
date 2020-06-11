@@ -72,6 +72,6 @@ PAC_filtsep <- function(PAC, type="counts", threshold=10, coverage=100, pheno_ta
                                                                                    return(rownames(y)[logi])
                                                                                    })
                                     nmax <- max(unlist(lapply(sub_data_lst, length)))
-                                    df <- do.call("cbind", lapply(sub_data_lst, function(x){fix <- c(x, rep(NA, times=nmax-length(x))); return(fix)}))
-                                    return(as.data.frame(df))
+                                    df <- do.call("cbind", lapply(sub_data_lst, function(x){fix <- as.character(c(x, rep(NA, times=nmax-length(x)))); return(fix)}))
+                                    return(as.data.frame(df, stringsAsFactors=FALSE))
 }

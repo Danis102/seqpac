@@ -138,7 +138,7 @@ PAC_sizedist <- function(PAC, norm=NULL, range=NULL, anno_target, pheno_target=N
                     require(ggplot2)  
                     #### Set up colors colors ###
                     if(is.null(colors)){
-                              colfunc <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
+                              colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
                               rgb <- colfunc(sum(!anno_target[[2]] %in% c("other", "no_anno")))
                               rgb_vec <- NULL
                               cnt <- 0

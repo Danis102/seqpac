@@ -143,7 +143,9 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
                     #### Set up colors colors ###
                             if(is.null(colors)){
                                       colfunc_sports <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
-                                      colors <- colfunc_sports(5)}
+                                      colors <- colfunc_sports(5)
+                                      colors <- c("#A0A0A0",colors[c(1,2,3,5)])
+                                      }
                               
                                       
 										require(ggplot2)   
@@ -151,7 +153,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
 										if(is.null(pheno_target)){samp <- rownames(ph)}else{samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph))}
 										for(i in 1:length(nuc_lst)){
 										                          nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, levels=c("N","C","G","A","T"))
-										                          uni_chr_len <- as.integer(unique(nuc_lst[[i]]$length))
+										                          uni_chr_len <- as.integer(unique(as.character(nuc_lst[[i]]$length)))
 										                          nuc_lst[[i]]$length <- factor(nuc_lst[[i]]$length, levels=uni_chr_len[order(uni_chr_len)] )
  										                          histo_lst[[i]] <- ggplot(nuc_lst[[i]], aes(x=length, y=counts, fill=nucleotide))+
                                                               	    geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+

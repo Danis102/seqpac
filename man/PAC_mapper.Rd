@@ -20,8 +20,6 @@ should be used.}
 
 \item{par_type}{Character indicating if "PSOCK" or "FORK" should be parsed to
 parallel::makeCluster (default="PSOCK").}
-
-\item{mismatches=0}{}
 }
 \value{
 Stacked list, where each object on the highest level contains:

@@ -35,7 +35,7 @@
 #'   the x-axis. Plotting long references with xseq=FALSE will increase
 #'   script performance. (default=TRUE).
 #'
-#' @param colour Character vector indicating the rgb colors to be parsed to
+#' @param color Character vector indicating the rgb colors to be parsed to
 #'   ggplot2 for plotting the covarage lines  (default = c("black", "red",
 #'   "grey", "blue"))
 #'   
@@ -63,7 +63,7 @@
 #' ## Mapping
 #' map_rRNA <- PAC_mapper(PAC_filt, ref_path="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
 #' 
-#' All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", colour="red")})
+#' All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", color="red")})
 #'
 #' cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
 #'                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],
@@ -77,7 +77,7 @@
 #' 
 #' @export
 
-PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, colour=c("black", "red", "grey", "blue")){
+PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=c("black", "red", "grey", "blue")){
                             require("GenomicRanges")
                             require("ggplot2")
                             require("stringr")
@@ -91,24 +91,16 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                             data <- smry[,summary_target[[2]], drop=FALSE]
                             data$empty_ <- 0 # Avoids problems with automatic vectorization
                             
-                            
                             sub_map <- map[names(map) %in% map_target]
                             if(length(sub_map)==1){sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]}
                             uni_map <- unique(do.call("c", lapply(sub_map, function(x){rownames(x$Alignments)})))
+                            uni_map <- uni_map[!uni_map == "1"]
                             PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
-                            sub_map  <- lapply(sub_map, function(x){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]; return(x)})
+                            sub_map  <- lapply(sub_map, function(x){
+                                                          if(is.integer(x$Alignments$Align_start)){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]}
+                                                          return(x)})
                             if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
 
-                             #### Check and subset if necessary
-                            map <- map[names(map) %in%  map_target]
-                            uni_map <- unique(do.call("c", lapply(map, function(x){rownames(x$Alignments)})))
-                            PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
-                            map  <- lapply(map, function(x){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]; return(x)})
-                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
-                              
-                            
-                            
-                            
                             ## Remove empty references
                             rm_filt <- !do.call("c", lapply(sub_map, function(x){as.character(x$Alignments[1,1]) == "no_hits"}))
                             cat(paste0("Of ", length(rm_filt), " references analyzed, ", length(rm_filt[rm_filt==TRUE]), " was covered\n"))
@@ -172,7 +164,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                                       }
 
                             ## Plot graphs
-                            names(colour) <- summary_target[[2]]
+                            names(color) <- summary_target[[2]]
                             plot_lst <- list(NA)
                             for(i in 1:length(cov_lst)){
                                     cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
@@ -189,7 +181,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                           plot_lst[[i]] <- ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
                                                             geom_line(size=1.0) +
                                                             geom_ribbon(data=cov_df, aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-                                                            scale_fill_manual(name='', values=colour)+
+                                                            scale_fill_manual(name='', values=color)+
                                                             geom_abline(intercept =0, slope=0)+
                                                             ylab("mean RPM") +
                                                             xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
@@ -200,7 +192,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                           plot_lst[[i]] <- ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
                                                             geom_line(size=1.0) +
                                                             geom_ribbon(data=cov_df, aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-                                                            scale_fill_manual(name='', values=colour)+
+                                                            scale_fill_manual(name='', values=color)+
                                                             coord_cartesian(ylim=c(0,100))+
                                               							scale_y_continuous(breaks = seq(0, 100, 30))+
                                                             geom_abline(intercept =0, slope=0)+
@@ -216,7 +208,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                         if(max(cov_df$Coverage) >= 100){
                                           plot_lst[[i]] <- 	ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
                                             								geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-                                            								scale_color_manual(values=colour)+
+                                            								scale_color_manual(values=color)+
                                             								labs(title=names(sub_map)[i])+
                                               							ylab("mean RPM") +
                                             								expand_limits(y=max(cov_df$Coverage)+20) +
@@ -227,7 +219,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                         if(max(cov_df$Coverage) < 100){
                                           plot_lst[[i]] <-  ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
                                             								geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-                                            								scale_color_manual(values=colour)+
+                                            								scale_color_manual(values=color)+
                                                             coord_cartesian(ylim=c(0,100))+
                                               							scale_y_continuous(breaks = seq(0, 100, 30))+
                                             								labs(title=names(sub_map)[i])+
