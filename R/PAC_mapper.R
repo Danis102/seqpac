@@ -104,7 +104,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                           names(full) <- nams_full
 
                           ## Aligning using parallel processing
-                          cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n\n")
+                          cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
                           len <- length(full)
                           
                           cl <- parallel::makeCluster(threads, type = par_type)
@@ -138,7 +138,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                           ## Parallelize sequences 
                           fin_lst <- list(NA)
                           for(i in 1:length(full)){ 
-                                    cat(paste0("\n\nAligning against:\n ", names(full)[i], "\n Start ", Sys.time()))
+                                    cat(paste0("\nAligning against:\n ", names(full)[i], "\n Start ", Sys.time()))
                                     seq_ref <- full[i]
                                     aligned_lst <- foreach(t=1:length(query_strings), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- paste0(Anno_frag); return(x)}) %dopar% {
                                                       y <- as.data.frame(Biostrings::vmatchPattern(query_strings[[t]],  seq_ref, max.mismatch=mismatches, fixed=FALSE))

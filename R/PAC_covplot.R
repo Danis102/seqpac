@@ -96,10 +96,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                             uni_map <- unique(do.call("c", lapply(sub_map, function(x){rownames(x$Alignments)})))
                             uni_map <- uni_map[!uni_map == "1"]
                             PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
-                            sub_map  <- lapply(sub_map, function(x){
-                                                          if(is.integer(x$Alignments$Align_start)){x$Alignments <- x$Alignments[rownames(x$Alignments) %in% rownames(PAC$Anno),]}
-                                                          return(x)})
-                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceede with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
+                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceed with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
 
                             ## Remove empty references
                             rm_filt <- !do.call("c", lapply(sub_map, function(x){as.character(x$Alignments[1,1]) == "no_hits"}))
