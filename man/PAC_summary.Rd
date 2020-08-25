@@ -4,8 +4,14 @@
 \alias{PAC_summary}
 \title{Summarizes PAC objects}
 \usage{
-PAC_summary(PAC, norm = "raw", type = "means", pheno_target = NULL,
-  rev = FALSE)
+PAC_summary(
+  PAC,
+  norm = "raw",
+  type = "means",
+  pheno_target = NULL,
+  rev = FALSE,
+  PAC_merge = FALSE
+)
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno dataframe with samples as row names,
@@ -26,6 +32,10 @@ group(s) in the target Pheno column (1st object).}
 
 \item{rev}{Logical whether pairwise comparisions should be reversed
 (default=FALSE).}
+
+\item{PAC_merge}{Logical whether simplified annotation vector should
+automatically be added to Anno object if a PAC list object were given as
+input (default=FALSE)}
 }
 \value{
 A PAC object with a pheno_summary folder containing the summarized
@@ -67,13 +77,22 @@ PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=lis
 \url{https://github.com/Danis102} for updates on the current
 package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_sizedist}},
-  \code{\link{PAC_stackbar}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

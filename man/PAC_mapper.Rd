@@ -4,7 +4,16 @@
 \alias{PAC_mapper}
 \title{Advanced sequences mapping of a PAC object}
 \usage{
-PAC_mapper(PAC, ref, mismatches = 0, threads = 1, par_type = "PSOCK")
+PAC_mapper(
+  PAC,
+  ref,
+  mismatches = 0,
+  threads = 1,
+  par_type = "PSOCK",
+  N_up = "",
+  N_down = "",
+  report_string = FALSE
+)
 }
 \arguments{
 \item{PAC}{PAC-list object.}
@@ -20,6 +29,22 @@ should be used.}
 
 \item{par_type}{Character indicating if "PSOCK" or "FORK" should be parsed to
 parallel::makeCluster (default="PSOCK").}
+
+\item{N_up}{Character indicating a sequence that should be added to the
+reference at the 5' end prior to mapping. A wild card nucleotides "NNN"
+(any of C, T, G, A) can for example be added for mapping non-perfect
+reference hits. No nucleotides are added by default.}
+
+\item{N_down}{Character. Same as N_up but indicating a sequence that should
+be added to the reference at the 3' end. Useful for tRNA analysis where the
+reference do not contain pre-processed tRNA. Setting N_down="NNN" or "CCA"
+(in many species CCA is added to mature tRNA) will allow mapping against
+the mature tRNA. No nucleotides are added by default.}
+
+\item{report_string}{Logical whether an alignment string that shows in
+character where sequences align against the reference. Works well with
+tRNA, but makes the Alignments object difficult to work with when longer
+references are used (default=FALSE).}
 }
 \value{
 Stacked list, where each object on the highest level contains:
@@ -95,13 +120,22 @@ map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

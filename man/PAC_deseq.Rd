@@ -4,9 +4,16 @@
 \alias{PAC_deseq}
 \title{A wrapper to DESeq2 that apply differential expression analysis on a PAC object}
 \usage{
-PAC_deseq(PAC, model, main_factor = NULL, norm = TRUE,
-  histogram = TRUE, threads = 1, pheno_target = NULL,
-  anno_target = NULL)
+PAC_deseq(
+  PAC,
+  model,
+  main_factor = NULL,
+  norm = TRUE,
+  histogram = TRUE,
+  threads = 1,
+  pheno_target = NULL,
+  anno_target = NULL
+)
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno data.frame with samples as row
@@ -62,13 +69,22 @@ test <- PAC_deseq(PAC, model=~Hemi_cast, main_factor="Hemi_cast", norm=TRUE, his
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_filter}}, \code{\link{PAC_filtsep}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

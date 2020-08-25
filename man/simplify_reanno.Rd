@@ -4,8 +4,13 @@
 \alias{simplify_reanno}
 \title{Generates one-hit hierarchial biotype annotation}
 \usage{
-simplify_reanno(input, hierarchy, mismatches = 2,
-  bio_name = "Biotypes", PAC_merge = FALSE)
+simplify_reanno(
+  input,
+  hierarchy,
+  mismatches = 2,
+  bio_name = "Biotypes",
+  PAC_merge = FALSE
+)
 }
 \arguments{
 \item{hierarchy}{List with character vectors as biotype search vectors that
@@ -71,8 +76,11 @@ PAC_check(PAC_filt)
  \url{http://bowtie-bio.sourceforge.net/index.shtml} for information about
  Bowtie \url{https://github.com/Danis102} for updates on the current package.
 
-Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{check_reanno}}, \code{\link{import_reanno}},
-  \code{\link{make_reanno}}, \code{\link{map_reanno}}
+Other PAC reannotation: 
+\code{\link{add_reanno}()},
+\code{\link{check_reanno}()},
+\code{\link{import_reanno}()},
+\code{\link{make_reanno}()},
+\code{\link{map_reanno}()}
 }
 \concept{PAC reannotation}

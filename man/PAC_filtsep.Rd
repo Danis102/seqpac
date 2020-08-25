@@ -4,8 +4,13 @@
 \alias{PAC_filtsep}
 \title{Generates filtered sequence name list seperated on group}
 \usage{
-PAC_filtsep(PAC, type = "counts", threshold = 10, coverage = 100,
-  pheno_target = NULL)
+PAC_filtsep(
+  PAC,
+  type = "counts",
+  threshold = 10,
+  coverage = 100,
+  pheno_target = NULL
+)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Pheno data.frame with samples as row
@@ -47,13 +52,22 @@ given filter within a given group.
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

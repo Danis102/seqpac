@@ -4,9 +4,17 @@
 \alias{map_reanno}
 \title{Makes annotation from R imported reannotation mapping}
 \usage{
-map_reanno(PAC, type = "bowtie", output_path, ref_paths,
-  mismatches = 3, mis_fasta_check = FALSE, threads = 1,
-  par_type = "PSOCK", parse_bowtie = "bowtie -a --norc -f")
+map_reanno(
+  PAC,
+  type = "bowtie",
+  output_path,
+  ref_paths,
+  mismatches = 3,
+  mis_fasta_check = FALSE,
+  threads = 1,
+  par_type = "PSOCK",
+  parse_bowtie = "bowtie -a --norc -f"
+)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
@@ -65,8 +73,11 @@ reanno <- map_reanno(PAC_filt, output_path= output_path, ref_paths=ref_paths,  m
   Bowtie \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{check_reanno}}, \code{\link{import_reanno}},
-  \code{\link{make_reanno}}, \code{\link{simplify_reanno}}
+Other PAC reannotation: 
+\code{\link{add_reanno}()},
+\code{\link{check_reanno}()},
+\code{\link{import_reanno}()},
+\code{\link{make_reanno}()},
+\code{\link{simplify_reanno}()}
 }
 \concept{PAC reannotation}

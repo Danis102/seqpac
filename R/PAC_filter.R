@@ -71,13 +71,17 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                             library(ggplot2, quietly=TRUE)
                                             options(scipen=999)
                                             strt <- nrow(PAC$Counts)
-                                            
+                                            nsamp <- ncol(PAC$Counts)
                                             ### Subset samples by Pheno                                                
                               							if(!is.null(pheno_target)){
                               							  if(length(pheno_target)==1){pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])}
                                               sub_pheno <- as.character(PAC$Pheno[, pheno_target[[1]]]) %in% pheno_target[[2]]
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[,sub_pheno]})}
-                                              if(any(names(PAC)=="summary")){warning("Table(s) were found in PAC$summary that may have been generated with samples that now are removed.")}
+                                              if(any(names(PAC)=="summary")){
+                                                                      if(!any(sub_pheno)){
+                                                                      warning("Table(s) were found in PAC$summary that may have been generated with samples that now are removed.\nSummary table names now contain a warning.")
+                                                                      names(PAC$summary) <- paste0(names(PAC$summary), "_WARNING_pheno_filter")
+                                                                      }}
                                               PAC$Counts  <- PAC$Counts[,sub_pheno]
                                               PAC$Pheno  <- PAC$Pheno[sub_pheno,]
                                               
@@ -85,8 +89,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                               PAC$Counts <- PAC$Counts[,ord_mch,drop=FALSE]
                                               PAC$Pheno <- PAC$Pheno[ord_mch,,drop=FALSE]
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(PAC$norm, function(x){x[, ord_mch, drop=FALSE]})}
-                                              if(any(names(PAC)=="summary")){PAC$summary <- lapply(PAC$summary, function(x){x[, ord_mch, drop=FALSE]})}
-                                              
+
                                               tab_pheno <- as.data.frame(table(sub_pheno))
                                               cat(paste0("\nPheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples\n"))
                                                 }  

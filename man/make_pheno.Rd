@@ -4,8 +4,7 @@
 \alias{make_pheno}
 \title{Make Phenotype File}
 \usage{
-make_pheno(pheno_input, type = "manual", counts = NULL,
-  progress_report = NULL)
+make_pheno(pheno_input, type = "manual", counts = NULL, progress_report = NULL)
 }
 \arguments{
 \item{pheno_input}{Character vector with the path to a .csv file or a
@@ -72,9 +71,12 @@ pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type=
   documentation about running Sports. \url{https://github.com/Danis102} for
   updates on the current package.
 
-Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_PAC}}, \code{\link{make_anno}},
-  \code{\link{make_counts2}}, \code{\link{make_counts}},
-  \code{\link{progress_report}}
+Other PAC generation: 
+\code{\link{import_sports}()},
+\code{\link{make_PAC}()},
+\code{\link{make_anno}()},
+\code{\link{make_counts2}()},
+\code{\link{make_counts}()},
+\code{\link{progress_report}()}
 }
 \concept{PAC generation}

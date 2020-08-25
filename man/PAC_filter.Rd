@@ -4,9 +4,17 @@
 \alias{PAC_filter}
 \title{Filter a PAC object on sequence size and covarage}
 \usage{
-PAC_filter(PAC, size = NULL, threshold = 0, coverage = 0,
-  type = NULL, subset_only = FALSE, stat = FALSE,
-  pheno_target = NULL, anno_target = NULL)
+PAC_filter(
+  PAC,
+  size = NULL,
+  threshold = 0,
+  coverage = 0,
+  type = NULL,
+  subset_only = FALSE,
+  stat = FALSE,
+  pheno_target = NULL,
+  anno_target = NULL
+)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
@@ -76,13 +84,22 @@ test4 <- PAC_filter(PAC_filt, size=c(16,30))   # Further filter on fragment leng
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filtsep}},
-  \code{\link{PAC_jitter}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

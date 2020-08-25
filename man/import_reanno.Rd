@@ -4,8 +4,7 @@
 \alias{import_reanno}
 \title{Imports annotation from reannotation mapping}
 \usage{
-import_reanno(bowtie_path, threads = 1, report = "minimum",
-  reduce = "piRNA")
+import_reanno(bowtie_path, threads = 1, report = "minimum", reduce = "piRNA")
 }
 \arguments{
 \item{bowtie_path}{Path to a directory where bowtie output files can be
@@ -80,8 +79,11 @@ lapply(reanno5, names)
   Bowtie \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{check_reanno}}, \code{\link{make_reanno}},
-  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
+Other PAC reannotation: 
+\code{\link{add_reanno}()},
+\code{\link{check_reanno}()},
+\code{\link{make_reanno}()},
+\code{\link{map_reanno}()},
+\code{\link{simplify_reanno}()}
 }
 \concept{PAC reannotation}

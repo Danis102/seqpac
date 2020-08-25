@@ -45,8 +45,11 @@ bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_t
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{import_reanno}}, \code{\link{make_reanno}},
-  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
+Other PAC reannotation: 
+\code{\link{add_reanno}()},
+\code{\link{import_reanno}()},
+\code{\link{make_reanno}()},
+\code{\link{map_reanno}()},
+\code{\link{simplify_reanno}()}
 }
 \concept{PAC reannotation}

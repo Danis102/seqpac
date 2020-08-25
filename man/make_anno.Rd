@@ -72,9 +72,12 @@ for all imported output files.
   documentation about running Sports. \url{https://github.com/Danis102} for
   updates on the current package.
 
-Other PAC generation: \code{\link{import_sports}},
-  \code{\link{make_PAC}}, \code{\link{make_counts2}},
-  \code{\link{make_counts}}, \code{\link{make_pheno}},
-  \code{\link{progress_report}}
+Other PAC generation: 
+\code{\link{import_sports}()},
+\code{\link{make_PAC}()},
+\code{\link{make_counts2}()},
+\code{\link{make_counts}()},
+\code{\link{make_pheno}()},
+\code{\link{progress_report}()}
 }
 \concept{PAC generation}

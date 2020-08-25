@@ -28,6 +28,10 @@
 #'   
 #' @param rev Logical whether pairwise comparisions should be reversed
 #'   (default=FALSE).
+#'   
+#' @param PAC_merge Logical whether simplified annotation vector should
+#'  automatically be added to Anno object if a PAC list object were given as
+#'  input (default=FALSE)
 #'
 #' @return A PAC object with a pheno_summary folder containing the summarized
 #'   data in a dataframe. The dataframe will be named according to the
@@ -58,7 +62,7 @@
 #' 
 #' @export
 #' 
-PAC_summary <- function(PAC, norm="raw", type="means", pheno_target=NULL, rev=FALSE){
+PAC_summary <- function(PAC, norm="raw", type="means", pheno_target=NULL, rev=FALSE, PAC_merge=FALSE){
 
                               ### Extract data ###
                                     if(norm=="raw"){
@@ -183,9 +187,15 @@ PAC_summary <- function(PAC, norm="raw", type="means", pheno_target=NULL, rev=FA
                                     # if(type=="mean_diff"){}
                                     # etc
                               ### Fix names and return object t###
-                              PAC$summary[[which(names(PAC$summary)=="new")]] <- fin
-                              names(PAC$summary)[which(names(PAC$summary)=="new")] <- df_nam
-                              return(PAC)
+                              if(PAC_merge==TRUE){PAC$summary[[which(names(PAC$summary)=="new")]] <- fin
+                                                  names(PAC$summary)[which(names(PAC$summary)=="new")] <- df_nam
+                                                  return(PAC)
+                              }else{
+                                                  
+                                                  fin_lst <- list(fin)
+                                                  names(fin_lst) <- df_nam
+                                                  return(fin_lst)
+                              }
                         }
 
 

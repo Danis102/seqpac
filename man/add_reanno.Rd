@@ -58,8 +58,11 @@ PAC_master$Anno <- cbind(PAC_master$Anno, New_anno)
  \url{http://bowtie-bio.sourceforge.net/index.shtml} for information about
  Bowtie \url{https://github.com/Danis102} for updates on the current package.
 
-Other PAC reannotation: \code{\link{check_reanno}},
-  \code{\link{import_reanno}}, \code{\link{make_reanno}},
-  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
+Other PAC reannotation: 
+\code{\link{check_reanno}()},
+\code{\link{import_reanno}()},
+\code{\link{make_reanno}()},
+\code{\link{map_reanno}()},
+\code{\link{simplify_reanno}()}
 }
 \concept{PAC reannotation}

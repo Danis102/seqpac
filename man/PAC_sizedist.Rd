@@ -4,8 +4,15 @@
 \alias{PAC_sizedist}
 \title{Generates a size distribution analysis from sequences and counts in a PAC object}
 \usage{
-PAC_sizedist(PAC, norm = NULL, range = NULL, anno_target,
-  pheno_target = NULL, summary_target = NULL, colors = NULL)
+PAC_sizedist(
+  PAC,
+  norm = NULL,
+  range = NULL,
+  anno_target,
+  pheno_target = NULL,
+  summary_target = NULL,
+  colors = NULL
+)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
@@ -77,13 +84,22 @@ cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_saturation}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

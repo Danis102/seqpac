@@ -4,8 +4,14 @@
 \alias{PAC_saturation}
 \title{Filter a PAC object on sequence size and coverage}
 \usage{
-PAC_saturation(PAC, resample = 10, steps = 10, thresh = c(1, 500),
-  cumulative = FALSE, start_perc = 1, threads = 8)
+PAC_saturation(
+  PAC,
+  resample = 10,
+  steps = 10,
+  thresh = c(1, 10),
+  threads = 4,
+  par_type = "PSOCK"
+)
 }
 \arguments{
 \item{PAC}{PAC-list object containing a Counts data.frame with sequences as
@@ -17,28 +23,16 @@ step (default=10).}
 \item{steps}{Integer the number of percentage steps between 0-100% of the
 original dataset (default=10).}
 
-\item{thresh}{Integer vector containing two mean count thresholds that will
-be targeted. Default is set to c(1,500), where each new occurance (>=1) and
-each new occurance reaching 500 counts (>=500) will be analyzed.}
-
-\item{cumulative}{(optional) Logical. FALSE make the analysis on total unique
-sequences when resampling at different percentages (default). TRUE make the
-analysis on unique sequences gained at each step compared to a given
-downsampled dataset given in 'start_perc' (default = 1%). While the integer
-in the 'resample' input sets how many (n) permutations to be made at each
-step, permutation with FALSE will permute n times at each percentage step,
-while TRUE will permute 1 time per step and then repeat this n times. The
-two approaches gives similar results.}
-
-\item{start_perc}{(optional) Logical specifying if an coverage graph should
-be generated or not (default=FALSE).}
+\item{thresh}{Integer vector containing mean count thresholds that will
+be targeted. Default is set to c(1,10), where each new occurance (>=1) and
+each new occurance reaching 10 counts (>=10) will be analyzed.}
 
 \item{threads}{Number of cores to be used for performing the permutations.}
 }
 \value{
-A list with two graph objects: The 1:st graph (A) shows
-  saturation/diversity result at the 1:st threshold. The 2:nd graph (B) shows
-  saturation/diversity result at the 2:nd threshold.
+A list with ggplot2 graph objects: The 1:st graph shows
+  saturation/diversity result at the 1:st threshold. The 2:nd graph shows
+  saturation/diversity result at the 2:nd threshold, etc.
 }
 \description{
 \code{PAC_saturation} Perfoms an sequence diversity/saturation analysis on a
@@ -47,9 +41,14 @@ PAC objects.
 \details{
 Given a PAC object the function will perform a sequence saturation analysis.
 This is done by downsampling the original dataset by permutation at different
-percentages of the original dataset. The flatter the curve at the original
-sequence depth (100%) the more saturated is the diversity of sequences at the
-original dataset.
+percentages of the original dataset. The closer the curve at the original
+sequence depth (100%) is to a plateau phase the more saturated is the
+diversity of sequences for the original dataset. Approaching the plateau,
+usually means that the sequencing depth of the library have sampled the full
+population of sequences available in the sample. Here we use an none-linear
+least square (\code{nls}) model with a self-starter for asymptotic
+regresssion (\code{SSasympt}) to describe the rate in which the library
+approaches the plateau.
 }
 \examples{
 
@@ -57,7 +56,7 @@ library(seqpac)
 path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
 load(file=paste0(path, "PAC_all.Rdata"))
 
-plot_lst  <- PAC_saturation(PAC, resample=10, steps=10, thresh=c(1,500), cumulative=TRUE, start_perc=1, threads=8)
+plot_lst  <- PAC_saturation(PAC, resample=10, steps=10, thresh=c(1,500), threads=8)
 cowplot::plot_grid(plot_lst$A,plot_lst$B)
 
 }
@@ -65,13 +64,22 @@ cowplot::plot_grid(plot_lst$A,plot_lst$B)
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_filtsep}}, \code{\link{PAC_jitter}},
-  \code{\link{PAC_mapper}}, \code{\link{PAC_mismap}},
-  \code{\link{PAC_nbias}}, \code{\link{PAC_pca}},
-  \code{\link{PAC_pie}}, \code{\link{PAC_rpm}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_jitter}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

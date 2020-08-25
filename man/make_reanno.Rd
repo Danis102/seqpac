@@ -51,8 +51,11 @@ identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview))
   Bowtie \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC reannotation: \code{\link{add_reanno}},
-  \code{\link{check_reanno}}, \code{\link{import_reanno}},
-  \code{\link{map_reanno}}, \code{\link{simplify_reanno}}
+Other PAC reannotation: 
+\code{\link{add_reanno}()},
+\code{\link{check_reanno}()},
+\code{\link{import_reanno}()},
+\code{\link{map_reanno}()},
+\code{\link{simplify_reanno}()}
 }
 \concept{PAC reannotation}

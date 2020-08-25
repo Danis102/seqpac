@@ -18,12 +18,29 @@
 #' @param mismatches Integer indicating the number of mismatches that should be
 #'   allowed in the mapping.
 #'
+#' @param N_up Character indicating a sequence that should be added to the
+#'   reference at the 5' end prior to mapping. A wild card nucleotides "NNN"
+#'   (any of C, T, G, A) can for example be added for mapping non-perfect
+#'   reference hits. No nucleotides are added by default.
+#'   
+#' @param N_down Character. Same as N_up but indicating a sequence that should
+#'   be added to the reference at the 3' end. Useful for tRNA analysis where the
+#'   reference do not contain pre-processed tRNA. Setting N_down="NNN" or "CCA"
+#'   (in many species CCA is added to mature tRNA) will allow mapping against
+#'   the mature tRNA. No nucleotides are added by default.
+#'   
 #' @param threads Integer indicating the number of parallel processes that
 #'   should be used.
 #'
 #' @param par_type Character indicating if "PSOCK" or "FORK" should be parsed to
 #'   parallel::makeCluster (default="PSOCK").
-#'
+#'   
+#'   
+#' @param report_string Logical whether an alignment string that shows in
+#'   character where sequences align against the reference. Works well with
+#'   tRNA, but makes the Alignments object difficult to work with when longer
+#'   references are used (default=FALSE).
+#'   
 #' @return Stacked list, where each object on the highest level contains:
 #'                    (Object 1) Reference name and sequence. 
 #'                    (Object 2) Dataframe showing the mapping results of
@@ -87,7 +104,7 @@
 #' 
 #' @export
 
-PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
+PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK", N_up="", N_down="", report_string=FALSE){
                           require(foreach)
                           
                           # Setup
@@ -100,7 +117,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                                           full <- Biostrings::readDNAStringSet(ref)
                                           }else{full <- ref}  
                           nams_full <- names(full) # Names are lost in the next step
-                          full <- Biostrings::DNAStringSet(paste("NNN", full, "NNN", sep=""))
+                          full <- Biostrings::DNAStringSet(paste(N_up, full, N_down, sep=""))
                           names(full) <- nams_full
 
                           ## Aligning using parallel processing
@@ -159,6 +176,26 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK"){
                                     cat(paste0("\n Done ", Sys.time()))
                           }
 
+                          
+                          
+                          if(report_string==TRUE){
+                          fin_lst <- lapply(fin_lst, function(x){
+                                                          x$Ref_seq -> ref
+                                                          x$Alignments -> algn
+                                                          n_ref <- nchar(as.character(ref))
+                                                          algn_lst <- split(algn, factor(row.names(algn), levels=row.names(algn)))
+                                                          positions_lst <- foreach(j=1:length(algn_lst), .final=function(y){names(y) <- names(algn_lst);return(y)})  %dopar% {
+                                                                                  ref=ref
+                                                                                  n_ref=n_ref
+                                                                                  algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), rownames(algn_lst[[j]]), strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), sep="")
+                                                                                  return(algn_str)
+                                                                                  }
+                                                          df <- cbind(algn, data.frame(Align_string=as.character(paste(do.call("c", positions_lst))), stringsAsFactors=FALSE))
+                                                          return(list(Ref_seq=ref, Alignments=df))
+                                                          })
+                          }
+                          
                           parallel::stopCluster(cl)
                           return(fin_lst)
                           }
+                          

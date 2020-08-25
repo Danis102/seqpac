@@ -4,9 +4,16 @@
 \alias{PAC_jitter}
 \title{Plots jitter plot from PAC object}
 \usage{
-PAC_jitter(PAC, summary_target = NULL, anno_target = NULL,
-  type = "jitter", limits = NULL, ypos_n = NULL, colvec = NULL,
-  box = TRUE)
+PAC_jitter(
+  PAC,
+  summary_target = NULL,
+  anno_target = NULL,
+  type = "jitter",
+  limits = NULL,
+  ypos_n = NULL,
+  colvec = NULL,
+  box = TRUE
+)
 }
 \arguments{
 \item{summary_target}{List with: 1st object being a character vector of the
@@ -76,13 +83,22 @@ cowplot::plot_grid(plotlist=plots_FCgrand[1:9],nrow = 3, ncol = 3)
 \url{https://github.com/Danis102} for updates on the current
   package.
 
-Other PAC analysis: \code{\link{PAC_covplot}},
-  \code{\link{PAC_deseq}}, \code{\link{PAC_filter}},
-  \code{\link{PAC_filtsep}}, \code{\link{PAC_mapper}},
-  \code{\link{PAC_mismap}}, \code{\link{PAC_nbias}},
-  \code{\link{PAC_pca}}, \code{\link{PAC_pie}},
-  \code{\link{PAC_rpm}}, \code{\link{PAC_saturation}},
-  \code{\link{PAC_sizedist}}, \code{\link{PAC_stackbar}},
-  \code{\link{PAC_summary}}, \code{\link{PAC_trna}}
+Other PAC analysis: 
+\code{\link{PAC_covplot}()},
+\code{\link{PAC_deseq}()},
+\code{\link{PAC_filter}()},
+\code{\link{PAC_filtsep}()},
+\code{\link{PAC_mapper}()},
+\code{\link{PAC_mismap}()},
+\code{\link{PAC_nbias}()},
+\code{\link{PAC_pca}()},
+\code{\link{PAC_pie}()},
+\code{\link{PAC_rpm}()},
+\code{\link{PAC_saturation}()},
+\code{\link{PAC_sizedist}()},
+\code{\link{PAC_stackbar}()},
+\code{\link{PAC_summary}()},
+\code{\link{PAC_tRNA}()},
+\code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}
