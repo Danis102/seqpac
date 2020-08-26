@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_rpm.R
 \name{PAC_rpm}
 \alias{PAC_rpm}
-\title{Generates RPM values from a PAC object}
+\title{Generates normalized values from a PAC object (deprecated)}
 \usage{
 PAC_rpm(PAC)
 }
@@ -11,17 +11,17 @@ PAC_rpm(PAC)
 row names and a Count table with raw counts.}
 }
 \value{
-dataframe
+A normalized count table (
 }
 \description{
-\code{generate_rpm} Generates RPM values from a PAC object
+\code{PAC_rpm} Generates RPM values from a PAC object (deprecated)
 }
 \details{
 Using the counts in a PAC object to generate RPM values in a dataframe with
 the same rownames as in the original PAC object
 }
 \examples{
-  df  <- PAC_rpm(PAC) 
+  df  <- PAC_norm(PAC, type="rpm") 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current
@@ -36,6 +36,7 @@ Other PAC analysis:
 \code{\link{PAC_mapper}()},
 \code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
+\code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_saturation}()},

@@ -65,8 +65,6 @@
 #' 
 #' @export
 
-
-
 PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
                                             library(ggplot2, quietly=TRUE)
                                             options(scipen=999)

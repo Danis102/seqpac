@@ -1,6 +1,6 @@
-#' Generates RPM values from a PAC object
+#' Generates normalized values from a PAC object (deprecated)
 #'
-#' \code{generate_rpm} Generates RPM values from a PAC object
+#' \code{PAC_rpm} Generates RPM values from a PAC object (deprecated)
 #' 
 #' Using the counts in a PAC object to generate RPM values in a dataframe with
 #' the same rownames as in the original PAC object
@@ -12,21 +12,13 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a Count table with raw counts.
-#'
-#' @return dataframe
+#'   
+#' @return A normalized count table (
 #'
 #' @examples
-#'   df  <- PAC_rpm(PAC) 
+#'   df  <- PAC_norm(PAC, type="rpm") 
 #' @export
 #' 
-PAC_rpm <- function(PAC){
-                                                      lib_sizes <- colSums(PAC$Counts)
-                                                      counts_RPM <- data.frame(matrix(NA, nrow=nrow(PAC$Counts), ncol=ncol(PAC$Counts)))
-                                                      colnames(counts_RPM) <- colnames(PAC$Counts)
-                                                      rownames(counts_RPM) <- rownames(PAC$Counts)
-                                                      for (i in 1:length(lib_sizes)){
-                                                                        counts_RPM[,i] <- (PAC$Counts[,i]/(lib_sizes[i]/1000000))
-                                                      }
-                                                      PAC$norm$rpm <- counts_RPM
-                                                      return(PAC)
-                                }
+PAC_rpm<- function(PAC){
+                  stop("PAC_rpm has been depricated.\nPlease use PAC_norm instead.")  
+                  }

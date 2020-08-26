@@ -128,6 +128,7 @@ Other PAC analysis:
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
+\code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_rpm}()},

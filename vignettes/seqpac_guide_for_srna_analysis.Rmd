@@ -192,7 +192,7 @@ While an anno_target that will target sequences of 22 nt in length would look li
 
 Notice that both target objects is a list of two character vectors, one
 targeting a specific column and one targeting specific groups within that
-column. 
+column.
 
 Important, if the second object is set to NULL or is empty this will
 automatically target all samples in a given column. If the anno_target is a
@@ -220,8 +220,8 @@ coverage=7, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL) ,
 
 Here are some examples:
 ```{r}
-# Extracts all sequences between 5-80 nt in length with at least 5 counts in 30% of all samples. 
-PAC_lowfilt <- PAC_filter(pac_master, size=c(5,80), threshold=5, coverage=30, type="counts",  
+# Extracts all sequences between 5-80 nt in length with at least 5 counts in 20% of all samples. 
+PAC_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5, coverage=20, type="counts",  
                           pheno_target=NULL, anno_target=NULL)
 
 # Extracts all sequences with 22 nt size and the samples test1 and test2 replicates. 
@@ -242,7 +242,8 @@ dataframe. Converted into a character vector with unique names (using `unique` +
 `do.call`) they can be applied as a anno_target that targets sequence names in
 Anno. 
 
-Hint, the dataframe output of PAC_filtsep has been designed for the purpose of generating Venn diagrams that visualize top overlaps across groups:
+Hint, the dataframe output of PAC_filtsep has been designed for the purpose of
+generating Venn diagrams that visualize top overlaps across groups:
 ```{r}
 olap <- reshape2::melt(filtsep, measure.vars = c("Ovaries", "Sperm"), na.rm=TRUE)
 plot(venneuler::venneuler(data.frame(olap[,2], olap[,1])))
@@ -250,7 +251,10 @@ plot(venneuler::venneuler(data.frame(olap[,2], olap[,1])))
 ```
 
 ### 2.2.3 Storage of processed data in PAC
-While the master PAC only contains three different dataframe objects (P, A and C), during analysis additional 'folders' will be stored in the PAC object. In fact, you may choose to store any number of objects in your PAC as long as they do not conflict with the names of the standard folders which are:
+While the master PAC only contains three different dataframe objects (P, A and
+C), during analysis additional 'folders' will be stored in the PAC object. In
+fact, you may choose to store any number of objects in your PAC as long as they
+do not conflict with the names of the standard folders which are:
 
     Pheno (P):   dataframe
     Anno (A):    dataframe
@@ -258,11 +262,38 @@ While the master PAC only contains three different dataframe objects (P, A and C
     norm:        list of dataframes
     summary:     list of dataframes
 
-The *norm* folder will be used to store Counts that have been normalized in different ways, while the *summary* folder will contain the data that has been summerized across groups of samples. In both cases, applying a filter using `PAC_filter` will automatically subset not only P, A, and C, but also all tables stored in *norm* and *summary*. 
+The *norm* folder will be used to store Counts that have been normalized in
+different ways, while the *summary* folder will contain the data that has been
+summerized across groups of samples. In both cases, applying a filter using
+`PAC_filter` will automatically subset not only P, A, and C, but also all tables
+stored in *norm* and *summary*.
 
 
 ### 2.2.4 Normalization
+The built in normalization methods in seqpac are handled by the `PAC_norm`
+function. In the current version only two methods are: 
 
+    1. Reads Per Million (rpm) 
+    2. Variance-Stabalizing Transformation (vst)
+
+Nonetheless, it is easy to generate your own normalized count table using your
+method of choice, and import it as a dataframe to the *norm* folder in the PAC
+object. Just remember that row and column names must be identical to the original Counts
+table. Use `PAC_check` to verify that this is the case.
+
+More specifically, rpm normalize the dataset according to the total number of reads, while vst uses the 
+
+Lets generate two normalized count tables with rpm and vst:
+```{r}
+# Since pac_master is small to begin with we use thi
+
+pac_rpm <- PAC_norm(pac_master, type="rpm")
+pac_vst <- PAC_norm(pac_master, type="rpm")
+
+
+
+    sometimes refered to as counts per million
+reads)
 
 
 
