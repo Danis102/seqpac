@@ -75,7 +75,7 @@ Other PAC generation:
 \code{\link{import_sports}()},
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts2}()},
+\code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
 \code{\link{progress_report}()}
 }

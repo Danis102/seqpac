@@ -42,7 +42,7 @@ fastq file (input file for Sports). Files will be imported
 Other PAC generation: 
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts2}()},
+\code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
 \code{\link{make_pheno}()},
 \code{\link{progress_report}()}

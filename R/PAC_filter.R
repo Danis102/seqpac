@@ -91,7 +91,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(PAC$norm, function(x){x[, ord_mch, drop=FALSE]})}
 
                                               tab_pheno <- as.data.frame(table(sub_pheno))
-                                              cat(paste0("\nPheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples\n"))
+                                              cat(paste0("\n-- Pheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples."))
                                                 }  
                                                                                         
                                             ### Subset data by Anno
@@ -101,8 +101,8 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                               sub_anno <- as.character(PAC$Anno[,anno_target[[1]]]) %in% anno_target[[2]]
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_anno,]})}
                                               if(any(names(PAC)=="summary")){PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_anno,]})}
-                                              PAC$Counts  <- PAC$Counts[sub_anno,]
-                                              PAC$Anno  <- PAC$Anno[sub_anno,]
+                                              PAC$Counts  <- PAC$Counts[sub_anno,,drop=FALSE]
+                                              PAC$Anno  <- PAC$Anno[sub_anno,,drop=FALSE]
                                               
                                               ord_mch <- order(match(as.character(PAC$Anno[,anno_target[[1]]]), anno_target[[2]]))
                                               PAC$Counts <- PAC$Counts[ord_mch,,drop=FALSE]
@@ -111,7 +111,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                               if(any(names(PAC)=="summary")){PAC$summary <- lapply(PAC$summary, function(x){x[ord_mch,, drop=FALSE]})}
                                               
                                               tab_anno <- as.data.frame(table(sub_anno))
-                                              cat(paste0("\nAnno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs\n")) 
+                                              cat(paste0("\n-- Anno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs.")) 
                                             }  
                                             
                                             if(subset_only==TRUE){return(PAC)
@@ -125,16 +125,16 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                             PAC$Counts  <- PAC$Counts[sub_size, , drop=FALSE] 
                                             PAC$Anno  <- PAC$Anno[sub_size, , drop=FALSE]
                                             tab_anno <- as.data.frame(table(sub_size))
-                                            cat(paste0("\nSize filter will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_size), " seqs\n"))
+                                            cat(paste0("\n-- Size filter will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_size), " seqs."))
                                               
                                             ### Extract essential information
                                             if(is.null(type)){return(PAC)}else{
-                                            if(type=="rpm"){ df <- PAC$norm$rpm; cat("\nRPM filter was specified\n")}
-                                            if(type=="counts"){ df <- PAC$Counts; cat("\nCount filter was specified\n")}    
+                                            if(type=="rpm"){ df <- PAC$norm$rpm; cat("\n-- RPM filter was specified.")}
+                                            if(type=="counts"){ df <- PAC$Counts; cat("\n-- Count filter was specified.")}    
                                             
                                             ### Check col and row names
-                                            if(!identical(rownames(PAC$Anno), rownames(df))){stop("\nError: Not matching rownames in input files! (Anno vs data)")}
-                                            if(!identical(rownames(PAC$Pheno), colnames(df))){stop("\nError: Not matching rownames in input files!")}
+                                            if(!identical(rownames(PAC$Anno), rownames(df))){stop("\n\nError: Not matching rownames in input files! (Anno vs data)")}
+                                            if(!identical(rownames(PAC$Pheno), colnames(df))){stop("\n\nError: Not matching rownames in input files!")}
                                							
                                             ### Create filter
                                             idx_filt <- data.frame(rowSums(df >= threshold)) >= round(ncol(df)*(coverage*0.01))
@@ -175,7 +175,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                               												}
 
                                             ### Apply rpm filter
-                                              cat(paste0("\nThe chosen filters will retain: ", idx_tab[idx_tab[,1]==TRUE, 2], " of ", strt, " seqs\n"))   
+                                              cat(paste0("\n-- The chosen filters will retain: ", idx_tab[idx_tab[,1]==TRUE, 2], " of ", strt, " seqs."))   
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[idx_filt,, drop=FALSE]})}
                                               if(any(names(PAC)=="summary")){PAC$summary <- lapply(as.list(PAC$summary), function(x){x[idx_filt,, drop=FALSE]})}
                                               PAC$Counts  <- PAC$Counts[idx_filt,, drop=FALSE] 
@@ -184,11 +184,11 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                               
                                             }}
                                             ## Double check
-                                                   if(!identical(rownames(PAC$Anno), rownames(PAC$Counts))){stop("Error: Not matching rownames in input files! (Anno vs Counts)")}
-                                                   if(!identical(rownames(PAC$Pheno), colnames(PAC$Counts))){stop("Error: Not matching rownames/colnames in input files! (Pheno vs Counts)")}
+                                                   if(!identical(rownames(PAC$Anno), rownames(PAC$Counts))){stop("\n\nError: Not matching rownames in input files! (Anno vs Counts)")}
+                                                   if(!identical(rownames(PAC$Pheno), colnames(PAC$Counts))){stop("\n\nError: Not matching rownames/colnames in input files! (Pheno vs Counts)")}
                                               if(type=="rpm"){  
-                                                   if(!any(do.call("c", lapply(as.list(PAC$norm), function(x){identical(rownames(PAC$Anno), rownames(x))})))){stop("Error: Not matching rownames in input files! (Anno vs RPM)")}
-                                                   if(!any(do.call("c", lapply(as.list(PAC$norm), function(x){identical(colnames(PAC$Counts), colnames(x))})))){stop("Error: Not matching rownames/colnames in input files! (Pheno vs RPM)")}
+                                                   if(!any(do.call("c", lapply(as.list(PAC$norm), function(x){identical(rownames(PAC$Anno), rownames(x))})))){stop("\n\nError: Not matching rownames in input files! (Anno vs RPM)")}
+                                                   if(!any(do.call("c", lapply(as.list(PAC$norm), function(x){identical(colnames(PAC$Counts), colnames(x))})))){stop("\n\nError: Not matching rownames/colnames in input files! (Pheno vs RPM)")}
                                               }
                                     if(!subset_only==TRUE){return(PAC)}
                                       }      
