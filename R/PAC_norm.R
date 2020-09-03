@@ -48,11 +48,11 @@ PAC_norm <- function(PAC, type="rpm", PAC_merge=TRUE){
                           
                           }
                   if(type=="vst") { 
-                          fin <- DESeq2::varianceStabilizingTransformation(as.matrix(pac_master$Counts), blind=TRUE, fitType="mean")
+                          fin <- DESeq2::varianceStabilizingTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="mean")
                           PAC$norm$vst <- fin 
                   }
                   if(type=="rlog") { 
-                          fin <- DESeq2::rlogTransformation(as.matrix(pac_master$Counts), blind=TRUE, fitType="mean")
+                          fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="mean")
                           PAC$norm$rlog <- fin 
                   }
           if(PAC_merge==TRUE){return(PAC)} else {return(fin)} 
