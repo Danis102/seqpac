@@ -151,7 +151,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                         														filt_plot[i,2] <- tab$Freq[tab$Var1=="TRUE"]
                                         												}
                               							### Plot graph
-                              												p <- ggplot(filt_plot, aes(x=x_graph, y=n_features, fill=x_graph))+
+                              												suppressWarnings( p <- ggplot(filt_plot, aes(x=x_graph, y=n_features, fill=x_graph))+
                               																			geom_line()+
                               																			geom_point(cex=2, fill="blue")+
                               																			geom_hline(yintercept=0)+
@@ -162,7 +162,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                               																			theme(axis.text.x = element_text(angle = 90, hjust = 0))+
                               																			geom_vline(xintercept=threshold, col="red")+
                               												              geom_label(x=50, y=max(filt_plot[,2])*0.95, label=paste0("n input sequences: ", strt, "\nn analyzed sequences: ", nrow(df), "\nn sequences after filter: ",idx_tab[idx_tab[,1]==TRUE, 2]), show.legend = FALSE)+
-                              																			theme(plot.margin=margin(t = 1, r = 1, b = 1, l = 1, unit="cm"), plot.title = element_text(color="red", size=10))
+                              																			theme(plot.margin=margin(t = 1, r = 1, b = 1, l = 1, unit="cm"), plot.title = element_text(color="red", size=10)) )
                               												Sys.sleep(0.01)
                               												print(p)
                               							### Promt for user input					
