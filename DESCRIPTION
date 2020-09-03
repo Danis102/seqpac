@@ -4,7 +4,7 @@ Title: seqpac - An R-package for Group-based Analysis of Short Reads using Count
 Version: 0.1.3
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
-    person("Lovisa", "Holm", email="lovisa.holm@liu.se", role= "ctb"),
+    person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
     person("Signe", "Skog", email="signe.skog@liu.se", role= "ctb"),
     person("Anita", "Öst", email="anita.ost@liu.se", role= c("aut", "fnd"))
     )
