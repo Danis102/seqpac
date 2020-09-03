@@ -131,7 +131,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                             if(type=="counts"){ df <- PAC$Counts; cat("\n-- Count filter was specified.")}    
                                             
                                             ### Check col and row names
-                                            if(!identical(rownames(PAC$Anno), rownames(df))){stop("\n\nError: Not matching rownames in input files! (Anno vs data)")}
+                                            if(!identical(rownames(PAC$Anno), rownames(df))){stop("\n\nError: Not matching rownames in input files! (Anno vs Counts)")}
                                             if(!identical(rownames(PAC$Pheno), colnames(df))){stop("\n\nError: Not matching rownames in input files!")}
                                							
                                             ### Create filter
