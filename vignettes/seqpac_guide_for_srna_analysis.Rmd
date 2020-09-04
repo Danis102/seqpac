@@ -78,21 +78,6 @@ The workflow is roughly divided into three steps:
 
 ## 2 Running the seqpac workflow 
 
-### 2.05 The short rundown
-
-```{r}
-library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_counts.Rdata", package = "seqpac", mustWork = TRUE))
-anno <- make_anno(input=counts$counts, type="counts")
-prog <- progress_report(counts)
-path_to_fastq <- system.file("extdata", package = "seqpac")
-pheno <- as.data.frame(do.call("rbind", strsplit(list.files(path_to_fastq, pattern="*.fastq.gz"), "_|\\."))[,c(2,4,5)]) 
-colnames(pheno) <- c("sample", "type", "replicate"); rownames(pheno) <- colnames(counts$counts)
-pheno <- make_pheno(pheno_input=pheno, progress_report=prog, counts=counts$counts)
-
-
-```
-
 ### 2.1 Example dataset
 Contained within this package are six example fastq files. These files were
 originally generated from extracting sRNA from fruit fly ovaries and sperm
@@ -313,6 +298,56 @@ pac_rpm <- PAC_norm(pac_master, type="rpm")
 pac_vst <- PAC_norm(pac_master, type="vst")
 
 ``` 
+
+From this, it may be wise to run a further filtering step to remove reads with low 
+RPM values. 
+
+```{r}
+
+pac_rpm_filter <- PAC_filter(pac_rpm, type="rpm")
+
+``` 
+
+### 2.3.5 Data Visualization
+One excellent tool for studying the structure of the data is to study the relationship
+of its principal components. This can be done with a PCA plot, where the distance of
+datapoints are calculated and presented in a figure. A principal component analysis (PCA)
+can only show how the data relates to one another, not why it behaves this way.
+To produce a PCA plot with seqpac, use PAC_pca:
+
+```{r}
+
+pca_all_cnt <- PAC_pca(pac_rpm_filter, type="counts")
+pca_all_rpm <- PAC_pca(pac_rpm_filter, type="rpm")
+
+``` 
+
+### 2.3.6 Differential Expression
+In RNA-sequencing it is common to look for differnetially expressed transcripts and there
+are several ways to study this. In addition to RPM, seqpac offers a function integrating
+DESeq2 differential expression with the PAC dataset, PAC_deseq. DESeq2 uses a negative
+binomial generailzed linear model to find differentially expressed transcripts in the data.
+When running PAC_deseq, it is important to formulate a correct model. For more information
+about designs and DESeq2 in general, please see https://github.com/mikelove/DESeq2 .
+
+```{r}
+ 
+model= ~Tissue+Exp
+pac_deseq <- PAC_deseq(pac_rpm_filter, model=model, main_factor="Testis", norm=TRUE, histogram=TRUE, threads=4, pheno_target=NULL, anno_target=NULL)
+
+
+``` 
+
+### 2.3.7 Plotting Data
+seqpac offers several ways to plot your data. 
+
+-PAC_covplot
+-PAC_jitter
+-PAC_pie
+-PAC_stackbar
+-PAC_sizedist
+
+
 
 A PAC object in its most basic form is a list containing three types of data frames: 
     - Phenotype table (P): Sample names (rows) with associated metadata (columns) e.g. groups. 
