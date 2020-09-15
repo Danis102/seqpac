@@ -48,6 +48,7 @@ PAC_norm <- function(PAC, type="rpm", PAC_merge=TRUE){
                           
                           }
                   if(type=="vst") { 
+
                           fin <- DESeq2::varianceStabilizingTransformation(as.matrix(pac_master$Counts), blind=TRUE, fitType="parametric")
                           PAC$norm$vst <- fin 
                   }

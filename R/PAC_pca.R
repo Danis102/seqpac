@@ -16,18 +16,22 @@
 #'  analysis will be done on rpm values returned from PAC_rpm function and
 #'  stored in the norm folder of the PAC-list object.
 #'
-#'@param anno_target List with: 1st object being character vector of target
+#'@param anno_target List with: 1st object being a character vector of target
 #'  column(s) in Anno, 2nd object being a character vector of the target
 #'  biotype(s) in the target column (1st object). Important, the 2nd object is
 #'  order sensitive, meaning that categories will appear in the same order in
 #'  the pie. (default=NULL)
 #'
 #'
-#'@param pheno_target List with: 1st object being character vector of target
+#'@param pheno_target List with: 1st object being a character vector of target
 #'  column(s) in Pheno, 2nd object being a character vector of the target
 #'  group(s) in the target column (1st object). Important, the 2nd object is
 #'  order sensitive, meaning that categories will appear in the same order in
 #'  the pie. (default=NULL)
+#'
+#'@param pheno_anno List with: 1st object being a character vector of desired
+#'  column in Pheno to use for annotating colors in graph. (default=NULL)
+#'
 #'
 #'
 #'
@@ -67,23 +71,28 @@
 #'
 #' @export
 
-PAC_pca <- function(PAC, type="counts", pheno_target=NULL, anno_target=NULL){
-                                      if(type=="counts"){ data <- PAC$Counts }
-                                      if(type=="rpm"){ data <- PAC$norm$rpm }    
+PAC_pca <- function(PAC, type="counts", pheno_target=NULL, anno_target=NULL, pheno_anno=NULL){
+  if(type=="counts"){ data <- PAC$Counts }
+  if(type=="rpm"){ data <- PAC$norm$rpm }    
   
-                                      if(!is.null(pheno_target)){
-                                                  phn_indx  <-  PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]]
-                                                  PAC$Pheno <- PAC$Pheno[phn_indx,]
-                                                  data <- data[,phn_indx]
-                                                  }
-                                      if(!is.null(anno_target)){
-                                                  ann_indx <- PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]]
-                                                  PAC$Anno <- PAC$Anno[ann_indx,]
-                                                  data <- data[ann_indx, ]
-                                                  }
-                                      stopifnot(identical(rownames(PAC$Anno), rownames(PAC$Counts)))
-                                      stopifnot(identical(rownames(PAC$Pheno), colnames(PAC$Counts)))
-                                      
-                                      PCA_res <- FactoMineR::PCA(t(data), graph=FALSE)
-                                      return(PCA_res)
-                                      }
+  if(!is.null(pheno_target)){
+    phn_indx  <-  PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]]
+    PAC$Pheno <- PAC$Pheno[phn_indx,]
+    data <- data[,phn_indx]
+  }
+  if(!is.null(anno_target)){
+    ann_indx <- PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]]
+    PAC$Anno <- PAC$Anno[ann_indx,]
+    data <- data[ann_indx, ]
+  }
+  stopifnot(identical(rownames(PAC$Anno), rownames(PAC$Counts)))
+  stopifnot(identical(rownames(PAC$Pheno), colnames(PAC$Counts)))
+  
+  PCA_res <- FactoMineR::PCA(t(data), graph=FALSE)
+  p1<-factoextra::fviz_pca_ind(PCA_res, habillage = PAC$Pheno[,pheno_anno[[1]]], geom="point", addEllipses = TRUE, axes = c(1,2))
+  p2<-factoextra::fviz_pca_ind(PCA_res, habillage = PAC$Pheno[,pheno_anno[[1]]], geom="point", addEllipses = TRUE, axes=c(1,3))
+  p3<-factoextra::fviz_pca_ind(PCA_res, habillage = PAC$Pheno[,pheno_anno[[1]]], geom="point", addEllipses = TRUE, axes=c(2,3))
+  require(patchwork)
+  print(p1 + p2 + p3)
+  return(PCA_res)
+}
