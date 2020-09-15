@@ -1,6 +1,6 @@
 #' Generates normalized values from a PAC object
 #'
-#' \code{PAC_norm} Generates RPM values from a PAC object
+#' \code{PAC_norm} generates RPM values from a PAC object
 #' 
 #' Using the counts in a PAC object to generate RPM values in a dataframe with
 #' the same rownames as in the original PAC object
@@ -48,11 +48,12 @@ PAC_norm <- function(PAC, type="rpm", PAC_merge=TRUE){
                           
                           }
                   if(type=="vst") { 
-                          fin <- DESeq2::varianceStabilizingTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="mean")
+
+                          fin <- DESeq2::varianceStabilizingTransformation(as.matrix(pac_master$Counts), blind=TRUE, fitType="parametric")
                           PAC$norm$vst <- fin 
                   }
                   if(type=="rlog") { 
-                          fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="mean")
+                          fin <- DESeq2::rlogTransformation(as.matrix(pac_master$Counts), blind=TRUE, fitType="parametric")
                           PAC$norm$rlog <- fin 
                   }
           if(PAC_merge==TRUE){return(PAC)} else {return(fin)} 

@@ -1,4 +1,4 @@
-#' Advanced sequences mapping of a PAC object 
+#' Advanced sequence mapping of a PAC object 
 #'
 #' \code{PAC_mapper} Mapping sequences against a reference.
 #'

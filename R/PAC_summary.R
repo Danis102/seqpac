@@ -14,10 +14,10 @@
 #'   a Counts table with raw counts and a normalized list-folder containing
 #'   tables with normalized Counts (e.g. rpm).
 #'
-#' @param norm Character indicating what type of data to be used. If raw the raw
-#'   counts in Counts will be used (default="raw"). Given any other value, the
+#' @param norm Character indicating what type of data to be used. If 'counts' the raw
+#'   counts in Counts will be used (default). Given any other value, the
 #'   function will search for the value as a name on a dataframe stored in the
-#'   normalized list-folder (created for example by PAC_rpm).
+#'   normalized list-folder (created for example by PAC_norm).
 #'
 #' @param type Character indicating what type of summary to be applied to the
 #'   data.
@@ -62,13 +62,13 @@
 #' 
 #' @export
 #' 
-PAC_summary <- function(PAC, norm="raw", type="means", pheno_target=NULL, rev=FALSE, PAC_merge=FALSE){
+PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev=FALSE, PAC_merge=FALSE){
 
                               ### Extract data ###
-                                    if(norm=="raw"){
+                                    if(norm=="counts"){
                                             data <- PAC$Counts
                                     }else{  
-                                          if(is.null(PAC$norm[[norm]])){stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_rpm,\n  or would you rather run the function on raw counts using norm='raw'?)"))}  
+                                          if(is.null(PAC$norm[[norm]])){stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_rpm,\n  or would you rather run the function on raw counts using norm='counts'?)"))}  
                                           data <- PAC$norm[[norm]]
                                     }
                               

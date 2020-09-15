@@ -29,7 +29,7 @@ retruned as a data frame.}
 A normalized count table
 }
 \description{
-\code{PAC_norm} Generates RPM values from a PAC object
+\code{PAC_norm} generates RPM values from a PAC object
 }
 \details{
 Using the counts in a PAC object to generate RPM values in a dataframe with

@@ -1,10 +1,10 @@
 Package: seqpac
 Type: Package
-Title: seqpac - An R-package for Group-based Analysis of Short Reads using Counts of Unique Sequences
+Title: seqpac - Group-based Analysis of Short Reads in R
 Version: 0.1.3
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
-    person("Lovisa", "Holm", email="lovisa.holm@liu.se", role= "ctb"),
+    person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
     person("Signe", "Skog", email="signe.skog@liu.se", role= "ctb"),
     person("Anita", "Öst", email="anita.ost@liu.se", role= c("aut", "fnd"))
     )
@@ -19,7 +19,7 @@ Description: A collection of functions used for complete analysis of short seque
     - Phenotype table (P): Sample names (rows) with associated metadata (columns) e.g. groups. 
     - Annotation table (A): Unique sequences (rows) with annotation (columns), eg. reference alignment.     
     - Counts table (C): Counts of unique sequences (rows) for each sample (columns).
-    The PAC list-objects follows the rule:
+    The PAC list-objects follow the rule:
     - Row names in P must be identical with column names in C.
     - Row names in A must be identical with row names in C.
     Thus P and A describes the columns and rows in C, respectively. The targeting system, will either 
@@ -30,6 +30,8 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Import:
+  stringr,
+  ShortRead,
   parallel,
   pbmcapply,
   data.table,

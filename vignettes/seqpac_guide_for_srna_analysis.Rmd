@@ -73,19 +73,23 @@ The workflow is roughly divided into three steps:
 
     i. Generate a PAC object from fastq-files
     ii. Preprocess the PAC object
-    iii. Analyze the PAC object using Targeting objects.
+    iii. Annotate the PAC object
+    iv. Analyze the PAC object.
 
 
-## 2 Running the seqpac workflow 
+# 2 Running the seqpac workflow 
 
-### 2.1 Example dataset
+## 2.1 Example dataset
+
 Contained within this package are six example fastq files. These files were
 originally generated from extracting sRNA from fruit fly ovaries and sperm
 (three each). The files were downsampled from original fastq-files aquired by
 Illumina NextSeq 500 sequencer using a High Output 75 cycles flowcell (product
 no: 20024906). 
 
-### 2.2 Generate a PAC object from fastq-files
+## 2.2 Generate a PAC object from fastq-files
+
+### 2.2.1 make_counts
 The first step depends on two external softwares, cutadapt and
 fastq_quality_filter, which will trim the adapter sequence and remove low
 quality reads prior of making a count table (C).
@@ -105,11 +109,14 @@ load(system.file("extdata", "drosophila_sRNA_counts.Rdata", package = "seqpac", 
 <br>
 For linux users with all dependencies installed:
 ```{r, eval = FALSE}
+###--------------------------------------------------------------------- 
 # Generate counts using setting path to fastq files and parse commands to cutadapt
 # (Note, the cutadapt parse argument is specifcly designed for sRNA trimming
 # with a NebNext smallRNA Library Prep Set For Illumina (E7330) adapter.) 
 path_to_fastq <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+
 parse_to_cutadapt <- "cutadapt -j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 5 -m 5"
+
 counts <- make_counts(path_to_fastq, type="fastq", threads=4, cutadpt=TRUE, parse=parse_to_cutadapt)
 
 ```
@@ -126,25 +133,30 @@ together with sequences that have better evidence. As seqpac focuses on group
 analysis evidence from at least two independent samples, this is a minimum inclusion
 criteria.
 
-<br>
+### 2.2.2 make_anno
 Next, generate a simple Anno table (A):
 ```{r, results = "hide"}
-# Generate an annotation table from the counts table 
+###--------------------------------------------------------------------- 
+## Generate a annotation table from the counts table 
 anno <- make_anno(input=counts$counts, type="counts")
 
 ```
 
+
 <br>
-Now, generate a Pheno table (P) and add a report from the logs in *counts*
-Pheno table contains sample specific information such as sample name and possible interventions,
+### 2.2.3 make_pheno
+Now, generate a Pheno table (P) and add a report from the logs in *counts*. 
+The Pheno table contains sample specific information such as sample name and possible interventions,
 with each sample as a row. Pheno may be added manually (see ?make_pheno), or produced autoamtically,
 such as in this case: 
 ```{r, results = "hide"}
-# Generate a progress report from the cutadapt/fastq_quality_filter logs in counts
+###--------------------------------------------------------------------- 
+## Generate a progress report from the cutadapt/fastq_quality_filter logs in counts
 prog <- progress_report(counts)
 ```
 ```{r, results = "hide"}
-# Generate Pheno table from file names and add report
+###--------------------------------------------------------------------- 
+## Generate Pheno table from file names and add report
 path_to_fastq <- system.file("extdata", package = "seqpac")
 pheno <- as.data.frame(do.call("rbind", strsplit(list.files(path_to_fastq, pattern="*.fastq.gz"), "_|\\."))[,c(2,4,5)]) 
 colnames(pheno) <- c("sample", "type", "replicate"); rownames(pheno) <- colnames(counts$counts)
@@ -152,17 +164,20 @@ pheno <- make_pheno(pheno_input=pheno, progress_report=prog, counts=counts$count
 
 ```
 
+### 2.2.4 make_PAC
 <br>
 Finally, put everything together as a master PAC object:
 ```{r}
-# Generate PAC object
+###--------------------------------------------------------------------- 
+## Generate PAC object
 pac_master <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=counts$counts)
 names(pac_master)
 
-# If TRUE the PAC object is ok 
+## If TRUE the PAC object is ok 
 PAC_check(pac_master)
 ```
 
+<br>
 ## 2.3 Preprocess the PAC object
 
 ### 2.3.1 Targeting objects
@@ -220,23 +235,26 @@ Seqpac contains two functions for this purpose:
 
 While `PAC_filter` gives a variety of choices to subset the PAC file according
 to for example sequence size or minimum counts in a certain proportion of the
-samples.
+samples.`PAC_filtsep` extracts lists of top.
 
 Here are some examples:
 ```{r}
-# Extracts all sequences between 5-80 nt in length with at least 5 counts in 20% of all samples. 
-PAC_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5, coverage=20, type="counts",  
+###--------------------------------------------------------------------- 
+## Extracts all sequences between 5-80 nt in length with at least 5 counts in 20% of all samples. 
+pac_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5, coverage=20, type="counts",  
                           pheno_target=NULL, anno_target=NULL)
 
-# Extracts all sequences with 22 nt size and the samples test1 and test2 replicates. 
-PAC_subset <- PAC_filter(pac_master, subset_only = TRUE,
+###--------------------------------------------------------------------- 
+## Extracts all sequences with 22 nt size and the samples test1 and test2 replicates. 
+pac_subset <- PAC_filter(pac_master, subset_only = TRUE,
                          pheno_target=list("replicate", c("test1", "test2")), 
-                         anno_target=list("Length", c("22", "24")))
+                         anno_target=list("Length", "22"))
 
-# Extracts all sequences with >=10 counts in 100% of samples within the groups of pac_master$Pheno$type.
+###--------------------------------------------------------------------- 
+## Extracts all sequences with >=10 counts in 100% of samples within each category of the 'type' column in Pheno.
 filtsep <- PAC_filtsep(pac_master, type="counts", threshold=10, coverage=100, pheno_target= list("type"))
 
-PAC_filt <- PAC_filter(pac_master, , subset_only = TRUE,
+pac_filt <- PAC_filter(pac_master, subset_only = TRUE,
                        anno_target= unique(do.call("c", as.list(filtsep))))
                        
                       
@@ -277,10 +295,11 @@ stored in *norm* and *summary*.
 
 ### 2.3.4 Normalization
 The built in normalization methods in seqpac are handled by the `PAC_norm`
-function. In the current version only two methods are present: 
+function. In the current version only three methods are available: 
 
     1. Reads Per Million (rpm) 
     2. Variance-Stabalizing Transformation (vst)
+    3. Regularized log Transformation (rlog)
 
 Nonetheless, it is easy to generate your own normalized count table using your
 method of choice, and import it as a dataframe to the *norm* folder in the PAC
@@ -288,7 +307,13 @@ object. Just remember that row and column names must be identical to the origina
 table. Use `PAC_check` to verify that this is the case.
 
 More specifically, rpm normalize the dataset according to the total number of reads, while vst 
-uses both mean dispersion and size factor to produce homoskedastic values.
+uses both mean dispersion and size factor to produce homoskedastic values with functions avalable in the DESeq2 package. 
+
+
+It is easy to generate your own normalized count table using your
+method of choice, and import it as a dataframe to the *norm* folder in the PAC
+object. Just remember that row and column names must be identical to the
+original Counts table. Use `PAC_check` to verify that this is the case.
 
 Lets generate two normalized count tables with rpm and vst:
 ```{r}
@@ -348,32 +373,40 @@ seqpac offers several ways to plot your data.
 -PAC_sizedist
 
 
+<br>
+Lets generate a few normalized count tables and compare them:
+```{r, fig.width = 6, fig.height = 3}
+###--------------------------------------------------------------------- 
+## Since the example pac_master is small to begin with we use this as start:
+## (You may wish to use a low-filtered PAC for normalization to get rid of noise)
 
-A PAC object in its most basic form is a list containing three types of data frames: 
-    - Phenotype table (P): Sample names (rows) with associated metadata (columns) e.g. groups. 
-    - Annotation table (A): Unique sequences (rows) with annotation (columns), eg. reference alignment.     
-    - Counts table (C): Counts of unique sequences (rows) for each sample (columns).
+pac_rpm <- PAC_norm(pac_master, type="rpm")                 # Returned as a dataframe in the PAC$norm folder
+df_vst <- PAC_norm(pac_master, type="vst", PAC_merge=FALSE) # Returned as a dataframe 
+df_rlog <- PAC_norm(pac_master, type="rlog", PAC_merge=FALSE) 
 
-PAC objects follows the rule:
-    - Row names in P must be identical with column names in C.
-    - Row names in A must be identical with row names in C.
-    Thus P and A describes the columns and rows in C, respectively. The targeting system, will either 
-    target specific samples in P (pheno_target) or sequences in A (anno_target) and group them according 
-    to a target column in P and A, respectively.
+cowplot::plot_grid(nrow=1, ncol=2,
+            ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), mean_vst=rowMeans(df_vst)), aes(x=log2_mean_rpm, y=mean_vst)) + geom_point(),
+            ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), mean_rlog=rowMeans(df_rlog)), aes(x=log2_mean_rpm, y=mean_rlog)) + geom_point())
 
-is the generation and subsequence analysis/visualization of a standardized list object
-called PAC. Using an innovative target system, seqpac extracts, analyze and
-visualize group differences using the PAC object.
-
-prerequisite
-. The pre-requicite  fastq raw sequence
-file and
-
-analysis.  sequence-
-
-
-
-
-```{r setup}
-library(seqpac)
 ```
+
+<br>
+As you probably noticed we only stored the rpm values in the PAC. Lets now apply
+a deeper filter that are based on rpm thresholds:
+
+```{r}
+###--------------------------------------------------------------------- 
+## Extracts all sequences with >=10 counts in 100% of samples within each category of the 'type' column in Pheno.
+filtsep <- PAC_filtsep(pac_rpm, type="rpm", threshold=10, coverage=100, pheno_target= list("type"))
+
+pac_hifilt <- PAC_filter(pac_rpm, subset_only = TRUE,
+                       anno_target= unique(do.call("c", as.list(filtsep))))
+
+PAC_check(pac_hifilt)
+
+ls.str(pac_hifilt)
+```
+
+<br>
+## 2.4 Annotation
+So far we have not bothered about what type of RNA species (or biotype) that we have in our data, but have   
