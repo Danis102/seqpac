@@ -1,2 +1,2 @@
 # seqpac
-Group based analysis of small RNA sequencing data
+seqpac: Group-based Analysis of sRNA in R using Short Read Counts
