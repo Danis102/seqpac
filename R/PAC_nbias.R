@@ -77,55 +77,41 @@
 #' 
 #' @export
 
-PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, pheno_target=NULL, summary_target=NULL, colors=NULL){
-										## Organize input
-                    anno <- PAC$Anno
-										if(!is.null(norm)){
-										    if(norm=="raw"){data <- PAC$Counts; labl <- "rawCounts"
-										    }else{
-										      if(is.null(summary_target)){ data <- PAC$norm[[norm]]; labl <- norm}}
-										}else{data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0(summary_target[[1]])}
+
+ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, pheno_target=NULL, summary_target=NULL, colors=NULL){
+                    # Prepare filtered PAC
+                    if(!is.null(pheno_target)){ 
+ 										if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}}
+ 					          
+                    if(!is.null(anno_target)){ 
+ 										if(length(anno_target)==1){ anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))}}
+ 	                  
+                    if(is.null(range)){range <- c(min(PAC$Anno$Length), max(PAC$Anno$Length))}
                     
-                    if(length(summary_target)==1){summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
-                    if(!is.null(summary_target)){data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
-
-										## Add range filter
-										if(is.null(range)){range <- c(min(anno$Length), max(anno$Length))}
-										filt <- anno$Length >= range[1] & anno$Length <= range[2] 
-							      anno <- anno[filt,]
-										data <- data[filt,]
-										
-										## Reomve unwanted biotypes
-										if(!is.null(anno_target)){ 
-										if(length(anno_target)==1){ anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))}
-										filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
-							      anno <- anno[filt2,]
-										data <- data[filt2,]}
-										
-										## Remove unwanted samples
-										if(!is.null(pheno_target)){ 
-										if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
-										filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
-										data <- data[,filt3,drop=FALSE]
-										ph <- PAC$Pheno[filt3,,drop=FALSE]
-										match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
-										data <- data[,match_pfilt,drop=FALSE]
-										ph <- ph[match_pfilt,,drop=FALSE]
-										}else{ 
-										if(!is.null(summary_target)){ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
-										  
-
-										stopifnot(identical(colnames(data), rownames(ph)))
-										stopifnot(identical(rownames(data), rownames(anno)))          
-										
-										#### Counting nucs
-										anno$nuc_bias <- substr(rownames(anno), start=position, stop=position)
+                    PAC <- seqpac::PAC_filter(PAC, size=range, pheno_target=pheno_target, anno_target=anno_target, subset_only=TRUE)
+                    stopifnot(PAC_check(PAC))
+                    
+                    
+                    # Extract data
+                    if(is.null(summary_target)){
+                        if(is.null(norm)){
+                              dat <- PAC$Counts; labl <- "Counts"}
+                        else{
+                            if(norm=="counts"){dat <- PAC$Counts; labl <- "Counts"}
+                            else{dat <- PAC$norm[[norm]]; labl <- norm}}}
+                    else{dat <- PAC$summary[[summary_target]]; labl <- summary_target}
+                    
+                    # Extract nt anno
+                    anno <-PAC$Anno
+                    anno$nuc_bias <- substr(rownames(anno), start=position, stop=position)
                     cat(paste0("Counting nucleotides"))
                     combin <- c(paste0(range[1]:range[2], "_A"), paste0(range[1]:range[2], "_T"), paste0(range[1]:range[2], "_C"), paste0(range[1]:range[2], "_G"), paste0(range[1]:range[2], "_N"))
-										nuc_lst <- lapply(as.list(data), function(x){
+										nuc_lst <- lapply(as.list(dat), function(x){
 										                          nuc_agg <- aggregate(x, list(factor(paste(anno$Length, anno$nuc_bias, sep="_"))), sum)
 										                          colnames(nuc_agg) <- c("position_nuc", "counts")
-										                          nuc_agg <- rbind(nuc_agg, data.frame(position_nuc=combin[!combin %in% as.character(nuc_agg$position_nuc)], counts=0))
+										                          zeros <- combin[!combin %in% as.character(nuc_agg$position_nuc)]
+										                          if(length(zeros) >0){
+										                                  nuc_agg <- rbind(nuc_agg, data.frame(position_nuc=zeros, counts=0))}
 										                          nuc_agg_ord <- nuc_agg[match(combin, nuc_agg$position_nuc),]
 										                          rownames(nuc_agg_ord) <- NULL
 										                          stopifnot(identical(as.character(nuc_agg_ord$position_nuc), combin))
@@ -133,7 +119,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
 										                          return(data.frame(length=splt[,1], nucleotide=splt[,2], counts=nuc_agg_ord[,2]))
 										                          })
 										
-										#### Generate individial histograms 
+										#### Set options and load requirements
                             options(scipen=999)
                             require(RColorBrewer)
                             require(scales)
@@ -147,10 +133,11 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
                                       colors <- c("#A0A0A0",colors[c(1,2,3,5)])
                                       }
                               
-                                      
+                    #### Plot ###                 
 										require(ggplot2)   
 										histo_lst <- list(NA)
-										if(is.null(pheno_target)){samp <- rownames(ph)}else{samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph))}
+										if(is.null(summary_target)){samp <- rownames(PAC$Pheno)}
+										else{samp <- names(PAC$summary[[summary_target]])}
 										for(i in 1:length(nuc_lst)){
 										                          nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, levels=c("N","C","G","A","T"))
 										                          uni_chr_len <- as.integer(unique(as.character(nuc_lst[[i]]$length)))

@@ -6,7 +6,7 @@
 \usage{
 PAC_summary(
   PAC,
-  norm = "raw",
+  norm = "counts",
   type = "means",
   pheno_target = NULL,
   rev = FALSE,
@@ -18,10 +18,10 @@ PAC_summary(
 a Counts table with raw counts and a normalized list-folder containing
 tables with normalized Counts (e.g. rpm).}
 
-\item{norm}{Character indicating what type of data to be used. If raw the raw
-counts in Counts will be used (default="raw"). Given any other value, the
+\item{norm}{Character indicating what type of data to be used. If 'counts' the raw
+counts in Counts will be used (default). Given any other value, the
 function will search for the value as a name on a dataframe stored in the
-normalized list-folder (created for example by PAC_rpm).}
+normalized list-folder (created for example by PAC_norm).}
 
 \item{type}{Character indicating what type of summary to be applied to the
 data.}

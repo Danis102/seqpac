@@ -73,7 +73,7 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
                                             }
                     if(length(PAC$summary) > 0){ 
                                             sum_logi_row  <- any(!unlist(lapply(lapply(PAC$summary, rownames), function(x){identical(rownames(PAC$Counts), x)})))
-                                            if(norm_logi_row){stop("Row names in summary tables of PAC$summary are not identical with row names in Counts.")}
+                                            if(sum_logi_row){stop("Row names in summary tables of PAC$summary are not identical with row names in Counts.")}
                                             } 
                     res <- NULL
                     ### sample_check #############################################################          
