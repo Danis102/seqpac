@@ -1,9 +1,9 @@
 #' Plot stackbars from PAC
 #'
-#' \code{PAC_stackbar} analyses nucleotide bias.
+#' \code{PAC_stackbar} Depicits count data into stacks based on phenotypic information.
 #'
 #' Given a PAC object the function will attempt to extract group information
-#' from Pheno, biotype information from Anno, and summaries this over the data
+#' from Pheno, biotype information from Anno, and summarize this over the data
 #' in Counts or norm.
 #'
 #' @family PAC analysis
