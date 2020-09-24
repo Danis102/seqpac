@@ -1,8 +1,8 @@
-#' Filter a PAC object on sequence size and covarage  
+#' Filter a PAC object on sequence size and coverage  
 #'
 #' \code{PAC_filter} Filter PAC objects.
 #'
-#' Given a PAC object the function will extract sequences within a given size
+#' Given a PAC object, the function will extract sequences within a provided size
 #' interval and percent coverage across independent samples.
 #' 
 #' @family PAC analysis
@@ -13,17 +13,17 @@
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a Counts table with raw counts or reads per million (rpm).
 #'   
-#' @param size Integer vector giving the size interval, as c(min,max), that
-#'   should be saved (default=c(min,max)).
-#'   
+#' @param size Integer vector giving the nucleotide size (length) interval for  
+#'   each transcript as c(min,max), that should be saved (default=c(min,max)).
+#'     
 #' @param treshold Integer giving the threshold in rpm or counts that needs to
 #'   be reached for a sequence to be included (default=10).
 #'   
 #' @param coverage Integer giving the percent of independent samples that need
 #'   to reach the threshold for a sequence to be included (default=100).
 #'   
-#' @param type Character specifying if filtering should be done "rpm" or
-#'   "counts" (default="rpm").
+#' @param type Character specifying if filtering should be done on "rpm" values 
+#'   or "counts" (default="rpm").
 #' 
 #' @param stat (optional) Logical specifying if an coverage graph should be
 #'   generated or not (default=FALSE).
