@@ -1,6 +1,6 @@
 #' Pie plot from PAC
 #'
-#' \code{PAC_pie} analyses nucleotide bias.
+#' \code{PAC_pie} produces pie plot of biotype distribution.
 #'
 #' Given a PAC object the function will summarize the counts into percent
 #' biotype and plot a pie chart.
