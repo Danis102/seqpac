@@ -124,8 +124,8 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK", N_up
                           cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
                           len <- length(full)
                           
-                          cl <- parallel::makeCluster(threads, type = par_type)
-                          doParallel::registerDoParallel(cl)
+                       
+                          doParallel::registerDoParallel(threads)
                           
                           ## Parallelize references 
                           # fin_lst <- foreach(i=1:length(full), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- names(full); return(x)}) %dopar% {
@@ -195,7 +195,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK", N_up
                                                           })
                           }
                           
-                          parallel::stopCluster(cl)
+                          doParallel::stopImplicitCluster()
                           return(fin_lst)
                           }
                           

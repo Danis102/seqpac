@@ -113,15 +113,3 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
                                                       return(input)
                                                       }
                                 }
-                                
-                              
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-
-
- 

@@ -29,33 +29,33 @@
 #'   ls.str() to explore each level.
 #'   
 #' @examples
-
-
-input="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
-gtf_feature="exon"
-gtf_attrbute="gene_id"
-PAC_gtf <- function(PAC, input=NULL, type="gtf", gtf_feature="exon", gtf_attrbute="gene_id")
-                            
-  
-  
-                            if(type=="gtf"){
-                              if(class(input)=="data.frame"){
-                                new_anno <- input
-                              }else{
-                                gtf <- rtracklayer::import(input)
-                                gtf <- gtf[gtf$type==gtf_feature,]
-                                gtf <- as.data.frame(gtf)
-                                new_anno <- as.data.frame(data.table::data.table(GeneID=gtf[,gtf_attrbute], Chr=gtf$seqnames, Start=gtf$start, End=gtf$end, Strand=gtf$strand))
-                             }}
-                           if(type=="saf"){
-                                if(class(input)=="data.frame"){
-                                  new_anno <- input
-                                }else{
-                                  new_anno <- read.delim(input, header=TRUE)
-                                }
-                          stopifnot(colnames(new_anno)==c("GeneID", "Chr", "Start", "End", "Strand")) 
-                                  
-                                  
+# 
+# 
+# input="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
+# gtf_feature="exon"
+# gtf_attrbute="gene_id"
+# PAC_gtf <- function(PAC, input=NULL, type="gtf", gtf_feature="exon", gtf_attrbute="gene_id")
+#                             
+#   
+#   
+#                             if(type=="gtf"){
+#                               if(class(input)=="data.frame"){
+#                                 new_anno <- input
+#                               }else{
+#                                 gtf <- rtracklayer::import(input)
+#                                 gtf <- gtf[gtf$type==gtf_feature,]
+#                                 gtf <- as.data.frame(gtf)
+#                                 new_anno <- as.data.frame(data.table::data.table(GeneID=gtf[,gtf_attrbute], Chr=gtf$seqnames, Start=gtf$start, End=gtf$end, Strand=gtf$strand))
+#                              }}
+#                            if(type=="saf"){
+#                                 if(class(input)=="data.frame"){
+#                                   new_anno <- input
+#                                 }else{
+#                                   new_anno <- read.delim(input, header=TRUE)
+#                                 }
+#                           stopifnot(colnames(new_anno)==c("GeneID", "Chr", "Start", "End", "Strand")) 
+#                                   
+#                                   
                                   
                                   
                                   

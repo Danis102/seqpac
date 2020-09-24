@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_mapper.R
 \name{PAC_mapper}
 \alias{PAC_mapper}
-\title{Advanced sequences mapping of a PAC object}
+\title{Advanced sequence mapping of a PAC object}
 \usage{
 PAC_mapper(
   PAC,

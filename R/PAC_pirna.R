@@ -70,17 +70,17 @@
 #' 
 #' 
 #' @export
-
-
-PAC_pirna <- function(PAC, ref_pirna=NULL, ref_custom=NULL, )
-
-                      
-                      
-
-
-pirbase_dat
-
-
-test3
-
-185230  175900
+# 
+# 
+# PAC_pirna <- function(PAC, ref_pirna=NULL, ref_custom=NULL, )
+# 
+#                       
+#                       
+# 
+# 
+# pirbase_dat
+# 
+# 
+# test3
+# 
+# 185230  175900

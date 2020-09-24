@@ -4,7 +4,13 @@
 \alias{import_reanno}
 \title{Imports annotation from reannotation mapping}
 \usage{
-import_reanno(bowtie_path, threads = 1, report = "minimum", reduce = "piRNA")
+import_reanno(
+  bowtie_path,
+  threads = 1,
+  coord = FALSE,
+  report = "minimum",
+  reduce = NULL
+)
 }
 \arguments{
 \item{bowtie_path}{Path to a directory where bowtie output files can be
@@ -12,8 +18,11 @@ found.}
 
 \item{threads}{Integer stating the number of parallell jobs.}
 
+\item{coord}{Logical whether or not mapping coordinates should be reported
+when report="full".}
+
 \item{report}{Character vector indicating what to report "minimum" or "full"
-(default="minimum")}
+(default="minimum").}
 
 \item{reduce}{Character indicating a reference name (without file type
 extension) that should be exempted from report="full" and instead will
@@ -24,29 +33,31 @@ row names.}
 }
 \value{
 List of data frames with additional information from reannotation
-  files generated with bowtie -v -a. If \emph{report="minimum"}, the function
+  files generated with bowtie. If \emph{report="minimum"}, the function
   will report each hit only as the number of mismatches for a given reference
-  file. If \emph{report="full"} the full annotation reported in the fasta
+  file. If \emph{report="full"} the full name reported in the fasta
   file used as reference in the bowtie reannotation will be reported. If a
-  reference name is speficied in \emph{reduce}, this reference is excempted
+  reference name is specified in \emph{reduce}, this reference is excempted
   from \emph{report="full"} and is instead reported as
-  \emph{report="minimum"}
+  \emph{report="minimum"}.
   
   Caution: Large references with lots of redudancy (such as pirBase in some
-  species) will case massive character strings if \emph{report="full"} with
+  species) will cause massive character strings if \emph{report="full"} with
   no restrictions. Specifing such references in
   \emph{reduce=<reference_names>} will circumvent this problem.
 }
 \description{
-\code{import_reanno} imports bowtie reannotation files.
+This function imports bowtie output and summarizes the content.
 }
 \details{
-Given the path to bowtie mapping output, \code{import_reanno} will attempt to
-read these files into R and generate a list of unordered data.frames where
-each row summarizes all annotations for a given sequence. \code{check_reanno}
-will check if sequences are listed in any of the imported reannotation
-data.frames. \code{add_reanno} will add the new annotations to a PAC-list
-object.
+Given the path to alignment outputs from bowtie, \code{import_reanno} will
+attempt to read these files into R and generate a list of unordered
+data.frames where each row summarizes all annotations for a given sequence.
+It is called by \code{map_reanno} to generate summarized data from bowtie
+output saved as .Rdata files. These files can then be re-imported into R
+where information is organized using \code{make_reanno}
+and finally added to the annotation table (PAC$Anno) of the original PAC-list
+object using \code{add_reanno}.
 }
 \section{Important}{
  Re-annotation must have been done using Bowtie default
@@ -73,11 +84,10 @@ lapply(reanno5, names)
 
 }
 \seealso{
-\url{https://github.com/junchaoshi/sports1.0} for download and
-  documentation about running Sports.
-  \url{http://bowtie-bio.sourceforge.net/index.shtml} for information about
-  Bowtie \url{https://github.com/Danis102} for updates on the current
-  package.
+\url{http://bowtie-bio.sourceforge.net/index.shtml} for information
+  about Bowtie and for Rbowtie:
+  \url{https://www.bioconductor.org/packages/release/bioc/html/Rbowtie.html}.
+  \url{https://github.com/Danis102} for updates on the current package.
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
