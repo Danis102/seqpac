@@ -133,6 +133,19 @@ together with sequences that have better evidence. As seqpac focuses on group
 analysis evidence from at least two independent samples, this is a minimum inclusion
 criteria.
 
+If data that is already trimmed from adaptors is presented, `make_counts`can be used
+in both Linux and Windows environment:
+
+```{r, eval = FALSE}
+###--------------------------------------------------------------------- 
+# Generate counts using setting path to fastq files
+
+path_to_fastq <- "C:/your-path-here"
+
+counts <- make_counts(path_to_fastq, type="fastq", anno=NULL, threads=4, cutadpt=FALSE)
+
+```
+
 ### 2.2.2 make_anno
 Next, generate a simple Anno table (A):
 ```{r, results = "hide"}
@@ -141,7 +154,11 @@ Next, generate a simple Anno table (A):
 anno <- make_anno(input=counts$counts, type="counts")
 
 ```
-
+(if we want it like this, reorder numbering after it)
+### 2.2.3 map_reanno
+If the anno table have not been annotated to any reference genome, users can
+use `map_reanno` to annotate the sequences provided in the anno data frame to a desired 
+reference genome. 
 
 <br>
 ### 2.2.3 make_pheno
