@@ -162,15 +162,18 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   ## Run bowtie over each reference
   if(type=="internal"){
     vrs <- capture.output(Rbowtie::bowtie_version())
-    cat("R internal mapping using the Rbowtie package was specified.\n")
-    cat(paste0("This package uses ", gsub("  ", " ", basename(vrs[[1]]))))
-    cat("If you need a newer version, please install Bowtie manually")
+    vrs <- gsub("  |bowtie version ", " ", basename(vrs[[1]]))
+    vrs <- gsub(" ", "", basename(vrs[[1]]))
+    vrs <- gsub("\"", "", basename(vrs[[1]]))
+    cat("\nR internal mapping using the Rbowtie package was specified.\n")
+    cat(paste0("This package uses ", vrs, ".\n"))
+    cat("If you need a newer version, please install Bowtie manually\n")
     cat("outside R and then use option type='external'.")}
   
   if(type=="external"){
     vrs <- stringr::str_split(basename(capture.output(system("bowtie --version", intern=TRUE))[[1]]), "version")
     cat("R external mapping depends on correct installation of bowtie.\n")
-    cat("If you are having problem using external bowtie, try type='internal'. ")
+    cat("If you are having problem using external bowtie, try type='internal'.\n")
     cat(paste0("An external bowtie installation was found using version", vrs[[1]][2],"\n"))
   }
 
@@ -213,7 +216,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
         ## Write files
         
         save(reanno, file= paste0(output_path, "/Full_reanno_", suffix, ".Rdata"))
-        Biostrings::writeXStringSet(new_input, filepath=paste0("anno_", new_suffix, ".fa"), format="fasta")
+        Biostrings::writeXStringSet(new_input, filepath=paste0(output_path, "/anno_", new_suffix, ".fa"), format="fasta")
 
         cat(paste0("\n|--- Mismatch ", mis_lst[[i]], " finished -----|"))
         cat(paste0("\n******************************************************"))

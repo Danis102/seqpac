@@ -100,16 +100,16 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
   
   ## Entering import loop
   files <- files[do.call("c", form_logi)]
-  data.table::setDTthreads(threads)
+  suppressPackageStartupMessages(data.table::setDTthreads(threads))
   bowtie_out_lst <- list(NA)
-  for (t in 1:length(files)){
-    cat(paste0("\nImport and reorganize ", basename(files)[t], "\n"))
-    nam <- gsub(paste0(base, "|_piRBase"), "",  basename(files)[t])
-    if(coord==TRUE){bow_out <- data.table::fread(files[t], header=FALSE, select = c(3,4,1,8), data.table=TRUE)}
-    if(coord==FALSE){bow_out <- data.table::fread(files[t], header=FALSE, select = c(3,1,8), data.table=TRUE)}
+  for (k in 1:length(files)){
+    cat(paste0("\nImport and reorganize ", basename(files)[k], "\n"))
+    nam <- gsub(paste0(base, "|_piRBase"), "",  basename(files)[k])
+    if(coord==TRUE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,4,1,8), data.table=TRUE)}
+    if(coord==FALSE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,1,8), data.table=TRUE)}
     bow_out$V8 <- as.character(bow_out$V8)
 
-    uni  <- unique(bow_out$V5)
+    uni  <- unique(bow_out$V1)
     mis <- unique(bow_out$V8)
     n_mis <- stringr::str_count(mis, ":")
     n_mis <- as.character(unique(n_mis))
@@ -119,18 +119,18 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
     
     ## Generate report from imported bowtie files
     if(report=="minimum"){
-      bowtie_out_lst[[t]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
-      names(bowtie_out_lst)[t] <- nam
+      bowtie_out_lst[[k]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
+      names(bowtie_out_lst)[k] <- nam
     }
     
     if(report=="full"){
       if(nam %in% reduce){
         cat(paste0("\n|-------> ", nam, " was specified as reduced; minimum information will be extracted ..."))
-        bowtie_out_lst[[t]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
-        names(bowtie_out_lst)[t] <- nam
+        bowtie_out_lst[[k]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
+        names(bowtie_out_lst)[k] <- nam
       }else{
         cat("\n|-------> Compiling data for full report (may take a while)...")
-        bow_splt <- split(bow_out, bow_out$V5) 
+        bow_splt <- split(bow_out, bow_out$V1) 
         rm(bow_out)
         gc(reset=TRUE)
         
@@ -143,7 +143,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
         chnks_rng <- list(chnks1, chnks2)
 
         doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-        bowtie_out_lst[[t]] <- foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
+        bowtie_out_lst[[k]] <- foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
               compile_lst <- lapply(bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
                   uni_mis <- unique(x$V8)
                   uni_mis <- unique(do.call("c", stringr::str_split(uni_mis, ",")))
@@ -159,7 +159,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
               return(bow_fin)
         }
       doParallel::stopImplicitCluster()
-      names(bowtie_out_lst)[t] <- nam 
+      names(bowtie_out_lst)[k] <- nam 
       }
     }
     cat(paste0("\n|-------> Done ", nam, "!\n"))
