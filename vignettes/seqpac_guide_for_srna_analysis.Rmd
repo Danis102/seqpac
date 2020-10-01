@@ -329,7 +329,7 @@ RPM values.
 
 ```{r}
 
-pac_rpm_filter <- PAC_filter(pac_rpm, type="rpm")
+pac_rpm_filter <- PAC_filter(pac_rpm, type="rpm", threshold = 10, coverage = 100)
 
 ``` 
 

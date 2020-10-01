@@ -115,7 +115,7 @@
 #' type="internal"
 #' 
 #' map_reanno(PAC, ref_paths=ref_paths, output_path=output_path, type="internal", parse_internal=parse_internal, mismatches=3, import=import, threads=10)
-#' 
+#' map_reanno(PAC, ref_paths=ref_paths, output_path=output_path, type="external", mismatches=3, import=import, threads=10)
 #' 
 #' #### Example type= external #### 
 #' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")

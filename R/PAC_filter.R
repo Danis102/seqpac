@@ -96,7 +96,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
                                             if(!is.null(anno_target)){
                                               if(class(anno_target)=="list"){if(length(anno_target)==1){anno_target[[2]] <- unique(PAC$Anno[, anno_target[[1]]])}
                                               }else{PAC$Anno$all_names <- rownames(PAC$Anno); anno_target=list("all_names", anno_target)}
-                                              sub_anno <- as.character(PAC$Anno[,anno_target[[1]]]) %in% anno_target[[2]]
+                                              sub_anno <- as.character(PAC$Anno[,anno_target[[1]]]) %in% as.character(anno_target[[2]])
                                               if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_anno,]})}
                                               if(any(names(PAC)=="summary")){PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_anno,]})}
                                               PAC$Counts  <- PAC$Counts[sub_anno,,drop=FALSE]
