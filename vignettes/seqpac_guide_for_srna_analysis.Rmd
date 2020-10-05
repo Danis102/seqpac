@@ -14,6 +14,11 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+<br>
+<br>
+
+---
+
 ## 1.1 Introduction
 
 Seqpac contains a complete toolbox for the analysis of short sequenced reads.
@@ -24,12 +29,12 @@ This involves, for example, regular RNA-seq with long RNA.
 
 To perserve sequence integrity, seqpac applies sequence-based counting. This can
 be contrasted against feature-based counting, where reads are counted over known
-genomic features, such a protein coding gene or sRNA. This will result in a
+genomic features, such a protein coding genes or sRNA. This will result in a
 count table where a count is made per feature (e.g. number of read counts
 mapping to a gene). In seqpac, such annotations are initially disregarded, as a
 count table is generated solely by counting unique sequences in the raw sequence
-files. Annotation against known refereces (such as databases containing miRNA,
-tRNA, or protein coding genes) are done after the count table has been
+files. Annotation against known refereces (such as databases containing genome,
+miRNA, tRNA, or protein coding genes) are done after the count table has been
 generated.
 
 The big advantage of using sequence-based counting, compared to feature-based
@@ -58,8 +63,8 @@ The input file format for seqpac is .fastq, which can be generated from most
 sequencing platforms. Two types of objects sustain the core of the seqpac
 workflow:
 
-    The PAC object 
-    The Targeting objects
+- The PAC object 
+- The Targeting objects
 
 
 The PAC object stores the Phenotypic information (P), Annotations (A) and Counts
@@ -69,13 +74,17 @@ both of these objects are lists. The PAC object is in its simplest form a list o
 dataframes (P, A and C), while the Targeting object is a list of 2 character
 vectors.
 
-The workflow is roughly divided into three steps: 
+The workflow is roughly divided into four steps: 
 
-    i. Generate a PAC object from fastq-files
-    ii. Preprocess the PAC object
-    iii. Annotate the PAC object
-    iv. Analyze the PAC object.
+- Generate a PAC object from fastq-files
+- Preprocess the PAC object
+- Annotate the PAC object
+- Analyze the PAC object.
 
+<br>
+<br>
+
+---
 
 # 2 Running the seqpac workflow 
 
@@ -144,6 +153,7 @@ anno <- make_anno(input=counts$counts, type="counts")
 
 
 <br>
+
 ### 2.2.3 make_pheno
 Now, generate a Pheno table (P) and add a report from the logs in *counts*. 
 The Pheno table contains sample specific information such as sample name and possible interventions,
@@ -178,6 +188,7 @@ PAC_check(pac_master)
 ```
 
 <br>
+
 ## 2.3 Preprocess the PAC object
 
 ### 2.3.1 Targeting objects
@@ -329,84 +340,233 @@ RPM values.
 
 ```{r}
 
-pac_rpm_filter <- PAC_filter(pac_rpm, type="rpm", threshold = 10, coverage = 100)
+pac_rpm_filt <- PAC_filter(pac_rpm, type="rpm", threshold = 10, coverage = 100)
 
 ``` 
 
-### 2.3.5 Data Visualization
-One excellent tool for studying the structure of the data is to study the relationship
-of its principal components. This can be done with a PCA plot, where the distance of
-datapoints are calculated and presented in a figure. A principal component analysis (PCA)
-can only show how the data relates to one another, not why it behaves this way.
-To produce a PCA plot with seqpac, use PAC_pca:
+
+
+## 2.4 Generate annotations
+From the start a PAC object only contains a very limited Anno table.
 
 ```{r}
 
-pca_all_cnt <- PAC_pca(pac_rpm_filter, type="counts")
-pca_all_rpm <- PAC_pca(pac_rpm_filter, type="rpm")
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+head(pac_master$Anno)
 
 ``` 
 
-### 2.3.6 Differential Expression
-In RNA-sequencing it is common to look for differnetially expressed transcripts and there
-are several ways to study this. In addition to RPM, seqpac offers a function integrating
-DESeq2 differential expression with the PAC dataset, PAC_deseq. DESeq2 uses a negative
-binomial generailzed linear model to find differentially expressed transcripts in the data.
-When running PAC_deseq, it is important to formulate a correct model. For more information
-about designs and DESeq2 in general, please see https://github.com/mikelove/DESeq2 .
+To facilitate easy adoption of seqpac to any species, we provide a fast and
+comprahensive workflow for mapping PAC sequences against user defined reference
+databases. We call this reannotation, since we map the sequences in Anno object
+sequentially over one or multiple references.
+
+*Important*, seqpac relies on the popular bowtie aligner for mapping:
+http://bowtie-bio.sourceforge.net/manual.shtml. This means that references must
+be indexed using \code{bowtie-build} before they are compatible with the
+reannotation workflow (see below).
+
+<br>
+
+### 2.4.1 Fasta references
+Most databases provides their references in the fasta file format. Seqpac can
+use any correctly formated fasta file as input in the reannotation workflow.
+However, we destiguish two kinds of fasta references:
+
+1. Reference genomes.
+2. Other specialized references.
+
+To retreive the fasta files you need to download them manually from the source
+database. Here are some helpful example links where to retreive useful fasta
+references:
+
+<br>
+**Reference genomes:**
+[Ensembl Animals](https://www.ensembl.org/info/data/ftp/index.html) <br>
+[Ensembl Plants](https://plants.ensembl.org/info/data/ftp/index.html) <br>
+[UCSC](http://hgdownload.cse.ucsc.edu/downloads.html) <br>
+[iGenomes](https://emea.support.illumina.com/sequencing/sequencing_software/igenome.html?langsel=/se/) <br>
+
+Hint: Unmasked top level fasta files are best for most purposes, e.g. Ensembl file name *.dna.toplevel.fa.gz
+
+
+<br>
+**Other specialized references:**
+[miRNA (mirbase)](http://www.mirbase.org/ftp.shtml) <br>
+[miRNA (mirgenedb)](https://mirgenedb.org/download) <br>
+[piRNA (piRBase)](http://www.regulatoryrna.org/database/piRNA/download.html) <br>
+[Different ncRNA (Ensembl Animals)](https://www.ensembl.org/info/data/ftp/index.html) <br>
+[Different ncRNA (Ensembl Plants)](https://plants.ensembl.org/info/data/ftp/index.html) <br>
+[tRNA (GtRNAbd)](http://gtrnadb.ucsc.edu/) <br>
+[repeats (repeatMasker)](http://repeatmasker.org/genomicDatasets/RMGenomicDatasets.html) <br>
+
+<br>
+Custom fasta files can also be used, and you can easily merge, add and remove
+features to the database references by functions in the Biostrings package:
+
+`fasta <- Biostrings::readDNAStringSet(filepath=<path to your fasta file>", format="fasta")`
+
+Hint: You may want to remove all haplotype or scaffold 'chromosomes' from your
+top level reference genome. 
+
+Hint: You may also want to add tRNAs from the mitochrondrial genome to your
+tRNA reference, which is not always provided in the GtRNAdb fasta. This can be
+done by moving them from Ensembl ncRNA fasta or scan the mitochondrial genome
+manually at [tRNAscan-SE](http://lowelab.ucsc.edu/tRNAscan-SE/). The
+mitochonridal genome is normally found in the reference genome fasta.
+
+<br>
+
+### 2.4.3 Indexing the fasta references 
+Before we can use the fasta references we need to index them for bowtie mapping.
+You can do this by using the \code{bowtie_build} function in the Rbowtie package
+or by running bowtie externally, outside R. For more information see
+?Rbowtie::bowtie, Rbowtie::bowtie_build_usage()
+http://bowtie-bio.sourceforge.net/manual.shtml.
+
+
+<br>
+
+### 2.4.2 GTF feature coordinates
+After the sequences has been mapped against a reference genome they can also
+aquire annotations from genomic feature files, such as the gtf and gff formates.
+These files contains the coordinates for different genomic features associated
+with a specific reference genome, such as repeatitative regions, exons and CpG
+islands etc. Some functions in seqpac will require gtf files. Thus it is
+important to know how to handle them.
+
+GTF files can often be aquired at the same places as the fasta files (see
+above). Just like the fasta files, you can create and change gtf/gff files
+directly in R using for example functions in the rtracklayer package:
+
+`gtf <- data.table::setDT(rtracklayer::readGFF("<path to your gtf file>"))`
+
+
+<br>
+
+### 2.4.4 The reannotation workflow
+If you do not want to know the details about how seqpac generates annotations
+you can skip forward to the next section. There, user-friendly wrappers for
+generating different kinds of annotations are presented.
+
+The PAC reannotation family of functions carry out the following tasks:
+- Mapping sequences against fasta references.
+- Storing the output on hard drive.
+- Importing specific parts into R.
+- Reorganizing the import into a suitable table.
+- Merging the table with an existing PAC$Anno table.
+
+This is done by four functions map_reanno, import_reanno, make_reanno and
+add_reanno.
+
+<br>
+
+**map_reanno**<br>
+To accommodate most users on most platforms, seqpac provides two alternatives
+for calling bowtie: internally from within R \code{type="internal"} or
+externally from outside R (\code{type="external"}). In the internal mode, seqpac
+uses the bowtie function in the Rbowtie package, while in the external mode
+bowtie is called by a system command to a locally installed version of bowtie.
+Both options gives identical results, but since the internal Rbowtie package is
+rarely updated, we provide the external option.
+
+Since the input commands for external bowtie and internal Rbowtie differs
+slightly, map_reanno has two parse options (\code{parse_internal} and
+\code{parse_external}). These can be used to control the two versions of bowtie
+as if they were run from the console or command line, respectively.
+
+While bowtie maintains its own way to handle mismatches in the alignments,
+seqpac runs bowtie sequentially, increasing the number of mismatches for each
+round. After each round all sequences that recieved a match in any of the
+provided references will be subtracted. Therefore, in the next round only
+sequences without a match will be reapplied but allowing one additional
+mismatch. The map_reanno function controls this by sequentially increasing the
+the number of mismatches after substracting the matches.
+
+<br>
+
+**import_reanno**<br>
+This is the function that is called by \code{map_reanno} to import the bowtie
+results after each sequential run. If you would run \code{import_reanno}
+seperatly it simply provides you with options on how to import bowtie resulst
+into R. For example, when aligning against a reference genome the mapping
+coordinates is important, while mapping against other reference 'hit' or 'no
+hit' might be enough.
+
+<br>
+
+**make_reanno**<br>
+
+
+
 
 ```{r}
- 
-model= ~Tissue+Exp
-pac_deseq <- PAC_deseq(pac_rpm_filter, model=model, main_factor="Testis", norm=TRUE, histogram=TRUE, threads=4, pheno_target=NULL, anno_target=NULL)
+
+# External bowtie call
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+
+
 
 
 ``` 
 
-### 2.3.7 Plotting Data
-seqpac offers several ways to plot your data. 
-
--PAC_covplot
--PAC_jitter
--PAC_pie
--PAC_stackbar
--PAC_sizedist
 
 
-<br>
-Lets generate a few normalized count tables and compare them:
-```{r, fig.width = 6, fig.height = 3}
-###--------------------------------------------------------------------- 
-## Since the example pac_master is small to begin with we use this as start:
-## (You may wish to use a low-filtered PAC for normalization to get rid of noise)
+generate annotations in seqpac is easy.
 
-pac_rpm <- PAC_norm(pac_master, type="rpm")                 # Returned as a dataframe in the PAC$norm folder
-df_vst <- PAC_norm(pac_master, type="vst", PAC_merge=FALSE) # Returned as a dataframe 
-df_rlog <- PAC_norm(pac_master, type="rlog", PAC_merge=FALSE) 
+PAC_genome 
 
-cowplot::plot_grid(nrow=1, ncol=2,
-            ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), mean_vst=rowMeans(df_vst)), aes(x=log2_mean_rpm, y=mean_vst)) + geom_point(),
-            ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), mean_rlog=rowMeans(df_rlog)), aes(x=log2_mean_rpm, y=mean_rlog)) + geom_point())
 
-```
 
-<br>
-As you probably noticed we only stored the rpm values in the PAC. Lets now apply
-a deeper filter that are based on rpm thresholds:
 
-```{r}
-###--------------------------------------------------------------------- 
-## Extracts all sequences with >=10 counts in 100% of samples within each category of the 'type' column in Pheno.
-filtsep <- PAC_filtsep(pac_rpm, type="rpm", threshold=10, coverage=100, pheno_target= list("type"))
+<!-- ### 2.3.6 Differential Expression In RNA-sequencing it is common to look for -->
+<!-- differnetially expressed transcripts and there are several ways to study this. -->
+<!-- In addition to RPM, seqpac offers a function integrating DESeq2 differential -->
+<!-- expression with the PAC dataset, PAC_deseq. DESeq2 uses a negative binomial -->
+<!-- generailzed linear model to find differentially expressed transcripts in the -->
+<!-- data. When running PAC_deseq, it is important to formulate a correct model. For -->
+<!-- more information about designs and DESeq2 in general, please see -->
+<!-- https://github.com/mikelove/DESeq2 . -->
+<!-- ```{r} -->
+<!-- model= ~Tissue+Exp pac_deseq <- PAC_deseq(pac_rpm_filt, model=model, -->
+<!-- main_factor="Testis", norm=TRUE, histogram=TRUE, threads=4, pheno_target=NULL, -->
+<!-- anno_target=NULL) -->
+<!-- ``` -->
+<!-- ### 2.3.7 Plotting Data seqpac offers several ways to plot your data. -->
+<!-- -PAC_covplot -PAC_jitter -PAC_pie -PAC_stackbar -PAC_sizedist -->
+<!-- <br> Lets generate a few normalized count tables and compare them: ```{r, -->
+<!-- fig.width = 6, fig.height = 3} -->
+<!-- ###--------------------------------------------------------------------- ## -->
+<!-- Since the example pac_master is small to begin with we use this as start: ## -->
+<!-- (You may wish to use a low-filtered PAC for normalization to get rid of noise) -->
+<!-- pac_rpm <- PAC_norm(pac_master, type="rpm")                 # Returned as a -->
+<!-- dataframe in the PAC$norm folder df_vst <- PAC_norm(pac_master, type="vst", -->
+<!-- PAC_merge=FALSE) # Returned as a dataframe df_rlog <- PAC_norm(pac_master, -->
+<!-- type="rlog", PAC_merge=FALSE) -->
+<!-- cowplot::plot_grid(nrow=1, ncol=2, -->
+<!-- ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), -->
+<!-- mean_vst=rowMeans(df_vst)), aes(x=log2_mean_rpm, y=mean_vst)) + geom_point(), -->
+<!-- ggplot2::ggplot(data.frame(log2_mean_rpm=log2(rowMeans(pac_rpm$norm$rpm)), -->
+<!-- mean_rlog=rowMeans(df_rlog)), aes(x=log2_mean_rpm, y=mean_rlog)) + geom_point()) -->
+<!-- ``` -->
+<!-- <br> As you probably noticed we only stored the rpm values in the PAC. Lets now -->
+<!-- apply a deeper filter that are based on rpm thresholds: -->
+<!-- ```{r} ###--------------------------------------------------------------------- -->
+<!-- ## Extracts all sequences with >=10 counts in 100% of samples within each -->
+<!-- category of the 'type' column in Pheno. filtsep <- PAC_filtsep(pac_rpm, -->
+<!-- type="rpm", threshold=10, coverage=100, pheno_target= list("type")) -->
+<!-- pac_hifilt <- PAC_filter(pac_rpm, subset_only = TRUE, anno_target= -->
+<!-- unique(do.call("c", as.list(filtsep)))) -->
+<!-- PAC_check(pac_hifilt) -->
+<!-- ls.str(pac_hifilt) ``` -->
+<!-- <br> -->
+<!-- ## 2.5 Data Visualization One excellent tool for studying the structure of the -->
+<!-- data is to study the relationship of its principal components. This can be done -->
+<!-- with a PCA plot, where the distance of datapoints are calculated and presented -->
+<!-- in a figure. A principal component analysis (PCA) can only show how the data -->
+<!-- relates to one another, not why it behaves this way. To produce a PCA plot with -->
+<!-- seqpac, use PAC_pca: -->
 
-pac_hifilt <- PAC_filter(pac_rpm, subset_only = TRUE,
-                       anno_target= unique(do.call("c", as.list(filtsep))))
 
-PAC_check(pac_hifilt)
-
-ls.str(pac_hifilt)
-```
-
-<br>
-## 2.4 Annotation
-So far we have not bothered about what type of RNA species (or biotype) that we have in our data, but have   

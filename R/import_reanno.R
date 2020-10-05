@@ -75,7 +75,8 @@
 #' @export
 
 import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum", reduce=NULL){
-  base <- ".txt"
+  suppressMessages(suppressPackageStartupMessages(require(data.table)))
+  base <- ".out$"
   files <- list.files(bowtie_path, pattern = base, full.names=TRUE)
   options(scipen=999)
   
@@ -92,56 +93,66 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
           }else{form_logi[[x]] <- return(sum(c(grepl("IIIIIII", as.character(x[,6])), is.integer(x[,4]))) == 2)
           }
         })
+  form_logi <-  do.call("c", form_logi)
+  no_hit <- do.call("c", lapply(row1, function(x){as.character(x[1,1]) == "No_hits"}))
   
   ## Give some feedback
-  cat("\nFound ", length(files), "txt-files of which ", sum(do.call("c", form_logi)), " had the correct bowtie format.\n")
-  if(any(do.call("c", lapply(row1, function(x){as.character(x[1,1]) == "No_hits"})))){warning("Some bowtie outputs were empty indicating no hits at all.\n  These will be missing in the result.")}
-  cat(paste0("\n******************************************************"))
-  
+  cat("\n|--- Found", sum(form_logi), "bowtie file(s) with hits and", sum(no_hit), "without.")
+
   ## Entering import loop
-  files <- files[do.call("c", form_logi)]
-  suppressPackageStartupMessages(data.table::setDTthreads(threads))
+  data.table::setDTthreads(threads)
   bowtie_out_lst <- list(NA)
   for (k in 1:length(files)){
-    cat(paste0("\nImport and reorganize ", basename(files)[k], "\n"))
-    nam <- gsub(paste0(base, "|_piRBase"), "",  basename(files)[k])
-    if(coord==TRUE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,4,1,8), data.table=TRUE)}
-    if(coord==FALSE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,1,8), data.table=TRUE)}
-    bow_out$V8 <- as.character(bow_out$V8)
-
-    uni  <- unique(bow_out$V1)
-    mis <- unique(bow_out$V8)
-    n_mis <- stringr::str_count(mis, ":")
-    n_mis <- as.character(unique(n_mis))
-    if(is.na(n_mis)){n_mis <- 0}
-    stopifnot(length(n_mis)=="1")
-    n_mis <- paste0("mis", n_mis)
+    cat(paste0("\n  |--- Import and reorganize ", basename(files)[k]))
+    nam <- gsub(paste0(base), "",  basename(files)[k])
     
-    ## Generate report from imported bowtie files
-    if(report=="minimum"){
-      bowtie_out_lst[[k]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
-      names(bowtie_out_lst)[k] <- nam
-    }
+    ## Handle no hits    
+    if(no_hit[k]){
+      bowtie_out_lst[[k]] <- data.table::data.table(.id="No_hits", mis_n=NA, mis_where=NA, ref_hits=NA)
+      names(bowtie_out_lst)[k] <- nam 
+      }
     
-    if(report=="full"){
-      if(nam %in% reduce){
-        cat(paste0("\n|-------> ", nam, " was specified as reduced; minimum information will be extracted ..."))
-        bowtie_out_lst[[k]] <- suppressPackageStartupMessages(data.table::data.table(seq=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam))
-        names(bowtie_out_lst)[k] <- nam
+    ## Import selected bowtie data
+    if(form_logi[k]){
+      
+      if(report=="minimum"|nam %in% reduce){
+        reprt <- "min"
+        bow_out <- data.table::fread(files[k], header=FALSE, select = c(1,8), data.table=TRUE, , showProgress=FALSE)
       }else{
-        cat("\n|-------> Compiling data for full report (may take a while)...")
-        bow_splt <- split(bow_out, bow_out$V1) 
+        reprt <- "full"
+        if(coord==TRUE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,4,1,8), data.table=TRUE, showProgress=FALSE)}
+        if(coord==FALSE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,1,8), data.table=TRUE, showProgress=FALSE)}
+      }
+      
+      bow_out$V8 <- as.character(bow_out$V8)
+      uni  <- unique(bow_out$V1)
+      mis <- unique(bow_out$V8)
+      n_mis <- stringr::str_count(mis, ":")
+      n_mis <- as.character(unique(n_mis))
+      if(is.na(n_mis)){n_mis <- 0}
+      stopifnot(length(n_mis)=="1")
+      n_mis <- paste0("mis", n_mis)
+      
+      ## Generate mini report from imported bowtie files
+      if(reprt=="min"){
+        cat(paste0("\n    |---> Generating minimum report ..."))
+        bowtie_out_lst[[k]] <- data.table::data.table(.id=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
+        names(bowtie_out_lst)[k] <- nam
+      }
+      ## Compile full report with multithreading 
+      if(reprt=="full"){
+        cat("\n    |---> Generating full report (please wait)...")
+        bow_splt <- split(bow_out, bow_out$V1)
         rm(bow_out)
         gc(reset=TRUE)
-        
-    #### Compile everything with multi-threading 
+  
         require("foreach", quietly = TRUE)
         chk_size <- ceiling(length(bow_splt)/100) # foreach combine every 100 instances
         chnks1 <-as.integer(seq(from=1, to=length(bow_splt), by=chk_size))
         chnks2 <-as.integer(seq(from=0, to=length(bow_splt), by=chk_size))
         chnks2 <- c(chnks2[-1], length(bow_splt))
         chnks_rng <- list(chnks1, chnks2)
-
+  
         doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
         bowtie_out_lst[[k]] <- foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
               compile_lst <- lapply(bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
@@ -152,20 +163,20 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
                   uni_mis <- paste(uni_mis, collapse="|")
                   if(coord==TRUE){hits <- paste(unique(paste(x$V3, x$V4, sep=":")), collapse="|")}
                   if(coord==FALSE){hits <- paste(unique(x$V3), collapse="|")}
-                  fin <- suppressPackageStartupMessages(data.table::data.table(mis_n=n_mis, mis_where=uni_mis, ref_hits=hits))
+                  fin <- data.table::data.table(mis_n=n_mis, mis_where=uni_mis, ref_hits=hits)
                   return(fin)
                   })
-              bow_fin <- suppressPackageStartupMessages(data.table::rbindlist(compile_lst, idcol=TRUE))
+              bow_fin <- data.table::rbindlist(compile_lst, idcol=TRUE)
               return(bow_fin)
-        }
-      doParallel::stopImplicitCluster()
-      names(bowtie_out_lst)[k] <- nam 
+            }
+        doParallel::stopImplicitCluster()
+        names(bowtie_out_lst)[k] <- nam
       }
     }
-    cat(paste0("\n|-------> Done ", nam, "!\n"))
-    cat(paste0("\n******************************************************"))
+    cat(paste0("\n    |---> ", nam, " done"))
   }
   return(bowtie_out_lst)
-  cat("All done!")
+  detach(package:data.table)
+  detach(package:foreach)
 }
 

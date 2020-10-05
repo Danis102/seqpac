@@ -57,9 +57,6 @@
 #'   command fails you probably do not have bowtie correctly installed. As
 #'   default parse_external= "-a -f".
 #'
-#' @param mis_fasta_check Logical TRUE/FALSE if checking against anno_misX.fa
-#'   should be done availble in the same folder as the reannoration files.
-#'
 #' @param import List with exactly 3 objects, named "coord", "report" and
 #'   "reduce" that specifies the options for bowtie import. This list will be
 #'   parsed to the \code{import_reanno} function, where ?import_reanno will give
@@ -88,6 +85,13 @@
 #' @param par_type Character indicating what type of parallelization to be used.
 #'   (Default = "PSOCK")
 #'   
+#' @param keep_temp Logical whether or not bowtie output files temporarly stored
+#'   in the output path should be deleted. Note, this option is only used for
+#'   troubleshooting. The bowtie output files are named as the reference files
+#'   and are overwritten in each mismatch round. Thus for safe saving of
+#'   mismatch 0 bowtie output make sure that \code{mismatches=0}. If not, the
+#'   mismatch 1 round will overwrite the botwie files.
+#'   
 #' @return Will primarily generate .Rdata files in the destination folder
 #'   (\emph{output_path}) containing summarized information about the reference
 #'   alignments. One file is generated for every mismatch specified in
@@ -98,55 +102,59 @@
 #'  
 #' @examples
 #' 
-#'#### Example type = "internal" #### 
+#'#### Example type = "internal" with genome alignment #### 
+#'
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
-
-#' # Genome alignment
-#' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
-#'               
-#' PAC = pac_master
-#' output_path= "/home/danis31/Desktop/Temp_docs"
-#' mismatches=3
-#' threads=10
-#' par_type="PSOCK"
-#' import= list(coord=TRUE, report="full", reduce=NULL)
-#' parse_internal = "a=TRUE, f=TRUE"
-#' type="internal"
 #' 
-#' map_reanno(PAC, ref_paths=ref_paths, output_path=output_path, type="internal", parse_internal=parse_internal, mismatches=3, import=import, threads=10)
-#' map_reanno(PAC, ref_paths=ref_paths, output_path=output_path, type="external", mismatches=3, import=import, threads=10)
+#' ## Path to bowtie indexed reference genome fasta 
+#' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
+#' ## Path to output folder:
+#' output_path <- "/home/danis31/Desktop/Temp_docs/"
+#' ## Import options (see ?import_reanno):
+#' import <- list(coord=TRUE, report="full", reduce=NULL)
+#'                               
+#' map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=output_path, 
+#'            type="internal", mismatches=3, import=import, threads=8)
+#' 
 #' 
 #' #### Example type= external #### 
-#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
-#' 
-#' #' #PAC_filt <- PAC_filter(PAC, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' 
-#' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#'
+#' ## Path to bowtie indexed fasta references   
 #' ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
 #'                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
 #'                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
 #'                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa",
 #'                   piRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa")
 #' 
+#' ## Path to output folder:
+#' output_path <- "/home/danis31/Desktop/Temp_docs/"
+#' ## Import options (see ?import_reanno):
+#' import <- list(coord=FALSE, report="full", reduce=c("piRNA","Ensembl"))
 #'
-#' PAC = pac_master
-#' output_path= "/home/danis31/Desktop/Temp_docs"
-#' mismatches=3
-#' threads=10
-#' par_type="PSOCK"
-#' import= list(coord=TRUE, report="full", reduce=NULL)
-#' type="external"
-#' parse_external <- "-a -f"   
-#' 
-
-#' 
+#' map_reanno(pac_master, ref_paths=ref_paths, output_path=output_path, 
+#'            type="external", mismatches=3,  import=import, threads=8)
+#'
+#'
+#' # Do not run:
+#' map_reanno(pac_master, ref_paths=ref_paths, output_path=output_path, 
+#'            type="internal", mismatches=3,  import=import, threads=8, keep_temp=FALSE)
+#'   
+#' ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
+#'                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
+#'                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
+#'                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa")
+#'         
+#'                 
+#'                                 
 #' @export
 # 
 map_reanno <- function(PAC, type="internal", output_path, ref_paths, 
-                       mismatches=3, mis_fasta_check=FALSE, threads=1, par_type="PSOCK", 
+                       mismatches=3, threads=1, par_type="PSOCK", 
                        parse_external= "-a -f", parse_internal = "a=TRUE, f=TRUE", 
-                       import=list(coord=FALSE, report="minimum", reduce=NULL)){
+                       import=list(coord=FALSE, report="minimum", reduce=NULL), keep_temp=FALSE){
 
   ## setup
   stopifnot(PAC_check(PAC))
@@ -156,7 +164,20 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   seq_fst <- Biostrings::DNAStringSet(rownames(PAC$Anno))
   names(seq_fst) <- paste(seq_fst)
 
-  if(!dir.exists(output_path)){suppressWarnings(dir.create(output_path))}
+  ## Look for files and folders in output path
+  drs <- list.dirs(output_path, full.names = FALSE, recursive = FALSE) 
+  fls <- list.files(output_path, recursive = FALSE)
+  if(length(fls[!fls %in% drs])>0){
+      warning(paste0("\n  There are files in the output folder:\n  ", output_path,  "\n  Is it ok to delete them? (y/n)"), immediate.=TRUE, call.=FALSE)
+      response <- readline()
+      if(!response %in% c("y", "Y")){stop(paste0("Please move or delete the files in the output folder."))}
+  }
+  if(!dir.exists(output_path)){suppressWarnings(dir.create(output_path))  
+  }else{
+      fls_full <- list.files(output_path, recursive = FALSE, full.names=TRUE)
+      file.remove(fls_full[!fls %in% drs])}
+  
+  ## Save first input
   Biostrings::writeXStringSet(seq_fst, filepath=paste0(output_path, "/anno_mis0.fa"), format="fasta")
 
   ## Run bowtie over each reference
@@ -166,28 +187,29 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
     vrs <- gsub(" ", "", basename(vrs[[1]]))
     vrs <- gsub("\"", "", basename(vrs[[1]]))
     cat("\nR internal mapping using the Rbowtie package was specified.\n")
-    cat(paste0("This package uses ", vrs, ".\n"))
+    cat(paste0("This package uses bowtie version ", vrs, ".\n"))
     cat("If you need a newer version, please install Bowtie manually\n")
-    cat("outside R and then use option type='external'.")}
+    cat("outside R and then use option type='external'.\n")}
   
   if(type=="external"){
     vrs <- stringr::str_split(basename(capture.output(system("bowtie --version", intern=TRUE))[[1]]), "version")
-    cat("R external mapping depends on correct installation of bowtie.\n")
+    cat("\nR external mapping depends on correct installation of bowtie.\n")
     cat("If you are having problem using external bowtie, try type='internal'.\n")
-    cat(paste0("An external bowtie installation was found using version", vrs[[1]][2],"\n"))
+    cat(paste0("An external bowtie installation was found using version", vrs[[1]][2]))
   }
 
   for(i in 1:length(mis_lst)){
-      cat("\nBowtie mapping please wait\n")
+      cat(paste0("\n\n******************************************************"))
+      cat(paste0("\n|--- Mismatch ", mis_lst[[i]], " started at ", format(Sys.time(), "%X")))
+      cat("\n|--- Bowtie mapping:")
       input_file <- paste0(output_path, "/anno_mis", mis_lst[[i]], ".fa")
       
       for (j in 1:length(ref_paths)){
-        cat(paste0(names(ref_paths)[j], "... \n"))
-        cat("\n")
-        write(paste0("##--- ", names(ref_paths)[j], " --- ", mis_lst[[i]], " mismatches ------------------##"), file=paste0(output_path, "/bowtie_log.txt"), append=TRUE)
-        output_file <-  paste0(output_path, "/", names(ref_paths)[j], ".txt")
+        cat("\n   |--->", paste0(names(ref_paths)[j], "..."))
+        output_file <-  paste0(output_path, "/", names(ref_paths)[j], ".out")
       ## Internal bowtie
         if(type=="internal"){
+            cat("\n\n")
             bwt_exp <- paste0("Rbowtie::bowtie(sequences=input_file, index=ref_paths[[j]], ",
                                                   paste0(parse_internal, ", v=", mis_lst[[i]], ", p=",threads),
                                                   ", type ='single', outfile='", output_file,
@@ -196,14 +218,18 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
         
       ## External bowtie
         if(type=="external"){
+            cat("\n\n")
             bwt_exp <- paste0("bowtie ", parse_external, " -v ", mis_lst[[i]], " -p ", threads, " ", 
-                            ref_paths[[j]], " ", input_file, " ", output_file, " 2>> ", 
-                            paste0(output_path, "/bowtie_log.txt"))
+                            ref_paths[[j]], " ", input_file, " ", output_file)
             system(bwt_exp, intern=FALSE, ignore.stderr=FALSE)}
+        }
         
         reanno <- import_reanno(bowtie_path=output_path, threads=threads, coord=import$coord, report=import$report, reduce=import$reduce)
-        write("\n", file=paste0(output_path, "/bowtie_log.txt"), append=TRUE)
-
+        
+        ## Remove No_hits
+        rm_no_hits <- unlist(lapply(reanno, function(x){x[1,1]=="No_hits"}))
+        reanno <- reanno[!rm_no_hits]
+        
         ## Compare with previous input to generate new input
         suffix <- paste0("mis", mis_lst[[i]])
         anno_path <- list.files(output_path, pattern = paste0("anno_", suffix, ".fa"), full.names=TRUE)
@@ -214,15 +240,23 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
         new_suffix <- paste0("mis", mis_lst[[i]]+1)
         
         ## Write files
-        
         save(reanno, file= paste0(output_path, "/Full_reanno_", suffix, ".Rdata"))
         Biostrings::writeXStringSet(new_input, filepath=paste0(output_path, "/anno_", new_suffix, ".fa"), format="fasta")
-
+        if(any(rm_no_hits)){cat(paste0("\n\n|--- All reference but ", names(rm_no_hits)[rm_no_hits], " generated hits"))
+        }else{cat(paste0("\n|--- All reference but generated hits"))}
         cat(paste0("\n|--- Mismatch ", mis_lst[[i]], " finished -----|"))
-        cat(paste0("\n******************************************************"))
-    }
   }
+cat(paste0("\n\n******************************************************"))
+cat(paste0("\n Cleaning up ... "))
+if(keep_temp==FALSE){
+  fls_temp <- list.files(output_path, full.names=TRUE, recursive = FALSE, patter=".out$")
+  file.remove(fls_temp)}  
+cat(paste0("\n Reanno mapping finished at: ", format(Sys.time(), "%X")))
+cat(paste0("\n Output files are saved in:\n  ", paste0(output_path)))
+  
 }
+
+
   
  
 
