@@ -100,7 +100,7 @@ PAC_pie <- function(PAC, pheno_target, anno_target, colvec=NULL, angle=-25){
                                                     data <- PAC$Counts[PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]],]
                                                     data <- data[, PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]]]
                                                     anno <- PAC$Anno[PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]],]
-                                                    pheno <- PAC$Pheno[PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]]]
+                                                    pheno <- PAC$Pheno[PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]],]
 
                                                     ## Fix order
                                                     anno[, anno_target[[1]]] <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
