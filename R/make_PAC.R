@@ -54,6 +54,7 @@
 #' @export
 
 make_PAC<- function(pheno_input, anno_input, counts_input){
+                                if(class(counts_input)=="list"){counts_input<-counts_input[[1]]}
                                 PAC_unord <- list(Pheno=pheno_input, Anno=anno_input, Counts=counts_input)
                                 stopifnot(!any(!unlist(lapply(PAC_unord, is.data.frame))))
                                 stopifnot(nrow(anno_input) == nrow(counts_input))
