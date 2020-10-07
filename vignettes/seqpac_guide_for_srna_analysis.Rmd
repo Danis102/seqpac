@@ -370,16 +370,16 @@ reannotation workflow (see below).
 <br>
 
 ### 2.4.1 Fasta references
-Most databases provides their references in the fasta file format. Seqpac can
+Most databases provide their references in the fasta file format. Seqpac can
 use any correctly formated fasta file as input in the reannotation workflow.
 However, we destiguish two kinds of fasta references:
 
 1. Reference genomes.
 2. Other specialized references.
 
-To retreive the fasta files you need to download them manually from the source
-database. Here are some helpful example links where to retreive useful fasta
-references:
+You can download the files manually from the source database. Below are some
+helpful example links where to retreive useful fasta references. Note that all
+compressed files must be uncompressed to work with the bowtie aligner.
 
 <br>
 **Reference genomes:**
@@ -388,10 +388,9 @@ references:
 [UCSC](http://hgdownload.cse.ucsc.edu/downloads.html) <br>
 [iGenomes](https://emea.support.illumina.com/sequencing/sequencing_software/igenome.html?langsel=/se/) <br>
 
-Hint: Unmasked top level fasta files are best for most purposes, e.g. Ensembl file name *.dna.toplevel.fa.gz
+Hint: Unmasked top level fasta files are best for most purposes, e.g. Ensembl
+file name *.dna.toplevel.fa.gz.
 
-
-<br>
 **Other specialized references:**
 [miRNA (mirbase)](http://www.mirbase.org/ftp.shtml) <br>
 [miRNA (mirgenedb)](https://mirgenedb.org/download) <br>
@@ -401,20 +400,165 @@ Hint: Unmasked top level fasta files are best for most purposes, e.g. Ensembl fi
 [tRNA (GtRNAbd)](http://gtrnadb.ucsc.edu/) <br>
 [repeats (repeatMasker)](http://repeatmasker.org/genomicDatasets/RMGenomicDatasets.html) <br>
 
+
+There are also several packages in R that allows you to download reference
+genomes. Here are two examples using the BSgenome and biomartr packages.
+
+```{r, eval=FALSE}
+
+## First specify where to store all the fasta file
+ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
+
+###################################
+####---- BSgenome ------------ ####
+dest_path <- file.path(ref_path, "/uscs_genome/dm6_ucsc.fa")
+BSgenome::available.genomes()
+BiocInstaller::biocLite("BSgenome.Dmelanogaster.UCSC.dm6") # Only once
+dm6 <- BSgenome::getBSgenome("BSgenome.Dmelanogaster.UCSC.dm6", masked=FALSE)
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
+Biostrings::writeXStringSet(getSeq(dm6), filepath=dest_path, format="fasta")
+
+``` 
+
+```{r}
+###################################
+####---- biomartr ------------ ####
+dest_path <- file.path(ref_path, "/biomartr_genome/") # Only dir
+biomartr::is.genome.available(db = "ensembl", organism = "Drosophila melanogaster", details = TRUE)
+file_path <- biomartr::getGenome(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
+R.utils::gunzip(list.files(dest_path, pattern="fa.gz$", full.names=TRUE), remove=TRUE, skip=TRUE)
+genome <- Biostrings::readDNAStringSet(filepath=list.files(dest_path, pattern=".fa$", full.names=TRUE), format="fasta")
+
+``` 
+
+<br>
+
+Similar to full genomes, some specilized references may be available for direct
+download using specific packages. Here is an example for ensembl ncRNA (animals)
+using the biomartr package.
+
+```{r}
+
+###################################
+####---- biomartr ncRNA ------ ####
+dest_path <- file.path(ref_path, "/ensembl_ncRNA/") # Only dir
+biomartr::is.genome.available(db = "ensembl", organism = "Drosophila melanogaster", details = TRUE)
+ncrna_path <- biomartr::getRNA(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
+ncrna <-  biomartr::read_rna(file = ncrna_path)
+
+```
+
+Using the \code{download.file} function makes all urls (https/http/ftp etc)
+available for download. Here an example for drosophila tRNA and miRNA
+fasta:
+```{r, eval=TRUE}
+
+###################################
+####---- Download GtRNAdb ---- ####
+dest_path <- file.path(ref_path, "/GtRNAdb/trna.fa")
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
+download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.fa", destfile=dest_path)
+trna <- Biostrings::readDNAStringSet(filepath=dest_path, format="fasta")
+```
+
+```{r, eval=FALSE}
+###################################
+####---- Download mirbase ---- ####
+# 1. Download pre-miRNA data
+# 2. Extract compressed fasta
+# 3. Read as RNA
+# 4. Extract species D. melanogaster 
+# 4. Convert to DNA
+# 5. Overwrite RNA fasta with DNA fasta
+# (sequenced reads are always in DNA)
+# (we use pre-miRNA to catch all miRNA)
+dest_path <- file.path(ref_path, "/mirbase/mirna_pre_mirbase.fa.gz")
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
+download.file(url="ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz", destfile=dest_path)
+R.utils::gunzip(dest_path, remove=TRUE, skip=TRUE)
+mirna <- Biostrings::readRNAStringSet(filepath=gsub(".gz", "", dest_path), format="fasta")
+mirna <- mirna[grepl("Drosophila melanogaster", names(mirna)),]
+mirna <- Biostrings::DNAStringSet(mirna)
+Biostrings::writeXStringSet(mirna, filepath=gsub(".gz", "", dest_path), format="fasta")
+
+```
+
+```{r, eval=TRUE}
+###################################
+####- Similar but MirGeneDB -- ####
+# Since mirBase is no longer updated you might want to use MirGeneDB
+dest_path <- file.path(ref_path, "/mirgenedb/mirna_pre_mirbase.fa.gz")
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
+download.file(url="https://www.mirgenedb.org/static/data/dme/dme-pre.fas", destfile=dest_path)
+mirna2 <- Biostrings::readRNAStringSet(filepath=dest_path, format="fasta")
+mirna2 <- Biostrings::DNAStringSet(mirna2)
+Biostrings::writeXStringSet(mirna2, filepath=dest_path, format="fasta")
+
+## There are some overlaps 
+table(paste0(mirna2) %in% paste0(mirna)) # Not much perfect overlap
+table(grepl(paste(paste0(mirna2), collapse="|"), paste0(mirna))) # Non-perfect overlaps better 
+
+``` 
+
 <br>
 Custom fasta files can also be used, and you can easily merge, add and remove
-features to the database references by functions in the Biostrings package:
+features to the database references by functions in the Biostrings package, such
+as \code{readDNAStringSet}.
 
-`fasta <- Biostrings::readDNAStringSet(filepath=<path to your fasta file>", format="fasta")`
 
-Hint: You may want to remove all haplotype or scaffold 'chromosomes' from your
-top level reference genome. 
+You may for some reason want to remove all haplotype or scaffold 'chromosomes'
+from your top level reference genome.
 
-Hint: You may also want to add tRNAs from the mitochrondrial genome to your
+```{r, eval=TRUE}
+## Remove scaffold in genome files
+file_path <- list.files(paste0(ref_path, "/ensembl_ncrna/"), pattern=".fa", full.names=TRUE)
+genome <- Biostrings::readDNAStringSet(filepath=file_path[1], format="fasta")
+genome <- genome[!grepl("scaffold", names(genome)),] # Remove scaffolds 
+Biostrings::writeXStringSet(genome, filepath=file_path, format="fasta")
+
+``` 
+
+Sometime the sequence names need to be rearranged for the bowtie aligner to best
+report the names in the mapping output. As default, bowtie only reports the names
+up to the first white space. This can easily be done using the Biostrings
+package:
+
+```{r}
+## Fixing the trna names
+file_path <- paste0(ref_path, "/GtRNAdb/trna.fa")
+trna <- Biostrings::readDNAStringSet(filepath=file_path, format="fasta")
+names(trna) <- gsub("Drosophila_melanogaster_", "", names(trna)) # Remove species 
+mat <- do.call("rbind", strsplit(names(trna), " ")) # Make a matrix the names 
+names(trna) <-  paste(mat[,1], mat[,ncol(mat)-1], mat[,ncol(mat)], sep="_") # Save the important as one single string
+
+``` 
+
+You may also want to add tRNAs from the mitochrondrial genome to your
 tRNA reference, which is not always provided in the GtRNAdb fasta. This can be
 done by moving them from Ensembl ncRNA fasta or scan the mitochondrial genome
 manually at [tRNAscan-SE](http://lowelab.ucsc.edu/tRNAscan-SE/). The
-mitochonridal genome is normally found in the reference genome fasta.
+mitochonridal genome is found in the reference genome fasta.
+
+
+```{r, eval=TRUE}
+## First rearrange the ncRNA fasta names
+file_path <- list.files(paste0(ref_path, "/ensembl_ncRNA/"), pattern=".fa", full.names=TRUE)
+ncrna <- Biostrings::readDNAStringSet(filepath=file_path, format="fasta")
+mat <- do.call("rbind", strsplit(names(ncrna), " ")) # Make a matrix the names
+col_bio <- grepl("gene_biotype:", mat[1,])  # Locate gene biotype column
+col_coord <- grepl("chromosome:", mat[1,])  # Locate coordinate column
+new_names <- paste(mat[,ncol(mat)], mat[,1], mat[,col_bio], mat[,col_coord], sep="_") 
+names(ncrna) <- gsub("gene_symbol:|chromosome:BDGP6.28:|gene_biotype:", "",  new_names) # Clean up
+Biostrings::writeXStringSet(ncrna, filepath=file_path, format="fasta")
+
+## Locate and add mito tRNA
+trna_logi <- grepl("tRNA_mitochondrion_genome", names(ncrna)) # Locate mito tRNA
+table(trna_logi)                                              # Should be 22
+trna <- c(trna, ncrna[trna_logi,])
+Biostrings::writeXStringSet(trna, filepath=paste0(ref_path, "/GtRNAdb/trna.fa"), format="fasta")
+
+``` 
+
 
 <br>
 
@@ -425,6 +569,20 @@ or by running bowtie externally, outside R. For more information see
 ?Rbowtie::bowtie, Rbowtie::bowtie_build_usage()
 http://bowtie-bio.sourceforge.net/manual.shtml.
 
+
+!!!!!!!!!!!!!!! HÄR ÄR JAG
+
+
+
+```{r, eval = FALSE}
+
+ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
+
+Rbowtie::bowtie_build(paste0(ref_path, "/trna/trna.fa"), outdir=paste0(ref_path, "/GtRNAdb/"), prefix="trna", force=TRUE)
+
+
+
+``` 
 
 <br>
 
@@ -489,7 +647,7 @@ the number of mismatches after substracting the matches.
 **import_reanno**<br>
 This is the function that is called by \code{map_reanno} to import the bowtie
 results after each sequential run. If you would run \code{import_reanno}
-seperatly it simply provides you with options on how to import bowtie resulst
+seperatly it simply provides you with options on how to import bowtie results
 into R. For example, when aligning against a reference genome the mapping
 coordinates is important, while mapping against other reference 'hit' or 'no
 hit' might be enough.
@@ -497,6 +655,9 @@ hit' might be enough.
 <br>
 
 **make_reanno**<br>
+This function will search for the .Rdata files that were generated by
+\code{map_reanno} and extract annotations in a format that fits the Anno table
+in a PAC object.
 
 
 
