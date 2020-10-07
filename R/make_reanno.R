@@ -31,11 +31,10 @@
 #'   so that no sequences are missing before and after reannotation.
 #'
 #' @examples
-#' reanno_path  <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
-#' 
-#' load(file="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_hifilt.Rdata")
-#' 
-#' Full_anno <- make_reanno(reanno_path, PAC=PAC_hifilt, mis_fasta_check=TRUE, threads=10)    # Complete use
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' reanno_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
+#' Full_anno <- make_reanno(reanno_path, PAC=pac_master, mis_fasta_check=TRUE, threads=10)    # Complete use
 #' identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview)) 
 #' 
 
@@ -55,22 +54,13 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
                   cat("\nReorganizing and matching reannotation files with PAC ...\n")
                   PAC_seq <- rownames(PAC$Anno)
                   reanno_lst_match <- lapply(reanno_lst, function(x){
-                                        # match_lst  <- parallel::mclapply(x,  mc.cores=threads, function(y){
-                                        #                       y$seq <- as.character(y$seq)
-                                        #                       y$ref_hits <- as.character(y$ref_hits)
-                                        #                       anno_match <- y[match(PAC_seq, y$seq), ]
-                                        #                       anno_match$seq[is.na(anno_match$seq)] <- PAC_seq[is.na(anno_match$seq)]
-                                        #                       #anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
-                                        #                       stopifnot(identical(PAC_seq, anno_match$seq))
-                                        #                       return(anno_match)
-                                        #                       })
                                         match_lst  <- lapply(x,  function(y){
-                                                              y$seq <- as.character(y$seq)
+                                                              y$.id <- as.character(y$.id)
                                                               y$ref_hits <- as.character(y$ref_hits)
-                                                              anno_match <- y[match(PAC_seq, y$seq), ]
-                                                              anno_match$seq[is.na(anno_match$seq)] <- PAC_seq[is.na(anno_match$seq)]
-                                                              #anno_match$mis_n <- gsub("misNA", "mis0", anno_match$mis_n)
-                                                              stopifnot(identical(PAC_seq, anno_match$seq))
+                                                              anno_match <- y[match(PAC_seq, y$.id), ]
+                                                              anno_match$.id[is.na(anno_match$.id)] <- PAC_seq[is.na(anno_match$.id)]
+                                                              stopifnot(identical(PAC_seq, anno_match$.id))
+                                                              names(anno_match)[names(anno_match)==".id"] <- "seq"
                                                               return(anno_match)
                                                               })
                                         return(match_lst)
@@ -117,11 +107,11 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
                   df_fin$Any_hit <- ifelse(vect_mis == paste0(rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit") 
                   df_fin$Mis0_hit <- ifelse(grepl("mis0", vect_mis) , "Hit", "No_hit")
               if(mis_fasta_check==TRUE){
-                  cat("\nChecking the anno_mis_fasta file was specified by user.\n")
-                  cat("Will try to read this file from same directory as the reannotion files.\n")
+                  cat("\nChecking the last anno_mis fasta file was specified.\n")
                   anno_mis_fls <- list.files(reanno_path, pattern = "anno_mis\\d.fa")
                   ns <- max(as.integer(gsub("anno_mis|.fa", "", anno_mis_fls)))
                   file_nam <- paste0("anno_mis", ns, ".fa")
+                  if(!file_nam %in% basename(anno_mis_fls)){stop(paste0("\nThe last anno_mis fasta ('leftover') file, named ", file_nam, ", was not found in reanno path.\nIf it was deleted, set mis_fasta_check=FALSE."))}                
                   noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", file_nam))
                   logi_no_anno <- df_fin$Any_hit=="No_anno"
                   logi_olap <-  rownames(df_fin)[df_fin$Any_hit=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
@@ -131,6 +121,5 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
                         }else{cat("Good! This is how it should be...\n")}
                   }
               return(list(Overview=df_fin, Full_anno=reanno_lst_match))
-              cat("Done!\n")
               }
 
