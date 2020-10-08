@@ -9,8 +9,11 @@
 #'
 #' @seealso \url{https://github.com/Danis102} for updates on the current
 #'   package.
-#'
-#' @param PAC PAC-list object.
+#' 
+#'#' @param PAC PAC-list object. If mapping only certain types of biotypes, 
+#' e.g. tRNAs for analysis with PAC_tRNA, you may want to filter only tRNA fragments
+#' from the PAC list with PAC_filter using anno_target=list("Biotype", "tRNA") for a 
+#' faster analysis.
 #'
 #' @param ref Character indicating the path to the fasta (.fa) reference
 #'   file or a DNAStringSet with already loaded reference sequences.
@@ -113,7 +116,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK", N_up
 
                           # Read files
                           if(class(ref)=="character"){
-                                          cat("Reading full length rRNA from file ...")
+                                          cat("Reading full length transcripts from reference file ...")
                                           full <- Biostrings::readDNAStringSet(ref)
                                           }else{full <- ref}  
                           nams_full <- names(full) # Names are lost in the next step
@@ -121,7 +124,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, threads=1, par_type="PSOCK", N_up
                           names(full) <- nams_full
 
                           ## Aligning using parallel processing
-                          cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
+                          cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take some time) ...    ", paste(Sys.time()), "\n")
                           len <- length(full)
                           
                        
