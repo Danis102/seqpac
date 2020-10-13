@@ -494,8 +494,8 @@ mirna2 <- Biostrings::DNAStringSet(mirna2)
 Biostrings::writeXStringSet(mirna2, filepath=dest_path, format="fasta")
 
 ## There are some overlaps 
-table(paste0(mirna2) %in% paste0(mirna)) # Not much perfect overlap
-table(grepl(paste(paste0(mirna2), collapse="|"), paste0(mirna))) # Non-perfect overlaps better 
+table(paste0(mirna2) %in% paste0(mirna))                          # Not much perfect overlap
+table(grepl(paste(paste0(mirna2), collapse="|"), paste0(mirna)))  # Non-perfect overlaps better 
 
 ``` 
 
@@ -521,19 +521,37 @@ Biostrings::writeXStringSet(scaff, filepath=paste0(dirname(file_path), "/scaffol
 ``` 
 
 As default, bowtie only reports the names up to the first white space. Sometime
-the sequence names need to be rearranged for the bowtie aligner to best report
-the names in the mapping output.  This can easily be done using the Biostrings
-package:
+the sequence names need to be modified or rearranged for the bowtie aligner to
+best report the names in the mapping output.  This can easily be done using the
+Biostrings package:
 
 ```{r}
 ## Fixing the trna names
 file_path <- paste0(ref_path, "/GtRNAdb/trna.fa")
 trna <- Biostrings::readDNAStringSet(filepath=file_path, format="fasta")
-names(trna) <- gsub("Drosophila_melanogaster_", "", names(trna)) # Remove species 
-mat <- do.call("rbind", strsplit(names(trna), " ")) # Make a matrix the names 
-names(trna) <-  paste(mat[,1], mat[,ncol(mat)-1], mat[,ncol(mat)], sep="_") # Save the important as one single string
+names(trna) <- gsub("Drosophila_melanogaster_", "", names(trna))              # Remove species 
+mat <- do.call("rbind", strsplit(names(trna), " "))                           # Make a name matrix 
+names(trna) <-  paste(mat[,1], mat[,ncol(mat)-1], mat[,ncol(mat)], sep="_")   # Save the important as one single string
+Biostrings::writeXStringSet(trna, filepath=file_path, format="fasta")
 
 ``` 
+
+
+
+
+```{r, eval=TRUE}
+## Rearrange the ncRNA fasta names
+file_path <- paste0(ref_path, "/ensembl_ncRNA/ncrna.fa")
+ncrna <- Biostrings::readDNAStringSet(filepath=file_path, format="fasta")
+mat <- do.call("rbind", strsplit(names(ncrna), " "))                        # Make a matrix the names
+col_bio <- grepl("gene_biotype:", mat[1,])                                  # Locate gene biotype column
+col_coord <- grepl("chromosome:", mat[1,])                                  # Locate coordinate column
+new_names <- paste(mat[,ncol(mat)], mat[,1], mat[,col_bio], mat[,col_coord], sep="_") 
+names(ncrna) <- gsub("gene_symbol:|chromosome:BDGP6.28:|gene_biotype:", "",  new_names) # Clean up
+Biostrings::writeXStringSet(ncrna, filepath=file_path, format="fasta")
+
+
+```
 
 You may also want to add tRNAs from the mitochrondrial genome to your
 tRNA reference, which is not always provided in the GtRNAdb fasta. This can be
@@ -541,18 +559,7 @@ done by moving them from Ensembl ncRNA fasta or scan the mitochondrial genome
 manually at [tRNAscan-SE](http://lowelab.ucsc.edu/tRNAscan-SE/). The
 mitochonridal genome is found in the reference genome fasta.
 
-
 ```{r, eval=TRUE}
-## Rearrange the ncRNA fasta names
-file_path <- list.files(paste0(ref_path, "/ensembl_ncRNA/"), pattern=".fa", full.names=TRUE)
-ncrna <- Biostrings::readDNAStringSet(filepath=file_path, format="fasta")
-mat <- do.call("rbind", strsplit(names(ncrna), " ")) # Make a matrix the names
-col_bio <- grepl("gene_biotype:", mat[1,])  # Locate gene biotype column
-col_coord <- grepl("chromosome:", mat[1,])  # Locate coordinate column
-new_names <- paste(mat[,ncol(mat)], mat[,1], mat[,col_bio], mat[,col_coord], sep="_") 
-names(ncrna) <- gsub("gene_symbol:|chromosome:BDGP6.28:|gene_biotype:", "",  new_names) # Clean up
-Biostrings::writeXStringSet(ncrna, filepath=file_path, format="fasta")
-
 ## Locate and add mito tRNA
 trna_logi <- grepl("tRNA_mitochondrion_genome", names(ncrna)) # Locate mito tRNA
 table(trna_logi)                                              # Should be 22
@@ -560,7 +567,6 @@ trna <- c(trna, ncrna[trna_logi,])
 Biostrings::writeXStringSet(trna, filepath=paste0(ref_path, "/GtRNAdb/trna.fa"), format="fasta")
 
 ``` 
-
 
 <br>
 
@@ -585,6 +591,7 @@ Rbowtie::bowtie_build(paste0(ref_path, "/biomartr_genome/chromsomes.fa"), outdir
 Rbowtie::bowtie_build(paste0(ref_path, "/GtRNAdb/trna.fa"), outdir=paste0(ref_path, "/GtRNAdb/"), prefix="trna", force=TRUE)
 Rbowtie::bowtie_build(paste0(ref_path, "/ensembl_ncRNA/ncrna.fa"), outdir=paste0(ref_path, "/ensembl_ncRNA/"), prefix="ncrna", force=TRUE)
 Rbowtie::bowtie_build(paste0(ref_path, "/mirbase/mirna.fa"), outdir=paste0(ref_path, "/mirbase/"), prefix="mirna", force=TRUE)
+
 
 
 ``` 
@@ -706,7 +713,7 @@ outpath_genome <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
 import <- list(coord=TRUE, report="full", reduce=NULL)
 
 map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=outpath_genome, 
-            type="internal", mismatches=3, import=import, threads=8)
+            type="internal", mismatches=3, import=import, threads=8, keep_temp=TRUE)
 
 ##########################################
 ### sRNA mapping using external bowtie
@@ -720,7 +727,7 @@ outpath_srna <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
 import <- list(coord=FALSE, report="full", reduce=NULL)
 
 map_reanno(pac_master, ref_paths=ref_paths, output_path=outpath_srna, 
-            type="external", mismatches=3,  import=import, threads=8)
+            type="external", mismatches=3,  import=import, threads=8, keep_temp=TRUE)
 
 
 ##########################################
@@ -729,24 +736,64 @@ map_reanno(pac_master, ref_paths=ref_paths, output_path=outpath_srna,
 anno_genome <- make_reanno(outpath_genome, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
 anno_srna <- make_reanno(outpath_srna, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
 
+# List structure
 ls.str(anno_genome)
 ls.str(anno_srna)
 
+# Pie simple charts
 pie(table(anno_genome$Overview$genome))
 pie(table(anno_srna$Overview$Any_hit))
+
+# Antisense mapping in srna
+mis0_ensembl <- anno_srna$Full_anno$mis0$Ensembl
+anti_sns <- grepl(":antisense", mis0_ensembl$ref_hits)
+sns <- grepl(":sense", mis0_ensembl$ref_hits)
+only_anti <- rowSums(data.frame(anti_sns, !sns)) == 2
+table(only_anti)
+mis0_ensembl[only_anti,]
 
 
 ##########################################
 ### Running add_reanno 
 ##----------------------------------------
+# Generating correct annotations from references that contains multiple biotypes
+# (e.g. Ensemble ncRNA) is all about finding the best 'search terms' against the
+# names of individual sequences in the fasta file (up to the 1st white space;
+# see above). Here we use the grepl function to find and classify RNA. The
+# add_reanno function contains automatic scripts so that your search terms are
+# exclusive with no overlaps between terms. But be aware! Check your references
+# carefully! For example, in some species long non-code RNA are named lncRNA in
+# Ensembl, while in other species they are named lincRNA. Below are some
+# examples for the fasta files we generated above for drosophila:
 
+# Setup reference search terms
+ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
 
-!!!!!!!!! HÄR ÄR JAG
+ncrna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/ensembl_ncRNA/ncrna.fa")))
+ncrna <- do.call("rbind", strsplit(ncrna, " "))[,1]   # Extract up to 1st white space
+table(do.call("rbind", strsplit(ncrna, "\\:"))[,1])   # Expressions up to ":"    
+srch <- paste(c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"), collapse="|")
+table(grepl(srch, ncrna))                             # FALSE will be classified as "other" 
+ncrna[!grepl(srch, ncrna)]                            # Mostly asRNA                      
 
+mirna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/mirbase/mirna.fa")))
+mirna <- do.call("rbind", strsplit(mirna, " "))[,1]
+table(grepl("dme-", mirna))                           # All TRUE; All will be classified miRNA
 
+trna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/GtRNAdb/trna.fa")))
+trna <- do.call("rbind", strsplit(trna, " "))[,1]
+srch <- paste(c("^tRNA", "mt:tRNA"), collapse="|")
+table(grepl(srch, trna))                              # All TRUE; Classified under 2 tRNA categories
 
-bio_search = list(
-anno_genome <-add_reanno(anno_genome, mismatches = 0, threads=8)
+# Setup serach terms for make_reanno
+bio_search <- list(
+                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "ncRNA"),
+                 miRNA="dme-",
+                 tRNA =c("^tRNA", "mt:tRNA")      # ^ regular expression for start of string  
+                 )
+
+# Run reanno
+anno_srna_extract <- add_reanno(anno_srna, bio_search=bio_search, type="biotype", mismatches = 0)
 
 
 ``` 

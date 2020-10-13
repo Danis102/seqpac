@@ -71,16 +71,9 @@ object using \code{add_reanno}.
 }
 
 \examples{
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
+bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
 reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
-reanno2 <- import_reanno(bowtie_path, report="full",  threads=10)
-reanno3 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=1)
-reanno4 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=8)
-reanno5 <- import_reanno(bowtie_path, report="minimum")
-
-lapply(reanno5, head)
-lapply(reanno5, names)
 
 }
 \seealso{

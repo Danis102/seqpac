@@ -60,17 +60,9 @@
 #'   \emph{reduce=<reference_names>} will circumvent this problem.
 #'
 #' @examples
-#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno"
-#' bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Processed_Pipeline31_05-03-20/R_files"
-
+#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
 #' reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
-#' reanno2 <- import_reanno(bowtie_path, report="full",  threads=10)
-#' reanno3 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=1)
-#' reanno4 <- import_reanno(bowtie_path, report="full", reduce="piRNA", threads=8)
-#' reanno5 <- import_reanno(bowtie_path, report="minimum")
-#' 
-#' lapply(reanno5, head)
-#' lapply(reanno5, names)
 #' 
 #' @export
 
@@ -108,7 +100,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
     
     ## Handle no hits    
     if(no_hit[k]){
-      bowtie_out_lst[[k]] <- data.table::data.table(.id="No_hits", mis_n=NA, mis_where=NA, ref_hits=NA)
+      bowtie_out_lst[[k]] <- tidyverse::tibble(.id="No_hits", mis_n=NA, mis_where=NA, ref_hits=NA)
       names(bowtie_out_lst)[k] <- nam 
       }
     
@@ -117,11 +109,11 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
       
       if(report=="minimum"|nam %in% reduce){
         reprt <- "min"
-        bow_out <- data.table::fread(files[k], header=FALSE, select = c(1,8), data.table=TRUE, , showProgress=FALSE)
+        bow_out <- data.table::fread(files[k], header=FALSE, select = c(1,8), data.table=TRUE, showProgress=FALSE)
       }else{
         reprt <- "full"
-        if(coord==TRUE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,4,1,8), data.table=TRUE, showProgress=FALSE)}
-        if(coord==FALSE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,1,8), data.table=TRUE, showProgress=FALSE)}
+        if(coord==TRUE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,4,2,1,8), data.table=TRUE, showProgress=FALSE)}
+        if(coord==FALSE){bow_out <- data.table::fread(files[k], header=FALSE, select = c(3,2,1,8), data.table=TRUE, showProgress=FALSE)}
       }
       
       bow_out$V8 <- as.character(bow_out$V8)
@@ -136,7 +128,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
       ## Generate mini report from imported bowtie files
       if(reprt=="min"){
         cat(paste0("\n    |---> Generating minimum report ..."))
-        bowtie_out_lst[[k]] <- data.table::data.table(.id=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
+        bowtie_out_lst[[k]] <- tidyverse::tibble(.id=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
         names(bowtie_out_lst)[k] <- nam
       }
       ## Compile full report with multithreading 
@@ -156,17 +148,28 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
         doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
         bowtie_out_lst[[k]] <- foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
               compile_lst <- lapply(bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
+                  # Fix neg strand mismatch   
+                  new <- gsub("A", "t", x$V8[x$V2 == "-"])
+                  new <- gsub("C", "g", new)
+                  new <- gsub("G", "c", new)
+                  new <- gsub("T", "a", new)
+                  x$V8[x$V2 == "-"] <- toupper(new)
+                  # Only report where mismatches occurs uniquely
                   uni_mis <- unique(x$V8)
                   uni_mis <- unique(do.call("c", stringr::str_split(uni_mis, ",")))
                   uni_mis <- uni_mis[order(as.integer(gsub( ":.*$", "", uni_mis )))]
                   if(any(is.na(uni_mis))){uni_mis <- "mis0"}
                   uni_mis <- paste(uni_mis, collapse="|")
-                  if(coord==TRUE){hits <- paste(unique(paste(x$V3, x$V4, sep=":")), collapse="|")}
-                  if(coord==FALSE){hits <- paste(unique(x$V3), collapse="|")}
+                  if(coord==TRUE){
+                              x$V4 <- x$V4+1 # Fix bowtie coordinate shift
+                              hits <- paste(unique(paste(x$V3, x$V4, x$V2, sep=":")), collapse="|")}
+                  if(coord==FALSE){
+                              strnd <- ifelse(x$V2=="+", "sense", "antisense")
+                              hits <- paste(unique(paste(x$V3, strnd, sep=":")), collapse="|")}
                   fin <- data.table::data.table(mis_n=n_mis, mis_where=uni_mis, ref_hits=hits)
                   return(fin)
                   })
-              bow_fin <- data.table::rbindlist(compile_lst, idcol=TRUE)
+              bow_fin <- tibble::as_tibble(data.table::rbindlist(compile_lst, idcol=TRUE))
               return(bow_fin)
             }
         doParallel::stopImplicitCluster()

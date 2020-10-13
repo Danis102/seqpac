@@ -110,12 +110,12 @@
 #' ## Path to bowtie indexed reference genome fasta 
 #' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
 #' ## Path to output folder:
-#' output_path <- "/home/danis31/Desktop/Temp_docs/"
+#' output_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
 #' ## Import options (see ?import_reanno):
 #' import <- list(coord=TRUE, report="full", reduce=NULL)
 #'                               
 #' map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=output_path, 
-#'            type="internal", mismatches=3, import=import, threads=8)
+#'            type="internal", mismatches=3, import=import, threads=8, keep_temp=TRUE)
 #' 
 #' 
 #' #### Example type= external #### 
