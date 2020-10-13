@@ -50,6 +50,11 @@
 #'   first hits up to \code{max_hits} will be reported. Useful to handling
 #'   seaquences that multimap.
 #'   
+#' @param merge_pac PAC object. If a PAC object is provided in merge_pac, then
+#'   the function will automatically merge the Anno table of the PAC object with
+#'   the newly generated annotations. As default, merge_pac=NULL that will return
+#'   a tibble dataframe instead.
+#'   
 #' @return Dataframe with mismatch and coordinate or biotype information (search
 #'   term hits) that can directly be added to an Anno dataframe of a PAC object,
 #'   given that the same PAC object was used in the reannotation workflow. It
@@ -59,60 +64,127 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
+#' ## Genome annotation ##
 #' outpath_genome="/home/danis31/Desktop/Temp_docs/reanno_genome"
-#' outpath_snc="/home/danis31/Desktop/Temp_docs/reanno_srna"
-#' 
 #' reanno <- make_reanno(outpath_genome, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
-#' reanno <- make_reanno(outpath_snc, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
-#' 
 #' ls.str(reanno)
+#' names(reanno$Full_anno$mis0)
+#' anno <- add_reanno(reanno, type="genome", mismatches = 3, genome_max=10)
+#' pac_master <- add_reanno(reanno, type="genome", mismatches = 3, genome_max=10, merge_pac=pac_master)
 #' 
-#' colnames(reanno$Full_anno$mis0$genome)
-#' 
-#' type = "genome"
-#' type = "biotype"
-#' 
-#' # Search terms must target the same names as in reanno
-#' # Double check:
-#' lapply(reanno$Full_anno, names)
-#' 
+#' ## Biotype annotation ##
+#' outpath_snc="/home/danis31/Desktop/Temp_docs/reanno_srna"
+#' reanno <- make_reanno(outpath_snc, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
+#' ls.str(reanno)
+#' names(reanno$Full_anno$mis0)
 #' bio_search <- list(
 #'                  Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"),
 #'                  miRNA="dme-",
 #'                  tRNA =c("^tRNA", "mt:tRNA")      # ^= regular expression for start of string  
 #'                  )
-#'                  
-#'  bio_search <- list(
-#'                  Ensembl=c("lncRNA", "miRNA"),
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=TRUE, mismatches = 3) # Throughs an error
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)  
+#'
+#'
+#' ## Merge with PAC object
+#' pac_master <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3, merge_pac=pac_master) 
+#' as_tibble(pac_master$Anno)
+#' 
+#' 
+#' ## The trick to succeed with bio_perfect=TRUE ##
+#' # Run with bio_perfect="TRUE" (look where "Other=XX" occurs)
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
+#' 
+#' # Find sequences that has been classified as other 
+#' other_seqs  <- anno[grepl("other", anno$mis0),]$seq
+#' 
+#' # Extract sequences from the non-classified reanno object: 
+#' tab <- reanno_srna$Full_anno$mis0$Ensembl
+#' tab[tab$seq %in% other_seqs,]
+#' 
+#' # Add new search terms and repeat until perfect hits 
+#' bio_search <- list(
+#'                  Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "snmRNA", "asRNA", "hpRNA"),
 #'                  miRNA="dme-",
 #'                  tRNA =c("^tRNA", "mt:tRNA")      # ^= regular expression for start of string  
-#'                  )                
-#'                  
-#'                  
+#'                  )
 #' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=TRUE, mismatches = 3)             
-#' 
+#'
 #' @export
-add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perfect=FALSE, genome_max=10){
-  require(tidyverse)
-  # Setup
+
+
+add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perfect=FALSE, genome_max=10, merge_pac=NULL){
+  suppressPackageStartupMessages(require(tidyverse, quietly=TRUE))
+## General setup ###############################
   stopifnot(any(do.call("c", lapply(reanno$Full_anno, function(x){do.call("c", lapply(x, function(y){identical(reanno$Overview$seq, y$seq)}))}))))
   seq_nam <- reanno$Overview$seq
+  cat(paste0("\nSequences in total: ", length(seq_nam)))
+  fin_lst <- list(NA)
 
 ## Extract genome ###############################
-  # if(type=="genome")
-  # 
-  #     for (i in 1:(mismatches+1)){
-  # 
-  # 
+  if(type=="genome"){
+    cat("\nExtracting the genome(s) ...")
+    
+    ## Loop mismatch
+    for (i in 1:(mismatches+1)){
+      full_lst  <- reanno$Full_anno[[i]]
+      gen_vec_lst <- list(NA)
+      
+      ## Loop biotype
+      for (a in 1:length(full_lst)){
+        gen_nams <- names(full_lst)
+        gen_len <- sum(!is.na(full_lst[[a]]$ref_hits))
+        prc <- round(gen_len/length(seq_nam)*100, digits=2)
+        cat_nam <- paste0(gen_nams[a], ":", paste0(rep(" ", times= max(nchar(gen_nams)+1)-nchar(gen_nams[a])), collapse=""))
+        cat_len <- paste0(gen_len, paste0(rep(" ", times= 8-nchar(gen_len)), collapse=""))
+        cat_hits <- paste0("Ref_hits= ", cat_len, "  (", prc, "%)")
+        cat(paste0("\n\tmis", i-1, "\t",  cat_nam,"\t", cat_hits)) 
 
+        if(genome_max=="all"){
+          gen_vec_lst[[a]] <- full_lst[[a]]$ref_hits
+        }else{
+          ref_hits <- full_lst[[a]]$ref_hits
+          loc <- stringr::str_locate_all(ref_hits, "\\-\\||\\+\\|")
+          loc <- lapply(loc, function(x){
+                          if(nrow(x)>=genome_max){
+                              incl <- x[genome_max,1]
+                          }else{incl <- "all"}
+                          return(incl)
+                    })
+          loc <- unlist(loc, use.names = FALSE)
+          vect <- NULL
+          vect[loc == "all"] <- ref_hits[loc == "all"]
+          vect[!loc == "all"] <- paste0("Warning>10|", substr(ref_hits[!loc == "all"], start=1, stop=as.integer(loc[!loc == "all"])))
+          stopifnot(identical(is.na(vect), is.na(ref_hits)))
+          gen_vec_lst[[a]] <- vect
+        }
+        names(gen_vec_lst)[a] <- names(full_lst)[a]
+      }
+      fin_lst[[i]] <- gen_vec_lst
+      names(fin_lst)[i] <- names(reanno$Full_anno)[i]
+    }
+    
+    ## Finish up
+    cat("\nCompiling everything into one table ...")
+    gen_nam <- names(fin_lst[[1]])
+    shrt <- lapply(as.list(gen_nam), function(x){
+            df <- data.frame(matrix(NA, nrow=length(seq_nam), ncol=length(names(fin_lst))))
+            colnames(df) <- paste(names(fin_lst), x, sep="_")
+              for(z in 1:length(fin_lst)){
+                  df[,z] <- fin_lst[[names(fin_lst)[z]]][[x]]
+              }
+            return(df)
+            })
+    fin <- as.data.frame(do.call("cbind", shrt), stringsAsFactors =FALSE)
+    rownames(fin) <- seq_nam
+   }
+  
+  
 ## Extract biotypes ###############################
   if(type=="biotype"){
     bio_nam <- names(bio_search)
-    fin_lst <- list(NA)
     fin_strand_lst <- list(NA)
     cat("\nExtracting the biotypes ...")
-    cat(paste0("\n  Sequences in total: ", length(seq_nam))) 
   
     ## Loop mismatch
     for (i in 1:(mismatches+1)){
@@ -141,7 +213,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
         bio_hits <- as.numeric(grepl(".", bio_vec))
         over_hits <- as.numeric(grepl(names(reanno$Full_anno)[i], reanno$Overview %>% dplyr::pull(bio_nam[a])))
         
-        # Check bio_perfect 
+        ## Check bio_perfect 
         if(bio_perfect == TRUE){
            if(!identical(bio_hits, over_hits)){
              cat("\n")
@@ -149,7 +221,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
            }
         }
         
-        # Fix missing hits
+        ## Fix missing hits
         if(bio_perfect == FALSE){
             if(any(paste0(over_hits, bio_hits) == "01")){
                 stop("\n  There were more bio_search hits than there were references hits in the Overview table.\n  This should not happen. Please, rerun make_reanno to generate an Overview table \n  that matches the Full annotation tables.")    
@@ -157,7 +229,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
             bio_vec[paste0(over_hits, bio_hits) == "10"] <- paste0(bio_nam[a], "_other")
         }
       
-        # Print some stats and fix classifications
+        ## Print some stats and fix classifications
         cat_nam <- paste0(bio_nam[a], ":", paste0(rep(" ", times= max(nchar(bio_nam)+1)-nchar(bio_nam[a])), collapse=""))
         cat_over <- paste0(sum(over_hits), paste0(rep(" ", times= 8-nchar(sum(over_hits))), collapse=""))
         cat_bio <- paste0(sum(bio_hits), paste0(rep(" ", times= 8-nchar(sum(bio_hits))), collapse=""))
@@ -172,8 +244,8 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
       fin_strand_lst[[i]] <- strand_lst
     }
     
-    # Finish up
-    cat("\nCompiling everything into one dataframe ...")
+    ## Finish up
+    cat("\nCompiling everything into one table ...")
     shrt <- lapply(fin_lst, function(x){do.call("cbind", x)})
     fin <- lapply(shrt, function(x){apply(x, 1, function(y){
       y[y==""] <- "<NA>"
@@ -186,9 +258,37 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
     fin <- as.data.frame(do.call("cbind", fin), stringsAsFactors =FALSE)
     rownames(fin) <- seq_nam
     logi_strand <- apply(do.call("cbind", lapply(fin_strand_lst, function(x){do.call("cbind", x)})), 1 , function(z){paste(z, collapse="")})
-    fin_strand <- paste(ifelse(grepl("s", logi_strand), "+",""), ifelse(grepl("a", logi_strand), "-",""), sep="|")  
-
-    detach(package:tidyverse)
-    return(tibble::as_tibble(cbind(reanno$Overview, data.frame(strand=fin_strand, stringsAsFactors =FALSE), fin)))
+    fin_strand <- paste(ifelse(grepl("s", logi_strand), "+",""), ifelse(grepl("a", logi_strand), "-",""), sep="|")
+    fin <- cbind(data.frame(strand=fin_strand, stringsAsFactors =FALSE), fin)
   }
-}
+  
+## Return table
+  reanno <- cbind(reanno$Overview, fin)
+    # Merge PAC and fix unique column names
+    if(!is.null(merge_pac)){
+          cat("\nMerging with PAC ...")
+          reanno <- reanno[,!colnames(reanno) == "seq"]
+          anno <- merge_pac$Anno
+          if(type=="biotype"){
+            col_fix <- "bio"
+            colsrch <- c("Mis0_bio", paste0("Mis0", 1:100, "_bio"))}
+          if(type=="genome"){
+            col_fix <- "genome"
+            colsrch <- c("Mis0_genome", paste0("Mis0", 1:100, "_genome"))}
+          col_hits <- colnames(anno) %in% colsrch
+          if(any(col_hits)){ 
+                  num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", colnames(anno)[col_hits]))
+                     if(is.na(num)){col_fix <- paste0(col_fix, 2)
+                     }else{col_fix <- paste0(col_fix, num+1)}
+          }
+          colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+          if(!identical(rownames(reanno), rownames(merge_pac$Anno))){stop("\nReanno sequence (row) names do not match PAC sequence names.\nDid you use another PAC object as input for map_reanno?")}  
+          merge_pac$Anno <- cbind(merge_pac$Anno, reanno)
+          PAC_check(merge_pac)
+          return(merge_pac)
+  }else{
+          return(tibble::as_tibble(reanno))
+    }
+  detach(package:tidyverse)
+  }
+

@@ -510,11 +510,11 @@ from your top level reference genome.
 
 ```{r, eval=TRUE}
 ## Extract scaffold in genome files
-file_path <- list.files(paste0(ref_path, "/biomartr_genome/"), pattern=".fa", full.names=TRUE)
+file_path <- list.files(paste0(ref_path, "/biomartr_genome/"), pattern="toplevel.fa", full.names=TRUE)
 genome <- Biostrings::readDNAStringSet(filepath=file_path[1], format="fasta")
 chrom <- genome[!grepl("scaffold", names(genome)),] # Remove scaffolds
 Biostrings::writeXStringSet(chrom, filepath=paste0(dirname(file_path), "/chromsomes.fa") , format="fasta")
-scaff <- genome[!grepl("scaffold", names(genome)),] # Keep scaffolds
+scaff <- genome[grepl("scaffold", names(genome)),] # Keep scaffolds
 Biostrings::writeXStringSet(scaff, filepath=paste0(dirname(file_path), "/scaffolds.fa"), format="fasta")
 
 
@@ -535,8 +535,6 @@ names(trna) <-  paste(mat[,1], mat[,ncol(mat)-1], mat[,ncol(mat)], sep="_")   # 
 Biostrings::writeXStringSet(trna, filepath=file_path, format="fasta")
 
 ``` 
-
-
 
 
 ```{r, eval=TRUE}
@@ -588,10 +586,10 @@ bowtie indexes for a few of the fasta references we downloaded:
 
 ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
 Rbowtie::bowtie_build(paste0(ref_path, "/biomartr_genome/chromsomes.fa"), outdir=paste0(ref_path, "/biomartr_genome/"), prefix="chromosomes", force=TRUE)
+Rbowtie::bowtie_build(paste0(ref_path, "/biomartr_genome/scaffolds.fa"), outdir=paste0(ref_path, "/biomartr_genome/"), prefix="scaffolds", force=TRUE)
 Rbowtie::bowtie_build(paste0(ref_path, "/GtRNAdb/trna.fa"), outdir=paste0(ref_path, "/GtRNAdb/"), prefix="trna", force=TRUE)
 Rbowtie::bowtie_build(paste0(ref_path, "/ensembl_ncRNA/ncrna.fa"), outdir=paste0(ref_path, "/ensembl_ncRNA/"), prefix="ncrna", force=TRUE)
 Rbowtie::bowtie_build(paste0(ref_path, "/mirbase/mirna.fa"), outdir=paste0(ref_path, "/mirbase/"), prefix="mirna", force=TRUE)
-
 
 
 ``` 
@@ -705,20 +703,22 @@ Lets observe the fucntions in action:
 ```{r}
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
-##########################################
+#####################################################
 ### Genome mapping using internal bowtie
-##----------------------------------------
-ref_paths <- list(genome="/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa")
+##---------------------------------------------
+ref_paths <- list(chromosomes="/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa",
+                  scaffolds="/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/scaffolds.fa")
 outpath_genome <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
 import <- list(coord=TRUE, report="full", reduce=NULL)
 
 map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=outpath_genome, 
-            type="internal", mismatches=3, import=import, threads=8, keep_temp=TRUE)
+            type="external", mismatches=3, import=import, threads=8, keep_temp=TRUE)
 
-##########################################
+
+
+#####################################################
 ### sRNA mapping using external bowtie
-## (will also work with type="internal")
-##----------------------------------------
+##---------------------------------------------
 # Paths to indexed fasta files as list
 ref_paths <- list(miRNA="/home/danis31/Desktop/Temp_docs/fasta/mirbase/mirna.fa",
                    Ensembl="/home/danis31/Desktop/Temp_docs/fasta/ensembl_ncRNA/ncrna.fa",
@@ -727,73 +727,99 @@ outpath_srna <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
 import <- list(coord=FALSE, report="full", reduce=NULL)
 
 map_reanno(pac_master, ref_paths=ref_paths, output_path=outpath_srna, 
-            type="external", mismatches=3,  import=import, threads=8, keep_temp=TRUE)
+            type="internal", mismatches=3,  import=import, threads=8, keep_temp=TRUE)
 
 
-##########################################
-### Running make_reanno 
-##----------------------------------------
-anno_genome <- make_reanno(outpath_genome, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
-anno_srna <- make_reanno(outpath_srna, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
+#####################################################
+### Generate a reanno object with make_reanno 
+##---------------------------------------------
+reanno_genome <- make_reanno(outpath_genome, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
+reanno_srna <- make_reanno(outpath_srna, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
 
 # List structure
-ls.str(anno_genome)
-ls.str(anno_srna)
+ls.str(reanno_genome)
+ls.str(reanno_srna)
 
-# Pie simple charts
-pie(table(anno_genome$Overview$genome))
-pie(table(anno_srna$Overview$Any_hit))
-
-# Antisense mapping in srna
-mis0_ensembl <- anno_srna$Full_anno$mis0$Ensembl
-anti_sns <- grepl(":antisense", mis0_ensembl$ref_hits)
-sns <- grepl(":sense", mis0_ensembl$ref_hits)
-only_anti <- rowSums(data.frame(anti_sns, !sns)) == 2
-table(only_anti)
-mis0_ensembl[only_anti,]
+# Pie simple charts of Overview table
+pie(table(reanno_genome$Overview$chromosomes))
+pie(table(reanno_genome$Overview$scaffolds))
+pie(table(reanno_srna$Overview$Any))
 
 
 ##########################################
-### Running add_reanno 
+### Classify sequences using add_reanno 
 ##----------------------------------------
+
 # Generating correct annotations from references that contains multiple biotypes
 # (e.g. Ensemble ncRNA) is all about finding the best 'search terms' against the
 # names of individual sequences in the fasta file (up to the 1st white space;
-# see above). Here we use the grepl function to find and classify RNA. The
-# add_reanno function contains automatic scripts so that your search terms are
-# exclusive with no overlaps between terms. But be aware! Check your references
-# carefully! For example, in some species long non-code RNA are named lncRNA in
-# Ensembl, while in other species they are named lincRNA. Below are some
-# examples for the fasta files we generated above for drosophila:
+# see above). The add_reanno function uses a list of search terms directed
+# against each fasta file originally used as a reference in the map_reanno
+# function.
+#
+# The function has two modes: 
+#    1. When type="genome", reanno input is expected to to have genomic
+#       coordinates. This is set in the map_reanno/import_reanno functions as
+#       coord=TRUE. This mode runs without search terms.
+#    2. When type="biotype", a list of search terms are used to classify each
+#       sequence given a match against the sequence names of a given reference.
+#       This mode provides two options. Either bio_perfect=TRUE, in which case
+#       the provided search terms must generate the same number of matches as
+#       the number of reference hits. Using this option will garantee that your
+#       search terms will cover all reference hits. Using bio_perfect=FALSE
+#       instead will allow non-perfect matching. Every reference hit that fail
+#       to match your search terms, will be classified as other.
+#
+# Lets start by exploring the names in the original fasta reference:
 
-# Setup reference search terms
+# Explore reference search terms
 ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
 
-ncrna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/ensembl_ncRNA/ncrna.fa")))
-ncrna <- do.call("rbind", strsplit(ncrna, " "))[,1]   # Extract up to 1st white space
-table(do.call("rbind", strsplit(ncrna, "\\:"))[,1])   # Expressions up to ":"    
-srch <- paste(c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"), collapse="|")
-table(grepl(srch, ncrna))                             # FALSE will be classified as "other" 
-ncrna[!grepl(srch, ncrna)]                            # Mostly asRNA                      
-
-mirna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/mirbase/mirna.fa")))
-mirna <- do.call("rbind", strsplit(mirna, " "))[,1]
-table(grepl("dme-", mirna))                           # All TRUE; All will be classified miRNA
+Ensembl_ncrna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/ensembl_ncRNA/ncrna.fa")))
+Ensembl_ncrna <- do.call("rbind", strsplit(Ensembl_ncrna, " "))[,1]        # Extract up to 1st white space
+Ensembl_ncrna <- do.call("rbind", strsplit(Ensembl_ncrna, "\\:"))[,1]      # Expressions up to ":"
+table(Ensembl_ncrna[!grepl("pre_miRNA", Ensembl_ncrna)])           
 
 trna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/GtRNAdb/trna.fa")))
 trna <- do.call("rbind", strsplit(trna, " "))[,1]
-srch <- paste(c("^tRNA", "mt:tRNA"), collapse="|")
-table(grepl(srch, trna))                              # All TRUE; Classified under 2 tRNA categories
+table(do.call("rbind", strsplit(trna, "\\-"))[,1])
 
-# Setup serach terms for make_reanno
-bio_search <- list(
-                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "ncRNA"),
+mirna <- names(Biostrings::readDNAStringSet(paste0(ref_path,"/mirbase/mirna.fa")))
+mirna <- do.call("rbind", strsplit(mirna, " "))[,1]
+table(do.call("rbind", strsplit(mirna, "\\-"))[,1])
+
+
+# Lets try two search terms (written as 'regular expressions')
+bio_search_1 <- list(
+                 Ensembl=c("lncRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"),
                  miRNA="dme-",
-                 tRNA =c("^tRNA", "mt:tRNA")      # ^ regular expression for start of string  
-                 )
+                 tRNA =c("^tRNA", "mt:tRNA")      # ^= Regular expression for start of string  
+                )
 
-# Run reanno
-anno_srna_extract <- add_reanno(anno_srna, bio_search=bio_search, type="biotype", mismatches = 0)
+bio_search_2 <- list(
+                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", "RNaseMRP",                                  "RNaseP", "sbRNA", "scaRNA", "sisRNA", "snmRNA", "snoRNA", "snRNA", "Su\\(Ste\\)"), # ()= Brackets must be escaped  
+                 miRNA="dme-",
+                 tRNA =c("^tRNA", "mt:tRNA") 
+                )
+
+# Throughs because perfect matching is required:
+anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=TRUE, mismatches = 3)
+# References with no search term hits are classified as "other": 
+anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=FALSE, mismatches = 3)
+# Better search terms gives perfect matching
+anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=TRUE, mismatches = 3) 
+
+# See ?add_reanno for a trick on how to succeed with bio_perfect=TRUE
+
+
+##########################################
+### Set hierarchy with simply_reanno
+##----------------------------------------
+
+
+
+anno
+
 
 
 ``` 

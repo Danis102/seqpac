@@ -112,8 +112,8 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
                     
   df_fin[df_fin == ""] <- "_"
   vect_mis <- do.call("paste", as.list(df_fin))
-  df_fin$Any_hit <- ifelse(vect_mis == paste0(rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit") 
-  df_fin$Mis0_hit <- ifelse(grepl("mis0", vect_mis) , "Hit", "No_hit")
+  df_fin$Any <- ifelse(vect_mis == paste0(rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit") 
+  df_fin$Mis0 <- ifelse(grepl("mis0", vect_mis) , "Hit", "No_hit")
   df_fin <- dplyr::bind_cols(tibble::tibble(seq=PAC_seq), df_fin) 
   
   ## Check leftover fasta file
@@ -124,8 +124,8 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
     file_nam <- paste0("anno_mis", ns, ".fa")
     if(!file_nam %in% basename(anno_mis_fls)){stop(paste0("\nThe last anno_mis fasta ('leftover') file, named ", file_nam, ", was not found in reanno path.\nIf it was deleted, set mis_fasta_check=FALSE."))}                
     noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", file_nam))
-    logi_no_anno <- df_fin$Any_hit=="No_anno"
-    logi_olap <-  df_fin$seq[df_fin$Any_hit=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
+    logi_no_anno <- df_fin$Any=="No_anno"
+    logi_olap <-  df_fin$seq[df_fin$Any=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
     perc <-  round(length(logi_olap[logi_olap==TRUE])  / length(logi_no_anno[logi_no_anno==TRUE])*100, digits=2)
     cat("Of the ", length(logi_no_anno[logi_no_anno==TRUE]), "missing sequences in the reannotation\n")
     cat(paste0("files ", perc, "% were found in ", file_nam, ".\n"))

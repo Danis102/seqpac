@@ -138,7 +138,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
         rm(bow_out)
         gc(reset=TRUE)
   
-        require("foreach", quietly = TRUE)
+        suppressPackageStartupMessages(require("foreach", quietly = TRUE))
         chk_size <- ceiling(length(bow_splt)/100) # foreach combine every 100 instances
         chnks1 <-as.integer(seq(from=1, to=length(bow_splt), by=chk_size))
         chnks2 <-as.integer(seq(from=0, to=length(bow_splt), by=chk_size))

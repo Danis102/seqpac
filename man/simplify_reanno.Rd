@@ -45,7 +45,7 @@ Character vector with single best-hit biotypes with fewest mismatches.
 \code{simplify_reanno} adds biotypes from reannotation to PAC.
 }
 \details{
-This function is used for dealing with and to explore the effect of
+This function deals with and xcan be used to explores the effect of
 multimapping. Given a mismatch/biotype reannotation matrix (colnames: mis0,
 mis1, mis2 etc) created by \emph{add_reanno} and usually added to the Anno
 dataframe of a PAC object (colnames: mis0, mis1, mis2 etc) , the function will
@@ -54,16 +54,20 @@ hierarchy.
 }
 \examples{
 
-load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 
-hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-                rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-                Mt_tRNA= "tRNA_mt-tRNA",
-               tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-               miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-               piRNA="piRNA")
+#-------------------------------------------------------------------------------------------------#
+# Simplify and make hierarchy of reannotation 
+#-------------------------------------------------------------------------------------------------#
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 
-PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
+hierarchy <- list(rRNA="Ensembl_rRNA",
+                  Mt_tRNA="tRNA_mt:tRNA",
+                  tRNA="Ensembl_tRNA|tRNA_^tRNA",
+                  miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
+                 )
+
+PAC_filt <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
 PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", PAC_merge=TRUE)
 
 PAC_check(PAC_filt)
