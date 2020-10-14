@@ -99,7 +99,7 @@ anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FA
 
 ## Merge with PAC object
 pac_master <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3, merge_pac=pac_master) 
-as_tibble(pac_master$Anno)
+head(pac_master$Anno)
 
 
 ## The trick to succeed with bio_perfect=TRUE ##

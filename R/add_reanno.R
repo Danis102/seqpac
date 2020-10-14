@@ -88,7 +88,7 @@
 #'
 #' ## Merge with PAC object
 #' pac_master <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3, merge_pac=pac_master) 
-#' as_tibble(pac_master$Anno)
+#' head(pac_master$Anno)
 #' 
 #' 
 #' ## The trick to succeed with bio_perfect=TRUE ##
@@ -271,10 +271,10 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
           anno <- merge_pac$Anno
           if(type=="biotype"){
             col_fix <- "bio"
-            colsrch <- c("Mis0_bio", paste0("Mis0", 1:100, "_bio"))}
+            colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))}
           if(type=="genome"){
             col_fix <- "genome"
-            colsrch <- c("Mis0_genome", paste0("Mis0", 1:100, "_genome"))}
+            colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))}
           col_hits <- colnames(anno) %in% colsrch
           if(any(col_hits)){ 
                   num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", colnames(anno)[col_hits]))
