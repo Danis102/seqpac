@@ -16,7 +16,7 @@
 #' @param size Integer vector giving the size interval, as c(min,max), that
 #'   should be saved (default=c(min,max)).
 #'   
-#' @param treshold Integer giving the threshold in rpm or counts that needs to
+#' @param threshold Integer giving the threshold in rpm or counts that needs to
 #'   be reached for a sequence to be included (default=10).
 #'   
 #' @param coverage Integer giving the percent of independent samples that need
