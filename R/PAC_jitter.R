@@ -110,6 +110,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                         					 plot_lst <- lapply(plt_lst, function(num){ 
                                                                   data <- data.frame(biotype=ann[,1], values=df[,num])
                                                                   data$biotype <- factor(data$biotype, levels=anno_target[[2]])
+                                                                  data$values<-round(data$values, digits=8)
                                                                   mima  <- c(min(data$values), max(data$values))
                                                                   max_lim <- max(sqrt(mima^2))*1.4
                                                                   if(is.null(ypos_n)){ypos_n <- max(sqrt(mima^2))*1.35}
@@ -120,7 +121,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                                   p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
                                                 								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
                                                 								        geom_jitter(position=position_jitter(0.2), cex=1.5)+
-                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                	                      stat_summary(geom = "crossbar", fun=median, fun.max = median, fun.min = median, width=0.7, cex=0.4, position = "identity", col="Black") +
                                                 												geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
                                                 												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
                                                 												theme_classic()+
@@ -136,7 +137,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                                   p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
                                                 								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
                                                 								        geom_violin (width=0.9, trim=TRUE, scale="width", color="black")+
-                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                	                      stat_summary(geom = "crossbar", fun=median, fun.max = median, fun.min = median, width=0.7, cex=0.4, position = "identity", col="Black") +
                                                                         geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
                                                 												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
                                                 												theme_classic()+
