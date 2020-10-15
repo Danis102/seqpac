@@ -20,7 +20,7 @@
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names.
 #' @param mis_fasta_check Logical TRUE/FALSE if checking against anno_misX.fa
-#'   should be done availble in the same folder as the reannoration files.
+#'   should be done availble in the same folder as the reannotation files.
 #'
 #' @param threads Integer indicating the number of paralell workers to be used.
 #'
