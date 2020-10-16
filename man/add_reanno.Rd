@@ -45,11 +45,12 @@ perfect=TRUE, if the search terms does not catch all reference hits the
 function will through an error. Can be used to ensure that all hits receive
 a classification.}
 
-\item{genome_max}{Integer indicating the number of maximum coordinates to be
-reported when type="genome". If the number of hits exceedes
-\code{genome_max} it will be indicated in the classification and only the
-first hits up to \code{max_hits} will be reported. Useful to handling
-seaquences that multimap.}
+\item{genome_max}{Integer or character indicating the number of maximum
+coordinates to be reported when type="genome".  If the number of hits
+exceedes \code{genome_max} it will be indicated in the classification and
+only the first hits up to \code{max_hits} will be reported. Useful to
+handling seaquences that multimap. If genome_max="all", all coordinates
+will be reported which may dramatically affect performance. (default=10)}
 
 \item{merge_pac}{PAC object. If a PAC object is provided in merge_pac, then
 the function will automatically merge the Anno table of the PAC object with

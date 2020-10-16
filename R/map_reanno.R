@@ -57,68 +57,57 @@
 #'   command fails you probably do not have bowtie correctly installed. As
 #'   default parse_external= "-a -f".
 #'
-#' @param import List with exactly 3 objects, named "coord", "report" and
-#'   "reduce" that specifies the options for bowtie import. This list will be
-#'   parsed to the \code{import_reanno} function, where ?import_reanno will give
-#'   more information. As default, \emph{import=list(coord=FALSE,
-#'   report="minimum", reduce=NULL)}. This means that mapping coordinates
-#'   (coord) will not be reported and only minimum information of each alignment
-#'   will be reported (simply hit or no hit). This option increases the
-#'   performance dramatically. Setting \emph{import=list(coord=TRUE,
-#'   report="full", reduce=NULL)} will instead import both the mapping
-#'   coordinates and the names of each entery in the fasta reference files
-#'   listed in \emph{ref_path}. This option could be very slow and reasource
-#'   heavy given that bowtie has been set to a=TRUE so that all alignments of
-#'   extremely repetitive features are imported. With the reduce option,
-#'   alignments against a specific reference can be exempted from a full report
-#'   when report="full". For example, \emph{import=list(coord=TRUE,
-#'   report="full", reduce=c("piRNA", "repeatMasker"))} will report the
-#'   coordinates and long names of all reference alignments except for the
-#'   references named "piRNA" and "repeatMasker" in the ref_path list, that
-#'   instead will have a minimum report. This can be useful when millions of
-#'   sequences are aligned. Remember, since seqpac maintain sequence integrety,
-#'   generating full reports are easily done on a later stage, when fewer target
-#'   sequences are mapped.
-#'
-#' @param threads Integer indicating the number of paralell workers to be used.
-#'
-#' @param par_type Character indicating what type of parallelization to be used.
-#'   (Default = "PSOCK")
+#' @param import Character or a list. If import="genome" mapping is done against
+#'   a reference genome and genomic coordinates are aquired. If
+#'   import="biotype", mapping is done against a specialized fasta reference
+#'   (e.g. Ensembl_ncrna, pirBase etc), where genomic coordinates is not
+#'   required because classification will be performed on a match-or-no-match
+#'   basis. A list of exactly 3 objects, named "coord", "report" and "reduce"
+#'   can also be provided. This list will be parsed to the \code{import_reanno}
+#'   function. When import="genome", the list \code{import=list(coord=TRUE,
+#'   report="full", reduce=NULL)} is automatically be parsed, while when
+#'   import="biotype" the list parsed is \code{import=list(coord=FALSE,
+#'   report="full", reduce=NULL)}. Performance increases by setting coord=FALSE.
+#'   See ?import_reanno for more information on how to set \code{report} and
+#'   \code{reduce} for increased performance when extremely large and
+#'   repetitative references are used, such as pirBase and repeatMasker.
 #'   
+#' @param threads Integer indicating the number of parallel processes to be used.
+#'
 #' @param keep_temp Logical whether or not bowtie output files temporarly stored
 #'   in the output path should be deleted. Note, this option is only used for
 #'   troubleshooting. The bowtie output files are named as the reference files
-#'   and are overwritten in each mismatch round. Thus for safe saving of
+#'   and are overwritten in each mismatch cycle. Thus for safe saving of
 #'   mismatch 0 bowtie output make sure that \code{mismatches=0}. If not, the
-#'   mismatch 1 round will overwrite the botwie files.
+#'   mismatch 1 cycle will overwrite the botwie files.
 #'   
 #' @return Will primarily generate .Rdata files in the destination folder
-#'   (\emph{output_path}) containing summarized information about the reference
+#'   (\code{output_path}) containing summarized information about the reference
 #'   alignments. One file is generated for every mismatch specified in
 #'   \emph{mismatches}. The  \code{make_reanno} function can then be used to
-#'   extract and generate an annotation table for a PAC list object. Large
+#'   extract and generate annotation tables for a PAC list object. Large
 #'   temporary bowtie input and output files will also be generated in the
-#'   destination folder, but are removed unless \emph{temp_remove=FALSE}.
+#'   destination folder, but are removed unless \\code{temp_remove=FALSE}.
 #'  
 #' @examples
 #' 
-#'#### Example type = "internal" with genome alignment #### 
+#'#### Example type = "internal" for genome alignment #### 
 #'
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
 #' ## Path to bowtie indexed reference genome fasta 
 #' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
+#' 
 #' ## Path to output folder:
 #' output_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-#' ## Import options (see ?import_reanno):
-#' import <- list(coord=TRUE, report="full", reduce=NULL)
-#'                               
+#' 
+#' ## Run map_reanno internally for genome mapping
 #' map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=output_path, 
-#'            type="internal", mismatches=3, import=import, threads=8, keep_temp=TRUE)
+#'            type="internal", mismatches=3, import="genome", threads=8, keep_temp=TRUE)
 #' 
 #' 
-#' #### Example type= external #### 
+#' #### Example type= external for biotype classification #### 
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #'
@@ -130,31 +119,19 @@
 #'                   piRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa")
 #' 
 #' ## Path to output folder:
-#' output_path <- "/home/danis31/Desktop/Temp_docs/"
-#' ## Import options (see ?import_reanno):
-#' import <- list(coord=FALSE, report="full", reduce=c("piRNA","Ensembl"))
-#'
+#' output_path <- "/home/danis31/Desktop/Temp_docs/reanno_biotype"
+#' 
+#' ## Run map_reanno for biotype classification
 #' map_reanno(pac_master, ref_paths=ref_paths, output_path=output_path, 
-#'            type="external", mismatches=3,  import=import, threads=8)
+#'            type="external", mismatches=3,  import="biotype", threads=8)
 #'
 #'
-#' # Do not run:
-#' map_reanno(pac_master, ref_paths=ref_paths, output_path=output_path, 
-#'            type="internal", mismatches=3,  import=import, threads=8, keep_temp=FALSE)
-#'   
-#' ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
-#'                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
-#'                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
-#'                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa")
-#'         
-#'                 
 #'                                 
 #' @export
 # 
 map_reanno <- function(PAC, type="internal", output_path, ref_paths, 
-                       mismatches=3, threads=1, par_type="PSOCK", 
-                       parse_external= "-a -f", parse_internal = "a=TRUE, f=TRUE", 
-                       import=list(coord=FALSE, report="minimum", reduce=NULL), keep_temp=FALSE){
+                       mismatches=3, threads=1, parse_external= "-a -f", parse_internal = "a=TRUE, f=TRUE", 
+                       import="genome", keep_temp=FALSE){
 
   ## setup
   stopifnot(PAC_check(PAC))
@@ -163,7 +140,10 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   ref_paths <- lapply(ref_paths, function(x){gsub("\\.fa$", "", x)})
   seq_fst <- Biostrings::DNAStringSet(rownames(PAC$Anno))
   names(seq_fst) <- paste(seq_fst)
-
+  
+  if(import=="genome"){ import <- list(coord=TRUE, report="full", reduce=NULL)
+  }else{if(import=="biotype"){ import <- list(coord=FALSE, report="full", reduce=NULL)}}
+  
   ## Look for files and folders in output path
   drs <- list.dirs(output_path, full.names = FALSE, recursive = FALSE) 
   fls <- list.files(output_path, recursive = FALSE)

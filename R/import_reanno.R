@@ -100,7 +100,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
     
     ## Handle no hits    
     if(no_hit[k]){
-      bowtie_out_lst[[k]] <- tidyverse::tibble(.id="No_hits", mis_n=NA, mis_where=NA, ref_hits=NA)
+      bowtie_out_lst[[k]] <- tibble::tibble(.id="No_hits", mis_n=NA, mis_where=NA, ref_hits=NA)
       names(bowtie_out_lst)[k] <- nam 
       }
     
@@ -128,7 +128,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
       ## Generate mini report from imported bowtie files
       if(reprt=="min"){
         cat(paste0("\n    |---> Generating minimum report ..."))
-        bowtie_out_lst[[k]] <- tidyverse::tibble(.id=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
+        bowtie_out_lst[[k]] <- tibble::tibble(.id=uni, mis_n=n_mis, mis_where="mini_report", ref_hits=nam)
         names(bowtie_out_lst)[k] <- nam
       }
       ## Compile full report with multithreading 

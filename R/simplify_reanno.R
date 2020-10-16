@@ -67,7 +67,7 @@
 #' 
 #' @export
 
-simplify_reanno <- function(input,  hierarchy, mismatches=2, bio_name="Biotypes", merge_pac=FALSE, target_columns=NULL){
+simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes", merge_pac=FALSE, target_columns=NULL){
   
   ### Prepare:
   if(sum(names(input)[1:3] == c("Pheno", "Anno", "Counts"))==3){
@@ -107,7 +107,7 @@ simplify_reanno <- function(input,  hierarchy, mismatches=2, bio_name="Biotypes"
   other <- anno_vect_uni[!anno_vect_uni %in% c(do.call("c", strsplit(catg[,1], ", ")), "_")]
   if(length(other) == 0){ other <- "<NA>"}
   catg <- rbind(catg, data.frame(row.names=c("other", "no_anno") , Original_biotypes=c(paste(other, collapse=", "), "_"))) 
-  catg <- data.frame(Original_biotypes=catg[,1], Simplified_biotype=rownames(catg), Hierarchy=1:(nrow(catg)))
+  catg <- data.frame(Simplified_biotype=rownames(catg), Hierarchy=1:(nrow(catg)), Original_biotypes=catg[,1])
   print(catg)
   
   ### Extract simplified biotypes:
@@ -137,7 +137,7 @@ simplify_reanno <- function(input,  hierarchy, mismatches=2, bio_name="Biotypes"
   if(merge_pac==TRUE){  
     stopifnot(identical(rownames(input$Anno), rownames(bio_vect_fin))) 
     input$Anno <- cbind(input$Anno, bio_vect_fin)
-    return(input)
     }
   }
+    return(input)
 }

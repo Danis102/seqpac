@@ -15,19 +15,35 @@
 #'   generated during the \family{PAC reannotation} workflow
 #'   (\code{map_reanno},\code{import_reanno},\code{make_reanno},
 #'   \code{add_reanno}.
-#'
-#' @param data_pirna
 #' 
-#' @param data_custom
+#' @param mismatches 
 #' 
-#' @param graphs Logical whether graphs should be reported or not.
+#' @param pirna
+#' 
+#' @param genome
+#' 
+#' @param fasta_list
+#' 
+#' @param gtf_list
+#' 
+#' @param nuc_bias Integer vector indicating which nucleotide to perform
+#'   nucluotide bias analysis on. As default, nuc_bias = c(1,10). Nucleotide
+#'   bias analysis is then performed on the 1st and 10th nucleotide.
 #'   
+#' @param graphs Logical whether graphs should be reported or not.
+#'  
+#' @param threads Integer indiciating the number of parallel processes.   
+#'     
 #' @return List of ggplot2 plots and the data used for generating the plots. Use
 #'   ls.str() to explore each level.
 #'   
 #' @examples
 #' 
 #' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' 
+#' 
+#' 
 #' 
 #' ### Prepare pirbase data file  ###
 #' # - Download pirbase data from pirbase. Make sure you get a table where dataset identity is specified in a seperate column.
@@ -72,15 +88,72 @@
 #' @export
 # 
 # 
-# PAC_pirna <- function(PAC, ref_pirna=NULL, ref_custom=NULL, )
-# 
-#                       
-#                       
+# pirna <- "/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa"
+# genome <- "/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa"
 # 
 # 
-# pirbase_dat
+# 
+# PAC_pirna <- function(PAC, mismatches=3, pirna="piRNA", genome="mis0_genome",
+#                       fasta_list=NULL, gtf_list=NULL, nuc_bias=c(1,10), cluster=TRUE, threads=1, ...){
+# 
+#   ## Setup
+#   seqs <- rownames(PAC$Anno)
+#   if(!file.exists(genome)){
+#         test <- PAC$Anno[, grepl("_genome$|^genome$", colnames(PAC$Anno))]
 # 
 # 
-# test3
+#   ## Generate main pirna annotations from fasta or Anno
+#   if(file.exists(pirna)){
+#     cat("Input pirna was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
+#     outpath <- tempfile(pattern = "", fileext = "")
+#     err <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="external", mismatches=3,
+#                    import = list(coord=FALSE, report="minimum", reduce=NULL), threads=threads, ...), silent = TRUE)
+#     if(!is.null(err)){
+#       err2 <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="internal", mismatches=3,
+#                    import = list(coord=FALSE, report="minimum", reduce=NULL), threads=threads, ...), silent = TRUE)
+#     if(!is.null(err2)){
+#       stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\nLast log says:\n", err2))
+#       }
+#     }
+#     reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE, threads=threads)
+#     pirna_anno <- add_reanno(reanno, bio_search=list(pirna="pirna"), type="biotype", bio_perfect=FALSE, mismatches = 3)
+#     rm(reanno)
+#     unlink(outpath, recursive = TRUE)
+#   } else {
+#     pirna <- unlist(strsplit(pirna, "\\$"))
+#     pirna <- PAC$Anno[,pirna[length(pirna)]]
+#     cat("Using user defined column in PAC$Anno as main pirna classification.\n")
+#   }
 # 
-# 185230  175900
+#  ## Generate main genome annotations from fasta or Anno
+#   if(file.exists(genome)){
+#     cat("\nInput genome was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
+#     outpath <- tempfile(pattern = "", fileext = ".out")
+#     err <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="external", mismatches=3,
+#                    import = list(coord=TRUE, report="full", reduce=NULL), threads=threads), silent = TRUE)
+#     if(!is.null(err)){
+#       outpath <- tempfile(pattern = "", fileext = "")
+#       err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="internal", mismatches=3,
+#                    import=list(coord=TRUE, report="full", reduce=NULL), threads=threads), silent = TRUE)
+#     if(!is.null(err2)){
+#       stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\tNo bowtie index (see ?Rbowtie::bowtie_build)\n\nLast log says:\n", err2))
+#       }
+#     }
+#     reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE, threads=threads)
+#     anno_genome <- add_reanno(reanno, type="genome", mismatches = 3, genome_max="all")
+# 
+# 
+#     rm(reanno)
+#     unlink(outpath, recursive = TRUE)
+#   }else{
+# 
+# 
+# 
+# 
+#     genome <- unlist(strsplit(genome, "\\$"))
+#     genome <- PAC$Anno[,genome[length(genome)]]
+#     cat("Using user defined column in PAC$Anno as main pirna classification.")
+
+
+
+    

@@ -67,14 +67,13 @@ load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mus
 # Build hierarchy with regular expressions:
 hierarchy <- list(rRNA="Ensembl_rRNA",
                   Mt_tRNA="tRNA_mt:tRNA",
-                  tRNA="Ensembl_tRNA|tRNA_^tRNA",
+                  tRNA="Ensembl_tRNA|tRNA_\\\\^tRNA",
                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
                  )
 
-PAC_filt <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
-PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", PAC_merge=TRUE)
+pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
 
-PAC_check(PAC_filt)
+PAC_check(pac_master)
 
 
 }

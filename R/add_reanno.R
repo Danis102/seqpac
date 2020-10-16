@@ -44,11 +44,12 @@
 #'   function will through an error. Can be used to ensure that all hits receive
 #'   a classification.
 #'
-#' @param genome_max Integer indicating the number of maximum coordinates to be
-#'   reported when type="genome". If the number of hits exceedes
-#'   \code{genome_max} it will be indicated in the classification and only the
-#'   first hits up to \code{max_hits} will be reported. Useful to handling
-#'   seaquences that multimap.
+#' @param genome_max Integer or character indicating the number of maximum
+#'   coordinates to be reported when type="genome".  If the number of hits
+#'   exceedes \code{genome_max} it will be indicated in the classification and
+#'   only the first hits up to \code{max_hits} will be reported. Useful to
+#'   handling seaquences that multimap. If genome_max="all", all coordinates
+#'   will be reported which may dramatically affect performance. (default=10)
 #'   
 #' @param merge_pac PAC object. If a PAC object is provided in merge_pac, then
 #'   the function will automatically merge the Anno table of the PAC object with
@@ -154,7 +155,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
           loc <- unlist(loc, use.names = FALSE)
           vect <- NULL
           vect[loc == "all"] <- ref_hits[loc == "all"]
-          vect[!loc == "all"] <- paste0("Warning>10|", substr(ref_hits[!loc == "all"], start=1, stop=as.integer(loc[!loc == "all"])))
+          vect[!loc == "all"] <- paste0("Warning>", genome_max, "|", substr(ref_hits[!loc == "all"], start=1, stop=as.integer(loc[!loc == "all"])))
           stopifnot(identical(is.na(vect), is.na(ref_hits)))
           gen_vec_lst[[a]] <- vect
         }
@@ -265,28 +266,32 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
 ## Return table
   reanno <- cbind(reanno$Overview, fin)
     # Merge PAC and fix unique column names
+    if(type=="biotype"){
+        col_fix <- "bio"
+        colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))}
+    if(type=="genome"){
+        col_fix <- "genome"
+        colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))}
+  
     if(!is.null(merge_pac)){
           cat("\nMerging with PAC ...")
           reanno <- reanno[,!colnames(reanno) == "seq"]
           anno <- merge_pac$Anno
-          if(type=="biotype"){
-            col_fix <- "bio"
-            colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))}
-          if(type=="genome"){
-            col_fix <- "genome"
-            colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))}
           col_hits <- colnames(anno) %in% colsrch
           if(any(col_hits)){ 
                   num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", colnames(anno)[col_hits]))
                      if(is.na(num)){col_fix <- paste0(col_fix, 2)
                      }else{col_fix <- paste0(col_fix, num+1)}
           }
-          colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+          
           if(!identical(rownames(reanno), rownames(merge_pac$Anno))){stop("\nReanno sequence (row) names do not match PAC sequence names.\nDid you use another PAC object as input for map_reanno?")}  
           merge_pac$Anno <- cbind(merge_pac$Anno, reanno)
           PAC_check(merge_pac)
           return(merge_pac)
-  }else{
+    }else{
+          colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+          colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
+          colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
           return(tibble::as_tibble(reanno))
     }
   detach(package:tidyverse)
