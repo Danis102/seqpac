@@ -95,47 +95,58 @@
 
 
 PAC_pie <- function(PAC, pheno_target, anno_target, colvec=NULL, angle=-25){
-
-                                                    ## Subset
-                                                    data <- PAC$Counts[PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]],]
-                                                    data <- data[, PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]]]
-                                                    anno <- PAC$Anno[PAC$Anno[,anno_target[[1]]] %in% anno_target[[2]],]
-                                                    pheno <- PAC$Pheno[PAC$Pheno[,pheno_target[[1]]] %in% pheno_target[[2]],]
-
-                                                    ## Fix order
-                                                    anno[, anno_target[[1]]] <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
-                                                    pheno[, pheno_target[[1]]] <- factor(pheno[, pheno_target[[1]]], levels=pheno_target[[2]])
-                                                    
-                                                    ## Check files
-                                                    stopifnot(identical(rownames(data), rownames(anno)))
-                                                    stopifnot(identical(colnames(data), rownames(pheno)))
-                                                    
-                                                    ## Summaries
-                                                    sums <- aggregate(data, list(anno[, anno_target[[1]]]), sum) 
-                                                    sums_t <- t(sums[,-1])
-                                                    colnames(sums_t) <- sums[,1]
-                                                    sum_means <- aggregate(sums_t, list(pheno[, pheno_target[[1]]]), mean)
-                                                    perc <- apply(sum_means[,-1], 1, function(x){x/sum(x)*100})
-                                                    colnames(perc) <- sum_means[,1]
-                                                    
-                                                    ## Setup colors
-                                                    if(is.null(colvec)){
-                                                          bio <- as.character(rownames(perc))
-                                                          n_extra  <- sum(bio %in% c("no_anno", "other"))
-                                                          colfunc <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
-                                                          if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
-                                                          if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
-                                                          if(n_extra==0){colvec <- colfunc(length(bio))}
-                                                          }
-                                                    
-                                                    ## Plot
-                                                    prec_lst <- as.list(as.data.frame(perc))
-                                                    plt_lst<- lapply(prec_lst, function(x){
-                                                                        p1  <- suppressMessages(pie(x, labels=paste(rownames(perc), round(x, digits=0), "%", sep="_"), col=colvec, init.angle = angle))
-                                                                        print(p1)
-                                                                        rp <- recordPlot()
-                                                                        return(rp)}
-                                                                        )
-                                                    leg <- cowplot::get_legend(ggplot(data.frame(types=rownames(perc), variables=factor(rownames(perc), levels=rownames(perc))), aes(x=types, fill=variables)) + geom_bar(color="black") + scale_fill_manual(values=colvec)) 
-                                                    return(c(plt_lst, list(legend=leg)))
-                                        }
+  # Prepare targets
+  if(!is.null(pheno_target)){ 
+    if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    }
+  }
+  
+  if(!is.null(anno_target)){ 
+    if(length(anno_target)==1){ 
+      anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
+    }
+  }
+  
+  ## Subset
+  PAC_sub <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  anno <- PAC_sub$Anno
+  pheno <- PAC_sub$Pheno
+  data <- PAC_sub$Counts
+  
+  ## Fix order
+  anno[, anno_target[[1]]] <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
+  pheno[, pheno_target[[1]]] <- factor(pheno[, pheno_target[[1]]], levels=pheno_target[[2]])
+  
+  ## Check files
+  stopifnot(identical(rownames(data), rownames(anno)))
+  stopifnot(identical(colnames(data), rownames(pheno)))
+  
+  ## Summaries
+  sums <- aggregate(data, list(anno[, anno_target[[1]]]), sum) 
+  sums_t <- t(sums[,-1])
+  colnames(sums_t) <- sums[,1]
+  sum_means <- aggregate(sums_t, list(pheno[, pheno_target[[1]]]), mean)
+  perc <- apply(sum_means[,-1], 1, function(x){x/sum(x)*100})
+  colnames(perc) <- sum_means[,1]
+  
+  ## Setup colors
+  if(is.null(colvec)){
+    bio <- as.character(rownames(perc))
+    n_extra  <- sum(bio %in% c("no_anno", "other"))
+    colfunc <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
+    if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
+    if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
+    if(n_extra==0){colvec <- colfunc(length(bio))}
+  }
+  
+  ## Plot
+  prec_lst <- as.list(as.data.frame(perc))
+  plt_lst<- lapply(prec_lst, function(x){
+    p1  <- suppressMessages(pie(x, labels=paste(rownames(perc), round(x, digits=0), "%", sep="_"), col=colvec, init.angle = angle))
+    print(p1)
+    rp <- recordPlot()
+    return(rp)}
+  )
+  leg <- cowplot::get_legend(ggplot(data.frame(types=rownames(perc), variables=factor(rownames(perc), levels=rownames(perc))), aes(x=types, fill=variables)) + geom_bar(color="black") + scale_fill_manual(values=colvec)) 
+  return(c(plt_lst, list(legend=leg)))
+}

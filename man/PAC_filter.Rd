@@ -23,6 +23,9 @@ row names and a Counts table with raw counts or reads per million (rpm).}
 \item{size}{Integer vector giving the size interval, as c(min,max), that
 should be saved (default=c(min,max)).}
 
+\item{threshold}{Integer giving the threshold in rpm or counts that needs to
+be reached for a sequence to be included (default=10).}
+
 \item{coverage}{Integer giving the percent of independent samples that need
 to reach the threshold for a sequence to be included (default=100).}
 
@@ -46,9 +49,6 @@ generated or not (default=FALSE).}
 object being a character vector of the target type/biotypes(s) in
 the target Anno column (1st object).
 (default=NULL)}
-
-\item{treshold}{Integer giving the threshold in rpm or counts that needs to
-be reached for a sequence to be included (default=10).}
 }
 \value{
 A list of objects: 
@@ -88,6 +88,7 @@ Other PAC analysis:
 \code{\link{PAC_covplot}()},
 \code{\link{PAC_deseq}()},
 \code{\link{PAC_filtsep}()},
+\code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
 \code{\link{PAC_mismap}()},

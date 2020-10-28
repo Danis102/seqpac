@@ -73,6 +73,7 @@ Other PAC analysis:
 \code{\link{PAC_covplot}()},
 \code{\link{PAC_filter}()},
 \code{\link{PAC_filtsep}()},
+\code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
 \code{\link{PAC_mismap}()},
