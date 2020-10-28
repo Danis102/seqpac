@@ -81,244 +81,244 @@
 #' @export
 
 PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
-                                                  
-                                                  ## Setup ##
-                                                  if(!is.null(anno_target_1)){
-                                                  if(!class(anno_target_1) =="list"){anno_target_1 <-list(anno_target_1)}  
-                                                  if(length(anno_target_1)==1){anno_target_1[[2]] <- unique(PAC$Anno[, anno_target_1[[1]]])
-                                                  }}else{stop("You have to provide a valid anno_target list object.")}
   
-                                                  if(!is.null(anno_target_2)){
-                                                  if(!class(anno_target_2) =="list"){anno_target_2 <-list(anno_target_2)}  
-                                                  if(length(anno_target_2)==1){anno_target_2[[2]] <- unique(PAC$Anno[, anno_target_2[[1]]])
-                                                  }}else{stop("You have to provide a valid anno_target list object.")}
+  ## Setup ##
+  if(!is.null(anno_target_1)){
+    if(!class(anno_target_1) =="list"){anno_target_1 <-list(anno_target_1)}  
+    if(length(anno_target_1)==1){anno_target_1[[2]] <- unique(PAC$Anno[, anno_target_1[[1]]])
+    }}else{stop("You have to provide a valid anno_target list object.")}
   
-                                                  if(!is.null(pheno_target)){
-                                                  if(!class(pheno_target) =="list"){pheno_target <- list(pheno_target)}    
-                              							      if(length(pheno_target)==1){pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])
-                              							      }}else{stop("You have to provide a valid pheno_target list object.")}
+  if(!is.null(anno_target_2)){
+    if(!class(anno_target_2) =="list"){anno_target_2 <-list(anno_target_2)}  
+    if(length(anno_target_2)==1){anno_target_2[[2]] <- unique(PAC$Anno[, anno_target_2[[1]]])
+    }}else{stop("You have to provide a valid anno_target list object.")}
   
-                                                  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, pheno_target=pheno_target) 
-                                                  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_2) 
-                                                  if(!is.null(filter)){ PAC <- PAC_filter(PAC, threshold=filter, coverage=100)}
+  if(!is.null(pheno_target)){
+    if(!class(pheno_target) =="list"){pheno_target <- list(pheno_target)}    
+    if(length(pheno_target)==1){pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])
+    }}else{stop("You have to provide a valid pheno_target list object.")}
   
-                                                  PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])
-                                                  PAC$Anno[,anno_target_1[[1]]] <- factor(PAC$Anno[,anno_target_1[[1]]], levels=anno_target_1[[2]])
-                                                  PAC$Anno[,anno_target_2[[1]]] <- factor(PAC$Anno[,anno_target_2[[1]]], levels=anno_target_2[[2]])
-                                                  
-                                                  if(norm=="raw"){data <- PAC$Counts }else{ data <- PAC$norm[[norm]]}
-                                                  
-                                                  
-                                                  ## Aggregate data for anno_target_1 ##
-                                                  spl_lst <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
-                                                  Ann1_agg_lst <- lapply(spl_lst, function(x){
-                                                                          x  <- t(x)
-                                                                          x_agg <- aggregate(x, list(PAC$Anno[[anno_target_1[[1]]]]), sum)
-                                                                          x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
-                                                                          })
-                                                  if(join==TRUE){Ann1_agg_lst <- list(do.call("rbind", Ann1_agg_lst))}
-                                                  
-                                                  
-                                                  ## Aggregate data for anno_target_2 ##
-                                                  spl_lst_2 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
-                                                  Ann2_agg_lst <- lapply(spl_lst_2, function(x){
-                                                                          x  <- t(x)
-                                                                          x_agg <- aggregate(x, list(PAC$Anno[[anno_target_2[[1]]]]), sum)
-                                                                          x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
-                                                                          })
-                                                  if(join==TRUE){Ann2_agg_lst <- list(do.call("rbind", Ann2_agg_lst))}
-                                                  
-                                                  ## Aggregate data for anno_target_1  and anno_target_2 ##
-                                                  spl_lst_12 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
-                                                  Ann12_agg_lst <- lapply(spl_lst_12, function(x){
-                                                                          x  <- t(x)
-                                                                          x_agg <- aggregate(x, list(paste(PAC$Anno[[anno_target_1[[1]]]], PAC$Anno[[anno_target_2[[1]]]], sep="____")), sum)
-                                                                          x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
-                                                                          facts <-  as.data.frame(do.call("rbind", strsplit(x_agg_long$Group.1, "____")))
-                                                                          return(cbind(x_agg_long, data.frame(ann1=facts[,1], ann2=facts[,2])))
-                                                                          })
-                                                  if(join==TRUE){Ann12_agg_lst <- list(do.call("rbind", Ann12_agg_lst))}
-       
-                                                  
-                                                  ## Fix missing values in each category and generate percent types
-                                                  Ann12_perc  <- lapply(Ann12_agg_lst, function(x){
-                                                                            spl_inside <- split(x, x$ann1)
-                                                                            ann12_lst <- lapply(spl_inside, function(y){
-                                                                                                missing <- anno_target_2[[2]][!anno_target_2[[2]] %in% unique(y$ann2)]
-                                                                                                df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), missing, sep="____"),
-                                                                                                                 variable= NA,
-                                                                                                                 value= 0,
-                                                                                                                 ann1= as.character(unique(y$ann1)),
-                                                                                                                 ann2= missing)
-                                                                                                
-                                                                                                df <- df[rep( 1:length(missing), times=length(unique(y$variable))),]
-                                                                                                df$variable <- rep( unique(y$variable), each=length(missing))
-                                                                                                df_fin <- rbind(y, df)
-                                                                                                df_fin_agg <- aggregate(df_fin$value, list(df_fin$Group.1), mean)
-                                                                                                names(df_fin_agg)[names(df_fin_agg)=="x"] <- "values"
-                                                                                                tot <- sum(df_fin_agg$values)
-                                                                                                df_fin_agg$perc <- df_fin_agg$values/tot*100
-                                                                                                df_fin_agg$perc[is.na(df_fin_agg$perc)] <- 0
-                                                                                                return(df_fin_agg)
-                                                                                                })
-                                                                            return(ann12_lst)
-                                                                            })
-                                                  
-                          
-                                                  ## Ordered according to sums of anno_target_1 in first object and return joint top table  
-                                                  ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){sum(x$values)})), decreasing=TRUE)
-                                                  ordr <- ordr[1:top] # Extract the top 
-                                                  lvls <- names(Ann12_perc[[1]])[ordr]
-                                                  if(join==FALSE){stopifnot(identical(lapply(Ann12_perc, names)[[1]],  lapply(Ann12_perc, names)[[2]]))}
-                                                  
-                                                  Ann12_perc_ord <- lapply(Ann12_perc, function(x){
-                                                                            ord_df <- do.call("rbind", x[ordr])
-                                                                            facts <- as.data.frame(do.call("rbind", strsplit(as.character(ord_df$Group.1), "____")))
-                                                                            return(cbind(ord_df, data.frame(ann1=facts[,1], ann2=facts[,2])))
-                                                                            })
-                                                  
-                                                  ## Generate colors
-                                                  colfunc_ann1 <- grDevices::colorRampPalette(c("white", "black"))
-                                                  rgb_vec_ann1 <- rev(colfunc_ann1(top))
-                                                  
-                                                  colfunc_ann2<- grDevices::colorRampPalette(c("#094A6B", "#FFFFFF", "#9D0014"))
-                                                  rgb_vec_ann2 <- rev(colfunc_ann2(length(anno_target_2[[2]])))
-                                                  
-                                                  
-                                                  
-                                                  ## Fix zeros for log10 
-                                                  Ann1_agg_lst <- lapply(Ann1_agg_lst, function(x) {x$value[x$value == 0] <- 0.000001; return(x)})
-                                                  
-                                                  
-                                                  plot_lst <- list(NULL)
-                                                  #######################################################################
-                                                  ## Plot mean expression anno_target_1
-                                                  plot_lst$Expression_Anno_1 <- lapply(Ann1_agg_lst, function(x){
-                                                                          ## Bars for mean RPM per type - log10
-                                                                          x$Group.1 <- factor(x$Group.1, levels=rev(lvls))
-                                                                          x <- x[!is.na(x$Group.1),]
-                                                                          
-                                                                          dat <- aggregate(x$value, list(x$Group.1), mean)
-                                                                          names(dat)[names(dat)=="x"] <- "means"
-                                                                          dat$SE <- (aggregate(x$value, list(x$Group.1), function(y){sd(y)/(sqrt(length(y)))}))$x
-                                                                          dat$means[dat$means<1] <- 1
-                                                                          if(max(dat$means) < 10000){breaks <- c(1,10,100,1000,10000)}
-                                                                          if(max(dat$means) >= 100000 && max(dat$means) <1000000){breaks <- c(1,10,100,1000,10000,100000)}
-                                                                          if(max(dat$means) >= 1000000){breaks <- c(1,10,100,1000,10000,100000,1000000)}
-                                                                          plot <- ggplot(dat, aes(x=Group.1, y=means, fill=Group.1 ,
-                                                                                              						  ymax = means + (means > 0)*SE,
-                                                                                              						  ymin = means - (means < 0)*SE)) +
-                                                                                              					geom_errorbar(width=0.5, size=1.0, colour="black") +
-                                                                                              					geom_col(width = 0.8, cex=0.2, colour="black")+
-                                                                                              					labs(title="Mean RPM")+
-                                                                                              					ylab("Log10 RPM +/- SE") +
-                                                                                              					scale_fill_manual(values=rev(rgb_vec_ann1))+
-                                                                                              					theme_classic()+
-                                                                                              					theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_text(angle = 0, hjust = 0), axis.line.x =element_blank())+
-                                                                                              					scale_y_log10(limits = c(min(breaks),max(breaks)), breaks=breaks)+
-                                                                                              					coord_flip()
-                                                                            if(!is.null(ymax_1)){plot <- plot + scale_y_continuous(limits=c(0,ymax_1))}
-                                                                            return(plot)
-                                                  })               
-                                                                    
-                                                  #Paired#############################################################################################################
-                                                  if(paired==TRUE && log2fc==TRUE){
-                                                    return(cat("Paired samples are not yet implemented in the function, but will be in the near future."))
-                                                  #                   if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
-                                                  #                   paried_samp <- as.character(PAC$Pheno[,paired_IDs])
-                                                  #   
-                                                  #                   Ann1_agg_lst[[1]]$variable
-                                                  #                   stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-                                                  #                   logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
-                                                  # 
-                                                  #                   plot_df$variable <- factor(plot_df$variable , levels=rev(levels(plot_df$variable)))
-                                                  #                   plot_lst$Log2FC_Anno_1 <- ggplot(plot_df, aes(x=variable, y=value, fill=variable)) +
-                                                  #                                     					geom_hline(yintercept = 0, size=1.5, color="azure4")+
-                                                  #                                               geom_jitter(aes(color= "grey"), position=position_jitter(0.1), cex=1.3) +
-                                                  #                                          				stat_summary(geom = "errorbar",  width=0.5, size=1.0, fun.data = mean_se, position = "identity") +
-                                                  #                                       					stat_summary(geom = "point", colour="black", stroke=1.5, shape=21, size = 3.5, fun.y = mean, position = "identity") +
-                                                  #                                     					labs(title="Log2 Fold change C vs B")+
-                                                  #                                     					ylab("Log2 Fold change +/- SE") +
-                                                  #                                     					scale_fill_manual(values=c(col_isotype))+
-                                                  #                                               scale_color_manual(values="bisque3") +
-                                                  #                                     					scale_x_discrete(labels=gsub("log2FC_", "", levels(plot_df$variable)))+
-                                                  #                                     					theme_classic()+
-                                                  #                                     					theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_blank(), axis.line.x =element_blank(), axis.line.y =element_blank())+
-                                                  #                                     					coord_flip(ylim=c(-1.3, 2.25))
-                                                                    }
-                                                  #Independent#############################################################################################################
-                                                  if(paired==FALSE && log2fc==TRUE){
-                                                          ## Error bars for log2_FC types - independent
-                                                          if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
-                                                          data_lst <- lapply(Ann1_agg_lst, function(x){suppressWarnings(aggregate(x, list(factor(x$Group.1, levels=lvls)), mean))})
-                                                          stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-                                                          logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
-                                                          logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
-                                                          lim <- max(sqrt(logfc$value^2))
-                                                          plot_lst$Log2FC_Anno_1 <- ggplot(logfc, aes(x=Group.1, y=value, fill=Group.1, ymin=value, ymax=value)) +
-                                                                            					geom_hline(yintercept = 0, linetype="dashed", size=1, color="azure4")+
-                                                                                      geom_errorbar(width=0.8, size=0.5, position = "identity") +
-                                                                                      geom_point(shape=21, size=4, position = "identity") +
-                                                                            				  labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
-                                                                             					ylab("Mean Log2FC between groups (RPM) +/- SE") + 
-                                                                            					scale_fill_manual(values=rev(rgb_vec_ann1)) +
-                                                                            					scale_x_discrete(labels=levels(logfc$Group.1)) +
-                                                                                      theme_classic()+
-                                                                                      theme(legend.position="none", 
-                                                                                            axis.title.y= element_blank(), 
-                                                                                            panel.grid.major.y =  element_line(linetype="dashed", 
-                                                                                            colour="grey", size=0.5), 
-                                                                                            panel.grid.major.x = element_line(colour="grey", size=0.5), 
-                                                                                            axis.text.x = element_text(angle = 0, hjust = 0), 
-                                                                                            axis.text.y = element_blank(),
-                                                                                            axis.line.x =element_blank(), 
-                                                                                            axis.line.y =element_blank())+
-                                                                                      #coord_flip(ylim=c(-lim, lim))
-                                                                                      coord_flip(ylim=c(-13, 13))
-                                                          } 
-                                                          ## Error bars for differencs in RPM - independent
-                                                          # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
-                                                          # dat <- Ann1_agg_lst
-                                                          # dat$pheno_target <- factor(do.call("rbind",  strsplit(rownames(dat), "\\."))[,1], levels=pheno_target[[2]])
-                                                          # dat$Group.1 <- factor(dat$Group.1, levels=lvls)
-                                                          # dat <- dat[!is.na(dat$Group.1),] 
-                                                          # ymax <- max(dat$value) - max(sd(dat$value))
-                                                          # 
-                                                          # plot_lst$Errorbar_Anno_1 <- ggplot(dat, aes(x=Group.1, y=value, group=interaction(pheno_target, Group.1), fill=Group.1)) +
-                                                          #                             stat_summary(geom = "errorbar",  width=0.8, size=0.5, fun.data = mean_se, position = "dodge") +
-                                                          #                   					stat_summary(geom = "point", stroke=0.5, shape=21, size = 5.0, fun.y = mean, position = position_dodge(width=0.8)) +
-                                                          #   	                        #stat_summary(geom = "text", aes(label=paste0("n=",..y..)), size = 4.0, fun.y = length, vjust = -23,  position = position_dodge(width=1)) +
-                                                          #                   					labs(title=paste0(levels(dat$pheno_target), collapse=" vs ")) + 
-                                                          #                    					ylab("Mean RPM +/- SE") + 
-                                                          #                   					scale_fill_manual(values=rgb_vec_ann1) +
-                                                          #                   					scale_x_discrete(labels=levels(data$Group.1)) +
-                                                          #                             coord_cartesian(ylim = c(0, ymax)) +
-                                                          #                             #scale_y_continuous(limits=c(0, ymax)) +
-                                                          #                             ggthemes::theme_tufte()+
-                                                          #                   					theme(legend.position="none",
-                                                          #                   					      axis.title.y=element_text(size=16, face= "bold"), 
-                                                          #                   					      axis.title.x= element_blank(), 
-                                                          #                   					      axis.text=element_text(size=14),
-                                                          #                   					      axis.text.x = element_text(angle=45, hjust=1))+
-                                                          #                             ggthemes::geom_rangeframe()
-                                                     
-                                                          
-                                                          
-                                                          
-                                                        ## Percent filled bar (All)
-                                                        if(join==TRUE){Ann12_perc_ord <- split(Ann12_perc_ord[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann12_perc_ord[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
-                                                        plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
-                                                                              x$ann1 <- factor(x$ann1, levels=rev(unique(x$ann1)))
-                                                                              x$ann2 <- factor(x$ann2, levels=rev(anno_target_2[[2]]))
-                                                                              plot <- ggplot(x, aes(x=ann1, y=perc, fill=ann2)) +
-                                                                            					geom_col(width = 0.9, cex=0.2, colour="black", position="fill")+
-                                                                            					labs(title="Mean percent content")+
-                                                                            					ylab("%") +
-                                                                            					scale_fill_manual(values=rev(rgb_vec_ann2))+
-                                                                            					theme_classic()+
-                                                                            					theme(axis.title.y= element_blank(), axis.text.x = element_text(angle = 0, hjust = 0),axis.line.x =element_blank(), axis.line.y =element_blank())+
-                                                                            					coord_flip(ylim=c(0, 1))
-                                                                            return(plot)
-                                                                          })
-                                        return(list(plots=plot_lst[-1], data=list(anno_target_1=Ann1_agg_lst, annot_target_2=Ann2_agg_lst, Percent=Ann12_perc)))
-                      }
+  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, pheno_target=pheno_target) 
+  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_2) 
+  if(!is.null(filter)){ PAC <- PAC_filter(PAC, threshold=filter, coverage=100)}
+  
+  PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])
+  PAC$Anno[,anno_target_1[[1]]] <- factor(PAC$Anno[,anno_target_1[[1]]], levels=anno_target_1[[2]])
+  PAC$Anno[,anno_target_2[[1]]] <- factor(PAC$Anno[,anno_target_2[[1]]], levels=anno_target_2[[2]])
+  
+  if(norm=="raw"){data <- PAC$Counts }else{ data <- PAC$norm[[norm]]}
+  
+  
+  ## Aggregate data for anno_target_1 ##
+  spl_lst <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  Ann1_agg_lst <- lapply(spl_lst, function(x){
+    x  <- t(x)
+    x_agg <- aggregate(x, list(PAC$Anno[[anno_target_1[[1]]]]), sum)
+    x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
+  })
+  if(join==TRUE){Ann1_agg_lst <- list(do.call("rbind", Ann1_agg_lst))}
+  
+  
+  ## Aggregate data for anno_target_2 ##
+  spl_lst_2 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  Ann2_agg_lst <- lapply(spl_lst_2, function(x){
+    x  <- t(x)
+    x_agg <- aggregate(x, list(PAC$Anno[[anno_target_2[[1]]]]), sum)
+    x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
+  })
+  if(join==TRUE){Ann2_agg_lst <- list(do.call("rbind", Ann2_agg_lst))}
+  
+  ## Aggregate data for anno_target_1  and anno_target_2 ##
+  spl_lst_12 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  Ann12_agg_lst <- lapply(spl_lst_12, function(x){
+    x  <- t(x)
+    x_agg <- aggregate(x, list(paste(PAC$Anno[[anno_target_1[[1]]]], PAC$Anno[[anno_target_2[[1]]]], sep="____")), sum)
+    x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
+    facts <-  as.data.frame(do.call("rbind", strsplit(x_agg_long$Group.1, "____")))
+    return(cbind(x_agg_long, data.frame(ann1=facts[,1], ann2=facts[,2])))
+  })
+  if(join==TRUE){Ann12_agg_lst <- list(do.call("rbind", Ann12_agg_lst))}
+  
+  
+  ## Fix missing values in each category and generate percent types
+  Ann12_perc  <- lapply(Ann12_agg_lst, function(x){
+    spl_inside <- split(x, x$ann1)
+    ann12_lst <- lapply(spl_inside, function(y){
+      missing <- anno_target_2[[2]][!anno_target_2[[2]] %in% unique(y$ann2)]
+      df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), missing, sep="____"),
+                       variable= NA,
+                       value= 0,
+                       ann1= as.character(unique(y$ann1)),
+                       ann2= missing)
+      
+      df <- df[rep( 1:length(missing), times=length(unique(y$variable))),]
+      df$variable <- rep( unique(y$variable), each=length(missing))
+      df_fin <- rbind(y, df)
+      df_fin_agg <- aggregate(df_fin$value, list(df_fin$Group.1), mean)
+      names(df_fin_agg)[names(df_fin_agg)=="x"] <- "values"
+      tot <- sum(df_fin_agg$values)
+      df_fin_agg$perc <- df_fin_agg$values/tot*100
+      df_fin_agg$perc[is.na(df_fin_agg$perc)] <- 0
+      return(df_fin_agg)
+    })
+    return(ann12_lst)
+  })
+  
+  
+  ## Ordered according to sums of anno_target_1 in first object and return joint top table  
+  ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){sum(x$values)})), decreasing=TRUE)
+  ordr <- ordr[1:top] # Extract the top 
+  lvls <- names(Ann12_perc[[1]])[ordr]
+  if(join==FALSE){stopifnot(identical(lapply(Ann12_perc, names)[[1]],  lapply(Ann12_perc, names)[[2]]))}
+  
+  Ann12_perc_ord <- lapply(Ann12_perc, function(x){
+    ord_df <- do.call("rbind", x[ordr])
+    facts <- as.data.frame(do.call("rbind", strsplit(as.character(ord_df$Group.1), "____")))
+    return(cbind(ord_df, data.frame(ann1=facts[,1], ann2=facts[,2])))
+  })
+  
+  ## Generate colors
+  colfunc_ann1 <- grDevices::colorRampPalette(c("white", "black"))
+  rgb_vec_ann1 <- rev(colfunc_ann1(top))
+  
+  colfunc_ann2<- grDevices::colorRampPalette(c("#094A6B", "#FFFFFF", "#9D0014"))
+  rgb_vec_ann2 <- rev(colfunc_ann2(length(anno_target_2[[2]])))
+  
+  
+  
+  ## Fix zeros for log10 
+  Ann1_agg_lst <- lapply(Ann1_agg_lst, function(x) {x$value[x$value == 0] <- 0.000001; return(x)})
+  
+  
+  plot_lst <- list(NULL)
+  #######################################################################
+  ## Plot mean expression anno_target_1
+  plot_lst$Expression_Anno_1 <- lapply(Ann1_agg_lst, function(x){
+    ## Bars for mean RPM per type - log10
+    x$Group.1 <- factor(x$Group.1, levels=rev(lvls))
+    x <- x[!is.na(x$Group.1),]
+    
+    dat <- aggregate(x$value, list(x$Group.1), mean)
+    names(dat)[names(dat)=="x"] <- "means"
+    dat$SE <- (aggregate(x$value, list(x$Group.1), function(y){sd(y)/(sqrt(length(y)))}))$x
+    dat$means[dat$means<1] <- 1
+    if(max(dat$means) < 10000){breaks <- c(1,10,100,1000,10000)}
+    if(max(dat$means) >= 100000 && max(dat$means) <1000000){breaks <- c(1,10,100,1000,10000,100000)}
+    if(max(dat$means) >= 1000000){breaks <- c(1,10,100,1000,10000,100000,1000000)}
+    plot <- ggplot(dat, aes(x=Group.1, y=means, fill=Group.1 ,
+                            ymax = means + (means > 0)*SE,
+                            ymin = means - (means < 0)*SE)) +
+      geom_errorbar(width=0.5, size=1.0, colour="black") +
+      geom_col(width = 0.8, cex=0.2, colour="black")+
+      labs(title="Mean RPM")+
+      ylab("Log10 RPM +/- SE") +
+      scale_fill_manual(values=rev(rgb_vec_ann1))+
+      theme_classic()+
+      theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_text(angle = 0, hjust = 0), axis.line.x =element_blank())+
+      scale_y_log10(limits = c(min(breaks),max(breaks)), breaks=breaks)+
+      coord_flip()
+    if(!is.null(ymax_1)){plot <- plot + scale_y_continuous(limits=c(0,ymax_1))}
+    return(plot)
+  })               
+  
+  #Paired#############################################################################################################
+  if(paired==TRUE && log2fc==TRUE){
+    return(cat("Paired samples are not yet implemented in the function, but will be in the near future."))
+    #                   if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
+    #                   paried_samp <- as.character(PAC$Pheno[,paired_IDs])
+    #   
+    #                   Ann1_agg_lst[[1]]$variable
+    #                   stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
+    #                   logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+    # 
+    #                   plot_df$variable <- factor(plot_df$variable , levels=rev(levels(plot_df$variable)))
+    #                   plot_lst$Log2FC_Anno_1 <- ggplot(plot_df, aes(x=variable, y=value, fill=variable)) +
+    #                                     					geom_hline(yintercept = 0, size=1.5, color="azure4")+
+    #                                               geom_jitter(aes(color= "grey"), position=position_jitter(0.1), cex=1.3) +
+    #                                          				stat_summary(geom = "errorbar",  width=0.5, size=1.0, fun.data = mean_se, position = "identity") +
+    #                                       					stat_summary(geom = "point", colour="black", stroke=1.5, shape=21, size = 3.5, fun.y = mean, position = "identity") +
+    #                                     					labs(title="Log2 Fold change C vs B")+
+    #                                     					ylab("Log2 Fold change +/- SE") +
+    #                                     					scale_fill_manual(values=c(col_isotype))+
+    #                                               scale_color_manual(values="bisque3") +
+    #                                     					scale_x_discrete(labels=gsub("log2FC_", "", levels(plot_df$variable)))+
+    #                                     					theme_classic()+
+    #                                     					theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_blank(), axis.line.x =element_blank(), axis.line.y =element_blank())+
+    #                                     					coord_flip(ylim=c(-1.3, 2.25))
+  }
+  #Independent#############################################################################################################
+  if(paired==FALSE && log2fc==TRUE){
+    ## Error bars for log2_FC types - independent
+    if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
+    data_lst <- lapply(Ann1_agg_lst, function(x){suppressWarnings(aggregate(x, list(factor(x$Group.1, levels=lvls)), mean))})
+    stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
+    logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+    logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
+    lim <- max(sqrt(logfc$value^2))
+    plot_lst$Log2FC_Anno_1 <- ggplot(logfc, aes(x=Group.1, y=value, fill=Group.1, ymin=value, ymax=value)) +
+      geom_hline(yintercept = 0, linetype="dashed", size=1, color="azure4")+
+      geom_errorbar(width=0.8, size=0.5, position = "identity") +
+      geom_point(shape=21, size=4, position = "identity") +
+      labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
+      ylab("Mean Log2FC between groups (RPM) +/- SE") + 
+      scale_fill_manual(values=rev(rgb_vec_ann1)) +
+      scale_x_discrete(labels=levels(logfc$Group.1)) +
+      theme_classic()+
+      theme(legend.position="none", 
+            axis.title.y= element_blank(), 
+            panel.grid.major.y =  element_line(linetype="dashed", 
+                                               colour="grey", size=0.5), 
+            panel.grid.major.x = element_line(colour="grey", size=0.5), 
+            axis.text.x = element_text(angle = 0, hjust = 0), 
+            axis.text.y = element_blank(),
+            axis.line.x =element_blank(), 
+            axis.line.y =element_blank())+
+      #coord_flip(ylim=c(-lim, lim))
+      coord_flip(ylim=c(-13, 13))
+  } 
+  ## Error bars for differencs in RPM - independent
+  # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
+  # dat <- Ann1_agg_lst
+  # dat$pheno_target <- factor(do.call("rbind",  strsplit(rownames(dat), "\\."))[,1], levels=pheno_target[[2]])
+  # dat$Group.1 <- factor(dat$Group.1, levels=lvls)
+  # dat <- dat[!is.na(dat$Group.1),] 
+  # ymax <- max(dat$value) - max(sd(dat$value))
+  # 
+  # plot_lst$Errorbar_Anno_1 <- ggplot(dat, aes(x=Group.1, y=value, group=interaction(pheno_target, Group.1), fill=Group.1)) +
+  #                             stat_summary(geom = "errorbar",  width=0.8, size=0.5, fun.data = mean_se, position = "dodge") +
+  #                   					stat_summary(geom = "point", stroke=0.5, shape=21, size = 5.0, fun.y = mean, position = position_dodge(width=0.8)) +
+  #   	                        #stat_summary(geom = "text", aes(label=paste0("n=",..y..)), size = 4.0, fun.y = length, vjust = -23,  position = position_dodge(width=1)) +
+  #                   					labs(title=paste0(levels(dat$pheno_target), collapse=" vs ")) + 
+  #                    					ylab("Mean RPM +/- SE") + 
+  #                   					scale_fill_manual(values=rgb_vec_ann1) +
+  #                   					scale_x_discrete(labels=levels(data$Group.1)) +
+  #                             coord_cartesian(ylim = c(0, ymax)) +
+  #                             #scale_y_continuous(limits=c(0, ymax)) +
+  #                             ggthemes::theme_tufte()+
+  #                   					theme(legend.position="none",
+  #                   					      axis.title.y=element_text(size=16, face= "bold"), 
+  #                   					      axis.title.x= element_blank(), 
+  #                   					      axis.text=element_text(size=14),
+  #                   					      axis.text.x = element_text(angle=45, hjust=1))+
+  #                             ggthemes::geom_rangeframe()
+  
+  
+  
+  
+  ## Percent filled bar (All)
+  if(join==TRUE){Ann12_perc_ord <- split(Ann12_perc_ord[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann12_perc_ord[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
+  plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
+    x$ann1 <- factor(x$ann1, levels=rev(unique(x$ann1)))
+    x$ann2 <- factor(x$ann2, levels=rev(anno_target_2[[2]]))
+    plot <- ggplot(x, aes(x=ann1, y=perc, fill=ann2)) +
+      geom_col(width = 0.9, cex=0.2, colour="black", position="fill")+
+      labs(title="Mean percent content")+
+      ylab("%") +
+      scale_fill_manual(values=rev(rgb_vec_ann2))+
+      theme_classic()+
+      theme(axis.title.y= element_blank(), axis.text.x = element_text(angle = 0, hjust = 0),axis.line.x =element_blank(), axis.line.y =element_blank())+
+      coord_flip(ylim=c(0, 1))
+    return(plot)
+  })
+  return(list(plots=plot_lst[-1], data=list(anno_target_1=Ann1_agg_lst, annot_target_2=Ann2_agg_lst, Percent=Ann12_perc)))
+}

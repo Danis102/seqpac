@@ -55,7 +55,7 @@ The string follows similar rules as '...' parsing. See ?Rbowtie::bowtie
 details on the format. As default: parse_internal= "a=TRUE, f=TRUE".}
 
 \item{import}{Character or a list. If import="genome" mapping is done against
-a reference genome and genomic coordinates are required. If
+a reference genome and genomic coordinates are aquired. If
 import="biotype", mapping is done against a specialized fasta reference
 (e.g. Ensembl_ncrna, pirBase etc), where genomic coordinates is not
 required because classification will be performed on a match-or-no-match
@@ -72,9 +72,9 @@ repetitative references are used, such as pirBase and repeatMasker.}
 \item{keep_temp}{Logical whether or not bowtie output files temporarly stored
 in the output path should be deleted. Note, this option is only used for
 troubleshooting. The bowtie output files are named as the reference files
-and are overwritten in each mismatch round. Thus for safe saving of
+and are overwritten in each mismatch cycle. Thus for safe saving of
 mismatch 0 bowtie output make sure that \code{mismatches=0}. If not, the
-mismatch 1 round will overwrite the botwie files.}
+mismatch 1 cycle will overwrite the botwie files.}
 }
 \value{
 Will primarily generate .Rdata files in the destination folder
@@ -113,11 +113,11 @@ load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mus
 ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
 
 ## Path to output folder:
-output_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+output_path <- "/home/danis31/Desktop/Temp_docs/reanno_temp"
 
 ## Run map_reanno internally for genome mapping
 map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=output_path, 
-           type="internal", mismatches=3, import="genome", threads=8, keep_temp=TRUE)
+           type="internal", mismatches=2, import="genome", threads=8, keep_temp=TRUE)
 
 
 #### Example type= external for biotype classification #### 

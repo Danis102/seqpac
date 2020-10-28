@@ -52,60 +52,60 @@
 #' @export
 
 PAC_deseq <- function(PAC, model, main_factor=NULL, norm=TRUE, histogram=TRUE, threads=1, pheno_target=NULL, anno_target=NULL){
-                            ### Subset samples by Pheno                                                
-                              							if(!is.null(pheno_target)){
-                                              sub_pheno <- as.character(PAC$Pheno[pheno_target[[1]]][,1]) %in% pheno_target[[2]]
-                                              if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[,sub_pheno] }
-                                              PAC$Counts   <- PAC$Counts [,sub_pheno]
-                                              PAC$Pheno  <- PAC$Pheno[sub_pheno,]
-                                              tab_pheno <- as.data.frame(table(sub_pheno))
-                                              cat(paste0("\nPheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples\n"))                                            ### Subset data by groups
-                              							}              
-                            ### Subset data by Anno
-                                           if(!is.null(anno_target)){
-                                              sub_anno <- as.character(PAC$Anno[anno_target[[1]]][,1]) %in% anno_target[[2]]
-                                              if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[sub_anno,] }
-                                              PAC$Counts   <- PAC$Counts [sub_anno,] 
-                                              PAC$Anno  <- PAC$Anno[sub_anno,]
-                                              tab_anno <- as.data.frame(table(sub_anno))
-                                              cat(paste0("\nAnno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs\n"))                                                ### Subset data by groups
-                                           }
+  ### Subset samples by Pheno                                                
+  if(!is.null(pheno_target)){
+    sub_pheno <- as.character(PAC$Pheno[pheno_target[[1]]][,1]) %in% pheno_target[[2]]
+    if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[,sub_pheno] }
+    PAC$Counts   <- PAC$Counts [,sub_pheno]
+    PAC$Pheno  <- PAC$Pheno[sub_pheno,]
+    tab_pheno <- as.data.frame(table(sub_pheno))
+    cat(paste0("\nPheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples\n"))                                            ### Subset data by groups
+  }              
+  ### Subset data by Anno
+  if(!is.null(anno_target)){
+    sub_anno <- as.character(PAC$Anno[anno_target[[1]]][,1]) %in% anno_target[[2]]
+    if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[sub_anno,] }
+    PAC$Counts   <- PAC$Counts [sub_anno,] 
+    PAC$Anno  <- PAC$Anno[sub_anno,]
+    tab_anno <- as.data.frame(table(sub_anno))
+    cat(paste0("\nAnno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs\n"))                                                ### Subset data by groups
+  }
   
-                            ### Prepare data
-                                            anno <- PAC$Anno
-                                            pheno <- PAC$Pheno
-                                            if(!is.null(pheno_target)){
-                                                            groups_ord <- pheno_target[[2]]
-                                                            trg <- as.character(pheno[, colnames(pheno) == main_factor])
-                                                            pheno[,colnames(pheno) == main_factor] <- factor(trg, levels=rev(pheno_target[[2]]))
-                                                            }
-                                            
-                                            dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC$Counts , colData = droplevels(PAC$Pheno), design=model)
-                                            dds <- DESeq2::estimateSizeFactors(dds)
-                                            
-                            ### DEseq function
-                                            BiocParallel::register(BiocParallel::MulticoreParam(workers=threads))
-                                					  deseq <- function(dds, anno, model, norm){
-                                    												dds_fit <- DESeq2::DESeq(dds, fitType='local', parallel = TRUE)
-                                    												res_nam <- DESeq2::resultsNames(dds_fit)
-                                    												res_DESeq2 <- DESeq2::results(dds_fit, name=paste0(res_nam[2]))
-                                    												cat(summary(res_DESeq2))
-                                    												res_DESeq2_df <- as.data.frame(res_DESeq2[order(as.numeric(res_DESeq2$pvalue)),])
-                                    												res_DESeq2_df_not_ord <- as.data.frame(res_DESeq2)
-                                    												anno_filt <- anno[match(rownames(res_DESeq2_df_not_ord), rownames(anno)),]
-                                    												if(identical(rownames(dds), rownames(res_DESeq2_df_not_ord))==FALSE){stop("Error! Not identical ids in result and dds.\nHave you been messing with the code?\n")}
-                                    												if(identical(rownames(dds), rownames(anno_filt))==FALSE){stop("Error! Not identical ids in anno and dds.\n")}
-                                    												Res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df_not_ord, DESeq2::counts(dds, normalized=norm), anno_filt)
-                                    												colnames(Res_counts)[colnames(Res_counts)=="log2FoldChange"] <-  paste("logFC", res_nam[2], sep="_")
-                                    												return(Res_counts)
-                        												}
-      									#--------------------------------------------------------
-      									# Apply the deseq function and add histograms:	
-      									res <- deseq(dds, anno, model, norm)
-      									p <- ggplot2::ggplot(data=res, aes(res$pvalue)) + 
-        														ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
-      															ggplot2::labs(title="p-value destributions", x="p-value", y = "Number of features")
-      											   res_lst<- list(result=res, histogram=p)
-      								  return(res_lst)
-      }
+  ### Prepare data
+  anno <- PAC$Anno
+  pheno <- PAC$Pheno
+  if(!is.null(pheno_target)){
+    groups_ord <- pheno_target[[2]]
+    trg <- as.character(pheno[, colnames(pheno) == main_factor])
+    pheno[,colnames(pheno) == main_factor] <- factor(trg, levels=rev(pheno_target[[2]]))
+  }
+  
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC$Counts , colData = droplevels(PAC$Pheno), design=model)
+  dds <- DESeq2::estimateSizeFactors(dds)
+  
+  ### DEseq function
+  BiocParallel::register(BiocParallel::MulticoreParam(workers=threads))
+  deseq <- function(dds, anno, model, norm){
+    dds_fit <- DESeq2::DESeq(dds, fitType='local', parallel = TRUE)
+    res_nam <- DESeq2::resultsNames(dds_fit)
+    res_DESeq2 <- DESeq2::results(dds_fit, name=paste0(res_nam[2]))
+    cat(summary(res_DESeq2))
+    res_DESeq2_df <- as.data.frame(res_DESeq2[order(as.numeric(res_DESeq2$pvalue)),])
+    res_DESeq2_df_not_ord <- as.data.frame(res_DESeq2)
+    anno_filt <- anno[match(rownames(res_DESeq2_df_not_ord), rownames(anno)),]
+    if(identical(rownames(dds), rownames(res_DESeq2_df_not_ord))==FALSE){stop("Error! Not identical ids in result and dds.\nHave you been messing with the code?\n")}
+    if(identical(rownames(dds), rownames(anno_filt))==FALSE){stop("Error! Not identical ids in anno and dds.\n")}
+    Res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df_not_ord, DESeq2::counts(dds, normalized=norm), anno_filt)
+    colnames(Res_counts)[colnames(Res_counts)=="log2FoldChange"] <-  paste("logFC", res_nam[2], sep="_")
+    return(Res_counts)
+  }
+  #--------------------------------------------------------
+  # Apply the deseq function and add histograms:	
+  res <- deseq(dds, anno, model, norm)
+  p <- ggplot2::ggplot(data=res, aes(res$pvalue)) + 
+    ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
+    ggplot2::labs(title="p-value destributions", x="p-value", y = "Number of features")
+  res_lst<- list(result=res, histogram=p)
+  return(res_lst)
+}
 

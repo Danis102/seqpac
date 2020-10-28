@@ -100,11 +100,11 @@
 #' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
 #' 
 #' ## Path to output folder:
-#' output_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#' output_path <- "/home/danis31/Desktop/Temp_docs/reanno_temp"
 #' 
 #' ## Run map_reanno internally for genome mapping
 #' map_reanno(PAC=pac_master, ref_paths=ref_paths, output_path=output_path, 
-#'            type="internal", mismatches=3, import="genome", threads=8, keep_temp=TRUE)
+#'            type="internal", mismatches=2, import="genome", threads=8, keep_temp=TRUE)
 #' 
 #' 
 #' #### Example type= external for biotype classification #### 
@@ -141,9 +141,15 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   seq_fst <- Biostrings::DNAStringSet(rownames(PAC$Anno))
   names(seq_fst) <- paste(seq_fst)
   
-  if(import=="genome"){ import <- list(coord=TRUE, report="full", reduce=NULL)
-  }else{if(import=="biotype"){ import <- list(coord=FALSE, report="full", reduce=NULL)}}
-  
+  if(length(import)==1){
+        if(import=="genome"){ import <- list(coord=TRUE, report="full", reduce=NULL)
+        }else{
+          if(import=="biotype"){ import <- list(coord=FALSE, report="full", reduce=NULL)
+          }else{
+            stop("\nPlease, provide correct import options. \nChose between 'genome', 'biotype' or list of options. \nSee ?map_reanno and ?import_reanno for more details.")
+          }
+        }
+    }
   ## Look for files and folders in output path
   drs <- list.dirs(output_path, full.names = FALSE, recursive = FALSE) 
   fls <- list.files(output_path, recursive = FALSE)

@@ -139,5 +139,5 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
     input$Anno <- cbind(input$Anno, bio_vect_fin)
     }
   }
-    return(input)
+  return(input)
 }

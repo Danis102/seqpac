@@ -426,7 +426,7 @@ Biostrings::writeXStringSet(getSeq(dm6), filepath=dest_path, format="fasta")
 ####---- biomartr ------------ ####
 dest_path <- file.path(ref_path, "/biomartr_genome/") # Only dir
 biomartr::is.genome.available(db = "ensembl", organism = "Drosophila melanogaster", details = TRUE)
-file_path <- biomartr::getGenome(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, gunzip=TRUE) # Bowtie don't take gzip
+file_path <- biomartr::getGenome(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, gunzip=TRUE, release=101) # Bowtie don't take gzip
 genome <- Biostrings::readDNAStringSet(filepath=list.files(dest_path, pattern=".fa$", full.names=TRUE), format="fasta")
 
 ``` 
@@ -442,7 +442,7 @@ using the biomartr package.
 ###################################
 ####---- biomartr ncRNA ------ ####
 dest_path <- file.path(ref_path, "/ensembl_ncRNA/") # Only dir
-ncrna_path <- biomartr::getRNA(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
+ncrna_path <- biomartr::getRNA(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, release=101)
 R.utils::gunzip(ncrna_path, destname=paste0(dest_path, "/ncrna.fa"), remove=TRUE, skip=TRUE) # Unzip to prepare for bowtie
 ncrna <-  biomartr::read_rna(file = paste0(dest_path, "/ncrna.fa"))
 
@@ -614,26 +614,27 @@ using rtracklayer. Here are some examples:
 ## Get gene gtf using biomartr
 dest_path <- file.path(ref_path, "/gtf/") # Only dir
 gtf_path <- biomartr::getGTF(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
-gtf <- data.table::setDT(rtracklayer::readGFF(gtf_path))
+gtf <- tibble::as_tibble(rtracklayer::readGFF(gtf_path))
 
 ## Get repeatMasker gtf using biomartr (doesn't work for all species)
 dest_path <- file.path(ref_path, "/repeatMasker/") # Only dir
 rm_path <- biomartr::getRepeatMasker(db="refseq", organism = "Drosophila melanogaster", path=dest_path)
-gtf <- data.table::setDT(rtracklayer::readGFF(gtf_path))
+gtf <- tibble::as_tibble(rtracklayer::readGFF(gtf_path))
 
 ## Get repeatMasker table and manually turn it into gtf using rtracklayer
 # Table names can be found at:
 # https://genome.ucsc.edu/cgi-bin/hgTables
 dest_path <- file.path(ref_path, "/repeatMasker/repeatMasker.gtf") # Full file path
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
 session <- rtracklayer::browserSession("UCSC")
 rtracklayer::genome(session) <- "dm6"
-rm_tab <- data.table::setDT(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
-gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
-mcols(gr)$type <- "repeat"
-mcols(gr)$source <- "repeatMasker_dm6"
-mcols(gr)$exon_name <- rm_tab$repName
-mcols(gr)$transcript_name <- rm_tab$repClass
-mcols(gr)$gene_name <- rm_tab$repFamily  
+rm_tab <- tibble::as_tibble(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
+gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges::IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
+GenomicRanges::mcols(gr)$type <- "repeat"
+GenomicRanges::mcols(gr)$source <- "repeatMasker_dm6"
+GenomicRanges::mcols(gr)$repName <- rm_tab$repName
+GenomicRanges::mcols(gr)$repClass <- rm_tab$repClass
+GenomicRanges::mcols(gr)$repFamily <- rm_tab$repFamily  
 rtracklayer::export(gr, dest_path, format="gtf")
 
 ``` 
@@ -816,7 +817,7 @@ maximum number of alignments to be reported by \code{genome_max}
 ##########################################
 ### Genomic coordinates using add_reanno 
 ##----------------------------------------
-pac_genome <- add_reanno(reanno_genome, type="genome", genome_max=5, mismatches=3, merge_pac=pac_master)
+anno_genome <- add_reanno(reanno_genome, type="genome", genome_max=10, mismatches=3)
 
 # Example of original reference name annotations 
 head(reanno_genome$Full_anno$mis0$chromosomes)
@@ -870,7 +871,10 @@ bio_search_1 <- list(
                 )
 
 bio_search_2 <- list(
-                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", "RNaseMRP",                                  "RNaseP", "sbRNA", "scaRNA", "sisRNA", "snmRNA", "snoRNA", "snRNA", "Su\\(Ste\\)"), # ()= Brackets must be escaped  
+                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
+                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
+                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
+                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"), # ()= Brackets must be escaped  
                  miRNA="dme-",
                  tRNA =c("^tRNA", "mt:tRNA") 
                 )
@@ -878,11 +882,13 @@ bio_search_2 <- list(
 ```{r, eval=FALSE, message=FALSE}
 # Throws an error because perfect matching is required:
 anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=TRUE, mismatches = 3)
-```{r, eval=TRUE, message=FALSE}
 # References with no search term hits are classified as "other":
 anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=FALSE, mismatches = 3)
 # Better search terms gives perfect matching
-anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=TRUE, mismatches = 3) 
+anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=TRUE, mismatches = 3)
+
+```{r, eval=TRUE, message=FALSE, echo=FALSE}
+anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=FALSE, mismatches = 3)
 
 ```
 
@@ -909,10 +915,13 @@ match will always be prioritized over the hierarchy.
 hierarchy <- list(rRNA="Ensembl_rRNA",
                    Mt_tRNA="tRNA_mt:tRNA",
                    tRNA="Ensembl_tRNA|tRNA_\\^tRNA",
-                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
+                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+                   snoRNA="Ensembl_snoRNA",
+                   lncRNA="Ensembl_lncRNA"   
                   )
 
 pac_master_anno <- simplify_reanno(input=anno, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=pac_master)
+pac_master_anno <- simplify_reanno(input=anno, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis3", merge_pac=pac_master_anno)
 
 # Example of original reference name annotations 
 head(reanno_srna$Full_anno$mis0$Ensembl)
