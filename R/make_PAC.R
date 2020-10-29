@@ -62,6 +62,7 @@ make_PAC<- function(pheno_input, anno_input, counts_input){
                                 seq_ord <- rownames(PAC_unord$Counts)
                                 PAC_unord$Anno <- PAC_unord$Anno[match(rownames(PAC_unord$Anno), seq_ord),, drop=FALSE]
                                 PAC_unord$Pheno <- PAC_unord$Pheno[match(rownames(PAC_unord$Pheno), ph_ord),, drop=FALSE]
+                                class(PAC_unord) <-  c("list", "PAC")
                                 stopifnot(PAC_check(PAC_unord))
                                 return(PAC_unord)
                                 }

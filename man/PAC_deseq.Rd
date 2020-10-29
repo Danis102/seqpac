@@ -7,8 +7,7 @@
 PAC_deseq(
   PAC,
   model,
-  main_factor = NULL,
-  norm = TRUE,
+  deseq_norm = FALSE,
   histogram = TRUE,
   threads = 1,
   pheno_target = NULL,
@@ -23,18 +22,27 @@ sequences as row names.}
 
 \item{model}{Character vector describing the statistical model based on column names in Pheno.}
 
-\item{main_factor}{Character vector (default = first term in model).}
-
-\item{norm}{Logical whether to return deseq normalized values or not (default=TRUE).}
+\item{deseq_norm}{Logical whether to return deseq normalized values or not (default=TRUE).}
 
 \item{histogram}{Logical whether to return a p-value destributions as a histogram (default=TRUE).}
 
 \item{threads}{Integer number of threads to run in parallel.}
 
 \item{pheno_target}{(optional) List with: 
-1st object being a character vector of target column in Pheno 
-2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
-(default=NULL)}
+1st object being a character indicating the main target column in
+Pheno.
+2nd object being a character vector of the target group(s) in the
+target Pheno column (1st object).
+
+Note: In PAC_deseq pheno_target controls the main comparative factor
+category. If for instance a target column named "groups" in
+PAC$Pheno contains "control" and "treatment" categories, setting
+pheno_target=list("groups", c("treatment", "controls") ensures that
+"treatment" is presented 1st in the factor levels, making for
+example log2FC appear as "treatment vs control". As default,
+pheno_target=NULL will result in the factor levels being
+automatically sorted in ascending order, which in the example above
+would result in control vs treatment log2FC.}
 
 \item{anno_target}{(optional) List with: 
 1st object being a character vector of target column in Anno 
@@ -54,15 +62,21 @@ Given a PAC object this function will apply a differential expression analysis u
 }
 \examples{
 
-load(file="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline3_02-01-20/R_files/PAC_master_reanno.Rdata")
-PAC <- PAC_rpm(PAC_master_reanno)
-PAC$Pheno$Hemi_cast <- ifelse(grepl("HC", PAC$Pheno$Index), "Hemi", "Cont") 
-PAC$Pheno$Type <- ifelse(grepl("sperm_cells", PAC$Pheno$Index), "Sperm", "Plasma")
-pheno_target <- list("Type", "Sperm")
-PAC  <- PAC_filter(PAC, size = c(16, 45), threshold = 1, coverage = 100, type = "rpm", stat = TRUE, pheno_target = pheno_target, anno_target = NULL)
-pheno_target <- list("Hemi_cast", c("Hemi", "Cont"))  
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-test <- PAC_deseq(PAC, model=~Hemi_cast, main_factor="Hemi_cast", norm=TRUE, histogram=TRUE, threads=4, pheno_target=NULL, anno_target=NULL)
+PAC <- PAC_norm(pac, type="rpm")
+pheno_target <- list("replicate", c("test3", "test1"))
+pheno_target <- list("type", c("Sperm", "Ovaries"))
+pheno_target <- list("type", c("Ovaries", "Sperm"))
+
+model=~replicate
+model=~replicate+type  
+    
+    
+pheno_target <- list("replicate")
+
+test <- PAC_deseq(PAC, model=model, deseq_norm=TRUE, histogram=TRUE, threads=4, pheno_target=pheno_target, anno_target=NULL)
 
 }
 \seealso{

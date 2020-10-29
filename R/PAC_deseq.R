@@ -16,16 +16,25 @@
 #'
 #' @param model Character vector describing the statistical model based on column names in Pheno.
 #'   
-#' @param main_factor Character vector (default = first term in model).
-#' 
-#' @param norm Logical whether to return deseq normalized values or not (default=TRUE).
+#' @param deseq_norm Logical whether to return deseq normalized values or not (default=TRUE).
 #' 
 #' @param histogram Logical whether to return a p-value destributions as a histogram (default=TRUE).
 #' 
 #' @param pheno_target (optional) List with: 
-#'          1st object being a character vector of target column in Pheno 
-#'          2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
-#'          (default=NULL)
+#'          1st object being a character indicating the main target column in
+#'          Pheno.
+#'          2nd object being a character vector of the target group(s) in the
+#'          target Pheno column (1st object).
+#'          
+#'          Note: In PAC_deseq pheno_target controls the main comparative factor
+#'          category. If for instance a target column named "groups" in
+#'          PAC$Pheno contains "control" and "treatment" categories, setting
+#'          pheno_target=list("groups", c("treatment", "controls") ensures that
+#'          "treatment" is presented 1st in the factor levels, making for
+#'          example log2FC appear as "treatment vs control". As default,
+#'          pheno_target=NULL will result in the factor levels being
+#'          automatically sorted in ascending order, which in the example above
+#'          would result in control vs treatment log2FC.
 #'          
 #' @param anno_target (optional) List with: 
 #'          1st object being a character vector of target column in Anno 
@@ -39,45 +48,35 @@
 #'               2nd object - p-value histogram (optional)    
 #' @examples
 #' 
-#' load(file="/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline3_02-01-20/R_files/PAC_master_reanno.Rdata")
-#' PAC <- PAC_rpm(PAC_master_reanno)
-#' PAC$Pheno$Hemi_cast <- ifelse(grepl("HC", PAC$Pheno$Index), "Hemi", "Cont") 
-#' PAC$Pheno$Type <- ifelse(grepl("sperm_cells", PAC$Pheno$Index), "Sperm", "Plasma")
-#' pheno_target <- list("Type", "Sperm")
-#' PAC  <- PAC_filter(PAC, size = c(16, 45), threshold = 1, coverage = 100, type = "rpm", stat = TRUE, pheno_target = pheno_target, anno_target = NULL)
-#' pheno_target <- list("Hemi_cast", c("Hemi", "Cont"))  
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' test <- PAC_deseq(PAC, model=~Hemi_cast, main_factor="Hemi_cast", norm=TRUE, histogram=TRUE, threads=4, pheno_target=NULL, anno_target=NULL)
+#' PAC <- PAC_norm(pac, type="rpm")
+#' pheno_target <- list("replicate", c("test3", "test1"))
+#' pheno_target <- list("type", c("Sperm", "Ovaries"))
+#' pheno_target <- list("type", c("Ovaries", "Sperm"))
+#' 
+#' model=~replicate
+#' model=~replicate+type  
+#'     
+#'     
+#' pheno_target <- list("replicate")
+#' 
+#' test <- PAC_deseq(PAC, model=model, deseq_norm=TRUE, histogram=TRUE, threads=4, pheno_target=pheno_target, anno_target=NULL)
 #' 
 #' @export
 
-PAC_deseq <- function(PAC, model, main_factor=NULL, norm=TRUE, histogram=TRUE, threads=1, pheno_target=NULL, anno_target=NULL){
-  ### Subset samples by Pheno                                                
-  if(!is.null(pheno_target)){
-    sub_pheno <- as.character(PAC$Pheno[pheno_target[[1]]][,1]) %in% pheno_target[[2]]
-    if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[,sub_pheno] }
-    PAC$Counts   <- PAC$Counts [,sub_pheno]
-    PAC$Pheno  <- PAC$Pheno[sub_pheno,]
-    tab_pheno <- as.data.frame(table(sub_pheno))
-    cat(paste0("\nPheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples\n"))                                            ### Subset data by groups
-  }              
-  ### Subset data by Anno
-  if(!is.null(anno_target)){
-    sub_anno <- as.character(PAC$Anno[anno_target[[1]]][,1]) %in% anno_target[[2]]
-    if(any(names(PAC)=="rpm")){ PAC$rpm  <- PAC$rpm[sub_anno,] }
-    PAC$Counts   <- PAC$Counts [sub_anno,] 
-    PAC$Anno  <- PAC$Anno[sub_anno,]
-    tab_anno <- as.data.frame(table(sub_anno))
-    cat(paste0("\nAnno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs\n"))                                                ### Subset data by groups
-  }
+PAC_deseq <- function(PAC, model, deseq_norm=FALSE, histogram=TRUE, threads=1, pheno_target=NULL, anno_target=NULL){
   
+  ### Subset samples and sequences
+  PAC <-  PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  cat("\n")
   ### Prepare data
   anno <- PAC$Anno
   pheno <- PAC$Pheno
   if(!is.null(pheno_target)){
-    groups_ord <- pheno_target[[2]]
-    trg <- as.character(pheno[, colnames(pheno) == main_factor])
-    pheno[,colnames(pheno) == main_factor] <- factor(trg, levels=rev(pheno_target[[2]]))
+    trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
+    pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(trg, levels=rev(pheno_target[[2]]))
   }
   
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC$Counts , colData = droplevels(PAC$Pheno), design=model)
@@ -89,19 +88,23 @@ PAC_deseq <- function(PAC, model, main_factor=NULL, norm=TRUE, histogram=TRUE, t
     dds_fit <- DESeq2::DESeq(dds, fitType='local', parallel = TRUE)
     res_nam <- DESeq2::resultsNames(dds_fit)
     res_DESeq2 <- DESeq2::results(dds_fit, name=paste0(res_nam[2]))
+    comp <- strsplit(res_DESeq2@elementMetadata@listData$description[2], ": replicate ")[[1]][2]
+    cat(comp)
     cat(summary(res_DESeq2))
     res_DESeq2_df <- as.data.frame(res_DESeq2[order(as.numeric(res_DESeq2$pvalue)),])
     res_DESeq2_df_not_ord <- as.data.frame(res_DESeq2)
     anno_filt <- anno[match(rownames(res_DESeq2_df_not_ord), rownames(anno)),]
-    if(identical(rownames(dds), rownames(res_DESeq2_df_not_ord))==FALSE){stop("Error! Not identical ids in result and dds.\nHave you been messing with the code?\n")}
-    if(identical(rownames(dds), rownames(anno_filt))==FALSE){stop("Error! Not identical ids in anno and dds.\n")}
+    if(identical(rownames(dds), rownames(res_DESeq2_df_not_ord))==FALSE){stop("Not identical ids in result and dds.\nHave you been messing with the code?\n")}
+    if(identical(rownames(dds), rownames(anno_filt))==FALSE){stop("Not identical ids in anno and dds.\n")}
     Res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df_not_ord, DESeq2::counts(dds, normalized=norm), anno_filt)
     colnames(Res_counts)[colnames(Res_counts)=="log2FoldChange"] <-  paste("logFC", res_nam[2], sep="_")
     return(Res_counts)
   }
   #--------------------------------------------------------
   # Apply the deseq function and add histograms:	
-  res <- deseq(dds, anno, model, norm)
+  require(DESeq2, quietly = TRUE) 
+  res <- deseq(dds, anno, model, norm=deseq_norm)
+  detach(package:DESeq2)
   p <- ggplot2::ggplot(data=res, aes(res$pvalue)) + 
     ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
     ggplot2::labs(title="p-value destributions", x="p-value", y = "Number of features")

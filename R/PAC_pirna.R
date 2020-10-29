@@ -80,15 +80,12 @@
 #' # - The name column must either match fasta reference names or sequence names in PAC.
 #' # - The 2nd column will be embedded in PAC_pirna output.   
 #' # - Noter: Reading and preparing pirbase data may take several min. 
-#'   
+#' 
 #' pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Humans/pirBase/hg38/piR_hsa.txt.gz"), delim="\t", col_names = TRUE)
 #' pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.txt.gz"), delim="\t", col_names = TRUE)
+#' pirna_meta <- tibble::tibble(name=pirbase_dat$name, pubmed_id=pirbase_dat$pubmed)
 #' 
-#' datset <- strsplit(pirbase_dat$pubmed, " ")
-#' n_evidence  <- unlist(lapply(datset, length))
-#' pirna_meta <- tibble::tibble(name=pirbase_dat$name, n_evidence=n_evidence)
-#' table(pirna_meta$n_evidence)
-#' 
+#'  
 #' ##############################################################################
 #' ### Get repeatMasker table and manually turn it into gtf using rtracklayer ###
 #' # Table names can be found at:
@@ -130,250 +127,260 @@
 #' mismatches=3
 #' norm="rpm"
 #' pheno_target= list("type")
-#' cluster_gap=1000
+#' cluster=list(max_gap=1000, min_n=2) 
 #' pirna_meta=pirna_meta
 #' 
 #' #export
 
-PAC_pirna <- function(PAC, norm="counts", genome=NULL, mismatches=3, stranded=FALSE, cluster=NULL,
-                      pheno_target=NULL, pirna=NULL, pirna_meta=NULL, gtf_repeat=NULL, gtf_protein=NULL,
-                      threads=1){
-
-##### Setup general ####################################
-  seqs <- rownames(PAC$Anno)
-  
-  if(!is.null(pirna_meta)|!is.null(cluster)){
-    cat("\nRunning this function using a 'pirna_meta' input against \nfasta reference IDs or using a 'cluster' input may reduce \nperformance since a full piRNA mapping report must be generated.\nIf this becomes a problem reduce the number of sequences in your\nPAC object or run 'pirna_meta=NULL' and 'cluster=NULL' (default).\n") 
-    rprt <- "full"
-  }else{
-    rprt <- "minimum" 
-  }
-
-##### Setup pirna annotation and run reanno if necessary ####################################
-  # If user know the columns:
-  if(!file.exists(pirna) & !is.null(pirna)){
-   anno_pirna <- PAC$Anno[, pirna, drop=FALSE]
-  # If user do not know the columns:
-  }else{
-    # If user don't provide fasta reference:
-    if(!file.exists(pirna) & is.null(pirna)){
-          anno_pirna <- PAC$Anno
-    }
-    # If user provide fasta reference:
-    if(file.exists(pirna)){
-      cat("\nInput pirna was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
-      outpath <- tempfile(pattern = "", fileext = "")
-      err <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="external", mismatches=mismatches,
-                     import = list(coord=FALSE, report=rprt, reduce=NULL), threads=threads), silent = TRUE)
-      if(!is.null(err)){
-        err2 <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="internal", mismatches=mismatches,
-                     import = list(coord=FALSE, report=rprt, reduce=NULL), threads=threads), silent = TRUE)
-      if(!is.null(err2)){
-        stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\nLast log says:\n", err2))
-        }
-      }
-      reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE, threads=threads)
-      anno_pirna <- add_reanno(reanno, bio_search=list(pirna="pirna"), type="biotype", bio_perfect=FALSE, mismatches = mismatches)
-      
-      unlink(outpath, recursive = TRUE)
-    }
-    # Extract pirna column if user don't provide columns:
-    nam <- colnames(anno_pirna)
-    logi_col1 <- grepl("^piRNA|^pirna", nam)
-    prefix <- suppressWarnings(do.call("rbind", strsplit(nam[logi_col1], "_"))[,1])
-    if(any(duplicated(prefix))){
-      stop("\nFound more than 1 possible pirna annotation.\nAutomatic column identification only works when the results \nof one fasta pirna reference is reported in PAC$Anno.\nPlease, specify in 'pirna=' the exact columns reporting the alignments \nagainst 1 reference genome (column prefix: mis0_, mis1_, mis2_ etc.) \nor proved a path to a bowtie indexed fasta pirna file.")
-    }
-    pirna_col <- nam[logi_col1]
-    anno_pirna <- anno_pirna[,logi_col1, drop=FALSE]
-    anno_pirna[anno_pirna == "_"] <- "noAlign"
-    }
-  anno_pirna$xyzx <- as.character(ifelse(anno_pirna[[1]] %in% c("noAlign", "_"), "not_pirna", "pirna"))
-  pirna_hit_col <- paste0("pirna_hits_mis", mismatches)
-  colnames(anno_pirna)[colnames(anno_pirna) =="xyzx"] <- pirna_hit_col
-
-  ##### Handle pirna_meta  ####################################            
-    if(!is.null(pirna_meta)){
-      pirna_meta <- tibble::as_tibble(pirna_meta, .name_repair="minimal")
-      chck_str <- unique(unlist(strsplit(paste(pirna_meta[[1]][1:5], collapse=""), "")))
-      
-      # pirna_meta against PAC
-      if(sum(chck_str %in% c("N", "T", "C", "A", "G")) == length(chck_str)){ 
-           if(any(!as.character(pirna_meta[[1]]) %in% rownames(PAC$Anno))){
-           warning("The 1st ,'ID', column in 'pirna_meta' does not match rownames in 'PAC$Anno'.\nPlease, double check all sequence names in 'pirna_meta'.")
-        }
-        pirna_meta <- pirna_meta[match(pirna_meta[[1]], rownames(PAC$Anno)),]
-      }else{
-      # pirna_meta against pirna reference
-        pirna_id  <- dplyr::bind_cols(lapply(reanno$Full_anno, function(x){
-             x$pirna[names(x$pirna) == "ref_hits"]
-          }), .name_repair = "minimal")
-        
-        pirna_id <- tibble::tibble(pirna_id=apply(pirna_id, 1, function(x){
-          paste(x, collapse="|")}))
-        pirna_id[[1]] <- gsub(":sense|:antisense", "", pirna_id[[1]])
-        
-        pirna_id_splt <- strsplit(pirna_id[[1]], "\\|")
-        uni_id <- unique(unlist(pirna_id_splt))
-        uni_id <- uni_id[!uni_id == "NA"]
-         
-        if(any(!uni_id %in% pirna_meta[[1]])){
-           stop("The 1st ,'ID', column in pirna_meta does not match piRNA reference names.\nPlease, make sure that names in 'pirna_meta' are compatilble with fasta names.")
-        }
-        
-        
-        
-        
-        !!!! HÄR ÄR JAG 
-        Fixa så att pirna_meta för reference får length = PAC och ordered as PAC
-        
-        
-        
-        
-        
-        
-        pirna_meta <- pirna_meta[match(pirna_meta[[1]], rownames(PAC$Anno)),]
-        }
-      }
-       
-            
-            
-  
-    rm(reanno)            
-
-  ##### Run PAC_gtf and generate anno ####################################
-  full <- PAC_gtf(PAC, genome=genome, return="all", mismatches=mismatches, gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, stranded=TRUE, threads=threads)
-  
-  if(is.null(pirna_meta){
-    PAC$Anno <- cbind(data.frame(Length=PAC$Anno$Length), anno_pirna, full$simplify)
-  }else{
-    PAC$Anno <- cbind(data.frame(Length=PAC$Anno$Length, pirna_meta=pirna_meta), anno_pirna, full$simplify)
-  }
-  rownames(PAC$Anno) <- seqs
-  
-  PAC$Anno$repeats <- paste(PAC$Anno[,pirna_hit_col], ifelse(!is.na(full$simplify$repName), "repeats", "not_repeats"), sep="|")
-  PAC$Anno$protein <- paste(PAC$Anno[,pirna_hit_col], ifelse(grepl("^protein_coding|\\|protein_coding", full$simplify$gene_biotype), "protein", "not_protein"), sep="|")
-
-  ##### Create group means  ####################################
-  if(!norm=="counts"){
-    if(!any(names(PAC) == "norm")){
-       PAC <- PAC_norm(PAC, type=norm, PAC_merge=TRUE)
-       warning("\nThere were no normalized table named '", norm, "' in PAC$norm.\nWill try to generate normalized data with the existing PAC.\nNote, that generating normalized values from filtered \ndata may be incorrect.")
-    }else{
-       if(!names(PAC$norm) == norm){
-         warning("\nThere were no normalized table named '", norm, "' in PAC$norm.\nWill try to generate normalized data with the existing PAC.\nNote, that generating normalized values from filtered \ndata may be incorrect.")
-         PAC <- PAC_norm(PAC, type=norm, PAC_merge=TRUE)
-       }
-     }
-   }
-  PAC <- PAC_summary(PAC, norm=norm, type="means", pheno_target=pheno_target, PAC_merge = TRUE)
-
-  ##### Create clusters  ####################################
-  full_pirna <- full$full[anno_pirna[[2]] == "pirna"]
-  lapply(full_pirna, function(x){
-                  gr <- GenomicRanges::GRanges(seqnames=x$seqid,  ranges=IRanges(start=x$start, x$end), strand=x$strand)
-                  <- GenomicRanges::resize(gr, width=cluster_gap, fix="start", use.names=TRUE)
-  GenomicRanges::findOverlaps(gK.reg.ext , gr_repeats, minoverlap=1L) ->olap_repeats
-
-  tt.all -> res_tab
-
-colnames(res_tab)
-res_tab[c(4,1:2,8)] -> man
-colnames(man) <- c("SNP","CHR","BP","P")
-as.numeric(man$BP) -> man$BP          # Need to make numeric
-man$CHR <- gsub("chr", "", man$CHR)   # Need to get rid of "chr"
-as.numeric(man$CHR) -> man$CHR        # Need to make numeric
-head(man)
-top<- as.character(man[res_tab$adj.P.Val_MvalC < 0.1,1])
-temp<- man[1:(round(nrow(man)*0.01)),]
-
-
-# Top 5% (rank=13632; p<0.02787317)
-qqman::manhattan(man, ylim = c(0, 8), cex=1.5, ylab="", xlab="", pwd=2, col = c("blue4", "gray3"), highlight=top, suggestiveline = F, genomewideline = -log10(res_tab$P.Value_MvalC[round(nrow(res_tab)*0.01)]))
-res_tab$P.Value_MvalC[round(nrow(res_tab)*0.01)]
-
-
-
-  ##### Overview graphs  ####################################
-invisible(capture.output(
-    pie_lst_1$mis <- PAC_pie(PAC, pheno_target=pheno_target, anno_target=list(pirna_col))
-    PAC_pirna <- PAC_filter(PAC, subset_only=TRUE, anno_target=list(pirna_hit_col, "pirna"))
-    PAC_not_pirna <- PAC_filter(PAC, subset_only=TRUE, anno_target=list(pirna_hit_col, "not_pirna"))
-    PAC_lst <- list(pirna=PAC_pirna, not_pirna=PAC_not_pirna)
-    pie_lst_2 <- lapply(PAC_lst, function(x){
-              pie_lst <- list(NULL)
-              pie_lst$rep <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("repeats"))
-              pie_lst$repClass <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("repClass"))
-              pie_lst$prot <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("protein"))
-              pie_lst$protBio <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("gene_biotype"))
-              }))
-    list(all=pie_lst_1, 
-  ))
-
-
-  ##### Nuc bias graphs  ####################################
-  anno_trgt_lst <- list(NULL, "repeats", "protein")
-  names(anno_trgt_lst) <- c(all="all", repeats="repeats", "protein")
-
-  # 1st nuc bias
-  nbias_pos1 <- lapply(anno_trgt_lst, function(x){
-        if(is.null(x)){
-          mis <- paste0("mis", 0:mismatches)
-          res_lst <- list(NULL)
-          res_lst[[1]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_", pheno_target[[1]])), anno_target=NULL)
-          names(res_lst)[1] <- "all"
-          for(i in 1:length(mis)){
-                PAC$Anno$temp <- as.character(PAC$Anno[,pirna_col] %in% c(mis[1:i]))
-                res_lst[[i+1]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "TRUE"))
-                names(res_lst)[i+1]<- mis[i]
-          }
-          res_lst$not_pirna <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "FALSE"))
-        }else{
-          if(x=="repeats"){
-            ann_targ <- c("pirna|repeats", "pirna|not_repeats", "not_pirna|repeats", "not_pirna|not_repeats")
-          }
-          if(x=="protein"){
-            ann_targ <- c("pirna|protein", "pirna|not_protein", "not_pirna|protein", "not_pirna|not_protein")
-          }
-          res_lst <- list(NULL)
-          for(i in 1:length(ann_targ)){
-            res_lst[[i]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list(x, ann_targ[i]))
-            names(res_lst)[i] <- ann_targ[i]
-          }
-        }
-        res_lst  <- lapply(res_lst, function(x){x[["Histograms"]]})
-        return(res_lst)
-  })
-
-  # 10th nuc bias
-nbias_pos10 <- lapply(anno_trgt_lst, function(x){
-        if(is.null(x)){
-          mis <- paste0("mis", 0:mismatches)
-          res_lst <- list(NULL)
-          res_lst[[1]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=NULL)
-          names(res_lst)[1] <- "all"
-          for(i in 1:length(mis)){
-                PAC$Anno$temp <- as.character(PAC$Anno[,pirna_col] %in% c(mis[1:i]))
-                res_lst[[i+1]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "TRUE"))
-                names(res_lst)[i+1]<- mis[i]
-          }
-          res_lst$not_pirna <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "FALSE"))
-        }else{
-          if(x=="repeats"){
-            ann_targ <- c("pirna|repeats", "pirna|not_repeats", "not_pirna|repeats", "not_pirna|not_repeats")
-          }
-          if(x=="protein"){
-            ann_targ <- c("pirna|protein", "pirna|not_protein", "not_pirna|protein", "not_pirna|not_protein")
-          }
-          res_lst <- list(NULL)
-          for(i in 1:length(ann_targ)){
-            res_lst[[i]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list(x, ann_targ[i]))
-            names(res_lst)[i] <- ann_targ[i]
-          }
-        }
-        res_lst  <- lapply(res_lst, function(x){x[["Histograms"]]})
-        return(res_lst)
-  })
+# PAC_pirna <- function(PAC, norm="counts", genome=NULL, mismatches=3, stranded=FALSE, cluster=NULL,
+#                       pheno_target=NULL, pirna=NULL, pirna_meta=NULL, gtf_repeat=NULL, gtf_protein=NULL,
+#                       threads=1){
+# 
+# ##### Setup general ####################################
+#   seqs <- rownames(PAC$Anno)
+#   
+#   if(!is.null(pirna_meta)|!is.null(cluster)){
+#     cat("\nRunning this function using a 'pirna_meta' input against \nfasta reference IDs or using a 'cluster' input may reduce \nperformance since a full piRNA mapping report must be generated.\nIf this becomes a problem reduce the number of sequences in your\nPAC object or run 'pirna_meta=NULL' and 'cluster=NULL' (default).\n") 
+#     rprt <- "full"
+#   }else{
+#     rprt <- "minimum" 
+#   }
+# 
+# ##### Setup pirna annotation and run reanno if necessary ####################################
+#   # If user know the columns:
+#   if(!file.exists(pirna) & !is.null(pirna)){
+#    anno_pirna <- PAC$Anno[, pirna, drop=FALSE]
+#   # If user do not know the columns:
+#   }else{
+#     # If user don't provide fasta reference:
+#     if(!file.exists(pirna) & is.null(pirna)){
+#           anno_pirna <- PAC$Anno
+#     }
+#     # If user provide fasta reference:
+#     if(file.exists(pirna)){
+#       cat("\nInput pirna was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
+#       outpath <- tempfile(pattern = "", fileext = "")
+#       err <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="external", mismatches=mismatches,
+#                      import = list(coord=FALSE, report=rprt, reduce=NULL), threads=threads), silent = TRUE)
+#       if(!is.null(err)){
+#         err2 <- try(map_reanno(PAC, ref_paths=list(pirna=pirna), output_path=outpath, type="internal", mismatches=mismatches,
+#                      import = list(coord=FALSE, report=rprt, reduce=NULL), threads=threads), silent = TRUE)
+#       if(!is.null(err2)){
+#         stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\nLast log says:\n", err2))
+#         }
+#       }
+#       reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE, threads=threads)
+#       anno_pirna <- add_reanno(reanno, bio_search=list(pirna="pirna"), type="biotype", bio_perfect=FALSE, mismatches = mismatches)
+#       
+#       unlink(outpath, recursive = TRUE)
+#     }
+#     # Extract pirna column if user don't provide columns:
+#     nam <- colnames(anno_pirna)
+#     logi_col1 <- grepl("^piRNA|^pirna", nam)
+#     prefix <- suppressWarnings(do.call("rbind", strsplit(nam[logi_col1], "_"))[,1])
+#     if(any(duplicated(prefix))){
+#       stop("\nFound more than 1 possible pirna annotation.\nAutomatic column identification only works when the results \nof one fasta pirna reference is reported in PAC$Anno.\nPlease, specify in 'pirna=' the exact columns reporting the alignments \nagainst 1 reference genome (column prefix: mis0_, mis1_, mis2_ etc.) \nor proved a path to a bowtie indexed fasta pirna file.")
+#     }
+#     pirna_col <- nam[logi_col1]
+#     anno_pirna <- anno_pirna[,logi_col1, drop=FALSE]
+#     anno_pirna[anno_pirna == "_"] <- "noAlign"
+#     }
+#   anno_pirna$xyzx <- as.character(ifelse(anno_pirna[[1]] %in% c("noAlign", "_"), "not_pirna", "pirna"))
+#   pirna_hit_col <- paste0("pirna_hits_mis", mismatches)
+#   colnames(anno_pirna)[colnames(anno_pirna) =="xyzx"] <- pirna_hit_col
+# 
+#   ##### Handle pirna_meta  ####################################            
+#     if(!is.null(pirna_meta)){
+#       pirna_meta <- tibble::as_tibble(pirna_meta, .name_repair="minimal")
+#       chck_str <- unique(unlist(strsplit(paste(pirna_meta[[1]][1:5], collapse=""), "")))
+#       
+#       # pirna_meta against PAC
+#       if(sum(chck_str %in% c("N", "T", "C", "A", "G")) == length(chck_str)){
+#            cat("\nID column in pirna_meta holds nucleotide sequences and \nwill therefore be matched with PAC$Anno sequence(row) names.")   
+#            if(any(!as.character(pirna_meta[[1]]) %in% rownames(PAC$Anno))){
+#            warning("The 1st ,'ID', column in 'pirna_meta' does not match rownames in 'PAC$Anno'.\nPlease, double check all sequence names in 'pirna_meta'.")
+#         }
+#         pirna_meta <- pirna_meta[match(pirna_meta[[1]], rownames(PAC$Anno)),]
+#       }else{
+#       # pirna_meta against pirna reference
+#         cat("\nProcessing pirna_meta against fasta reference ... ")
+#         pirna_id  <- dplyr::bind_cols(lapply(reanno$Full_anno, function(x){
+#              x$pirna[names(x$pirna) == "ref_hits"]
+#           }), .name_repair = "minimal")
+#         
+#         pirna_id <- tibble::tibble(pirna_id=apply(pirna_id, 1, function(x){
+#           paste(x, collapse="|")
+#           }))
+#         pirna_id[[1]] <- gsub(":sense|:antisense", "", pirna_id[[1]])
+#         
+#         pirna_id_splt <- strsplit(pirna_id[[1]], "\\|")
+#         uni_id <- unique(unlist(pirna_id_splt))
+#         uni_id <- uni_id[!uni_id == "NA"]
+#          
+#         meta_logi <- pirna_meta[[1]] %in% uni_id
+#         if(!sum(meta_logi) == length(uni_id)){
+#            stop("The 1st ,'ID', column in pirna_meta does not match piRNA reference names.\nPlease, make sure that names in 'pirna_meta' are compatilble with fasta names.")
+#         }
+#         
+#         pirna_meta <- pirna_meta[meta_logi,]
+#         splt_meta <- strsplit(pirna_meta[[2]], " |\\||;")
+#         hits_meta <- lapply(pirna_id_splt, function(x){
+#             hits <- pirna_meta[pirna_meta[[1]] %in% x,]
+#             hits <- unique(unlist(strsplit(hits[[2]], " |\\||;")))
+#             return(tibble::tibble(x=paste0(hits, collapse="|"),  y=length(hits)))
+#         })
+#         hits_meta <- do.call("rbind", hits_meta)
+#         col_1 <- paste0("pirna_",names(pirna_meta)[2])
+#         col_2 <- paste("pirna_n", names(pirna_meta)[2], sep="_")
+#         names(hits_meta) <- c(col_1, col_2)
+#         }
+#       }
+#   rm(reanno, splt_meta, meta_logi)          
+# 
+#   ##### Run PAC_gtf and generate anno ####################################
+#   full <- PAC_gtf(PAC, genome=genome, return="all", mismatches=mismatches, gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, stranded=TRUE, threads=threads)
+#   
+#   if(is.null(pirna_meta)){
+#     PAC$Anno <- cbind(data.frame(Length=PAC$Anno$Length), anno_pirna, full$simplify)
+#   }else{
+#     PAC$Anno <- cbind(data.frame(Length=PAC$Anno$Length), anno_pirna, hits_meta, full$simplify)
+#   }
+#   rownames(PAC$Anno) <- seqs
+#   
+#   PAC$Anno$repeats <- paste(PAC$Anno[,pirna_hit_col], ifelse(!is.na(full$simplify$repName), "repeats", "not_repeats"), sep="|")
+#   PAC$Anno$protein <- paste(PAC$Anno[,pirna_hit_col], ifelse(grepl("^protein_coding|\\|protein_coding", full$simplify$gene_biotype), "protein", "not_protein"), sep="|")
+# 
+#   ##### Create group means  ####################################
+#   if(!norm=="counts"){
+#     if(!any(names(PAC) == "norm")){
+#        PAC <- PAC_norm(PAC, type=norm, PAC_merge=TRUE)
+#        warning("\nThere were no normalized table named '", norm, "' in PAC$norm.\nWill try to generate normalized data with the existing PAC.\nNote, that generating normalized values from filtered \ndata may be incorrect.")
+#     }else{
+#        if(!names(PAC$norm) == norm){
+#          warning("\nThere were no normalized table named '", norm, "' in PAC$norm.\nWill try to generate normalized data with the existing PAC.\nNote, that generating normalized values from filtered \ndata may be incorrect.")
+#          PAC <- PAC_norm(PAC, type=norm, PAC_merge=TRUE)
+#        }
+#      }
+#    }
+#   PAC <- PAC_summary(PAC, norm=norm, type="means", pheno_target=pheno_target, PAC_merge = TRUE)
+#   
+#   ##### Create clusters using GenomicRanges::findOverlaps ####################################
+#   full_pirna <- full$full[anno_pirna[[2]] == "pirna"]
+#   tibb <- list(NULL)
+#   for(i in 1:length(full_pirna)){
+#      tibb[[i]] <- full_pirna[[i]][c("seqid","start","end","strand")]
+#      tibb[[i]]$id <- names(full_pirna)[i]
+#   }
+#   tibb <- do.call("rbind", tibb)
+#   tibb <- tibb[!is.na(tibb[[1]]),]
+#   gr <- GenomicRanges::GRanges(seqnames=tibb$seqid,  ranges=IRanges::IRanges(start=tibb$start, tibb$end), strand="*")
+#   gr <- GenomicRanges::resize(gr, width=(IRanges::width(gr)+(2*cluster$max_gap)), fix="center", use.names=FALSE)
+#   gr_cluster <- GenomicRanges::reduce(gr)
+#   olap <- GenomicRanges::findOverlaps(gr_cluster, gr, minoverlap=1L)
+#   splt_cluster <- split(olap, as.factor(olap@from))
+#   splt_logi <- lapply(splt_cluster, function(x){length(x)<cluster$min_n})
+#   splt_cluster <- splt_cluster[!unlist(splt_logi)]     
+#   lst_cluster <- list(NULL)
+#   for(i in 1:length(splt_cluster)){
+#              clster <-  tibb[splt_cluster[[i]]@to,]
+#              srnd <- sort(paste(unique(clster$strand)), decreasing = TRUE)
+#              lst_cluster[[i]] <- clster
+#              names(lst_cluster)[i] <- paste0(unique(clster$seqid),":", min(clster$start),"-", max(clster$end), ":", paste(srnd, collapse=""))
+#   }
+# 
+#   
+#   
+#   !!!! HÄR ÄR JAG
+#    Fortsätt med manhattan plot
+#    1. rpm with cluster annotation
+#    2. fold difference groups 
+#   
+# # Top 5% (rank=13632; p<0.02787317)
+# qqman::manhattan(man, ylim = c(0, 8), cex=1.5, ylab="", xlab="", pwd=2, col = c("blue4", "gray3"), highlight=top, suggestiveline = F, genomewideline = -log10(res_tab$P.Value_MvalC[round(nrow(res_tab)*0.01)]))
+# res_tab$P.Value_MvalC[round(nrow(res_tab)*0.01)]
+# 
+# 
+# 
+#   ##### Overview graphs  ####################################
+# invisible(capture.output(
+#     pie_lst_1$mis <- PAC_pie(PAC, pheno_target=pheno_target, anno_target=list(pirna_col))
+#     PAC_pirna <- PAC_filter(PAC, subset_only=TRUE, anno_target=list(pirna_hit_col, "pirna"))
+#     PAC_not_pirna <- PAC_filter(PAC, subset_only=TRUE, anno_target=list(pirna_hit_col, "not_pirna"))
+#     PAC_lst <- list(pirna=PAC_pirna, not_pirna=PAC_not_pirna)
+#     pie_lst_2 <- lapply(PAC_lst, function(x){
+#               pie_lst <- list(NULL)
+#               pie_lst$rep <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("repeats"))
+#               pie_lst$repClass <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("repClass"))
+#               pie_lst$prot <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("protein"))
+#               pie_lst$protBio <- PAC_pie(x, pheno_target=pheno_target, anno_target=list("gene_biotype"))
+#               }))
+#     list(all=pie_lst_1, 
+#   ))
+# 
+# 
+#   ##### Nuc bias graphs  ####################################
+#   anno_trgt_lst <- list(NULL, "repeats", "protein")
+#   names(anno_trgt_lst) <- c(all="all", repeats="repeats", "protein")
+# 
+#   # 1st nuc bias
+#   nbias_pos1 <- lapply(anno_trgt_lst, function(x){
+#         if(is.null(x)){
+#           mis <- paste0("mis", 0:mismatches)
+#           res_lst <- list(NULL)
+#           res_lst[[1]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_", pheno_target[[1]])), anno_target=NULL)
+#           names(res_lst)[1] <- "all"
+#           for(i in 1:length(mis)){
+#                 PAC$Anno$temp <- as.character(PAC$Anno[,pirna_col] %in% c(mis[1:i]))
+#                 res_lst[[i+1]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "TRUE"))
+#                 names(res_lst)[i+1]<- mis[i]
+#           }
+#           res_lst$not_pirna <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "FALSE"))
+#         }else{
+#           if(x=="repeats"){
+#             ann_targ <- c("pirna|repeats", "pirna|not_repeats", "not_pirna|repeats", "not_pirna|not_repeats")
+#           }
+#           if(x=="protein"){
+#             ann_targ <- c("pirna|protein", "pirna|not_protein", "not_pirna|protein", "not_pirna|not_protein")
+#           }
+#           res_lst <- list(NULL)
+#           for(i in 1:length(ann_targ)){
+#             res_lst[[i]] <- PAC_nbias(PAC, position=1, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list(x, ann_targ[i]))
+#             names(res_lst)[i] <- ann_targ[i]
+#           }
+#         }
+#         res_lst  <- lapply(res_lst, function(x){x[["Histograms"]]})
+#         return(res_lst)
+#   })
+# 
+#   # 10th nuc bias
+# nbias_pos10 <- lapply(anno_trgt_lst, function(x){
+#         if(is.null(x)){
+#           mis <- paste0("mis", 0:mismatches)
+#           res_lst <- list(NULL)
+#           res_lst[[1]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=NULL)
+#           names(res_lst)[1] <- "all"
+#           for(i in 1:length(mis)){
+#                 PAC$Anno$temp <- as.character(PAC$Anno[,pirna_col] %in% c(mis[1:i]))
+#                 res_lst[[i+1]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "TRUE"))
+#                 names(res_lst)[i+1]<- mis[i]
+#           }
+#           res_lst$not_pirna <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list("temp", "FALSE"))
+#         }else{
+#           if(x=="repeats"){
+#             ann_targ <- c("pirna|repeats", "pirna|not_repeats", "not_pirna|repeats", "not_pirna|not_repeats")
+#           }
+#           if(x=="protein"){
+#             ann_targ <- c("pirna|protein", "pirna|not_protein", "not_pirna|protein", "not_pirna|not_protein")
+#           }
+#           res_lst <- list(NULL)
+#           for(i in 1:length(ann_targ)){
+#             res_lst[[i]] <- PAC_nbias(PAC, position=10, summary_target=list(paste0(norm,"Means_",pheno_target[[1]])), anno_target=list(x, ann_targ[i]))
+#             names(res_lst)[i] <- ann_targ[i]
+#           }
+#         }
+#         res_lst  <- lapply(res_lst, function(x){x[["Histograms"]]})
+#         return(res_lst)
+#   })
 
 
   
