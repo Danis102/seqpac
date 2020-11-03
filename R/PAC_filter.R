@@ -75,14 +75,14 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
   if(!is.null(pheno_target)){
     if(length(pheno_target)==1){pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])}
     sub_pheno <- as.character(PAC$Pheno[, pheno_target[[1]]]) %in% pheno_target[[2]]
-    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[,sub_pheno]})}
+    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[,sub_pheno, drop=FALSE]})}
     if(any(names(PAC)=="summary")){
       if(!any(sub_pheno)){
         warning("Table(s) were found in PAC$summary that may have been generated with samples that now are removed.\nSummary table names now contain a warning.")
         names(PAC$summary) <- paste0(names(PAC$summary), "_WARNING_pheno_filter")
       }}
-    PAC$Counts  <- PAC$Counts[,sub_pheno]
-    PAC$Pheno  <- PAC$Pheno[sub_pheno,]
+    PAC$Counts  <- PAC$Counts[,sub_pheno, drop=FALSE]
+    PAC$Pheno  <- PAC$Pheno[sub_pheno,, drop=FALSE]
     ord_mch <- order(match(as.character(PAC$Pheno[, pheno_target[[1]]]), pheno_target[[2]]))
     PAC$Counts <- PAC$Counts[,ord_mch,drop=FALSE]
     PAC$Pheno <- PAC$Pheno[ord_mch,,drop=FALSE]
@@ -96,8 +96,8 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
     if(class(anno_target)=="list"){if(length(anno_target)==1){anno_target[[2]] <- unique(PAC$Anno[, anno_target[[1]]])}
     }else{PAC$Anno$all_names <- rownames(PAC$Anno); anno_target=list("all_names", anno_target)}
     sub_anno <- as.character(PAC$Anno[,anno_target[[1]]]) %in% as.character(anno_target[[2]])
-    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_anno,]})}
-    if(any(names(PAC)=="summary")){PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_anno,]})}
+    if(any(names(PAC)=="norm")){PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_anno,, drop=FALSE]})}
+    if(any(names(PAC)=="summary")){PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_anno,, drop=FALSE]})}
     PAC$Counts  <- PAC$Counts[sub_anno,,drop=FALSE]
     PAC$Anno  <- PAC$Anno[sub_anno,,drop=FALSE]
     
@@ -106,19 +106,19 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
     PAC$Anno <- PAC$Anno[ord_mch,,drop=FALSE]
     if(any(names(PAC)=="norm")){PAC$norm <- lapply(PAC$norm, function(x){x[ord_mch,, drop=FALSE]})}
     if(any(names(PAC)=="summary")){PAC$summary <- lapply(PAC$summary, function(x){x[ord_mch,, drop=FALSE]})}
-    
     tab_anno <- as.data.frame(table(sub_anno))
     cat(paste0("\n-- Anno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs.")) 
   }  
+  
   ### Subset data by Size
   if(!is.null(size)){
     if(!length(size)==2)
       stop("\nYou must specify both min and max size.\nOnly one number was obtained.")
     sub_size <- PAC$Anno$Length >= size[1] & PAC$Anno$Length <= size[2]
     if(any(names(PAC)=="norm")){
-      PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_size,]})}
+      PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_size, , drop=FALSE]})}
     if(any(names(PAC)=="summary")){
-      PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_size,]})}
+      PAC$summary <- lapply(as.list(PAC$summary), function(x){x[sub_size, , drop=FALSE]})}
     PAC$Counts  <- PAC$Counts[sub_size, , drop=FALSE] 
     PAC$Anno  <- PAC$Anno[sub_size, , drop=FALSE]
     tab_anno <- as.data.frame(table(sub_size))

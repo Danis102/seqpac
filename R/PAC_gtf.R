@@ -172,11 +172,11 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
       if(file.exists(genome)){
           cat("\nInput genome was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
           outpath <- tempfile(pattern = "", fileext = ".out")
-          err <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="external", mismatches=3,
+          err <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="external", mismatches=mismatches,
                          import ="genome", threads=threads), silent = TRUE)
           if(!is.null(err)){
             outpath <- tempfile(pattern = "", fileext = "")
-            err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="internal", mismatches=3,
+            err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="internal", mismatches=mismatches,
                          import ="genome", threads=threads), silent = TRUE)
           if(!is.null(err2)){
             stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\tNo bowtie index (see ?Rbowtie::bowtie_build)\n\nLast log says:\n", err2))

@@ -10,7 +10,7 @@
 # fls = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Merged_fastq/Inx18-200130_S15_merge.fastq.gz" # medium TGIRT
 # fls = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Single/Merged_fastq/Inx3-190912_S13_merge.fastq.gz"  # Large POOH
 # 
-# input =  path_to_fastq <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+# path <- system.file("extdata", package = "seqpac", mustWork = TRUE)
 # path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Double/Long/Merged_fastq"
 # adapt="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT"
 # adapt_min=5
@@ -37,52 +37,123 @@
 #                                     print(count_files)
 # 
 # 
-# AGATCGTTAGATCGGAAGCGCACAAGTCTGAACTCCAGACACTTAGGCATCGCGTATGC
-# AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT
-# 
-# 
-# 
-# make_trim <- function(path, adapt="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", adapt_min=5, adapt_mis=20, mis_inc=10, max_inc=3, qc_thesh=20, qc_prop=80)
-# 
-#                     fls <- list.files(path, pattern ="fastq.gz\\>|fastq\\>", full.names=TRUE, recursive=TRUE)
-#                     
 # 
 # 
 # 
 # 
+# make_trim <- function(path, adapt="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
+#                       seq_min=5, adapt_min=5, adapt_mis=0.1, qc_thesh=20, qc_prop=80){
+#   
+#   ## General setup
+#   fls <- list.files(path, pattern ="fastq.gz\\>|fastq\\>", full.names=TRUE, recursive=TRUE)
+#   doParallel::registerDoParallel(threads)  # Do not use parallel::makeClusters!!!
+#   
+#   
+#   foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+#   
+#       ## Read fastq
+#       fstq <- ShortRead::readFastq(fls[[i]])
+#       seqs <- Biostrings::DNAStringSet(unique(paste0(ShortRead::sread(fstq))))
+#       lgn <- unique(nchar(cnts))
+#       if(!length(lgn) == 1){
+#         stop("\nDiffering read lengths prior to adapter trimming.\nHave you already performed 3-prim trimming?")
+#       }
+#       
+#       ## Generate suggestive trim matrix
+#       trim_mt <- list(NULL)
+#       z <- nchar(adapt_3)
+#       while(z>=adapt_min){
+#         shrt <- substr(adapt_3, 1, z)
+#         ns <- lgn-nchar(shrt)
+#         shrt_ns <- paste0(shrt, paste(rep("N", ns), collapse=""))
+#         adapt_mis_corr <- adapt_mis*(nchar(shrt)/lgn)  # Correction for N length extension
+#         trim_seqs <- trimLRPatterns(subject=seqs, ranges=TRUE, Rfixed=FALSE,  Rpattern=shrt_ns, max.Rmismatch=adapt_mis_corr)
+#         tibb <- tibble::tibble(end(trim_seqs))
+#         names(tibb) <- paste0("n", z)
+#         trim_mt[[z]] <- tibb
+#         names(trim_mt)[z] <- z
+#         z <- z - 1
+#       }
+#       trim_mt <- trim_mt[!is.na(names(trim_mt))]
+#       trim_mt <- do.call("cbind", trim_mt)
 # 
-#                     srch_1st <- substr(adapt, 1, adapt_min)
-#                     srch_2nd <- substr(adapt, adapt_min+1, adapt_min+adapt_min)
+#       ## Vote according to :
+#       trim_coord <- unlist(apply(trim_mt, 1, function(x){
+#         uni_coord <- unique(x)
+#                 if(length(uni_coord) > 1){
+#                  tab <- table(x)
+#                  uni_coord <- min(as.integer(names(tab)[tab==max(tab)]))
+#          #uni_coord <- as.integer(names(table(x))[table(x)==max(table(x))])
+#         }
+#         return(uni_coord)
+#       }))
+#     trim_coord
+#   
+#     seqs[trim_coord==75]
 # 
-#                     srch_last <- substr(adapt, 1, adapt_min*2)
-#                     srch_mis <- substr(adapt, 1, adapt_mis)
+# AGATC   
+#                             AGATCGGAAGAGCACACGTCTGAACTCCAGTCACATNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+#                    AGATCGGAAGAGCACACGTCTGAACTCCAGTCACATNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+#                    
+#                        AGATCGGAAGAG ACAC TCTGAACTC AGTCACAT
+# AAGGACATTGTAATCTATTAGCAAGATCGGAAGAGAACACTTCTGAACTCAAGTCACTAGCTTATCTCTTATGCC
 # 
-#                     seq(mis_inc, mis_inc*3, mis_inc)
-#                     seq_inc <-  seq(mis_inc, nchar(adapt), mis_inc)
+#               AGATCGGAAGAGC AC   TGAA  CCAGTCACAT
+# ACTGGGGCGGTACAAGATCGGAAGAGCCACGTCTGAACTCCAGTCACTAGCTTATCTCGTATGCCGTCTTCTGCT
 # 
+#   
+#                                               table(end(trim_seqs))
+#                                               
+#                                               seqs[13]
+#                                               
+#                                             adapt_lst <- adapt_3
+#                                             for(i in 1:length()
+#                                             
+#                                             trim_seqs <- trimLRPatterns(subject=seqs, ranges=TRUE, Lfixed=FALSE, Rfixed=FALSE, Lpattern="", max.Lmismatch=0.1,  Rpattern=adapt_3, max.Rmismatch=0.1)
+#                                             trim_seqs_shrt <- trimLRPatterns(subject=seqs, ranges=TRUE, Lfixed=TRUE, Rfixed=TRUE, Lpattern="", max.Lmismatch=0.1,  Rpattern=min_adapt_3, max.Rmismatch=0.1)
 # 
+#                                             matchLRPatterns(Rpattern, subject, max.Rmismatch=0,with.Rindels=FALSE, Rfixed=TRUE)
+#                                             test_1 <- trimLRPatterns(subject=seqs, ranges=TRUE, Rpattern=adapt_3, Rfixed=TRUE, max.Rmismatch=0.1)
+#                                             test_2 <- trimLRPatterns(subject=seqs, ranges=TRUE, Rpattern=adapt_3, Rfixed=FALSE, max.Rmismatch=0.1, with.Rindels=FALSE)
+#                                             
+#                                             table(end(test_1))
+#                                             table(end(test_2))
+#                                             table(nchar(rownames((pac$Anno))))
+#                                             
+#                                             trim_seqs <- trimLRPatterns(subject=seqs, ranges=FALSE, Rpattern=adapt_3, Rfixed=FALSE, max.Rmismatch=0.1, with.Rindels=FALSE)
+#                                             
+#                                             z <- nchar(adapt_3)
+#                                             while(z>=adapt_min){
+#                                             trim_seqs_shrt <- trimLRPatterns(subject=trim_seqs, ranges=FALSE, Rpattern=adapt_3_shrt, Rfixed=FALSE, max.Rmismatch=0.0, with.Rindels=FALSE)
 # 
+#                                             
+#                                                                AGATCGGAAGAGCACACGTCTGAACTCCAGTCACATNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+#                                             AGGACCGAGAACTTATAAGAGATCGGAAGAGCGCACCTCTCAACTCAACACACTACCTAAACTCGTATCCCGACT
+#                                             AGGACCGAGAACTTATAAGAGATCGGAAGAGCGCACCTCTCAACTCAACACACTACCTAAACTCGTATCCCGACT
+#                                             AGGACCGAGAACTTATAAG
+#                                             
+#                                             
+#                                             trim_seqs_shrt
+#                                             
+#                                             trim_seqs_shrt <- trimLRPatterns(subject=seqs, ranges=TRUE, Lfixed=TRUE, Rfixed=TRUE, Lpattern="", max.Lmismatch=0.1,  Rpattern=min_adapt_3, max.Rmismatch=0.1)
 # 
-#                     doParallel::registerDoParallel(threads)
-#                     foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+#                                             
+#                                             load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 # 
-#                       
-#                                             <- trimLRPatterns
-#                       
-#                       
-#                                             ## Read fastq and setup files
-#                                             fstq <- ShortRead::readFastq(fls[[i]])
-#                                             cnts <- table(paste0(ShortRead::sread(fstq)))
-#                                             vect <- names(cnts)
-#                                             names(vect) <- vect
-#                                             lgn <- unique(nchar(vect))
-#                                             vect[] <- "empty"
-#                                             check_again_lst <- list(NULL)
-#                                             if(!length(lgn) == 1){stop("\nDiffering read lengths prior to adapter trimming.\nHave you already performed 3-prim trimming?")}
+#                                             
+#                                             
+#                                             test <- trimLRPatterns(subject=seqs, ranges=FALSE, Lfixed=FALSE, Rfixed=FALSE, Lpattern="", max.Lmismatch=0.1,  Rpattern=adapt_3, max.Rmismatch=0.1)
+#                                             
+#                                             table(end(trim_seqs))
+#                                             table(rownames(pac_master$Anno) %in% paste0(test))
+#                                             
 # 
-#                                             ## Find obvious hits with first followed by another
-#                                             adp_coord_1st <- stringr::str_locate(names(cnts), srch_1st)[,1]
-#                                             adp_left <- substr(names(cnts), adp_coord_1st, lgn)
+#                                             test 
+#                                             
+#                                             
+#                                             adp_coord_1st <- stringr::str_locate(paste0(test), srch_1st)[,1]
+#                                             
+#                                             adp_left <- substr(seqs, adp_coord_1st, lgn)
 #                                             dub_hit <- stringr::str_locate(adp_left, srch_2nd)[,1]
 #                                             filt <- dub_hit == (adapt_min+1)
 #                                             filt[is.na(filt)] <- FALSE
@@ -92,7 +163,7 @@
 #                                             ## Find new coord if no double hit
 #                                             filt_no <- !dub_hit == (adapt_min+1)
 # 
-#                                             adp_left_new <- substr(adp_left, 2, nchar(adp_left))
+#                                             adp_left_new <- substr(adp_left, 2, nchar(adapt_3))
 #                                             adp_coord_1st_new <- stringr::str_locate(adp_left_new, srch_1st)[,1]
 # 
 #                                             adp_left_new_new <- substr(adp_left_new, adp_coord_1st_new, nchar(adp_left_new))

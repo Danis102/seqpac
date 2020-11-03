@@ -37,5 +37,6 @@ Import:
   tidyverse
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    qqman
 VignetteBuilder: knitr

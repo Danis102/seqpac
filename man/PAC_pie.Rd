@@ -111,6 +111,7 @@ Other PAC analysis:
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
+\code{\link{PAC_pirna}()},
 \code{\link{PAC_rpm}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
