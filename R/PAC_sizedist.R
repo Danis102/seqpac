@@ -62,24 +62,28 @@
 #' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("rpmMeans_Method"))
 #' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 1)
 #' 
-#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="raw", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
+#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
 #' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
 #' 
 #' 
 #' @export
 
-PAC_sizedist <- function(PAC, norm=NULL, range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
+PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
                    
                     ## Organize input
                     anno <- PAC$Anno
 										if(!is.null(norm)){
-										    if(norm=="raw"){data <- PAC$Counts; labl <- "rawCounts"
+										    if(norm=="counts"){
+										      data <- PAC$Counts; labl <- "rawCounts"
 										    }else{
 										      if(is.null(summary_target)){ data <- PAC$norm[[norm]]; labl <- norm}}
-										}else{data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0("mean_", summary_target[[1]])}
+										}else{
+										  data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0("mean_", summary_target[[1]])}
                     
-                    if(length(summary_target)==1){summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
-                    if(!is.null(summary_target)){data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
+                    if(length(summary_target)==1){
+                      summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
+                    if(!is.null(summary_target)){
+                      data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
 
 										## Add range filter
 										if(is.null(range)){range <- c(min(anno$Length), max(anno$Length))}
@@ -102,8 +106,9 @@ PAC_sizedist <- function(PAC, norm=NULL, range=NULL, anno_target, pheno_target=N
 										match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
 										data <- data[,match_pfilt,drop=FALSE]
 										ph <- ph[match_pfilt,,drop=FALSE]
-										}else{ 
-										if(!is.null(summary_target)){ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
+										  }else{ 
+										if(!is.null(summary_target)){
+										  ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
 										
 										stopifnot(identical(colnames(data), rownames(ph)))
 										stopifnot(identical(rownames(data), rownames(anno)))    
@@ -158,7 +163,7 @@ PAC_sizedist <- function(PAC, norm=NULL, range=NULL, anno_target, pheno_target=N
  										                          histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
                                                               	    geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
                                                               	    geom_hline(yintercept=0, col="azure4")+
-                                                                  	xlab("Length (bp)")+
+                                                                  	xlab("Size (nt)")+
  										                                                ylab(paste0(labl))+
                                                                     labs(subtitle = samp[i])+
                                                                   	scale_fill_manual(values=rgb_vec)+

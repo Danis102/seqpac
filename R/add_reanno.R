@@ -93,7 +93,7 @@
 #' 
 #' 
 #' ## The trick to succeed with bio_perfect=TRUE ##
-#' # Run with bio_perfect="TRUE" (look where "Other=XX" occurs)
+#' # Run with bio_perfect="FALSE" (look where "Other=XX" occurs)
 #' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
 #' 
 #' # Find sequences that has been classified as other 
@@ -124,7 +124,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
 
 ## Extract genome ###############################
   if(type=="genome"){
-    cat("\nExtracting the genome(s) ...")
+    cat("\nExtracting genome(s) ...")
     
     ## Loop mismatch
     for (i in 1:(mismatches+1)){
@@ -185,7 +185,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
   if(type=="biotype"){
     bio_nam <- names(bio_search)
     fin_strand_lst <- list(NA)
-    cat("\nExtracting the biotypes ...")
+    cat("\nExtracting biotype(s) ...")
   
     ## Loop mismatch
     for (i in 1:(mismatches+1)){
@@ -253,6 +253,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
       bio_comb <- paste(y, collapse=";")
       bio_comb <- gsub(";<NA>|<NA>;", "", bio_comb)
       bio_comb <- gsub("<NA>", "_", bio_comb)
+      bio_comb <- gsub("\\?|\\^|\\$", "_", bio_comb)
       return(bio_comb)
     })})
     
@@ -265,33 +266,42 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
   
 ## Return table
   reanno <- cbind(reanno$Overview, fin)
-    # Merge PAC and fix unique column names
+    
+  # Fix unique column names
     if(type=="biotype"){
         col_fix <- "bio"
-        colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))}
+        colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))
+        }
     if(type=="genome"){
         col_fix <- "genome"
-        colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))}
-  
-    if(!is.null(merge_pac)){
+        colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))
+    }
+    if(!is.null(merge_pac) && !is.logical(merge_pac)){
           cat("\nMerging with PAC ...")
           reanno <- reanno[,!colnames(reanno) == "seq"]
           anno <- merge_pac$Anno
           col_hits <- colnames(anno) %in% colsrch
           if(any(col_hits)){ 
                   num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", colnames(anno)[col_hits]))
-                     if(is.na(num)){col_fix <- paste0(col_fix, 2)
-                     }else{col_fix <- paste0(col_fix, num+1)}
+                     if(is.na(num)){
+                       col_fix <- paste0(col_fix, 2)
+                     }else{
+                       col_fix <- paste0(col_fix, num+1)}
           }
-          
-          if(!identical(rownames(reanno), rownames(merge_pac$Anno))){stop("\nReanno sequence (row) names do not match PAC sequence names.\nDid you use another PAC object as input for map_reanno?")}  
+    }
+    colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+    colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
+    colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
+
+    # Merge PAC
+    if(!is.null(merge_pac) && !is.logical(merge_pac)){
+          if(!identical(rownames(reanno), rownames(merge_pac$Anno))){
+            stop("\nReanno sequence (row) names do not match PAC sequence names.\nDid you use another PAC object as input for map_reanno?")
+            }  
           merge_pac$Anno <- cbind(merge_pac$Anno, reanno)
           PAC_check(merge_pac)
           return(merge_pac)
     }else{
-          colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
-          colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
-          colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
           return(tibble::as_tibble(reanno))
     }
   detach(package:tidyverse)

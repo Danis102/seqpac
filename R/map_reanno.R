@@ -65,7 +65,7 @@
 #'   basis. A list of exactly 3 objects, named "coord", "report" and "reduce"
 #'   can also be provided. This list will be parsed to the \code{import_reanno}
 #'   function. When import="genome", the list \code{import=list(coord=TRUE,
-#'   report="full", reduce=NULL)} is automatically be parsed, while when
+#'   report="full", reduce=NULL)} is automatically parsed, while when
 #'   import="biotype" the list parsed is \code{import=list(coord=FALSE,
 #'   report="full", reduce=NULL)}. Performance increases by setting coord=FALSE.
 #'   See ?import_reanno for more information on how to set \code{report} and

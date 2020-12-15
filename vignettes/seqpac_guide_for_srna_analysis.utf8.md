@@ -308,7 +308,7 @@ olap <- reshape2::melt(filtsep, measure.vars = c("Ovaries", "Sperm"), na.rm=TRUE
 plot(venneuler::venneuler(data.frame(olap[,2], olap[,1])))
 ```
 
-![](/tmp/Rtmp34RYjg/preview-3512d096f44.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](/tmp/Rtmp1e30BE/preview-f3715ed7775.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 ### 2.3.3 Storage of processed data in PAC
 While the master PAC only contains three different dataframe objects (P, A and
@@ -369,7 +369,6 @@ RPM values.
 
 pac_rpm_filt <- PAC_filter(pac_rpm, type="rpm", threshold = 10, coverage = 100)
 #> 
-#> -- Size filter will retain: 45954 of 45954 seqs.
 #> -- RPM filter was specified.
 #> -- The chosen filters will retain: 964 of 45954 seqs.
 ```
@@ -446,6 +445,7 @@ genomes. Here are two examples using the BSgenome and biomartr packages.
 
 ## First specify where to store all the fasta file
 ref_path <- "/home/danis31/Desktop/Temp_docs/fasta"
+
 ```
 
 ```r
@@ -466,17 +466,9 @@ Biostrings::writeXStringSet(getSeq(dm6), filepath=dest_path, format="fasta")
 ####---- biomartr ------------ ####
 dest_path <- file.path(ref_path, "/biomartr_genome/") # Only dir
 biomartr::is.genome.available(db = "ensembl", organism = "Drosophila melanogaster", details = TRUE)
-#> # A tibble: 1 x 10
-#>   release taxon_id name  accession strain division display_name assembly
-#>     <int> <chr>    <chr> <chr>     <chr>  <chr>    <chr>        <chr>   
-#> 1     101 7227     dros… GCA_0000… <NA>   Ensembl… Drosophila … BDGP6.28
-#> # … with 2 more variables: common_name <chr>, strain_collection <chr>
-file_path <- biomartr::getGenome(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, gunzip=TRUE) # Bowtie don't take gzip
-#> Starting genome retrieval of 'Drosophila melanogaster' from ensembl ...
-#> 
-#> The genome of 'Drosophila melanogaster' has been downloaded to '/home/danis31/Desktop/Temp_docs/fasta//biomartr_genome/' and has been named 'Drosophila_melanogaster.BDGP6.28.dna.toplevel.fa'.
-#> Unzipping downloaded file ...
+file_path <- biomartr::getGenome(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, gunzip=TRUE, release=101) # Bowtie don't take gzip
 genome <- Biostrings::readDNAStringSet(filepath=list.files(dest_path, pattern=".fa$", full.names=TRUE), format="fasta")
+
 ```
 
 <br>
@@ -491,12 +483,10 @@ using the biomartr package.
 ###################################
 ####---- biomartr ncRNA ------ ####
 dest_path <- file.path(ref_path, "/ensembl_ncRNA/") # Only dir
-ncrna_path <- biomartr::getRNA(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
-#> Starting RNA retrieval of 'Drosophila melanogaster' from ensembl ...
-#> 
-#> The RNA of 'Drosophila melanogaster' has been downloaded to '/home/danis31/Desktop/Temp_docs/fasta//ensembl_ncRNA/' and has been named 'Drosophila_melanogaster.BDGP6.28.ncrna.fa.gz'.
+ncrna_path <- biomartr::getRNA(db="ensembl", organism = "Drosophila melanogaster", path=dest_path, release=101)
 R.utils::gunzip(ncrna_path, destname=paste0(dest_path, "/ncrna.fa"), remove=TRUE, skip=TRUE) # Unzip to prepare for bowtie
 ncrna <-  biomartr::read_rna(file = paste0(dest_path, "/ncrna.fa"))
+
 ```
 
 Using the \code{download.file} function makes all urls (https/http/ftp etc)
@@ -533,6 +523,7 @@ mirna <- Biostrings::readRNAStringSet(filepath=gsub(".gz", "", dest_path), forma
 mirna <- mirna[grepl("Drosophila melanogaster", names(mirna)),]
 mirna <- Biostrings::DNAStringSet(mirna)
 Biostrings::writeXStringSet(mirna, filepath=gsub(".gz", "", dest_path), format="fasta")
+
 ```
 
 
@@ -549,13 +540,8 @@ Biostrings::writeXStringSet(mirna2, filepath=dest_path, format="fasta")
 
 ## There are some overlaps 
 table(paste0(mirna2) %in% paste0(mirna))                          # Not much perfect overlap
-#> 
-#> FALSE  TRUE 
-#>   153    11
 table(grepl(paste(paste0(mirna2), collapse="|"), paste0(mirna)))  # Non-perfect overlaps better 
-#> 
-#> FALSE  TRUE 
-#>   111   147
+
 ```
 
 <br>
@@ -593,6 +579,7 @@ names(trna) <- gsub("Drosophila_melanogaster_", "", names(trna))              # 
 mat <- do.call("rbind", strsplit(names(trna), " "))                           # Make a name matrix 
 names(trna) <-  paste(mat[,1], mat[,ncol(mat)-1], mat[,ncol(mat)], sep="_")   # Save the important as one single string
 Biostrings::writeXStringSet(trna, filepath=file_path, format="fasta")
+
 ```
 
 
@@ -621,11 +608,9 @@ mitochonridal genome is found in the reference genome fasta.
 ## Locate and add mito tRNA
 trna_logi <- grepl("tRNA_mitochondrion_genome", names(ncrna)) # Locate mito tRNA
 table(trna_logi)                                              # Should be 22
-#> trna_logi
-#> FALSE  TRUE 
-#>  3954    22
 trna <- c(trna, ncrna[trna_logi,])
 Biostrings::writeXStringSet(trna, filepath=paste0(ref_path, "/GtRNAdb/trna.fa"), format="fasta")
+
 ```
 
 <br>
@@ -676,26 +661,27 @@ using rtracklayer. Here are some examples:
 ## Get gene gtf using biomartr
 dest_path <- file.path(ref_path, "/gtf/") # Only dir
 gtf_path <- biomartr::getGTF(db="ensembl", organism = "Drosophila melanogaster", path=dest_path)
-gtf <- data.table::setDT(rtracklayer::readGFF(gtf_path))
+gtf <- tibble::as_tibble(rtracklayer::readGFF(gtf_path))
 
 ## Get repeatMasker gtf using biomartr (doesn't work for all species)
 dest_path <- file.path(ref_path, "/repeatMasker/") # Only dir
 rm_path <- biomartr::getRepeatMasker(db="refseq", organism = "Drosophila melanogaster", path=dest_path)
-gtf <- data.table::setDT(rtracklayer::readGFF(gtf_path))
+gtf <- tibble::as_tibble(rtracklayer::readGFF(gtf_path))
 
 ## Get repeatMasker table and manually turn it into gtf using rtracklayer
 # Table names can be found at:
 # https://genome.ucsc.edu/cgi-bin/hgTables
 dest_path <- file.path(ref_path, "/repeatMasker/repeatMasker.gtf") # Full file path
+if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
 session <- rtracklayer::browserSession("UCSC")
 rtracklayer::genome(session) <- "dm6"
-rm_tab <- data.table::setDT(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
-gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
-mcols(gr)$type <- "repeat"
-mcols(gr)$source <- "repeatMasker_dm6"
-mcols(gr)$exon_name <- rm_tab$repName
-mcols(gr)$transcript_name <- rm_tab$repClass
-mcols(gr)$gene_name <- rm_tab$repFamily  
+rm_tab <- tibble::as_tibble(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
+gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges::IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
+GenomicRanges::mcols(gr)$type <- "repeat"
+GenomicRanges::mcols(gr)$source <- "repeatMasker_dm6"
+GenomicRanges::mcols(gr)$repName <- rm_tab$repName
+GenomicRanges::mcols(gr)$repClass <- rm_tab$repClass
+GenomicRanges::mcols(gr)$repFamily <- rm_tab$repFamily  
 rtracklayer::export(gr, dest_path, format="gtf")
 
 ```
@@ -809,94 +795,7 @@ import="genome" must be set to catch the genomic coordinates. Since
 chromosomes and schaffold fasta that we generated previously. Remember, each
 fasta must have bowtie indexes (see 2.4.2).
 
-```
-#> 
-#> R external mapping depends on correct installation of bowtie.
-#> If you are having problem using external bowtie, try type='internal'.
-#> An external bowtie installation was found using version 1.2.2"                                                                                                                                                                                                                                                                                      
-#> 
-#> ******************************************************
-#> |--- Mismatch 0 started at 05:32:56 PM
-#> |--- Bowtie mapping:
-#>    |---> chromosomes...
-#> 
-#> 
-#>    |---> scaffolds...
-#> 
-#> 
-#> |--- Found 2 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize chromosomes.out
-#>     |---> Generating full report (please wait)...
-#>     |---> chromosomes done
-#>   |--- Import and reorganize scaffolds.out
-#>     |---> Generating full report (please wait)...
-#>     |---> scaffolds done
-#> |--- All reference but generated hits
-#> |--- Mismatch 0 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 1 started at 05:34:32 PM
-#> |--- Bowtie mapping:
-#>    |---> chromosomes...
-#> 
-#> 
-#>    |---> scaffolds...
-#> 
-#> 
-#> |--- Found 2 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize chromosomes.out
-#>     |---> Generating full report (please wait)...
-#>     |---> chromosomes done
-#>   |--- Import and reorganize scaffolds.out
-#>     |---> Generating full report (please wait)...
-#>     |---> scaffolds done
-#> |--- All reference but generated hits
-#> |--- Mismatch 1 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 2 started at 05:34:38 PM
-#> |--- Bowtie mapping:
-#>    |---> chromosomes...
-#> 
-#> 
-#>    |---> scaffolds...
-#> 
-#> 
-#> |--- Found 2 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize chromosomes.out
-#>     |---> Generating full report (please wait)...
-#>     |---> chromosomes done
-#>   |--- Import and reorganize scaffolds.out
-#>     |---> Generating full report (please wait)...
-#>     |---> scaffolds done
-#> |--- All reference but generated hits
-#> |--- Mismatch 2 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 3 started at 05:34:41 PM
-#> |--- Bowtie mapping:
-#>    |---> chromosomes...
-#> 
-#> 
-#>    |---> scaffolds...
-#> 
-#> 
-#> |--- Found 2 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize chromosomes.out
-#>     |---> Generating full report (please wait)...
-#>     |---> chromosomes done
-#>   |--- Import and reorganize scaffolds.out
-#>     |---> Generating full report (please wait)...
-#>     |---> scaffolds done
-#> |--- All reference but generated hits
-#> |--- Mismatch 3 finished -----|
-#> 
-#> ******************************************************
-#>  Cleaning up ... 
-#>  Reanno mapping finished at: 05:34:43 PM
-#>  Output files are saved in:
-#>   /home/danis31/Desktop/Temp_docs/reanno_genome
-```
+
 
 Similarly, we can map against other specialized references, that can be used for
 classifying each sequence into biotypes. Note, unlike genome mapping, at this
@@ -904,120 +803,7 @@ stage we are not interested in where a sequence matches a reference for the
 speciallized references, only if it matches or not. Thus we use
 \code{import="biotype"}.
 
-```
-#> 
-#> R internal mapping using the Rbowtie package was specified.
-#> This package uses bowtie version 1.1.1.
-#> If you need a newer version, please install Bowtie manually
-#> outside R and then use option type='external'.
-#> 
-#> 
-#> ******************************************************
-#> |--- Mismatch 0 started at 05:34:43 PM
-#> |--- Bowtie mapping:
-#>    |---> miRNA...
-#> 
-#> 
-#>    |---> Ensembl...
-#> 
-#> 
-#>    |---> tRNA...
-#> 
-#> 
-#> |--- Found 3 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize Ensembl.out
-#>     |---> Generating full report (please wait)...
-#>     |---> Ensembl done
-#>   |--- Import and reorganize miRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> miRNA done
-#>   |--- Import and reorganize tRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> tRNA done
-#> |--- All reference but generated hits
-#> |--- Mismatch 0 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 1 started at 05:34:56 PM
-#> |--- Bowtie mapping:
-#>    |---> miRNA...
-#> 
-#> 
-#>    |---> Ensembl...
-#> 
-#> 
-#>    |---> tRNA...
-#> 
-#> 
-#> |--- Found 3 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize Ensembl.out
-#>     |---> Generating full report (please wait)...
-#>     |---> Ensembl done
-#>   |--- Import and reorganize miRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> miRNA done
-#>   |--- Import and reorganize tRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> tRNA done
-#> |--- All reference but generated hits
-#> |--- Mismatch 1 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 2 started at 05:35:01 PM
-#> |--- Bowtie mapping:
-#>    |---> miRNA...
-#> 
-#> 
-#>    |---> Ensembl...
-#> 
-#> 
-#>    |---> tRNA...
-#> 
-#> 
-#> |--- Found 3 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize Ensembl.out
-#>     |---> Generating full report (please wait)...
-#>     |---> Ensembl done
-#>   |--- Import and reorganize miRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> miRNA done
-#>   |--- Import and reorganize tRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> tRNA done
-#> |--- All reference but generated hits
-#> |--- Mismatch 2 finished -----|
-#> 
-#> ******************************************************
-#> |--- Mismatch 3 started at 05:35:04 PM
-#> |--- Bowtie mapping:
-#>    |---> miRNA...
-#> 
-#> 
-#>    |---> Ensembl...
-#> 
-#> 
-#>    |---> tRNA...
-#> 
-#> 
-#> |--- Found 3 bowtie file(s) with hits and 0 without.
-#>   |--- Import and reorganize Ensembl.out
-#>     |---> Generating full report (please wait)...
-#>     |---> Ensembl done
-#>   |--- Import and reorganize miRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> miRNA done
-#>   |--- Import and reorganize tRNA.out
-#>     |---> Generating full report (please wait)...
-#>     |---> tRNA done
-#> |--- All reference but generated hits
-#> |--- Mismatch 3 finished -----|
-#> 
-#> ******************************************************
-#>  Cleaning up ... 
-#>  Reanno mapping finished at: 05:35:08 PM
-#>  Output files are saved in:
-#>   /home/danis31/Desktop/Temp_docs/reanno_srna
-```
+
 
 Now, the output .Rdata files for all mismatch cycles should have been stored in
 the output folders. Lets import everything into R, generate a reanno list
@@ -1070,19 +856,19 @@ ls.str(reanno_srna)
 pie(table(reanno_genome$Overview$chromosomes))
 ```
 
-![](/tmp/Rtmp34RYjg/preview-3512d096f44.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
+![](/tmp/Rtmp1e30BE/preview-f3715ed7775.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
 
 ```r
 pie(table(reanno_genome$Overview$scaffolds))
 ```
 
-![](/tmp/Rtmp34RYjg/preview-3512d096f44.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-30-2.png)<!-- -->
+![](/tmp/Rtmp1e30BE/preview-f3715ed7775.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-32-2.png)<!-- -->
 
 ```r
 pie(table(reanno_srna$Overview$Any))
 ```
 
-![](/tmp/Rtmp34RYjg/preview-3512d096f44.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-30-3.png)<!-- -->
+![](/tmp/Rtmp1e30BE/preview-f3715ed7775.dir/seqpac_guide_for_srna_analysis_files/figure-html/unnamed-chunk-32-3.png)<!-- -->
 
 Next step is to reorganize and classify using \code{add_reanno}. For mapping
 against a reference genome this is easy. Just set type="genome" and set the
@@ -1094,7 +880,7 @@ maximum number of alignments to be reported by \code{genome_max}
 ##########################################
 ### Genomic coordinates using add_reanno 
 ##----------------------------------------
-pac_genome <- add_reanno(reanno_genome, type="genome", genome_max=5, mismatches=3, merge_pac=pac_master)
+anno_genome <- add_reanno(reanno_genome, type="genome", genome_max=10, mismatches=3)
 #> 
 #> Sequences in total: 45954
 #> Extracting the genome(s) ...
@@ -1107,7 +893,6 @@ pac_genome <- add_reanno(reanno_genome, type="genome", genome_max=5, mismatches=
 #> 	mis3	chromosomes: 	Ref_hits= 870       (1.89%)
 #> 	mis3	scaffolds:   	Ref_hits= 178       (0.39%)
 #> Compiling everything into one table ...
-#> Merging with PAC ...
 
 # Example of original reference name annotations 
 head(reanno_genome$Full_anno$mis0$chromosomes)
@@ -1121,56 +906,9 @@ head(reanno_genome$Full_anno$mis0$chromosomes)
 #> 5 CGATATTTTCTCCTCGGACC  mis0  mis0      X:23454910:-|X:23535571:-               
 #> 6 TGGACGGAGAACT         mis0  mis0      2R:13329429:-
 # Finished genome annotation 
-head(pac_genome$Anno)
-#>                                         Length chromosomes scaffolds Any Mis0
-#> CACGCGGGC                                    9        mis0      mis0 Hit  Hit
-#> TGCTTGGACT                                  10        mis0      mis0 Hit  Hit
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG     39        mis0      mis0 Hit  Hit
-#> GGGGATGTAGCTC                               13        mis0         _ Hit  Hit
-#> CGATATTTTCTCCTCGGACC                        20        mis0      mis0 Hit  Hit
-#> TGGACGGAGAACT                               13        mis0         _ Hit  Hit
-#>                                                                                                        mis0_chromosomes
-#> CACGCGGGC                                   Warning>5|X:8279514:+|X:20374980:+|2R:7533637:+|3R:16057774:+|2R:21226220:+
-#> TGCTTGGACT                              Warning>5|2R:23083049:+|3L:23217394:+|2L:23081148:+|3L:26552517:+|3L:10676185:+
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG                                                       X:23291699:+|X:23537996:-
-#> GGGGATGTAGCTC                           Warning>5|3R:17619738:+|3R:19790972:+|2R:17392215:+|3R:17657145:+|3R:17668187:+
-#> CGATATTTTCTCCTCGGACC                                                                          X:23454910:-|X:23535571:-
-#> TGGACGGAGAACT                                                                                             2R:13329429:-
-#>                                         mis1_chromosomes mis2_chromosomes
-#> CACGCGGGC                                           <NA>             <NA>
-#> TGCTTGGACT                                          <NA>             <NA>
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG             <NA>             <NA>
-#> GGGGATGTAGCTC                                       <NA>             <NA>
-#> CGATATTTTCTCCTCGGACC                                <NA>             <NA>
-#> TGGACGGAGAACT                                       <NA>             <NA>
-#>                                         mis3_chromosomes
-#> CACGCGGGC                                           <NA>
-#> TGCTTGGACT                                          <NA>
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG             <NA>
-#> GGGGATGTAGCTC                                       <NA>
-#> CGATATTTTCTCCTCGGACC                                <NA>
-#> TGGACGGAGAACT                                       <NA>
-#>                                                                                                                                                      mis0_scaffolds
-#> CACGCGGGC                               Warning>5|211000022278408:1045:+|211000022279122:1591:+|211000022279204:948:+|211000022278975:1786:+|211000022280578:1670:-
-#> TGCTTGGACT                                                    Warning>5|rDNA:16526:+|211000022278869:871:+|211000022280312:841:+|211000022279342:377:+|rDNA:70540:+
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG                                Warning>5|211000022279342:376:+|rDNA:70539:+|rDNA:46355:+|rDNA:58804:+|211000022279132:333:+
-#> GGGGATGTAGCTC                                                                                                                                                  <NA>
-#> CGATATTTTCTCCTCGGACC                                    Warning>5|rDNA:73041:+|211000022279108:7:+|211000022278877:51:+|211000022279446:1433:+|211000022278881:51:+
-#> TGGACGGAGAACT                                                                                                                                                  <NA>
-#>                                         mis1_scaffolds mis2_scaffolds
-#> CACGCGGGC                                         <NA>           <NA>
-#> TGCTTGGACT                                        <NA>           <NA>
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG           <NA>           <NA>
-#> GGGGATGTAGCTC                                     <NA>           <NA>
-#> CGATATTTTCTCCTCGGACC                              <NA>           <NA>
-#> TGGACGGAGAACT                                     <NA>           <NA>
-#>                                         mis3_scaffolds
-#> CACGCGGGC                                         <NA>
-#> TGCTTGGACT                                        <NA>
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG           <NA>
-#> GGGGATGTAGCTC                                     <NA>
-#> CGATATTTTCTCCTCGGACC                              <NA>
-#> TGGACGGAGAACT                                     <NA>
+head(anno_genome$Anno)
+#> Warning: Unknown or uninitialised column: `Anno`.
+#> NULL
 ```
 
 For specialized reference, \code{type="biotype"} should be used. This allows
@@ -1260,7 +998,10 @@ bio_search_1 <- list(
                 )
 
 bio_search_2 <- list(
-                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", "RNaseMRP",                                  "RNaseP", "sbRNA", "scaRNA", "sisRNA", "snmRNA", "snoRNA", "snRNA", "Su\\(Ste\\)"), # ()= Brackets must be escaped  
+                 Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
+                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
+                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
+                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"), # ()= Brackets must be escaped  
                  miRNA="dme-",
                  tRNA =c("^tRNA", "mt:tRNA") 
                 )
@@ -1269,43 +1010,28 @@ bio_search_2 <- list(
 ```r
 # Throws an error because perfect matching is required:
 anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=TRUE, mismatches = 3)
-```
-
-```r
 # References with no search term hits are classified as "other":
 anno <- add_reanno(reanno_srna, bio_search=bio_search_1, type="biotype", bio_perfect=FALSE, mismatches = 3)
-#> 
-#> Sequences in total: 45954
-#> Extracting the biotypes ...
-#> 	mis0	Ensembl: 	Ref_hits=22202   	|Search=21712   	|Other=490     
-#> 	mis0	miRNA:   	Ref_hits=1434    	|Search=1434    	|Other=0       
-#> 	mis0	tRNA:    	Ref_hits=1468    	|Search=1468    	|Other=0       
-#> 	mis1	Ensembl: 	Ref_hits=7126    	|Search=6846    	|Other=280     
-#> 	mis1	miRNA:   	Ref_hits=646     	|Search=646     	|Other=0       
-#> 	mis1	tRNA:    	Ref_hits=423     	|Search=423     	|Other=0       
-#> 	mis2	Ensembl: 	Ref_hits=2745    	|Search=2492    	|Other=253     
-#> 	mis2	miRNA:   	Ref_hits=127     	|Search=127     	|Other=0       
-#> 	mis2	tRNA:    	Ref_hits=78      	|Search=78      	|Other=0       
-#> 	mis3	Ensembl: 	Ref_hits=1837    	|Search=1667    	|Other=170     
-#> 	mis3	miRNA:   	Ref_hits=57      	|Search=57      	|Other=0       
-#> 	mis3	tRNA:    	Ref_hits=37      	|Search=37      	|Other=0       
-#> Compiling everything into one table ...
 # Better search terms gives perfect matching
-anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=TRUE, mismatches = 3) 
+anno <- add_reanno(reanno_srna, bio_search=bio_search_2, type="biotype", bio_perfect=TRUE, mismatches = 3)
+
+```
+
+```
 #> 
 #> Sequences in total: 45954
 #> Extracting the biotypes ...
 #> 	mis0	Ensembl: 	Ref_hits=22202   	|Search=22202   	|Other=0       
-#> 	mis0	miRNA:   	Ref_hits=1434    	|Search=1434    	|Other=0       
+#> 	mis0	miRNA:   	Ref_hits=767     	|Search=767     	|Other=0       
 #> 	mis0	tRNA:    	Ref_hits=1468    	|Search=1468    	|Other=0       
-#> 	mis1	Ensembl: 	Ref_hits=7126    	|Search=7126    	|Other=0       
-#> 	mis1	miRNA:   	Ref_hits=646     	|Search=646     	|Other=0       
-#> 	mis1	tRNA:    	Ref_hits=423     	|Search=423     	|Other=0       
-#> 	mis2	Ensembl: 	Ref_hits=2745    	|Search=2745    	|Other=0       
-#> 	mis2	miRNA:   	Ref_hits=127     	|Search=127     	|Other=0       
-#> 	mis2	tRNA:    	Ref_hits=78      	|Search=78      	|Other=0       
-#> 	mis3	Ensembl: 	Ref_hits=1837    	|Search=1837    	|Other=0       
-#> 	mis3	miRNA:   	Ref_hits=57      	|Search=57      	|Other=0       
+#> 	mis1	Ensembl: 	Ref_hits=7121    	|Search=7121    	|Other=0       
+#> 	mis1	miRNA:   	Ref_hits=166     	|Search=166     	|Other=0       
+#> 	mis1	tRNA:    	Ref_hits=421     	|Search=421     	|Other=0       
+#> 	mis2	Ensembl: 	Ref_hits=2735    	|Search=2735    	|Other=0       
+#> 	mis2	miRNA:   	Ref_hits=73      	|Search=73      	|Other=0       
+#> 	mis2	tRNA:    	Ref_hits=77      	|Search=77      	|Other=0       
+#> 	mis3	Ensembl: 	Ref_hits=1829    	|Search=1829    	|Other=0       
+#> 	mis3	miRNA:   	Ref_hits=40      	|Search=40      	|Other=0       
 #> 	mis3	tRNA:    	Ref_hits=37      	|Search=37      	|Other=0       
 #> Compiling everything into one table ...
 ```
@@ -1334,7 +1060,9 @@ match will always be prioritized over the hierarchy.
 hierarchy <- list(rRNA="Ensembl_rRNA",
                    Mt_tRNA="tRNA_mt:tRNA",
                    tRNA="Ensembl_tRNA|tRNA_\\^tRNA",
-                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
+                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+                   snoRNA="Ensembl_snoRNA",
+                   lncRNA="Ensembl_lncRNA"   
                   )
 
 pac_master_anno <- simplify_reanno(input=anno, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=pac_master)
@@ -1346,15 +1074,41 @@ pac_master_anno <- simplify_reanno(input=anno, hierarchy=hierarchy, mismatches=0
 #> 2            Mt_tRNA         2
 #> 3               tRNA         3
 #> 4              miRNA         4
-#> 5              other         5
-#> 6            no_anno         6
-#>                                                                                                                                                                                                                Original_biotypes
-#> 1                                                                                                                                                                                                                   Ensembl_rRNA
-#> 2                                                                                                                                                                                                                   tRNA_mt:tRNA
-#> 3                                                                                                                                                                                                       Ensembl_tRNA, tRNA_^tRNA
-#> 4                                                                                                                                                                                        Ensembl_miRNA, Ensembl_pre_miRNA, miRNA
-#> 5 Ensembl_lncRNA, Ensembl_asRNA, Ensembl_snoRNA, Ensembl_hpRNA, Ensembl_Uhg, Ensembl_sisRNA, Ensembl_Su\\(Ste\\), Ensembl_snmRNA, Ensembl_scaRNA, Ensembl_snRNA, Ensembl_7SLRNA, Ensembl_sbRNA, Ensembl_RNaseMRP, Ensembl_RNaseP
-#> 6                                                                                                                                                                                                                              _
+#> 5             snoRNA         5
+#> 6             lncRNA         6
+#> 7              other         7
+#> 8            no_anno         8
+#>                                                                                                                                                                                Original_biotypes
+#> 1                                                                                                                                                                                   Ensembl_rRNA
+#> 2                                                                                                                                                                                   tRNA_mt:tRNA
+#> 3                                                                                                                                                                       Ensembl_tRNA, tRNA_^tRNA
+#> 4                                                                                                                                                        miRNA, Ensembl_miRNA, Ensembl_pre_miRNA
+#> 5                                                                                                                                                                                 Ensembl_snoRNA
+#> 6                                                                                                                                                                                 Ensembl_lncRNA
+#> 7 Ensembl_asRNA, Ensembl_hpRNA, Ensembl_Uhg, Ensembl_sisRNA, Ensembl_Su\\(Ste\\), Ensembl_snmRNA, Ensembl_scaRNA, Ensembl_snRNA, Ensembl_7SLRNA, Ensembl_sbRNA, Ensembl_RNaseMRP, Ensembl_RNaseP
+#> 8                                                                                                                                                                                              _
+pac_master_anno <- simplify_reanno(input=anno, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis3", merge_pac=pac_master_anno)
+#> 
+#> Number of mismatches specified by user: 0	(max available: 3)
+#> Biotypes will be asigned as follows:
+#>   Simplified_biotype Hierarchy
+#> 1               rRNA         1
+#> 2            Mt_tRNA         2
+#> 3               tRNA         3
+#> 4              miRNA         4
+#> 5             snoRNA         5
+#> 6             lncRNA         6
+#> 7              other         7
+#> 8            no_anno         8
+#>                                                                                                                                                                                Original_biotypes
+#> 1                                                                                                                                                                                   Ensembl_rRNA
+#> 2                                                                                                                                                                                   tRNA_mt:tRNA
+#> 3                                                                                                                                                                       Ensembl_tRNA, tRNA_^tRNA
+#> 4                                                                                                                                                        miRNA, Ensembl_miRNA, Ensembl_pre_miRNA
+#> 5                                                                                                                                                                                 Ensembl_snoRNA
+#> 6                                                                                                                                                                                 Ensembl_lncRNA
+#> 7 Ensembl_asRNA, Ensembl_hpRNA, Ensembl_Uhg, Ensembl_sisRNA, Ensembl_Su\\(Ste\\), Ensembl_snmRNA, Ensembl_scaRNA, Ensembl_snRNA, Ensembl_7SLRNA, Ensembl_sbRNA, Ensembl_RNaseMRP, Ensembl_RNaseP
+#> 8                                                                                                                                                                                              _
 
 # Example of original reference name annotations 
 head(reanno_srna$Full_anno$mis0$Ensembl)
@@ -1372,22 +1126,22 @@ head(anno)
 #> # A tibble: 6 x 11
 #>   seq_bio Ensembl_bio miRNA_bio tRNA_bio Any_bio Mis0_bio strand_bio mis0_bio
 #>   <chr>   <chr>       <chr>     <chr>    <chr>   <chr>    <chr>      <chr>   
-#> 1 CACGCG… mis0        _         mis0     Hit     Hit      +|-        Ensembl…
+#> 1 CACGCG… mis0        mis0      mis0     Hit     Hit      +|-        Ensembl…
 #> 2 TGCTTG… mis0        _         _        Hit     Hit      +|-        Ensembl…
 #> 3 CTGCTT… mis0        _         _        Hit     Hit      +|         Ensembl…
 #> 4 GGGGAT… mis0        _         mis0     Hit     Hit      +|         Ensembl…
 #> 5 CGATAT… mis0        _         _        Hit     Hit      +|         Ensembl…
-#> 6 TGGACG… mis0        mis0      _        Hit     Hit      +|         Ensembl…
+#> 6 TGGACG… mis0        _         _        Hit     Hit      +|         Ensembl…
 #> # … with 3 more variables: mis1_bio <chr>, mis2_bio <chr>, mis3_bio <chr>
 # Simplified hierarchical classification
 head(pac_master_anno$Anno)
-#>                                         Length Biotypes_mis0
-#> CACGCGGGC                                    9          tRNA
-#> TGCTTGGACT                                  10          rRNA
-#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG     39          rRNA
-#> GGGGATGTAGCTC                               13          tRNA
-#> CGATATTTTCTCCTCGGACC                        20          rRNA
-#> TGGACGGAGAACT                               13         miRNA
+#>                                         Length Biotypes_mis0 Biotypes_mis3
+#> CACGCGGGC                                    9          tRNA          tRNA
+#> TGCTTGGACT                                  10          rRNA          rRNA
+#> CTGCTTGGACTACATATGGTTGAGGGTTGTAAGACTATG     39          rRNA          rRNA
+#> GGGGATGTAGCTC                               13          tRNA          tRNA
+#> CGATATTTTCTCCTCGGACC                        20          rRNA          rRNA
+#> TGGACGGAGAACT                               13         miRNA         miRNA
 ```
 
 

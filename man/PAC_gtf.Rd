@@ -102,11 +102,12 @@ pac_merge <- PAC_gtf(pac, genome=genome, return="merge", gtf_repeat=gtf_repeat, 
 
 
 ##############################################################
-## Full output previously mapped columns
+## Full output previously mapped columns up to 3 mismatches
 
 # Generates an error because genome mapping was done
 # with add_reanno(genome_max=10):
 genome_col <- colnames(pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
+
 repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10) 
 
 # Works because PAC_gtf automatically maps the genome with add_reanno(genome_max="all")
@@ -129,11 +130,13 @@ gtf_other=list(rep=gtf_repeat, prot=gtf_protein)
 target_other=list(rep="repFamily", prot=c("type", "gene_id")) 
 
 genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\\\d_genome", colnames(pac_merge$Anno))]
-many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", 
+many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=3,
                        gtf_repeat=gtf_repeat, gtf_protein=gtf_protein,  
                        gtf_other=gtf_other, target_other=target_other, threads=10)
 
-
+# With perfect alignments (0 mismatches)
+many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=0,
+                       gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, threads=10)
 
 ##############################################################
 ## Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers)

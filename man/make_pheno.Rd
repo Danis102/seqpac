@@ -77,6 +77,8 @@ Other PAC generation:
 \code{\link{make_anno}()},
 \code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
+\code{\link{make_cutadapt}()},
+\code{\link{make_trim}()},
 \code{\link{progress_report}()}
 }
 \concept{PAC generation}

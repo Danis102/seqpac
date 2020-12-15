@@ -86,11 +86,13 @@
 #' 
 #' 
 #' ##############################################################
-#' ## Full output previously mapped columns
+#' ## Full output previously mapped columns up to 3 mismatches
 #' 
 #' # Generates an error because genome mapping was done
 #' # with add_reanno(genome_max=10):
 #' genome_col <- colnames(pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
+
+#' 
 #' repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10) 
 #' 
 #' # Works because PAC_gtf automatically maps the genome with add_reanno(genome_max="all")
@@ -113,11 +115,13 @@
 #' target_other=list(rep="repFamily", prot=c("type", "gene_id")) 
 #' 
 #' genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", colnames(pac_merge$Anno))]
-#' many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", 
+#' many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=3,
 #'                        gtf_repeat=gtf_repeat, gtf_protein=gtf_protein,  
 #'                        gtf_other=gtf_other, target_other=target_other, threads=10)
 #' 
-#' 
+#' # With perfect alignments (0 mismatches)
+#' many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=0,
+#'                        gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, threads=10)
 #' 
 #' ##############################################################
 #' ## Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers)
@@ -154,7 +158,8 @@
 #' @export
 
 PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=FALSE,
-                   gtf_repeat=NULL, gtf_protein=NULL, gtf_other=NULL, target_other=NULL, threads=1){
+                   gtf_repeat=NULL, gtf_protein=NULL, gtf_other=NULL, target_other=NULL, 
+                   threads=1){
 
 ##### Setup general ####################################
   seqs <- rownames(PAC$Anno)
@@ -213,10 +218,12 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   cat("\n\nReorganizing coordinates ...")
   coord_lst <- list(NULL)
   lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size")]
+  mis_incl <- unique(mis_genome[[1]])
+  mis_incl <- mis_incl[mis_incl %in% paste0("mis", 0:mismatches)]
   for(i in 1:nrow(mis_genome)){
     mis <- mis_genome[[1]][i]
     lng <- lng_all[i]
-    if(mis=="_"){
+    if(!mis %in% mis_incl){
       tb <- tibble::tibble(seqid=NA, start=NA, end=NA, strand=NA)
     }else{  
       targt <- coord_genome[i, grepl(mis, names(coord_genome))]

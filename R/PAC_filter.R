@@ -47,18 +47,19 @@
 #'               PAC object with filtered data.   
 #'               (optional) A covarage plot 
 #' @examples
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
-#' test1 <- PAC_filter(PAC_filt, size=c(16,45), threshold=10, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
+#' test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
 #' 
-#' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means",  pheno_target=list("Method"))
+#' pac_filt <- PAC_norm(pac, type="rpm")
+#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "rpm", type = "means",  pheno_target=list("type"))
 #' 
-#' test2 <- PAC_filter(PAC_filt, size=c(16,45), threshold=5, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
+#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
 #'
-#' test3 <- PAC_filter(PAC_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
+#' test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 #' 
-#' test4 <- PAC_filter(PAC_filt, size=c(16,30))   # Further filter on fragment lengths 
+#' test4 <- PAC_filter(pac_filt, size=c(16,30))   # Further filter on fragment lengths 
 #' 
 #' 
 #' 

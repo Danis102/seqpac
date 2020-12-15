@@ -100,7 +100,10 @@ make_pheno<- function(pheno_input, type="manual", counts=NULL, progress_report=N
                             if(type=="manual"){
                                   if(is.data.frame(pheno_input)){pheno <- pheno_input
                                   }else{
-                                  path <- list.files(pheno_input, pattern="pheno.csv|Pheno.csv|pheno.txt|Pheno.txt", full.names = TRUE)
+                                    path <- list.files(pheno_input, pattern="pheno.csv|Pheno.csv|pheno.txt|Pheno.txt", full.names = TRUE)
+                                    if(length(path) < 1){
+                                      path <- list.files(dirname(pheno_input), pattern="pheno.csv|Pheno.csv|pheno.txt|Pheno.txt", full.names = TRUE)
+                                    }
                                   if(length(path) > 1){stop("Error! There are more than one files named pheno to choose between in the specified folder.")}
                                   lines <- readLines(path, n=20)
                                   header <- which(grepl("\\<Sample_ID", lines))

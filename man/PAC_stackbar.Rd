@@ -70,21 +70,23 @@ in Counts or norm.
 }
 \examples{
 
-load(file="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_hifilt.Rdata")
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+
+head(pac$Anno)
+lapply(pac, tibble::as_tibble)
 
 
 #-------------------------------------------------------------------------------------------------#
 #  Stacked biotype barplots 
 #-------------------------------------------------------------------------------------------------#
 
-biotypes_ord <- c("rRNA","Mt_rRNA", "tRNA", "Mt_tRNA", "miRNA", "piRNA","other", "no_anno")
+levels(pac$Anno$Biotypes_mis0)
+biotypes_ord <- c("rRNA","Mt_rRNA", "tRNA", "Mt_tRNA", "miRNA", "snoRNA", "lncRNA","other", "no_anno") # Change biotype order
+group_ord <- as.character(unique(pac$Pheno$type)[c(2,1)]) # Change group order
 
-method_ord <- unique(PAC_hifilt$Pheno$Groups)[c(1, 15, 3 ,7, 9, 6, 14, 12, 8, 5, 13, 11, 2, 10, 4)]
-
-plot_mis0  <- PAC_stackbar(PAC_hifilt, anno_target = list("Biotypes_mis0", biotypes_ord), pheno_target = list("Groups", method_ord), width=1, no_anno=TRUE, total=TRUE)
-plot_mis3  <- PAC_stackbar(PAC_hifilt, anno_target = list("Biotypes_mis3", biotypes_ord), pheno_target = list("Groups", method_ord), width=1, no_anno=TRUE, total=TRUE)
-
-table(PAC_IOR1$Anno$Biotypes_simpl)
+plot_mis0  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis0", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
+plot_mis3  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis3", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
 
 
 }
