@@ -104,7 +104,7 @@ head(pac_master$Anno)
 
 
 ## The trick to succeed with bio_perfect=TRUE ##
-# Run with bio_perfect="TRUE" (look where "Other=XX" occurs)
+# Run with bio_perfect="FALSE" (look where "Other=XX" occurs)
 anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
 
 # Find sequences that has been classified as other 

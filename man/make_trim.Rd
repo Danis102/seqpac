@@ -91,8 +91,9 @@ Never ever use all threads!}
      Numeric controling the percen of mismatch. For instance, if min=10 and
      mismatch=0.1, then 1 mismatch is allowed in the minimum overlap.}
 
-\item{adapt_5_set}{Same as \code{adapt_5_set} but controls the behavior of 5'
-trimming when a sequence is provided in \code{adapt_5}.}
+\item{adapt_5_set}{Currently not supported, but will be in future updates.
+Same as \code{adapt_5_set} but controls the behavior of 5' trimming when a
+sequence is provided in \code{adapt_5}.}
 
 \item{seq_range}{Numeric vector with two inputs named 'min' and 'max', that
 controls the sequence size filter. For example, if
@@ -130,10 +131,10 @@ input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_19
 input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Single"
 
 input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-output <- "/home/danis31/Desktop/Temp_docs/temp/test"
+output <- "/home/danis31/Desktop/Temp_docs/temp"
 
 prog_report  <-  make_trim(input=input, output=output, threads=6, check_mem=TRUE,
-                     adapt_3_set=c(type="soft_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+                     adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
                      seq_range=c(min=14, max=70),
                      quality=c(threshold=20, percent=0.8))
@@ -146,7 +147,7 @@ prog_report  <-  make_trim(input=input, output=output, threads=5,
                      
 
 
-adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1)
+adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1)
 adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA"
 adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA"
 polyG=c(type="hard_trim", min=20, mismatch=0.1)

@@ -6,7 +6,7 @@
 \usage{
 PAC_sizedist(
   PAC,
-  norm = NULL,
+  norm = "counts",
   range = NULL,
   anno_target,
   pheno_target = NULL,
@@ -75,7 +75,7 @@ ord <- c("no_anno", "other", "miRNA", "tRNA", "Mt_tRNA", "rRNA", "Mt_rRNA",  "pi
 sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("rpmMeans_Method"))
 cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 1)
 
-sizedist_plots <- PAC_sizedist(PAC_filt, norm="raw", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
+sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
 cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
 
 

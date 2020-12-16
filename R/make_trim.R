@@ -41,9 +41,10 @@
 #'      mismatch=
 #'        Numeric controling the percen of mismatch. For instance, if min=10 and
 #'        mismatch=0.1, then 1 mismatch is allowed in the minimum overlap.
-#'   
-#' @param adapt_5_set Same as \code{adapt_5_set} but controls the behavior of 5'
-#'   trimming when a sequence is provided in \code{adapt_5}.
+#'
+#' @param adapt_5_set Currently not supported, but will be in future updates.
+#'   Same as \code{adapt_5_set} but controls the behavior of 5' trimming when a
+#'   sequence is provided in \code{adapt_5}.
 #'                     
 #' @param polyG Character vector with three inputs named 'type', 'min' and
 #'   'mismatch' that controls poly G trimming. This trimming might be necessary

@@ -28,6 +28,19 @@ stored in the input path. If type="sports", a count table is generated from
 a list object created using \code{import_sports} contain imported sports
 output files .}
 
+\item{trimming}{Character indicating what type of trimming tool that should
+be used. If \code{trimming="seqpac"}, fastq files will be sent to the
+\code{make_trim} function in seqpac, while if \code{trimming="cutadapt"}
+fastq files will be sent to the \code{make_cutadapt} function. Note that
+\code{trimming="seqpac"} runs independently of external software, while
+\code{trimming="cutadapt"} is dependent on an externally installed version
+of cutadapt. Trimmed fastq files are stored temporarily in the systems
+default temporary folder. Please, run \code{make_trim} and
+\code{make_cutadapt} seperately for perminant storaged options, or set
+\code{save_temp=TRUE} to avoid that \code{make_counts} will delete all
+temporary files.  As default trimming=NULL, which indicates that input
+fastq files has already been trimmed.}
+
 \item{threads}{Integer stating the number of parallell jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 file. To avoid crashing the system due to memory shortage, make sure that
@@ -36,50 +49,15 @@ your fastq files are very small.Use \code{parallel::detectcores()} to see
 available threads on the machine.}
 
 \item{parse}{Command strings defining the command that should be parsed to
-cutadapt using the system function in R. This will allow you to customize
+\code{make_trim} or \code{make_cutadapt}. This will allow you to customize
 your timming according to 3' adaptor sequence and platform specifics etc.
-See examples below. Important: Do not include the two last options in
-cutadapt: -o (output path) and -i (input path). These will be generated
-automatically.}
+See examples below. Please see manuals for \code{make_trim} \code{make_cutadapt}}
 
-\item{cutadpt}{Logical indicating if fastq files should be parsed to cutadapt
-and fastq_quality_filter (only available in Linux) for adaptor trimming and
-filtering prior to compiling a count table. If cutadpt=FALSE, the input
-path must contain already trimmed and quality filtered fastq files. If
-cutadpt=TRUE, trimming will be carried out using the commands in "parse",
-while quality filtering will be done using the following command:
-"fastq_quality_filter -q 20 -p 80 -v". Trimmed and filtered fastq files
-will be temporarly stored in "tmp/seqpac/", but will be deleted after the
-script has completed.}
+\item{evidence}{evidence=c(experiment=2, sample=1)}
 
-\item{tag}{Logical indicating whether 5' tagging has been used. This is
-specific to certain types of sequencing experiments, where beside a 3'
-adaptor a 5' tag has been ligated to the sequencing library. If tag=TRUE, a
-5' tag will be searched for only in the samples specified in 'target_tag'
-using the commands indicated in 'parse_tag'. Note that target_tag and
-parse_tag are lists, thus groups of samples can have different commands
-parsed to them. Example of how this can be done see below. Note that
-parsing these commands will be done after the 3' adaptor sequence has been
-trimmed off. This will be done on the fastq files If tag=FALSE, this step
-will be passed.}
-
-\item{parse_tag}{A named list of command strings. Each object contains the
-command that are to be parsed to cutadapt, for splitting the input fastq
-file specified in 'target_tag' into fastq files containg (_tag.fastq) and
-not containing (_notag.fastq) the 5' tag. The 5' tag will also be trimmed
-from _tag.fastq files. Important: Do not include the two last options in
-cutadapt: -o (output path) and -i (input path). These will be generated
-automatically. Default=NULL.}
-
-\item{target_tag}{A named list of character vectors. Each vector should
-contain the the input fastq file names of which 5' tagging have been used.
-If different 5' tags, with different sequences, has been ligated to
-different samples,  this can be specified objects with the same names in
-'target_tag' and 'parse_tag' having the same names.  For example, if
-target_tag$short contains the fastq file names of sample_A and sample_D,
-the command in parse_tag$short will be applied only on these samples.
-Samples missing from 'target_tag', will pass 5' tagging. For an examples
-see below. Default=NULL.}
+\item{save_temp}{Logical whether temporary files (including trimmed fastq
+files) should be saved or not. Note, the function will print the path to
+the temprorary folder in the console.}
 }
 \value{
 type="fastq": Data frame (a count table) with sequence counts across
@@ -119,7 +97,7 @@ this function will generate a raw countTable (columns=sample, rows=sequence).
 input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Merged_fastq/"
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 
-counts  <- make_counts(input, threads=6, parse="default",
+counts  <- make_counts(input, threads=6, parse="default_neb",
                        type="fastq", trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))     
     
