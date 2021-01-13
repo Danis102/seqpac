@@ -18,19 +18,19 @@ PAC_filter(
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
-row names and a Counts table with raw counts or reads per million (rpm).}
+row names and a Counts table with raw counts or reads per million (cpm).}
 
 \item{size}{Integer vector giving the size interval, as c(min,max), that
 should be saved (default=c(min,max)).}
 
-\item{threshold}{Integer giving the threshold in rpm or counts that needs to
+\item{threshold}{Integer giving the threshold in cpm or counts that needs to
 be reached for a sequence to be included (default=10).}
 
 \item{coverage}{Integer giving the percent of independent samples that need
 to reach the threshold for a sequence to be included (default=100).}
 
-\item{type}{Character specifying if filtering should be done "rpm" or
-"counts" (default="rpm").}
+\item{type}{Character specifying if filtering should be done "cpm" or
+"counts" (default="cpm").}
 
 \item{subset_only}{Logical whether only subsetting using pheno_target and/or
 anno_target should be done. If subset=FALSE (default) both subsetting and
@@ -68,10 +68,10 @@ load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac"
 
 test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
 
-pac_filt <- PAC_norm(pac, type="rpm")
-pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "rpm", type = "means",  pheno_target=list("type"))
+pac_filt <- PAC_norm(pac, type="cpm")
+pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", type = "means",  pheno_target=list("type"))
 
-test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
+test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
 
 test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 
@@ -103,7 +103,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

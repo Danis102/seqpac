@@ -138,7 +138,6 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
         rm(bow_out)
         gc(reset=TRUE)
   
-        suppressPackageStartupMessages(require("foreach", quietly = TRUE))
         chk_size <- ceiling(length(bow_splt)/100) # foreach combine every 100 instances
         chnks1 <-as.integer(seq(from=1, to=length(bow_splt), by=chk_size))
         chnks2 <-as.integer(seq(from=0, to=length(bow_splt), by=chk_size))
@@ -146,7 +145,8 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
         chnks_rng <- list(chnks1, chnks2)
   
         doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-        bowtie_out_lst[[k]] <- foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
+        `%dopar%` <- foreach::`%dopar%`
+        bowtie_out_lst[[k]] <- foreach::foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
               compile_lst <- lapply(bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
                   # Fix neg strand mismatch   
                   new <- gsub("A", "t", x$V8[x$V2 == "-"])
@@ -162,7 +162,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
                   uni_mis <- paste(uni_mis, collapse="|")
                   if(coord==TRUE){
                               x$V4 <- x$V4+1 # Fix bowtie coordinate shift
-                              hits <- paste(unique(paste(x$V3, x$V4, x$V2, sep=":")), collapse="|")}
+                              hits <- paste(unique(paste(x$V3, paste0("start=", x$V4), x$V2, sep=";")), collapse="|")}
                   if(coord==FALSE){
                               strnd <- ifelse(x$V2=="+", "sense", "antisense")
                               hits <- paste(unique(paste(x$V3, strnd, sep=":")), collapse="|")}
@@ -179,7 +179,5 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
     cat(paste0("\n    |---> ", nam, " done"))
   }
   return(bowtie_out_lst)
-  detach(package:data.table)
-  detach(package:foreach)
 }
 

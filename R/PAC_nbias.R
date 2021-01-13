@@ -91,7 +91,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
      }
     }
   if(is.null(range)){
-    range <- c(min(PAC$Anno$Length), max(PAC$Anno$Length))
+    range <- c(min(PAC$Anno$Size), max(PAC$Anno$Size))
     }
   
   PAC <- seqpac::PAC_filter(PAC, size=range, pheno_target=pheno_target, anno_target=anno_target, subset_only=TRUE)
@@ -122,7 +122,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
   cat(paste0("\nCounting nucleotides"))
   combin <- c(paste0(range[1]:range[2], "_A"), paste0(range[1]:range[2], "_T"), paste0(range[1]:range[2], "_C"), paste0(range[1]:range[2], "_G"), paste0(range[1]:range[2], "_N"))
   nuc_lst <- lapply(as.list(dat), function(x){
-    nuc_agg <- aggregate(x, list(factor(paste(anno$Length, anno$nuc_bias, sep="_"))), sum)
+    nuc_agg <- aggregate(x, list(factor(paste(anno$Size, anno$nuc_bias, sep="_"))), sum)
     colnames(nuc_agg) <- c("position_nuc", "counts")
     zeros <- combin[!combin %in% as.character(nuc_agg$position_nuc)]
     if(length(zeros) >0){
@@ -136,11 +136,6 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
   
   #### Set options and load requirements
   options(scipen=999)
-  require(RColorBrewer)
-  require(scales)
-  require(ggthemes)
-  require(cowplot)
-  require(extrafont)
   #### Set up colors colors ###
   if(is.null(colors)){
     colfunc_sports <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
@@ -149,7 +144,6 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
   }
   
   #### Plot ###                 
-  require(ggplot2)   
   histo_lst <- list(NA)
   if(is.null(summary_target)){samp <- rownames(PAC$Pheno)}
   else{samp <- names(PAC$summary[[summary_target[[1]]]])}
@@ -157,19 +151,19 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL, 
     nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, levels=c("N","C","G","A","T"))
     uni_chr_len <- as.integer(unique(as.character(nuc_lst[[i]]$length)))
     nuc_lst[[i]]$length <- factor(nuc_lst[[i]]$length, levels=uni_chr_len[order(uni_chr_len)] )
-    histo_lst[[i]] <- ggplot(nuc_lst[[i]], aes(x=length, y=counts, fill=nucleotide))+
-      geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
-      geom_hline(yintercept=0, col="azure4")+
-      xlab("Size (nt)")+
-      ylab(paste(labl))+
-      labs(subtitle = samp[i])+
-      scale_fill_manual(values=colors)+
+    histo_lst[[i]] <- ggplot2::ggplot(nuc_lst[[i]], ggplot2::aes(x=length, y=counts, fill=nucleotide))+
+      ggplot2::geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
+      ggplot2::geom_hline(yintercept=0, col="azure4")+
+      ggplot2::xlab("Size (nt)")+
+      ggplot2::ylab(paste(labl))+
+      ggplot2::labs(subtitle = samp[i])+
+      ggplot2::scale_fill_manual(values=colors)+
       #coord_cartesian(ylim=c(0,10000))+
       #scale_y_continuous(breaks = seq(0, 10000, 2500))+
       #ggthemes::geom_rangeframe(aes(x=range))+   
       ggthemes::theme_tufte()+
-      theme_classic()+
-      theme(axis.text.x = element_text(angle = 0))
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 0))
     names(histo_lst)[i] <- names(nuc_lst)[i]
   }
   return(list(Histograms=histo_lst, Data=nuc_lst))

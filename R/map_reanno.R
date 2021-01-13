@@ -158,10 +158,12 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
       response <- readline()
       if(!response %in% c("y", "Y")){stop(paste0("Please move or delete the files in the output folder."))}
   }
-  if(!dir.exists(output_path)){suppressWarnings(dir.create(output_path))  
+  if(!dir.exists(output_path)){
+    suppressWarnings(dir.create(output_path))  
   }else{
       fls_full <- list.files(output_path, recursive = FALSE, full.names=TRUE)
-      file.remove(fls_full[!fls %in% drs])}
+      file.remove(fls_full[!fls %in% drs])
+  }
   
   ## Save first input
   Biostrings::writeXStringSet(seq_fst, filepath=paste0(output_path, "/anno_mis0.fa"), format="fasta")
@@ -175,7 +177,8 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
     cat("\nR internal mapping using the Rbowtie package was specified.\n")
     cat(paste0("This package uses bowtie version ", vrs, ".\n"))
     cat("If you need a newer version, please install Bowtie manually\n")
-    cat("outside R and then use option type='external'.\n")}
+    cat("outside R and then use option type='external'.\n")
+    }
   
   if(type=="external"){
     vrs <- stringr::str_split(basename(capture.output(system("bowtie --version", intern=TRUE))[[1]]), "version")
@@ -200,14 +203,16 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
                                                   paste0(parse_internal, ", v=", mis_lst[[i]], ", p=",threads),
                                                   ", type ='single', outfile='", output_file,
                                                   "', force = TRUE, strict = TRUE)")
-            eval(parse(text=bwt_exp)) }
+            eval(parse(text=bwt_exp)) 
+            }
         
       ## External bowtie
         if(type=="external"){
             cat("\n\n")
             bwt_exp <- paste0("bowtie ", parse_external, " -v ", mis_lst[[i]], " -p ", threads, " ", 
                             ref_paths[[j]], " ", input_file, " ", output_file)
-            system(bwt_exp, intern=FALSE, ignore.stderr=FALSE)}
+            system(bwt_exp, intern=FALSE, ignore.stderr=FALSE)
+            }
         }
         
         reanno <- import_reanno(bowtie_path=output_path, threads=threads, coord=import$coord, report=import$report, reduce=import$reduce)

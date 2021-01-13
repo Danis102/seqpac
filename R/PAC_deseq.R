@@ -1,114 +1,176 @@
-#' A wrapper to DESeq2 that apply differential expression analysis on a PAC object  
+#' A wrapper to DESeq2 that apply differential expression analysis on a PAC
+#' object
 #'
 #' \code{PAC_deseq} DESeq2 analysis on PAC_object.
 #'
-#' Given a PAC object this function will apply a differential expression analysis using DESeq2.
-#' 
+#' Given a PAC object this function will apply a differential expression
+#' analysis using DESeq2.
+#'
 #' @family PAC analysis
 #'
 #' @seealso \url{https://github.com/Danis102} for updates on the current
 #'   package.
 #'
 #' @param PAC PAC object containing a Pheno data.frame with samples as row
-#'   names, an Anno data.frame with sequences as row names and a Counts table with
-#'   raw counts. The Counts table must have the sample names as column names and
-#'   sequences as row names.
+#'   names, an Anno data.frame with sequences as row names and a Counts table
+#'   with raw counts. The Counts table must have the sample names as column
+#'   names and sequences as row names.
 #'
-#' @param model Character vector describing the statistical model based on column names in Pheno.
-#'   
-#' @param deseq_norm Logical whether to return deseq normalized values or not (default=TRUE).
-#' 
-#' @param histogram Logical whether to return a p-value destributions as a histogram (default=TRUE).
-#' 
-#' @param pheno_target (optional) List with: 
-#'          1st object being a character indicating the main target column in
-#'          Pheno.
-#'          2nd object being a character vector of the target group(s) in the
-#'          target Pheno column (1st object).
-#'          
-#'          Note: In PAC_deseq pheno_target controls the main comparative factor
-#'          category. If for instance a target column named "groups" in
-#'          PAC$Pheno contains "control" and "treatment" categories, setting
-#'          pheno_target=list("groups", c("treatment", "controls") ensures that
-#'          "treatment" is presented 1st in the factor levels, making for
-#'          example log2FC appear as "treatment vs control". As default,
-#'          pheno_target=NULL will result in the factor levels being
-#'          automatically sorted in ascending order, which in the example above
-#'          would result in control vs treatment log2FC.
-#'          
-#' @param anno_target (optional) List with: 
-#'          1st object being a character vector of target column in Anno 
-#'          2nd object being a character vector of the target type/biotypes(s) in the target Anno column (1st object).
-#'          (default=NULL)
+#' @param model Character vector describing the statistical model based on
+#'   column names in Pheno.
 #'
-#' @param threads Integer number of threads to run in parallel.          
-#'   
+#' @param deseq_norm Logical whether to return deseq normalized values or not
+#'   (default=TRUE).
+#'
+#' @param pheno_target (optional) List with: 1st object being a character
+#'   indicating the main target column in Pheno. 2nd object being a character
+#'   vector of the target group(s) in the target Pheno column (1st object).
+#'
+#'   Imprtant: In \code{PAC_deseq}, pheno_target controls the main comparative
+#'   factor category from which a summarized table and plots will be generated.
+#'   If, for instance, a target column named "groups" in PAC$Pheno contains
+#'   "control" and "treatment" categories, setting pheno_target=list("groups",
+#'   c("treatment", "controls") ensures that "treatment" is presented 1st in the
+#'   factor levels, making for example log2FC appear as "treatment vs control".
+#'   As default, pheno_target=NULL will result in the factor levels being
+#'   automatically sorted in ascending order, which in the example above would
+#'   result in control vs treatment log2FC. If no pheno_target is given, the
+#'   first feature in the model will also be the main comparison presented in
+#'   the graphs and summary tables.
+#'
+#' @param anno_target (optional) List with: 1st object being a character vector
+#'   of target column in Anno 2nd object being a character vector of the target
+#'   type/biotypes(s) in the target Anno column (1st object). (default=NULL)
+#'
+#' @param test Character parsed directly to \code{DESeq2::DESeq} that
+#'   controls what type of statistical test that should be used. Alternatives
+#'   are either "Wald" (Wald significance test) or "LTR" (likelihood ratio
+#'   test/chi-squared test). See \code{DESeq2::DESeq} for more details.
+#'   (Default="Wald")
+#'
+#' @param fitType Character parsed directly to \code{DESeq2::DESeq} that
+#'   controls what type of despersion fit that should be used. Alternatives are
+#'   either "parametric" (dispersion-mean relation), "local" (local regression
+#'   of log dispersions), "mean" (mean of gene-wise dispersion). See
+#'   \code{DESeq2::DESeq} for more details. (Default="local")
+#'
+#' @param threads Integer number of threads to run in parallel.
+#'
 #' @return A list of objects: 
-#'               1st object - result table 
-#'               2nd object - p-value histogram (optional)    
+#'    1st object - Summarized result table merged with PAC$Anno 
+#'    2nd object - Target graphs (p-val distribution and volcano) 
+#'    3rd object - All output from DESeq2::DESeq
+#'    
 #' @examples
 #' 
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
-#' 
-#' PAC <- PAC_norm(pac, type="rpm")
-#' pheno_target <- list("replicate", c("test3", "test1"))
-#' pheno_target <- list("type", c("Sperm", "Ovaries"))
-#' pheno_target <- list("type", c("Ovaries", "Sperm"))
-#' 
-#' model=~replicate
-#' model=~replicate+type  
-#'     
-#'     
-#' pheno_target <- list("replicate")
-#' 
-#' test <- PAC_deseq(PAC, model=model, deseq_norm=TRUE, histogram=TRUE, threads=4, pheno_target=pheno_target, anno_target=NULL)
-#' 
+#'library(seqpac)
+#'load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#'
+#'
+#'## Simple model testing Ovaries against Sperm using Wald test with local fit (default)
+#'table(pac$Pheno$type)
+#'output_deseq <- PAC_deseq(pac, model= ~type, threads=6)
+#'
+#'## More complicated, but still graphs will be generated from 'type' since it is first in model  
+#'output_deseq <- PAC_deseq(pac, model= ~type + replicate)
+#'
+#'## More complicated, but still graphs will be generated from 'type' since it is first in model  
+#'output_deseq <- PAC_deseq(pac, model= ~type + replicate)   # (generates a warning)
+#'
+#'## Using pheno_target we can change focus
+#'output_deseq <- PAC_deseq(pac, model= ~type + replicate, pheno_target=list("replicate"))
+#'
+#'
+#'## With pheno_target we can also change the direction fo the comparision change focus
+#'# Sperm vs Ovaries:
+#'output_deseq <- PAC_deseq(pac, model= ~type, threads=6)   
+#'# Ovaries vs Sperm:
+#'output_deseq <- PAC_deseq(pac, model= ~type, pheno_target=list("type", c("Ovaries", "Sperm")), threads=6)
+#'
+#'## In the output you find PAC merged results, target plots and output_deseq   
+#'names(output_deseq)
+#'tibble::as_tibble(output_deseq$result)
+#'
 #' @export
 
-PAC_deseq <- function(PAC, model, deseq_norm=FALSE, histogram=TRUE, threads=1, pheno_target=NULL, anno_target=NULL){
+PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local", threads=1, pheno_target=NULL, anno_target=NULL){
   
   ### Subset samples and sequences
-  PAC <-  PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  #PAC_sub <-  PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  PAC_sub <- PAC
+  PAC_sub$Counts <- apply(PAC_sub$Counts, 2, as.integer)
+  rownames(PAC_sub$Counts) <- rownames(PAC$Anno)
+  
   cat("\n")
   ### Prepare data
-  anno <- PAC$Anno
-  pheno <- PAC$Pheno
+  anno <- PAC_sub$Anno
+  pheno <- PAC_sub$Pheno
   if(!is.null(pheno_target)){
+    if(length(pheno_target)==1){ 
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    }
     trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
     pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(trg, levels=rev(pheno_target[[2]]))
   }
   
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC$Counts , colData = droplevels(PAC$Pheno), design=model)
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC_sub$Counts , colData = droplevels(pheno), design=model)
   dds <- DESeq2::estimateSizeFactors(dds)
   
-  ### DEseq function
+  ### DEseq analysis and extract result table
   BiocParallel::register(BiocParallel::MulticoreParam(workers=threads))
-  deseq <- function(dds, anno, model, norm){
-    dds_fit <- DESeq2::DESeq(dds, fitType='local', parallel = TRUE)
-    res_nam <- DESeq2::resultsNames(dds_fit)
-    res_DESeq2 <- DESeq2::results(dds_fit, name=paste0(res_nam[2]))
-    comp <- strsplit(res_DESeq2@elementMetadata@listData$description[2], ": replicate ")[[1]][2]
-    cat(comp)
-    cat(summary(res_DESeq2))
-    res_DESeq2_df <- as.data.frame(res_DESeq2[order(as.numeric(res_DESeq2$pvalue)),])
-    res_DESeq2_df_not_ord <- as.data.frame(res_DESeq2)
-    anno_filt <- anno[match(rownames(res_DESeq2_df_not_ord), rownames(anno)),]
-    if(identical(rownames(dds), rownames(res_DESeq2_df_not_ord))==FALSE){stop("Not identical ids in result and dds.\nHave you been messing with the code?\n")}
-    if(identical(rownames(dds), rownames(anno_filt))==FALSE){stop("Not identical ids in anno and dds.\n")}
-    Res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df_not_ord, DESeq2::counts(dds, normalized=norm), anno_filt)
-    colnames(Res_counts)[colnames(Res_counts)=="log2FoldChange"] <-  paste("logFC", res_nam[2], sep="_")
-    return(Res_counts)
-  }
-  #--------------------------------------------------------
-  # Apply the deseq function and add histograms:	
-  require(DESeq2, quietly = TRUE) 
-  res <- deseq(dds, anno, model, norm=deseq_norm)
-  detach(package:DESeq2)
-  p <- ggplot2::ggplot(data=res, aes(res$pvalue)) + 
+  dds_fit <- DESeq2::DESeq(dds, test=test, fitType=fitType, parallel = TRUE)
+  res_nam <- DESeq2::resultsNames(dds_fit)
+  if(!is.null(pheno_target)){
+     target_nam <- res_nam[grepl(pheno_target[[1]], res_nam)]
+     target_nam <- target_nam[1]
+  }else{
+     target_nam <- res_nam[2]
+  }  
+  res_DESeq2 <- DESeq2::results(dds_fit, name=target_nam)
+  comp <- strsplit(res_DESeq2@elementMetadata@listData$description[2], ": ")[[1]][2]
+  cat("\n")
+  cat("\n")
+  cat(paste0("** ", comp, " **"))
+  cat("\n")
+  cat(DESeq2::summary.DESeqResults(res_DESeq2))
+  res_DESeq2_df <- as.data.frame(res_DESeq2)
+  anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),]
+
+  if(!identical(rownames(dds), rownames(res_DESeq2))){
+      stop("Not identical ids in result and dds.\nHave you been messing with the code?\n")
+      }
+  if(!identical(rownames(dds), rownames(anno_filt))){
+      stop("Not identical ids in anno and dds.\n")
+      }
+  res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df, DESeq2::counts(dds, normalized=deseq_norm), anno_filt)
+  colnames(res_counts)[colnames(res_counts)=="log2FoldChange"] <-  paste("log2FC", res_nam[2], sep="_")
+  
+  ###  Make plots
+  logi_thresh <- ifelse(rowSums(cbind(res_DESeq2_df$padj <= 0.1, res_DESeq2_df$log2FoldChange <=-1 | res_DESeq2_df$log2FoldChange >=1))==2, "pass", "not_pass")
+    df_plot <- data.frame(pval=res_DESeq2_df$pvalue, neglog_padj=-log10(res_DESeq2_df$padj), log2FC=res_DESeq2_df$log2FoldChange, DE=logi_thresh)
+  
+  p <- ggplot2::ggplot(data=df_plot, aes(x=pval)) + 
     ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
-    ggplot2::labs(title="p-value destributions", x="p-value", y = "Number of features")
-  res_lst<- list(result=res, histogram=p)
+    ggplot2::labs(title="p-value destributions", 
+                  subtitle=comp, x="p-value", y = "Number of features") +
+    ggplot2::theme_classic()
+  
+  vcano <- ggplot2::ggplot(df_plot, ggplot2::aes(x=log2FC, y=neglog_padj)) +
+    ggplot2::geom_hline(yintercept=1, col="black", size=0.1)+
+    ggplot2::geom_vline(xintercept=c(-1, 1), col="black", size=0.1)+
+    ggplot2::geom_point(ggplot2::aes(colour = DE), size=1) +
+    ggplot2::scale_colour_manual(values = c("not_pass"="grey", "pass"= "red")) +
+    ggplot2::labs(title="Volcano plot DE features", 
+                  subtitle="red points:\nlog2FC >=1  &  p-adj <=0.1",
+                  x="Log2 fold changes", y = "-log10 p-value") +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 0),
+                   legend.position = "none")
+            
+  res_lst <- list(result=res_counts, plots=list(histogram=p, volcano=vcano), output_deseq= res_DESeq2)
+  print(cowplot::plot_grid(plotlist=res_lst$plots))
   return(res_lst)
 }
+
+
 

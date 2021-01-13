@@ -1,9 +1,9 @@
 #' Summarizes PAC objects 
 #'
-#' \code{PAC_summary} Summarizes data stored in a PAC object.
+#' \code{PAC_summary} summarizes data stored in a PAC object.
 #'
-#' Given a PAC object this function summarize data in Counts or in the norm
-#' list-folder according to a grouping variable in Pheno.
+#' Given a PAC object this function summarize data in PAC$Counts or in the norm
+#' 'folder' according to a grouping variable in PAC$Pheno.
 #' 
 #' @family PAC analysis
 #' 
@@ -11,8 +11,8 @@
 #' package.
 #'
 #' @param PAC PAC object containing a Pheno dataframe with samples as row names,
-#'   a Counts table with raw counts and a normalized list-folder containing
-#'   tables with normalized Counts (e.g. rpm).
+#'   a Counts table with raw counts, and a normalized list-folder containing
+#'   tables with normalized Counts (e.g. cpm).
 #'
 #' @param norm Character indicating what type of data to be used. If 'counts' the raw
 #'   counts in Counts will be used (default). Given any other value, the
@@ -29,10 +29,10 @@
 #' @param rev Logical whether pairwise comparisions should be reversed
 #'   (default=FALSE).
 #'   
-#' @param PAC_merge Logical whether simplified annotation vector should
-#'  automatically be added to Anno object if a PAC list object were given as
-#'  input (default=FALSE)
-#'
+#' @param merge_pac Logical whether simplified annotation vector should
+#'   automatically be added to the Anno object of the input PAC list object
+#'   (default=TRUE). If \code{merge_pac=FALSE} a dataframe is returned. 
+#'   
 #' @return A PAC object with a pheno_summary folder containing the summarized
 #'   data in a dataframe. The dataframe will be named according to the
 #'   pheno_target, type and norm input.
@@ -43,7 +43,6 @@
 #' 
 #' PAC_check(PAC_filt) # TRUE
 #'
-#' PAC_filt <- PAC_rpm(PAC_filt)
 #'
 #' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method", NULL))
 #' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method", NULL))
@@ -62,27 +61,30 @@
 #' 
 #' @export
 #' 
-PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev=FALSE, PAC_merge=FALSE){
+PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev=FALSE, merge_pac=TRUE){
   
 ## Prepare and subset ################
   if(!is.null(pheno_target)){ 
     if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
   }
+  PAC -> sav
   PAC <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=NULL)
 
   ### Extract data ###
   if(norm=="counts"){
     data <- PAC$Counts
   }else{  
-    if(is.null(PAC$norm[[norm]])){stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_rpm,\n  or would you rather run the function on raw counts using norm='counts'?)"))}  
+    if(is.null(PAC$norm[[norm]])){
+      stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_rpm,\n  or would you rather run the function on raw counts using norm='counts'?)"))}  
     data <- PAC$norm[[norm]]
   }
   
   ### Subset dataset ###
   pheno <- PAC$Pheno
   pheno$All <- "All"
-  if(is.null(pheno_target)){warning("No grouping factor was specified with pheno_target.\nCalculations are based on all samples.")
+  if(is.null(pheno_target)){
+    warning("No grouping factor was specified with pheno_target.\nCalculations are based on all samples.")
     pheno_target <- list("All","All")
   }else{
     if(length(pheno_target)==1){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
@@ -104,10 +106,8 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
     if(rev==TRUE){combn_lst <- lapply(combn_lst, function(x){c(x[2], x[1])})}
   }
   
-  PAC$summary$new <- list(NULL)
-  
   ### Apply log2FC to all pairwise combinations ###        
-  if(type=="log2FC"){
+  if(type %in% c("log2FC", "Log2FC", "Log2Fc")){
     group_means <- lapply(sub_data_lst, function(x){ mns <- rowMeans(x)
     mns[mns == 0] <- 0.0000001
     return(mns)})
@@ -121,7 +121,7 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
     rownames(fin) <- rownames(data)
     df_nam <- paste0("Log2FC_", pheno_target[[1]])
   }
-  if(type=="log2FCgrand"){
+  if(type %in% c("log2FCgrand", "Log2FCgrand", "log2FCGrand")){
     grnd_mns <- rowMeans(data)
     grnd_mns[grnd_mns == 0] <- 0.0000001
     group_means <- lapply(sub_data_lst, function(x){ mns <- rowMeans(x)
@@ -140,7 +140,7 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   }
   
   ### Apply perc_change to all pairwise combinations ###       
-  if(type=="percent"){
+  if(type %in% c("percent", "perc")){
     group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
     perc_diff_lst <- lapply(combn_lst, function(x){
       combn_data <- do.call("cbind", group_means[x])
@@ -150,9 +150,9 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
     })
     fin <- do.call("cbind", perc_diff_lst)
     rownames(fin) <- rownames(data)
-    df_nam <- paste0("Percdiff_", pheno_target[[1]])
+    df_nam <- paste0("perc_", pheno_target[[1]])
   }
-  if(type=="percentgrand"){
+  if(type %in% c("percentgrand", "percgrand", "percentGrand", "percGrand")){
     grnd_mns <- rowMeans(data)
     group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
     perc_diff_lst <- lapply(group_means, function(x){
@@ -164,33 +164,33 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
     fin <- do.call("cbind", perc_diff_lst)
     rownames(fin) <- rownames(data)
     colnames(fin) <- paste0(names(perc_diff_lst), "_vs_grandMeans")
-    df_nam <- paste0("Percdiffgrand_", pheno_target[[1]])
+    df_nam <- paste0("percGrand_", pheno_target[[1]])
   }
   
   
 ### means, sd and se ###  
-  if(type=="means"){
+  if(type%in% c("means", "Means")){
     group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
     fin <- do.call("cbind", group_means)
     colnames(fin) <- names(group_means)
     rownames(fin) <- rownames(data)
     df_nam <- paste0(norm,"Means_", pheno_target[[1]])
   }
-  if(type=="sd"){
+  if(type %in% c("sd", "SD")){
     group_sd <- lapply(sub_data_lst, function(x){as.data.frame(apply(x, 1, stats::sd))})
     fin <- do.call("cbind", group_sd)
     colnames(fin) <- names(group_sd)
     rownames(fin) <- rownames(data)
-    df_nam <- paste0("Sd_", pheno_target[[1]])
+    df_nam <- paste0(norm,"SD_", pheno_target[[1]])
   }
-  if(type=="se"){
+  if(type %in% c("se", "SE")){
     group_se <- lapply(sub_data_lst, function(x){
       as.data.frame(apply(x, 1, function(y){stats::sd(y)/sqrt(length(y))}))
       }) 
     fin <- do.call("cbind", group_se)
     colnames(fin) <- names(group_se)
     rownames(fin) <- rownames(data)
-    df_nam <- paste0("Se_", pheno_target[[1]])
+    df_nam <- paste0(norm,"SE_", pheno_target[[1]])
   }     
   
   ### Add more summary functions###
@@ -198,9 +198,12 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   # if(type=="mean_diff"){}
   # etc
   ### Fix names and return object t###
-  if(PAC_merge==TRUE){
+  if(merge_pac==TRUE){
+    PAC <- sav
+    PAC$summary$new <- list(NULL)
     PAC$summary[[which(names(PAC$summary)=="new")]] <- as.data.frame(fin)
     names(PAC$summary)[which(names(PAC$summary)=="new")] <- df_nam
+    stopifnot(PAC_check(PAC))
   return(PAC)
   }else{
     fin_lst <- list(fin)

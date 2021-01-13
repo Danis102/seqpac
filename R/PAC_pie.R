@@ -94,59 +94,128 @@
 #' @export
 
 
-PAC_pie <- function(PAC, pheno_target, anno_target, colvec=NULL, angle=-25){
-  # Prepare targets
+PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colvec=NULL, no_anno=TRUE, summary="sample", angle=-25){
+  stopifnot(PAC_check(PAC))
+  
+  ## Prepare targets
   if(!is.null(pheno_target)){ 
     if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
-  }
-  
+  }else{
+    PAC$Pheno$eXtra_Col <- rownames(PAC$Pheno)
+    pheno_target <- list(NA)
+    pheno_target[[1]] <-  "eXtra_Col"
+    pheno_target[[2]] <-  PAC$Pheno$eXtra_Col
+    }
   if(!is.null(anno_target)){ 
     if(length(anno_target)==1){ 
       anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
     }
   }
-  
+
   ## Subset
   PAC_sub <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
   anno <- PAC_sub$Anno
   pheno <- PAC_sub$Pheno
   data <- PAC_sub$Counts
   
+  ### Removing no_Anno
+  if(no_anno==FALSE){
+    data <- data[!as.character(anno[, anno_target[[1]]]) == "no_anno",]
+    anno <- anno[!as.character(anno[, anno_target[[1]]]) == "no_anno",]
+  }
+  
+  ### Totaling all counts per sample and sums each per biotype
+  if(summary=="all"){
+    tot_cnts <- mean(colSums(data))
+    names(tot_cnts) <- "all"
+    data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+    data_shrt <- data.frame(Group.1=data_shrt[,1], all= rowMeans(data_shrt[,-1])) 
+    
+  }else{
+  
+    if(summary %in% c("sample","samples","pheno", "Pheno")){
+      tot_cnts <- colSums(data)
+      data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+    }
+    
+    if(summary %in% c("pheno", "Pheno")){
+      x <- split(pheno, pheno[, pheno_target[[1]]])
+      data_pheno_shrt <- as.data.frame(data_shrt$Group.1)
+     for(i in 1:length(x)){
+       names <- as.data.frame(x[i])
+       names <- rownames(names)
+       data_pheno <- data_shrt[, colnames(data_shrt) %in% names]
+       data_pheno <- rowMeans(data_pheno)
+       data_pheno_shrt <- as.data.frame(cbind(data_pheno_shrt,data_pheno))}
+    colnames(data_pheno_shrt) <- c("Group.1", names(x))
+    data_shrt <- data_pheno_shrt
+    tot_cnts <- colSums(data_shrt[,-1])
+    }
+  }  
+  
+  data_shrt_perc <- data_shrt
+  data_shrt_perc[,-1] <- "NA"
+  for (i in 1:length(tot_cnts)){ 
+    data_shrt_perc[,1+i]   <- data_shrt[,1+i]/tot_cnts[i]
+  }
+  
+  data_long_perc <- reshape2::melt(data_shrt_perc, id.vars="Group.1")
+  colnames(data_long_perc) <- c("Category", "Sample", "Percent")
+  data_long_perc$Percent <- data_long_perc$Percent*100
+
   ## Fix order
-  anno[, anno_target[[1]]] <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
-  pheno[, pheno_target[[1]]] <- factor(pheno[, pheno_target[[1]]], levels=pheno_target[[2]])
+  # Anno
+  bio <- anno_target[[2]] 
+  extra  <- which(bio %in% c("no_anno", "other"))
+  bio <- bio[c(extra, (1:length(bio))[!1:length(bio) %in% extra])] 
+  data_long_perc$Category <- factor(as.character(data_long_perc$Category), levels=bio)
+    
+  # Pheno
+  if(is.null(pheno_target)){
+    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(unique(data_long_perc$Sample)))
+  }else{
+    if(summary %in% c("sample","samples")){
+    stopifnot(any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE)
+    sampl_ord <- do.call("c", split(rownames(PAC$Pheno), factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])))
+    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(sampl_ord))
+    data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
+    }
+  }
   
-  ## Check files
-  stopifnot(identical(rownames(data), rownames(anno)))
-  stopifnot(identical(colnames(data), rownames(pheno)))
+  ## Add total counts
+  # tot_cnts <- tot_cnts[match(names(tot_cnts), unique(data_long_perc$Sample))]
+  # data_long_perc$tot_counts <- ""
+  # if(total==TRUE){
+  #   trg_1st <- levels(data_long_perc$Category)[length(levels(data_long_perc$Category))]
+  #   data_long_perc$tot_counts[data_long_perc$Category == trg_1st] <- tot_cnts
+  # }
   
-  ## Summaries
-  sums <- aggregate(data, list(anno[, anno_target[[1]]]), sum) 
-  sums_t <- t(sums[,-1])
-  colnames(sums_t) <- sums[,1]
-  sum_means <- aggregate(sums_t, list(pheno[, pheno_target[[1]]]), mean)
-  perc <- apply(sum_means[,-1], 1, function(x){x/sum(x)*100})
-  colnames(perc) <- sum_means[,1]
-  
-  ## Setup colors
+  ### Plot data
   if(is.null(colvec)){
-    bio <- as.character(rownames(perc))
-    n_extra  <- sum(bio %in% c("no_anno", "other"))
-    colfunc <- grDevices::colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
+    n_extra  <- length(extra)
+    colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
     if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
     if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
     if(n_extra==0){colvec <- colfunc(length(bio))}
   }
   
-  ## Plot
-  prec_lst <- as.list(as.data.frame(perc))
-  plt_lst<- lapply(prec_lst, function(x){
-    p1  <- suppressMessages(pie(x, labels=paste(rownames(perc), round(x, digits=0), "%", sep="_"), col=colvec, init.angle = angle))
+  prec_lst <- split(data_long_perc, data_long_perc$Sample)   
+  prec_lst <- lapply(prec_lst, function(x){
+    x <- x[match(levels(x$Category), x$Category),]
+    x$Category <- factor(levels(x$Category), levels=levels(x$Category))
+    x$Percent[is.na(x$Percent)] <- 0
+    return(x)
+  })
+  plt_lst<- invisible(lapply(prec_lst, function(x){
+    p1  <- pie(x$Percent, labels=paste0(x$Category, "_", round(x$Percent, digits=0), "%"), col=rev(colvec), init.angle = angle)
     print(p1)
     rp <- recordPlot()
-    return(rp)}
-  )
-  leg <- cowplot::get_legend(ggplot(data.frame(types=rownames(perc), variables=factor(rownames(perc), levels=rownames(perc))), aes(x=types, fill=variables)) + geom_bar(color="black") + scale_fill_manual(values=colvec)) 
+    return(rp)
+    }))
+  df <- data.frame(types=prec_lst[[1]]$Category, variables=prec_lst[[1]]$Category, levels=levels(prec_lst[[1]]$Category)) 
+  leg <- cowplot::get_legend(ggplot(df, aes(x=types, fill=variables)) + 
+                               geom_bar(color="black") + 
+                               scale_fill_manual(values=rev(colvec))) 
   return(c(plt_lst, list(legend=leg)))
 }

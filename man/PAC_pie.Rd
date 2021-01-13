@@ -4,23 +4,31 @@
 \alias{PAC_pie}
 \title{Pie plot from PAC}
 \usage{
-PAC_pie(PAC, pheno_target, anno_target, colvec = NULL, angle = -25)
+PAC_pie(
+  PAC,
+  anno_target = NULL,
+  pheno_target = NULL,
+  colvec = NULL,
+  no_anno = TRUE,
+  summary = "sample",
+  angle = -25
+)
 }
 \arguments{
 \item{PAC}{PAC-list object.}
-
-\item{pheno_target}{List with: 
-1st object being character vector of target column(s) in Pheno, 
-2nd object being a character vector of the target
-group(s) in the target column (1st object).
-Important, the 2nd object is order sensitive,
-meaning that categories will appear in the same
-order in the pie. (default=NULL)}
 
 \item{anno_target}{List with: 
 1st object being character vector of target column(s) in Anno, 
 2nd object being a character vector of the target
 biotype(s) in the target column (1st object).
+Important, the 2nd object is order sensitive,
+meaning that categories will appear in the same
+order in the pie. (default=NULL)}
+
+\item{pheno_target}{List with: 
+1st object being character vector of target column(s) in Pheno, 
+2nd object being a character vector of the target
+group(s) in the target column (1st object).
 Important, the 2nd object is order sensitive,
 meaning that categories will appear in the same
 order in the pie. (default=NULL)}
@@ -117,7 +125,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

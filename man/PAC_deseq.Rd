@@ -2,13 +2,15 @@
 % Please edit documentation in R/PAC_deseq.R
 \name{PAC_deseq}
 \alias{PAC_deseq}
-\title{A wrapper to DESeq2 that apply differential expression analysis on a PAC object}
+\title{A wrapper to DESeq2 that apply differential expression analysis on a PAC
+object}
 \usage{
 PAC_deseq(
   PAC,
   model,
   deseq_norm = FALSE,
-  histogram = TRUE,
+  test = "Wald",
+  fitType = "local",
   threads = 1,
   pheno_target = NULL,
   anno_target = NULL
@@ -16,67 +18,92 @@ PAC_deseq(
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno data.frame with samples as row
-names, an Anno data.frame with sequences as row names and a Counts table with
-raw counts. The Counts table must have the sample names as column names and
-sequences as row names.}
+names, an Anno data.frame with sequences as row names and a Counts table
+with raw counts. The Counts table must have the sample names as column
+names and sequences as row names.}
 
-\item{model}{Character vector describing the statistical model based on column names in Pheno.}
+\item{model}{Character vector describing the statistical model based on
+column names in Pheno.}
 
-\item{deseq_norm}{Logical whether to return deseq normalized values or not (default=TRUE).}
+\item{deseq_norm}{Logical whether to return deseq normalized values or not
+(default=TRUE).}
 
-\item{histogram}{Logical whether to return a p-value destributions as a histogram (default=TRUE).}
+\item{test}{Character parsed directly to \code{DESeq2::DESeq} that
+controls what type of statistical test that should be used. Alternatives
+are either "Wald" (Wald significance test) or "LTR" (likelihood ratio
+test/chi-squared test). See \code{DESeq2::DESeq} for more details.
+(Default="Wald")}
+
+\item{fitType}{Character parsed directly to \code{DESeq2::DESeq} that
+controls what type of despersion fit that should be used. Alternatives are
+either "parametric" (dispersion-mean relation), "local" (local regression
+of log dispersions), "mean" (mean of gene-wise dispersion). See
+\code{DESeq2::DESeq} for more details. (Default="local")}
 
 \item{threads}{Integer number of threads to run in parallel.}
 
-\item{pheno_target}{(optional) List with: 
-1st object being a character indicating the main target column in
-Pheno.
-2nd object being a character vector of the target group(s) in the
-target Pheno column (1st object).
+\item{pheno_target}{(optional) List with: 1st object being a character
+  indicating the main target column in Pheno. 2nd object being a character
+  vector of the target group(s) in the target Pheno column (1st object).
 
-Note: In PAC_deseq pheno_target controls the main comparative factor
-category. If for instance a target column named "groups" in
-PAC$Pheno contains "control" and "treatment" categories, setting
-pheno_target=list("groups", c("treatment", "controls") ensures that
-"treatment" is presented 1st in the factor levels, making for
-example log2FC appear as "treatment vs control". As default,
-pheno_target=NULL will result in the factor levels being
-automatically sorted in ascending order, which in the example above
-would result in control vs treatment log2FC.}
+  Imprtant: In \code{PAC_deseq}, pheno_target controls the main comparative
+  factor category from which a summarized table and plots will be generated.
+  If, for instance, a target column named "groups" in PAC$Pheno contains
+  "control" and "treatment" categories, setting pheno_target=list("groups",
+  c("treatment", "controls") ensures that "treatment" is presented 1st in the
+  factor levels, making for example log2FC appear as "treatment vs control".
+  As default, pheno_target=NULL will result in the factor levels being
+  automatically sorted in ascending order, which in the example above would
+  result in control vs treatment log2FC. If no pheno_target is given, the
+  first feature in the model will also be the main comparison presented in
+  the graphs and summary tables.}
 
-\item{anno_target}{(optional) List with: 
-1st object being a character vector of target column in Anno 
-2nd object being a character vector of the target type/biotypes(s) in the target Anno column (1st object).
-(default=NULL)}
+\item{anno_target}{(optional) List with: 1st object being a character vector
+of target column in Anno 2nd object being a character vector of the target
+type/biotypes(s) in the target Anno column (1st object). (default=NULL)}
 }
 \value{
 A list of objects: 
-              1st object - result table 
-              2nd object - p-value histogram (optional)
+   1st object - Summarized result table merged with PAC$Anno 
+   2nd object - Target graphs (p-val distribution and volcano) 
+   3rd object - All output from DESeq2::DESeq
 }
 \description{
 \code{PAC_deseq} DESeq2 analysis on PAC_object.
 }
 \details{
-Given a PAC object this function will apply a differential expression analysis using DESeq2.
+Given a PAC object this function will apply a differential expression
+analysis using DESeq2.
 }
 \examples{
 
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-PAC <- PAC_norm(pac, type="rpm")
-pheno_target <- list("replicate", c("test3", "test1"))
-pheno_target <- list("type", c("Sperm", "Ovaries"))
-pheno_target <- list("type", c("Ovaries", "Sperm"))
 
-model=~replicate
-model=~replicate+type  
-    
-    
-pheno_target <- list("replicate")
+## Simple model testing Ovaries against Sperm using Wald test with local fit (default)
+table(pac$Pheno$type)
+output_deseq <- PAC_deseq(pac, model= ~type, threads=6)
 
-test <- PAC_deseq(PAC, model=model, deseq_norm=TRUE, histogram=TRUE, threads=4, pheno_target=pheno_target, anno_target=NULL)
+## More complicated, but still graphs will be generated from 'type' since it is first in model  
+output_deseq <- PAC_deseq(pac, model= ~type + replicate)
+
+## More complicated, but still graphs will be generated from 'type' since it is first in model  
+output_deseq <- PAC_deseq(pac, model= ~type + replicate)   # (generates a warning)
+
+## Using pheno_target we can change focus
+output_deseq <- PAC_deseq(pac, model= ~type + replicate, pheno_target=list("replicate"))
+
+
+## With pheno_target we can also change the direction fo the comparision change focus
+# Sperm vs Ovaries:
+output_deseq <- PAC_deseq(pac, model= ~type, threads=6)   
+# Ovaries vs Sperm:
+output_deseq <- PAC_deseq(pac, model= ~type, pheno_target=list("type", c("Ovaries", "Sperm")), threads=6)
+
+## In the output you find PAC merged results, target plots and output_deseq   
+names(output_deseq)
+tibble::as_tibble(output_deseq$result)
 
 }
 \seealso{
@@ -101,7 +128,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

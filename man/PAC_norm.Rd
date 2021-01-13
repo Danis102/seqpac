@@ -4,39 +4,40 @@
 \alias{PAC_norm}
 \title{Generates normalized values from a PAC object}
 \usage{
-PAC_norm(PAC, type = "rpm", PAC_merge = TRUE)
+PAC_norm(PAC, type = "cpm", PAC_merge = TRUE)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
 row names and a Count table with raw counts.}
 
 \item{type}{Character describing what type of normalization method to be
-applied to the PAC$Counts. If type="rpm" will return reads per million (or
-sometimes refered to as counts per million reads). Each sequence is then
-divided against the total number of sequences in a given sample. If
-type="vst" PAC$Counts will instead be imported into the
+applied to the PAC$Counts. If type="cpm" will return reads/counts per
+million (or sometimes refered to as counts per million reads). Each
+sequence is then divided against the total number of counts in a given
+sample. If type="vst" PAC$Counts will instead be imported into the
 \code{varianceStabilizingTransformation} function in the DESeq2-package
-with the options blind=TRUE and fitType="mean".
-If type="rlog" PAC$Counts will instead be imported into the
-\code{rlogTransformation} function in the DESeq2-package
-with the options blind=TRUE and fitType="mean".}
+with the options blind=TRUE and fitType="mean". If type="rlog" PAC$Counts
+will instead be imported into the \code{rlogTransformation} function also
+available in DESeq2-package (options blind=TRUE and fitType="mean") for a
+log2 transformed version of vst that are more robust to varying library
+sizes.}
 
-\item{PAC_merge}{logical whether the normalized table should be returned as
-stored in the PAC$norm folder of the provided PAC object (TRUE) or be
-retruned as a data frame.}
+\item{PAC_merge}{logical whether the normalized table should be returned and
+stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
+returned as a data frame.}
 }
 \value{
 A normalized count table
 }
 \description{
-\code{PAC_norm} generates RPM values from a PAC object
+\code{PAC_norm} generates normalized values from a PAC object
 }
 \details{
-Using the counts in a PAC object to generate RPM values in a dataframe with
-the same rownames as in the original PAC object
+Using the counts in a PAC object to generate normalized values in a dataframe
+with the same rownames as in the original PAC object
 }
 \examples{
-  df  <- PAC_norm(PAC, type="rpm") 
+  df  <- PAC_norm(PAC, type="cpm") 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current
@@ -60,7 +61,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

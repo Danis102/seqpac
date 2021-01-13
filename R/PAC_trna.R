@@ -80,7 +80,7 @@
 #' 
 #' @export
 
-PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
+PAC_trna <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
   
   ## Setup ##
   if(!is.null(anno_target_1)){
@@ -100,14 +100,19 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
   
   PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, pheno_target=pheno_target) 
   PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_2) 
-  if(!is.null(filter)){ PAC <- PAC_filter(PAC, threshold=filter, coverage=100)}
+  if(!is.null(filter)){ 
+    PAC <- PAC_filter(PAC, threshold=filter, coverage=100)
+    }
   
   PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])
   PAC$Anno[,anno_target_1[[1]]] <- factor(PAC$Anno[,anno_target_1[[1]]], levels=anno_target_1[[2]])
   PAC$Anno[,anno_target_2[[1]]] <- factor(PAC$Anno[,anno_target_2[[1]]], levels=anno_target_2[[2]])
   
-  if(norm=="raw"){data <- PAC$Counts }else{ data <- PAC$norm[[norm]]}
-  
+  if(norm=="raw"){
+    data <- PAC$Counts 
+  }else{ 
+    data <- PAC$norm[[norm]]
+  }
   
   ## Aggregate data for anno_target_1 ##
   spl_lst <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
@@ -116,7 +121,10 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
     x_agg <- aggregate(x, list(PAC$Anno[[anno_target_1[[1]]]]), sum)
     x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
   })
-  if(join==TRUE){Ann1_agg_lst <- list(do.call("rbind", Ann1_agg_lst))}
+  if(join==TRUE){
+    Ann1_agg_lst <- list(do.call("rbind", Ann1_agg_lst))
+    names(Ann1_agg_lst) <- "Grand_means"
+    }
   
   
   ## Aggregate data for anno_target_2 ##
@@ -126,7 +134,10 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
     x_agg <- aggregate(x, list(PAC$Anno[[anno_target_2[[1]]]]), sum)
     x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
   })
-  if(join==TRUE){Ann2_agg_lst <- list(do.call("rbind", Ann2_agg_lst))}
+  if(join==TRUE){
+    Ann2_agg_lst <- list(do.call("rbind", Ann2_agg_lst))
+    names(Ann2_agg_lst) <- "Grand_means"
+    }
   
   ## Aggregate data for anno_target_1  and anno_target_2 ##
   spl_lst_12 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
@@ -137,7 +148,10 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
     facts <-  as.data.frame(do.call("rbind", strsplit(x_agg_long$Group.1, "____")))
     return(cbind(x_agg_long, data.frame(ann1=facts[,1], ann2=facts[,2])))
   })
-  if(join==TRUE){Ann12_agg_lst <- list(do.call("rbind", Ann12_agg_lst))}
+  if(join==TRUE){
+    Ann12_agg_lst <- list(do.call("rbind", Ann12_agg_lst))
+    names(Ann12_agg_lst) <- "Grand_means"
+    }
   
   
   ## Fix missing values in each category and generate percent types
@@ -184,12 +198,9 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
   colfunc_ann2<- grDevices::colorRampPalette(c("#094A6B", "#FFFFFF", "#9D0014"))
   rgb_vec_ann2 <- rev(colfunc_ann2(length(anno_target_2[[2]])))
   
-  
-  
   ## Fix zeros for log10 
   Ann1_agg_lst <- lapply(Ann1_agg_lst, function(x) {x$value[x$value == 0] <- 0.000001; return(x)})
-  
-  
+
   plot_lst <- list(NULL)
   #######################################################################
   ## Plot mean expression anno_target_1
@@ -249,8 +260,12 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
   #Independent#############################################################################################################
   if(paired==FALSE && log2fc==TRUE){
     ## Error bars for log2_FC types - independent
-    if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
-    data_lst <- lapply(Ann1_agg_lst, function(x){suppressWarnings(aggregate(x, list(factor(x$Group.1, levels=lvls)), mean))})
+    if(join==TRUE){
+      Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))
+    }
+    data_lst <- lapply(Ann1_agg_lst, function(x){
+        suppressWarnings(aggregate(x, list(factor(x$Group.1, levels=lvls)), mean))
+        })
     stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
     logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
     logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
@@ -303,10 +318,7 @@ PAC_tRNA <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
   #                             ggthemes::geom_rangeframe()
   
   
-  
-  
   ## Percent filled bar (All)
-  if(join==TRUE){Ann12_perc_ord <- split(Ann12_perc_ord[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann12_perc_ord[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
   plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
     x$ann1 <- factor(x$ann1, levels=rev(unique(x$ann1)))
     x$ann2 <- factor(x$ann2, levels=rev(anno_target_2[[2]]))

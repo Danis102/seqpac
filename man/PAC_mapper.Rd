@@ -7,9 +7,9 @@
 PAC_mapper(
   PAC,
   ref,
+  mapper = "reanno",
   mismatches = 0,
   threads = 1,
-  par_type = "PSOCK",
   N_up = "",
   N_down = "",
   report_string = FALSE
@@ -21,14 +21,21 @@ PAC_mapper(
 \item{ref}{Character indicating the path to the fasta (.fa) reference
 file or a DNAStringSet with already loaded reference sequences.}
 
+\item{mapper}{Character indicating what align engine to be used. If
+mapper="reanno" (default) PAC_mapper will create temporary files and
+generate missing bowtie indexes for a reannotion workflow (see
+\code{?map_reanno}. Important, for PAC_mapper to successfully tap into the
+reannotation workflow, the names of ref (fasta or DNAStringSet) cannot
+contain any ";" characters. If mapper="vmatch", PAC_mapper will instead use
+the \code{vmatchPattern} function in the Biostrings package. While the
+mapper="reanno" is by far the fastest option, mapper="vmatch" does not
+require bowtie indexes.}
+
 \item{mismatches}{Integer indicating the number of mismatches that should be
 allowed in the mapping.}
 
 \item{threads}{Integer indicating the number of parallel processes that
 should be used.}
-
-\item{par_type}{Character indicating if "PSOCK" or "FORK" should be parsed to
-parallel::makeCluster (default="PSOCK").}
 
 \item{N_up}{Character indicating a sequence that should be added to the
 reference at the 5' end prior to mapping. A wild card nucleotides "NNN"
@@ -70,6 +77,8 @@ map sequences in PAC and mapping extract information.
 path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
 load(file=paste0(path, "PAC_all.Rdata"))
 
+
+
 PAC_filt <- PAC_filter(PAC_all, size=c(16,70), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
 PAC_filt <- PAC_rpm(PAC_filt)
 PAC_filt <- PAC_filter(PAC_filt, size=c(16,70), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
@@ -86,7 +95,10 @@ PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=lis
 ## Mapping
 map_rRNA <- PAC_mapper(PAC_filt, ref="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
 
-All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", colour="red")})
+All_plots <- lapply(as.list(Smry_trg_all), function(x){
+                            PAC_covplot(PAC_filt, map_rRNA, 
+                            summary_target = list("means_[Groups]", x), 
+                            xseq=FALSE, style="line", colour="red")})
 
 cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],
@@ -104,7 +116,7 @@ load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophi
 
 ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
 full <- Biostrings::readDNAStringSet(ref_path)
-ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
+ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1", names(full))]
 
 
 #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
@@ -112,7 +124,7 @@ ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
 map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 
 
-
+ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
 
 
 }
@@ -138,7 +150,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

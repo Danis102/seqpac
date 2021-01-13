@@ -22,9 +22,45 @@
 #'   type="fastq", the scripts will generate a count table based on fastq files
 #'   stored in the input path. If type="sports", a count table is generated from
 #'   a list object created using \code{import_sports} contain imported sports
-#'   output files .
+#'   output files.
 #'   
-#' @param evidence  evidence=c(experiment=2, sample=1)
+#' @param trimming Character indicating what type of trimming tool that should
+#'   be used. If \code{trimming="seqpac"}, fastq files will be sent to the
+#'   \code{make_trim} function in seqpac, while if \code{trimming="cutadapt"}
+#'   fastq files will be sent to the \code{make_cutadapt} function. Note that
+#'   \code{trimming="seqpac"} runs independently of external software, while
+#'   \code{trimming="cutadapt"} is dependent on an externally installed version
+#'   of cutadapt and fastq_quality_filter. Trimmed fastq files are stored
+#'   temporarily in the systems default temporary folder. Please, run
+#'   \code{make_trim} and \code{make_cutadapt} seperately for perminant storage
+#'   options, or set \code{save_temp=TRUE} to avoid that \code{make_counts} will
+#'   delete all temporary files.  As default trimming=NULL, which indicates that
+#'   input fastq files has already been trimmed.
+#'     
+#' @param parse Character strings defining the command that should be parsed to
+#'   \code{make_trim} or \code{make_cutadapt}. This will allow you to customize
+#'   your trimming according to 3' adaptor sequence and platform specifics etc.
+#'   Please see examples below and the manuals for \code{make_trim} and
+#'   \code{make_cutadapt} for more details.
+#'   
+#' @param evidence Character vector with two inputs named 'experiment' and
+#'   'sample' that controls the low level evidence filter. Users may already at
+#'   this point markly reduce the level of noise in the counts table by
+#'   specifying the number of independent evidence that a specific sequence must
+#'   have to be included in the counts table. As default,
+#'   \code{evidence=c(experiment=2, sample=1)} will include all sequences that
+#'   have >=1 count in at least 2 independent fastq files. Thus 'experiment'
+#'   controls the number of independent fastq evidence needed across the whole
+#'   experiment. Note, however, that 'sample' does not control the number of
+#'   counts needed in each sample. The evidence filter will always use >=1 count
+#'   in X number of fastq files. Instead 'sample' controls when a sequence
+#'   should be included despite not reaching the 'experiment' threshold. Thus if
+#'   \code{evidence=c(experiment=2, sample=10)}, sequences that reach 10 counts
+#'   in a single sample will also be included. If evidence=NULL all unique
+#'   sequences will be saved. See 'examples' below for more examples.
+#'   
+#' @param plot Logical whether evidence plots should be printed and saved in the
+#'   returned list (default=TRUE).
 #'   
 #' @param threads Integer stating the number of parallell jobs. Note, that
 #'   reading multiple fastq files drains memory fast, using up to 10Gb per fastq
@@ -32,56 +68,20 @@
 #'   each thread on the machine have at least 10 Gb of memory availabe, unless
 #'   your fastq files are very small.Use \code{parallel::detectcores()} to see
 #'   available threads on the machine.
-#'
-#' @param trimming Character indicating what type of trimming tool that should
-#'   be used. If \code{trimming="seqpac"}, fastq files will be sent to the
-#'   \code{make_trim} function in seqpac, while if \code{trimming="cutadapt"}
-#'   fastq files will be sent to the \code{make_cutadapt} function. Note that
-#'   \code{trimming="seqpac"} runs independently of external software, while
-#'   \code{trimming="cutadapt"} is dependent on an externally installed version
-#'   of cutadapt. Trimmed fastq files are stored temporarily in the systems
-#'   default temporary folder. Please, run \code{make_trim} and
-#'   \code{make_cutadapt} seperately for perminant storaged options, or set
-#'   \code{save_temp=TRUE} to avoid that \code{make_counts} will delete all
-#'   temporary files.  As default trimming=NULL, which indicates that input
-#'   fastq files has already been trimmed.
-#'     
-#' @param parse Command strings defining the command that should be parsed to
-#'   \code{make_trim} or \code{make_cutadapt}. This will allow you to customize
-#'   your timming according to 3' adaptor sequence and platform specifics etc.
-#'   See examples below. Please see manuals for \code{make_trim} \code{make_cutadapt}
 #'   
 #' @param save_temp Logical whether temporary files (including trimmed fastq
 #'   files) should be saved or not. Note, the function will print the path to
 #'   the temprorary folder in the console.
 #'   
 #'   
-#'   
 #' @return 
-#' type="fastq": Data frame (a count table) with sequence counts across
-#' all samples of sequences that occured at least two independent samples.
-#' 
-#' type="sports" Using the weakly filtered master annotation file (anno)
-#' generated by the \code{make_anno} function, \code{make_counTable} will
-#' extract the target sequences in anno from sports_lst and merge the counts
-#' into one single data.frame (raw countTable). The output data.frame will ahve
-#' rownames matching the original master annotation file.
-#' 
-#' 
-#'
-#'
+#' A list containing three objects:
+#'   1. counts (data frame) = count table. 
+#'   2. progress_report = progress report from trimming and evidence filter.
+#'   3. evidence_plots = bar graphs showing the impact of evidence filter. 
+#'  
 #' @examples
 #'  library(seqpac)
-#'  
-#'  ############################################################ 
-#'  ### Sports import 
-#'  
-#'  countTable <- make_counts(input = <name_of_your_imported_sports_list>,
-#'                            anno    = <name_of_your_annotation_dataframe>,
-#'                            threads       = <number_of_independent_evidence>,
-#'                            )
-#'
-#'  countTable <- make_count(sports_lst = sports_lst, anno=anno, threads=12)
 #'   
 #' ############################################################ 
 #' ### Seqpac fastq trimming with the make_trim function 
@@ -134,41 +134,23 @@
 #'  
 #'  
 #'  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
-#'  test <- make_counts(input=input, type=type, evidence=c(experiment=2, sample=10), threads=threads, cutadpt=TRUE, parse=parse)
-#'  extras <- apply(test$counts, 1, function(x){sum(x==0)})
-#'  test$counts[extras==5,]  # No single sample sequence reaches 10 counts
+#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
+#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#'  test$counts[extras==1,]  # No single sample sequence reaches 10 counts
 #'  
 #'  
 #'  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
-#'  test <- make_counts(input=input, type=type, evidence=c(experiment=2, sample=3), threads=threads, cutadpt=TRUE, parse=parse)  
-#'  extras <- apply(test$counts, 1, function(x){sum(x==0)})
-#'  test$counts[extras==5,] # A few hundred single sample sequences reach 3 counts
+#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
+#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#'  test$counts[extras==1,] # A few hundred single sample sequences reach 3 counts
 #'  
 #'  
-#'  
-#'  ##############################
-#'  input <-  "/data/Data_analysis/Projects/Drosophila/Other/IOR/"
-#'  parse_tag = list(  Long="cutadapt -j 1 -g TGGCAACGATC -O 5 -m 5", 
-#'                         Short="cutadapt -j 1 -g TGGGATC -O 5 -m 5")
-#'                         
-#'  target_tag = list(  Long= gsub("_2", "-2", Ph_grps$Sample[Ph_grps$Tag_type %in% "Long"]),
-#'                       Short= gsub("_2", "-2", Ph_grps$Sample[Ph_grps$Tag_type %in% "Short"]))
-#'  
-#'  test <- make_counts(input=input, type=type, threads=threads, cutadpt=TRUE, parse=parse, tag=tag, parse_tag=parse_tag, target_tag=target_tag)
-#'  
-#'  
-#'  #'  Ph_grps <- read.delim("/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Groups_data.txt", header=TRUE)
-#'  Ph_grps$Sample <-  gsub("_d|_s", "", Ph_grps$Sample_ID)
-#'  Ph_grps <- Ph_grps[!duplicated(Ph_grps$Sample),]
-#'  Ph_grps$Tag_type <- ifelse(grepl("Long", Ph_grps$Method), "Long", 
-#'                              ifelse(grepl("Short", Ph_grps$Method), "Short", NA))
 #'  
 #' @export
 
 make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE,
-                        parse="default", evidence=c(experiment=2, sample=1), save_temp=FALSE)
+                        parse="default_illumina", evidence=c(experiment=2, sample=1), save_temp=FALSE)
                         {
-  suppressPackageStartupMessages(require(foreach))
   ##############################
   ###### Sports as input #######
   if(type=="sports"){
@@ -233,7 +215,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
           cat("\n----- cutadapt command ----------------------\n")
           print(parse$cutadapt)
           cat("\n---------------------------------------------")
-          cat("\n----- fastq_quality_filter command ----------")
+          cat("\n----- fastq_quality_filter command ----------\n")
           print(parse$fastq_quality_filter)
           cat("\n\n")
         }
@@ -338,7 +320,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     if(trimming=="cutadapt"){
       fls <- list.files(output, pattern="trim.fastq.gz$|trim.fastq$", full.names=TRUE, recursive=FALSE)
     }
-    
+    `%dopar%` <- foreach::`%dopar%`
     seq_lst   <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
       if(evidence[2]>1){
         fstq <- ShortRead::readFastq(fls[[i]], withIds=FALSE)
@@ -397,7 +379,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
 ###### Make count table #######
   cat(paste0("\nMaking a count table with sequences appearing in at least ", evidence[1]," independent samples ..."))
   if(evidence[2]>1){
-    cat(paste0("\nAlso saves sequences with less evidence but more than ", evidence[2]-1, " counts in a single sample."))
+    cat(paste0("\nAlso saves sequences with less evidence but >= ", evidence[2], " counts in a single sample."))
     cat(paste0("\n(Please set evidence$sample == 1 if this was not intended.)"))
   }
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
@@ -424,8 +406,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
   }
   doParallel::stopImplicitCluster()
   gc(reset=TRUE)
-  detach(package:foreach)
-  
+
   cat("\nFinalizing at ", paste0(Sys.time()), "\n")
   names(reads_lst) <- gsub("_merge|\\.fastq.gz$|fastq.gz$|\\.fastq$", "", names(reads_lst))
   names(reads_lst) <- gsub("temp_|\\.trim", "", names(reads_lst)) 
@@ -494,7 +475,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     plt_lst <- list(reads=p1, uniseqs=p2)
     if(plot==TRUE){
       print(cowplot::plot_grid(plotlist=plt_lst, ncol=1, nrow=2))
-    }
+    }else{plt_lst <- "Evidence plot was not omitted by user"}
     
     prog_report <- cbind(prog_report, stat_dt[!names(stat_dt) %in% c("uni_seqs", "tot_reads")])
     return(list(counts=ordCount_df, progress_report=prog_report, evidence_plots=plt_lst))

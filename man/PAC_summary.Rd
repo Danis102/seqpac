@@ -10,13 +10,13 @@ PAC_summary(
   type = "means",
   pheno_target = NULL,
   rev = FALSE,
-  PAC_merge = FALSE
+  merge_pac = TRUE
 )
 }
 \arguments{
 \item{PAC}{PAC object containing a Pheno dataframe with samples as row names,
-a Counts table with raw counts and a normalized list-folder containing
-tables with normalized Counts (e.g. rpm).}
+a Counts table with raw counts, and a normalized list-folder containing
+tables with normalized Counts (e.g. cpm).}
 
 \item{norm}{Character indicating what type of data to be used. If 'counts' the raw
 counts in Counts will be used (default). Given any other value, the
@@ -33,9 +33,9 @@ group(s) in the target Pheno column (1st object).}
 \item{rev}{Logical whether pairwise comparisions should be reversed
 (default=FALSE).}
 
-\item{PAC_merge}{Logical whether simplified annotation vector should
-automatically be added to Anno object if a PAC list object were given as
-input (default=FALSE)}
+\item{merge_pac}{Logical whether simplified annotation vector should
+automatically be added to the Anno object of the input PAC list object
+(default=TRUE). If \code{merge_pac=FALSE} a dataframe is returned.}
 }
 \value{
 A PAC object with a pheno_summary folder containing the summarized
@@ -43,11 +43,11 @@ A PAC object with a pheno_summary folder containing the summarized
   pheno_target, type and norm input.
 }
 \description{
-\code{PAC_summary} Summarizes data stored in a PAC object.
+\code{PAC_summary} summarizes data stored in a PAC object.
 }
 \details{
-Given a PAC object this function summarize data in Counts or in the norm
-list-folder according to a grouping variable in Pheno.
+Given a PAC object this function summarize data in PAC$Counts or in the norm
+'folder' according to a grouping variable in PAC$Pheno.
 }
 \examples{
 load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
@@ -55,7 +55,6 @@ load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophi
 
 PAC_check(PAC_filt) # TRUE
 
-PAC_filt <- PAC_rpm(PAC_filt)
 
 PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method", NULL))
 PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method", NULL))
@@ -95,7 +94,7 @@ Other PAC analysis:
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
-\code{\link{PAC_tRNA}()},
+\code{\link{PAC_trna}()},
 \code{\link{map_rangetype}()}
 }
 \concept{PAC analysis}

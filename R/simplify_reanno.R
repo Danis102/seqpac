@@ -114,11 +114,17 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
   df_hits <- data.frame(matrix(NA, nrow=length(anno_vect), ncol=nrow(catg)), row.names=names(anno_vect))
   colnames(df_hits) <- catg$Simplified_biotype
   search_terms <- as.character(catg$Original_biotypes)
+  search_terms[nchar(search_terms) == 0] <- "xkFTGWQd£$¤"
+  
   if(any(duplicated(unlist(strsplit(paste0(search_terms, collapse=", "), ", "))))){
     stop("\nAborted! Search terms overlap multiple biotype categories.\nPlease double check the asignments.")}  
   search_terms <- gsub(", ", "|", search_terms) 
   for(i in 1:length(search_terms)){
-    df_hits[,i]  <- ifelse(grepl(search_terms[i], anno_vect), as.character(catg$Simplified_biotype[i]), "no_hit")
+    if(search_terms[i]=="xkFTGWQd£$¤"){
+      df_hits[,i]  <- "no_hit"
+    }else{
+      df_hits[,i]  <- ifelse(grepl(search_terms[i], anno_vect), as.character(catg$Simplified_biotype[i]), "no_hit")
+    }
   }
   vect_hits <- apply(df_hits, 1, function(x){paste(x, collapse="|")}) 
   vect_hits <- gsub("no_hit\\||\\|no_hit", "", vect_hits)

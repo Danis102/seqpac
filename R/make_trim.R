@@ -199,14 +199,19 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
     suppressWarnings(dir.create(output, recursive = TRUE))  
   }
   
-
+#####################################
+##### Make adaptor trimming 5' ######
+    if(!is.null(adapt_5)){
+      stop("\n5' trimming is currently not supported, but will be included in future updates of seqpac.\nFor now you can use the 'make_cutadapt' function to parse a 5' argument to cutadapt.\nNote, however, that 'make_cutadapt' depends on externally installed versions of \ncutadapt and fastq_quality_filter.")   
+    }
+  
 #########################################################     
 ##### Enter parallel loops and reading fastq      #######
   cat("\nNow entering the parallel trimming loop (R may stop respond) ...")
   cat(paste0("\n(progress may be followed in: ", output, ")"))
   doParallel::registerDoParallel(threads)  # Do not use parallel::makeClusters!!!
-  suppressPackageStartupMessages(require(foreach))
-  prog_report <- foreach(i=1:length(fls), .inorder = TRUE, .export= c("fls", "out_file", "nam_trim", "nam"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+  `%dopar%` <- foreach::`%dopar%`
+  prog_report <- foreach::foreach(i=1:length(fls), .inorder = TRUE, .export= c("fls", "out_file", "nam_trim", "nam"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
       # Save lists
       sav_lst <- list(NA)
       coord_lst <- list(NA)
@@ -227,8 +232,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
       if(!length(unique(lgn)) == 1){
         warning("\nDiffering read lengths prior to adapter trimming.\nHave you already performed 3-prim trimming?")
       }
-
       
+
 #########################################################     
 ##### Make NextSeq/NovaSeq poly-G trimming/filter ####### 
       if(!is.null(polyG)){
@@ -263,7 +268,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
       mn <- as.numeric(adapt_3_set[names(adapt_3_set)=="min"])
       mis <- as.numeric(adapt_3_set[names(adapt_3_set)=="mismatch"])
       tp <- adapt_3_set[names(adapt_3_set)=="type"]
-    ## Setup adapter sequences
+    
+      ## Setup adapter sequences
       adapt_lgn <- nchar(adapt_3)
       ns <- mxlgn-adapt_lgn
       adapt_ns <- paste0(adapt_3, paste(rep("N", ns), collapse=""))
@@ -280,8 +286,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
 
     ## Trimming wobbling starts 
       if(mis>=0.1){
-          if(nchar(adapt_3)< 30){
-                 warning("Your trimming sequence was shorter than 30 nt.\nFor best trimming results in the terminals using \nmismatches, please provide a longer adaptor sequence.")
+          if(nchar(adapt_3)< 25){
+                 warning("Your trimming sequence was shorter than 25 nt.\nFor best trimming results in the terminals using \nmismatches, please provide a longer adaptor sequence.")
               }
       }
       shrtst_lgn <- 15
@@ -431,7 +437,11 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
          }
          if(length(rm_nam)>0){
            rm_logi <- rowSums(do.call("cbind", trim_filt[rm_nam])) > 0
-           fstq <- fstq[!rowSums(cbind(rm_logi, save_logi)) > 0]
+           if(length(sav_nam)>0){
+             fstq <- fstq[!rowSums(cbind(rm_logi, save_logi)) > 0]
+           }else{
+             fstq <- fstq[!rm_logi]
+           }
          }else{
            fstq <- fstq[!save_logi]
          }
@@ -474,7 +484,6 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
      return(sav_lst)
        }
 doParallel::stopImplicitCluster()
-detach(package:foreach)
 gc(reset=TRUE)
 
 nams_prog <- as.list(names(prog_report[[1]]))

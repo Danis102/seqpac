@@ -86,8 +86,8 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
                       data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
 
 										## Add range filter
-										if(is.null(range)){range <- c(min(anno$Length), max(anno$Length))}
-										filt <- anno$Length >= range[1] & anno$Length <= range[2] 
+										if(is.null(range)){range <- c(min(anno$Size), max(anno$Size))}
+										filt <- anno$Size >= range[1] & anno$Size <= range[2] 
 							      anno <- anno[filt,]
 										data <- data[filt,]
 										
@@ -118,7 +118,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
 										
 										bio_fact <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
 										seq_range <- seq(range[1], range[2])
-										size_fact <- factor(anno$Length, levels=seq_range)
+										size_fact <- factor(anno$Size, levels=seq_range)
                     size_lst <- lapply(as.list(data), function(x){
                                               bio_agg <- aggregate(x, list(bio_fact, size_fact), sum)
                                               colnames(bio_agg) <- c("biotype", "size", "data")

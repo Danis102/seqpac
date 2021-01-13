@@ -50,7 +50,8 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
   files <- list.files(reanno_path, pattern="Full_reanno_mis0|Full_reanno_mis1|Full_reanno_mis2|Full_reanno_mis3|Full_reanno_mis4|Full_reanno_mis5", full.names = TRUE)
   seqs <- (seq(1:length(files)))-1
   reanno_lst <- list(NA)
-  for(i in 1:length(files)){load(files[i])
+  for(i in 1:length(files)){
+    load(files[i])
     reanno_lst[[i]] <- reanno
     names(reanno_lst)[i] <- paste0("mis", seqs[i])
   }

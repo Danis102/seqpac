@@ -11,19 +11,19 @@
 #'   package.
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
-#'   row names and a Counts table with raw counts or reads per million (rpm).
+#'   row names and a Counts table with raw counts or reads per million (cpm).
 #'   
 #' @param size Integer vector giving the size interval, as c(min,max), that
 #'   should be saved (default=c(min,max)).
 #'   
-#' @param threshold Integer giving the threshold in rpm or counts that needs to
+#' @param threshold Integer giving the threshold in cpm or counts that needs to
 #'   be reached for a sequence to be included (default=10).
 #'   
 #' @param coverage Integer giving the percent of independent samples that need
 #'   to reach the threshold for a sequence to be included (default=100).
 #'   
-#' @param type Character specifying if filtering should be done "rpm" or
-#'   "counts" (default="rpm").
+#' @param type Character specifying if filtering should be done "cpm" or
+#'   "counts" (default="cpm").
 #' 
 #' @param stat (optional) Logical specifying if an coverage graph should be
 #'   generated or not (default=FALSE).
@@ -52,10 +52,10 @@
 #' 
 #' test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
 #' 
-#' pac_filt <- PAC_norm(pac, type="rpm")
-#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "rpm", type = "means",  pheno_target=list("type"))
+#' pac_filt <- PAC_norm(pac, type="cpm")
+#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", type = "means",  pheno_target=list("type"))
 #' 
-#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="rpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of rpm filter
+#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
 #'
 #' test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 #' 
@@ -115,7 +115,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
   if(!is.null(size)){
     if(!length(size)==2)
       stop("\nYou must specify both min and max size.\nOnly one number was obtained.")
-    sub_size <- PAC$Anno$Length >= size[1] & PAC$Anno$Length <= size[2]
+    sub_size <- PAC$Anno$Size >= size[1] & PAC$Anno$Size <= size[2]
     if(any(names(PAC)=="norm")){
       PAC$norm <- lapply(as.list(PAC$norm), function(x){x[sub_size, , drop=FALSE]})}
     if(any(names(PAC)=="summary")){
@@ -128,14 +128,16 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
   if(!subset_only==TRUE){   
     ### Extract essential information
     if(!is.null(type)){
-      if(type=="rpm"){ 
-        df <- PAC$norm$rpm
-        cat("\n-- RPM filter was specified.")
-        }
-      if(type=="counts"){ 
+      if(!type %in% c(names(PAC$norm),"counts", "Counts")){
+        stop("The data specified in 'type' was not avaiable in PAC.\nMake sure that name in 'type' specifies a table name in \nPAC$Counts or PAC$norm$...")
+      }
+      if(type %in% c("counts","Counts")){ 
         df <- PAC$Counts
         cat("\n-- Count filter was specified.")
-        }    
+        }else{ 
+        df <- PAC$norm[[type]]
+        cat(paste0("\n-- Filter on normalized (", type, ") values was specified."))
+        }   
       
       ### Check col and row names
       if(!identical(rownames(PAC$Anno), rownames(df))){

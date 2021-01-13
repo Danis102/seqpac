@@ -67,16 +67,17 @@
 #' @export
 
 make_anno <- function(input, type="counts", threads=1, stat=TRUE){
-                  require(data.table)
+                  
               if(type=="counts"){
                   if(class(input)=="list"){cnts <- input[["counts"]]}
                   if(class(input)=="data.frame"){cnts <- input}
-                  anno <- data.frame(Length=nchar(rownames(cnts)))
+                  anno <- data.frame(Size=nchar(rownames(cnts)))
                   rownames(anno) <- rownames(cnts)
                   return(anno)
-                  }
+              }
+  
               if(type=="sports"){      
-                        setDTthreads(threads=threads)
+                        #data.table::setDTthreads(threads=threads)
                         cat("First extracting all sequences from output files ...\n")
                         pb <- txtProgressBar(min = 0, max = length(input), initial = 0, style = 3, width = 100)
                         seq_lst<- list(NA)
