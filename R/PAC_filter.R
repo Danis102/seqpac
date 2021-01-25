@@ -22,8 +22,8 @@
 #' @param coverage Integer giving the percent of independent samples that need
 #'   to reach the threshold for a sequence to be included (default=100).
 #'   
-#' @param type Character specifying if filtering should be done "cpm" or
-#'   "counts" (default="cpm").
+#' @param norm Character specifying if filtering should be done using "counts",
+#'   "cpm" or another normalized data table in PAC$norm (default="counts").
 #' 
 #' @param stat (optional) Logical specifying if an coverage graph should be
 #'   generated or not (default=FALSE).
@@ -50,12 +50,12 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
+#' test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, norm="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
 #' 
-#' pac_filt <- PAC_norm(pac, type="cpm")
-#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", type = "means",  pheno_target=list("type"))
+#' pac_filt <- PAC_norm(pac, norm="cpm")
+#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", norm = "means",  pheno_target=list("type"))
 #' 
-#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
+#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, norm="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
 #'
 #' test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 #' 
@@ -66,7 +66,7 @@
 #' 
 #' @export
 
-PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
+PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
   library(ggplot2, quietly=TRUE)
   options(scipen=999)
   strt <- nrow(PAC$Counts)
@@ -127,16 +127,16 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, type=NULL, subse
   }
   if(!subset_only==TRUE){   
     ### Extract essential information
-    if(!is.null(type)){
-      if(!type %in% c(names(PAC$norm),"counts", "Counts")){
-        stop("The data specified in 'type' was not avaiable in PAC.\nMake sure that name in 'type' specifies a table name in \nPAC$Counts or PAC$norm$...")
+    if(!is.null(norm)){
+      if(!norm %in% c(names(PAC$norm),"counts", "Counts")){
+        stop("The data specified in 'norm' was not avaiable in PAC.\nMake sure that name in 'norm' specifies a table name in \nPAC$Counts or PAC$norm$...")
       }
-      if(type %in% c("counts","Counts")){ 
+      if(norm %in% c("counts","Counts")){ 
         df <- PAC$Counts
         cat("\n-- Count filter was specified.")
         }else{ 
-        df <- PAC$norm[[type]]
-        cat(paste0("\n-- Filter on normalized (", type, ") values was specified."))
+        df <- PAC$norm[[norm]]
+        cat(paste0("\n-- Filter on normalized (", norm, ") values was specified."))
         }   
       
       ### Check col and row names

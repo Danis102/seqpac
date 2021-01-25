@@ -9,7 +9,7 @@ PAC_filter(
   size = NULL,
   threshold = 0,
   coverage = 0,
-  type = NULL,
+  norm = NULL,
   subset_only = FALSE,
   stat = FALSE,
   pheno_target = NULL,
@@ -29,8 +29,8 @@ be reached for a sequence to be included (default=10).}
 \item{coverage}{Integer giving the percent of independent samples that need
 to reach the threshold for a sequence to be included (default=100).}
 
-\item{type}{Character specifying if filtering should be done "cpm" or
-"counts" (default="cpm").}
+\item{norm}{Character specifying if filtering should be done using "counts",
+"cpm" or another normalized data table in PAC$norm (default="counts").}
 
 \item{subset_only}{Logical whether only subsetting using pheno_target and/or
 anno_target should be done. If subset=FALSE (default) both subsetting and
@@ -66,12 +66,12 @@ interval and percent coverage across independent samples.
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, type="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
+test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, norm="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
 
-pac_filt <- PAC_norm(pac, type="cpm")
-pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", type = "means",  pheno_target=list("type"))
+pac_filt <- PAC_norm(pac, norm="cpm")
+pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", norm = "means",  pheno_target=list("type"))
 
-test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, type="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
+test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, norm="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
 
 test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
 

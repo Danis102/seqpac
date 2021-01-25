@@ -153,7 +153,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
                         
 ############################   
 #### General setup #########
-  fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", full.names=TRUE, recursive=FALSE, include.dirs = FALSE)
+  fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
   
   # Memory check
   if(check_mem==TRUE){

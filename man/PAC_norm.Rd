@@ -4,19 +4,19 @@
 \alias{PAC_norm}
 \title{Generates normalized values from a PAC object}
 \usage{
-PAC_norm(PAC, type = "cpm", PAC_merge = TRUE)
+PAC_norm(PAC, norm = "cpm", PAC_merge = TRUE)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
 row names and a Count table with raw counts.}
 
-\item{type}{Character describing what type of normalization method to be
-applied to the PAC$Counts. If type="cpm" will return reads/counts per
+\item{norm}{Character describing what type of normalization method to be
+applied to the PAC$Counts. If norm="cpm" will return reads/counts per
 million (or sometimes refered to as counts per million reads). Each
 sequence is then divided against the total number of counts in a given
-sample. If type="vst" PAC$Counts will instead be imported into the
+sample. If norm="vst" PAC$Counts will instead be imported into the
 \code{varianceStabilizingTransformation} function in the DESeq2-package
-with the options blind=TRUE and fitType="mean". If type="rlog" PAC$Counts
+with the options blind=TRUE and fitType="mean". If norm="rlog" PAC$Counts
 will instead be imported into the \code{rlogTransformation} function also
 available in DESeq2-package (options blind=TRUE and fitType="mean") for a
 log2 transformed version of vst that are more robust to varying library
@@ -37,7 +37,7 @@ Using the counts in a PAC object to generate normalized values in a dataframe
 with the same rownames as in the original PAC object
 }
 \examples{
-  df  <- PAC_norm(PAC, type="cpm") 
+  df  <- PAC_norm(PAC, norm="cpm") 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

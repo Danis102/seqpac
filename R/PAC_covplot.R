@@ -86,7 +86,7 @@
 #' 
 #' @export
 
-PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=c("black", "red", "grey", "blue"), check_overide=FALSE){
+PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=NULL, check_overide=FALSE){
                             require("GenomicRanges")
                             require("ggplot2")
                             require("stringr")
@@ -176,7 +176,16 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                                                       }
 
                             ## Plot graphs
-                            names(color) <- summary_target[[2]]
+                            # Setup colors
+                            if(is.null(color)){
+                                      n_colrs  <- length(summary_target[[2]])
+                                      colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
+                                      color <- colfunc(n_colrs)
+                                      names(color) <- summary_target[[2]]
+                                      }
+                                     
+                            
+                            # Plot
                             plot_lst <- list(NA)
                             for(i in 1:length(cov_lst)){
                                     cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))

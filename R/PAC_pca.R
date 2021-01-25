@@ -106,7 +106,8 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, pheno_target=
   if(type=="pheno"|type=="both"){data <- t(data)}
   pca_res <- FactoMineR::PCA(data, graph=FALSE)
   
-  if(graphs==FALSE){return(pca_res)
+  if(graphs==FALSE){
+    return(pca_res)
   }else{
 
     if(!is.null(pheno_target)|!is.null(anno_target)){

@@ -38,10 +38,20 @@
 #'   input fastq files has already been trimmed.
 #'     
 #' @param parse Character strings defining the command that should be parsed to
-#'   \code{make_trim} or \code{make_cutadapt}. This will allow you to customize
-#'   your trimming according to 3' adaptor sequence and platform specifics etc.
-#'   Please see examples below and the manuals for \code{make_trim} and
-#'   \code{make_cutadapt} for more details.
+#'   \code{\link{{make_trim}} or \code{\link{make_cutadapt}}. This will allow
+#'   you to customize your trimming according to 3' adaptor sequence and
+#'   platform specifics etc. Please see examples below and the manuals for
+#'   \code{\link{{make_trim}} and \code{\link{make_cutadapt}} for more details.
+#'   For convenience, \code{parse} also have two default mode for sRNA trimming,
+#'   using Illumina and New England Biotype (neb) type small RNA adaptors.
+#'   \code{make_counts} will automatically print the exact setting for each
+#'   default mode. Briefly, both modes involves polyG (NextSeq/NovaSeq) trimming
+#'   and 3' adaptor trimming, with a 0.1 tolerance for mismatch/indels. If
+#'   parse="default_illumina", then the "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC" 3'
+#'   adaptor is trimmed and untrimmed sequences are removed. If
+#'   parse="default_neb", then "AGATCGGAAGAGCACACGTCTGAACTCCA" is trimmed and
+#'   untrimmed sequences are removed. Removing untrimmed sequences are often
+#'   mandatory for sRNA sequencing.
 #'   
 #' @param evidence Character vector with two inputs named 'experiment' and
 #'   'sample' that controls the low level evidence filter. Users may already at
@@ -245,7 +255,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
       if(grepl("default", parse[[1]][1])){
         if(parse[[1]][1]=="default_neb"){
           parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
-                        adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1),
+                        adapt_3_set=c(type="soft_rm", min=10, mismatch=0.1),
                         adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA",
                         seq_range=c(min=14, max=70),
                         quality=c(threshold=20, percent=0.8),
@@ -253,7 +263,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
         }
         if(parse[[1]][1]=="default_illumina"){
           parse = list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
-                       adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+                       adapt_3_set=c(type="soft_rm", min=10, mismatch=0.1), 
                        adapt_3="TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC",
                        seq_range=c(min=14, max=70),
                        quality=c(threshold=20, percent=0.8),
@@ -461,7 +471,7 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
                                   axis.title.y = ggplot2::element_text(size=12, face= "bold"),
                                   axis.title.x = ggplot2::element_text(size=12, face="bold"),
                                   axis.text = ggplot2::element_text(size=10),
-                                  axis.text.x = ggplot2::element_text(angle=0, hjust=1),
+                                  axis.text.x = ggplot2::element_text(angle=45, hjust=1),
                                   panel.background = ggplot2::element_blank())
     }
     p1 <- p_func(df_long[df_long$variable %in% c("reads_pass_evidence", "reads_not_pass_evidence"),], 

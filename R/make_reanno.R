@@ -38,7 +38,7 @@
 #' mis_fasta_check=TRUE
 #' threads=10
 #' PAC=pac_master
-#' Full_anno <- make_reanno(reanno_path, PAC=pac_master, mis_fasta_check=TRUE, threads=10)    # Complete use
+#' Full_anno <- make_reanno(reanno_path, PAC=pac_master, mis_fasta_check=TRUE)    # Complete use
 #' 
 #' identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview)) 
 #' 
@@ -46,7 +46,7 @@
 #'
 #' @export
 
-make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, threads=1){
+make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
   files <- list.files(reanno_path, pattern="Full_reanno_mis0|Full_reanno_mis1|Full_reanno_mis2|Full_reanno_mis3|Full_reanno_mis4|Full_reanno_mis5", full.names = TRUE)
   seqs <- (seq(1:length(files)))-1
   reanno_lst <- list(NA)

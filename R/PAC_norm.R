@@ -13,13 +13,13 @@
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a Count table with raw counts.
 #'
-#' @param type Character describing what type of normalization method to be
-#'   applied to the PAC$Counts. If type="cpm" will return reads/counts per
+#' @param norm Character describing what type of normalization method to be
+#'   applied to the PAC$Counts. If norm="cpm" will return reads/counts per
 #'   million (or sometimes refered to as counts per million reads). Each
 #'   sequence is then divided against the total number of counts in a given
-#'   sample. If type="vst" PAC$Counts will instead be imported into the
+#'   sample. If norm="vst" PAC$Counts will instead be imported into the
 #'   \code{varianceStabilizingTransformation} function in the DESeq2-package
-#'   with the options blind=TRUE and fitType="mean". If type="rlog" PAC$Counts
+#'   with the options blind=TRUE and fitType="mean". If norm="rlog" PAC$Counts
 #'   will instead be imported into the \code{rlogTransformation} function also
 #'   available in DESeq2-package (options blind=TRUE and fitType="mean") for a
 #'   log2 transformed version of vst that are more robust to varying library
@@ -32,11 +32,11 @@
 #' @return A normalized count table 
 #'
 #' @examples
-#'   df  <- PAC_norm(PAC, type="cpm") 
+#'   df  <- PAC_norm(PAC, norm="cpm") 
 #' @export
 #' 
-PAC_norm <- function(PAC, type="cpm", PAC_merge=TRUE){
-                  if(type %in% c("cpm", "rpm")){
+PAC_norm <- function(PAC, norm="cpm", PAC_merge=TRUE){
+                  if(norm %in% c("cpm", "rpm")){
                           lib_sizes <- colSums(PAC$Counts)
                           counts_cpm <- data.frame(matrix(NA, nrow=nrow(PAC$Counts), ncol=ncol(PAC$Counts)))
                           colnames(counts_cpm) <- colnames(PAC$Counts)
@@ -48,12 +48,12 @@ PAC_norm <- function(PAC, type="cpm", PAC_merge=TRUE){
                           PAC$norm$cpm <- fin
                           
                           }
-                  if(type=="vst") { 
+                  if(norm=="vst") { 
 
                           fin <- DESeq2::varianceStabilizingTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="parametric")
                           PAC$norm$vst <- fin 
                   }
-                  if(type=="rlog") { 
+                  if(norm=="rlog") { 
                           fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="parametric")
                           PAC$norm$rlog <- fin 
                   }
