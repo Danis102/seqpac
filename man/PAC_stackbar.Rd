@@ -110,6 +110,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_summary}()},
 \code{\link{PAC_trna}()},
-\code{\link{map_rangetype}()}
+\code{\link{map_rangetype}()},
+\code{\link{tRNA_class}()}
 }
 \concept{PAC analysis}

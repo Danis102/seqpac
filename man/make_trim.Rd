@@ -12,7 +12,7 @@ make_trim(
   check_mem = TRUE,
   threads = 1,
   polyG = c(type = NULL, min = NULL, mismatch = NULL),
-  adapt_3_set = c(type = "trim", min = 10, mismatch = 0.1),
+  adapt_3_set = c(type = "hard_rm", min = 10, mismatch = 0.1),
   adapt_3 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
   adapt_5_set = c(type = NULL, min = NULL, mismatch = NULL),
   adapt_5 = NULL,
@@ -31,15 +31,15 @@ compressed trimmed fastq files should be saved (as basename trim.fastq.gz).}
 between read and adaptor sequences. Note that indel trimming will only be
 done on fragments that have failed to be trimmed by other means. Default=TRUE.}
 
-\item{concat}{Integer setting the threshold for trimmiing concatamere-like
+\item{concat}{Integer setting the threshold for trimming concatamere-like
 adaptors. Even when adaptor synthesis and ligation are strictly controlled,
 concatamer-like ("di-") adaptor sequences are formed. When \code{concat} is
 an integer, \code{make_trim} will search all trimmed sequnces for
 additional adaptor sequence using a shorter version of the provided adaptor
 in \code{adapt_3}. The length of the short adaptor is controlled by
 \code{adapt_3_set$min}. If an additional, shorter, adaptor sequence is
-found in a read, trimming will only occur if the resulting sequence is >=
-\code{concat} shorter in length than the original trimmed sequence. Thus if
+found in a read, trimming will only occur if the resulting sequence is <=
+\strong{concat} shorter in length than the first trimmed sequence. Thus if
 \code{concat}=12, a read with a NNNNN-XXXXX-YYYYYYYYY composition, where N
 is 'real' nucleotides and X/Y are two independent adaptor sequences, the
 trimming will result in NNNNN-XXXXX. If instead \code{concat}=5 then
@@ -70,26 +70,32 @@ Never ever use all threads!}
   output fastq file.}
 
 \item{adapt_3_set}{Character vector with three inputs named 'type', 'min' and
-'mismatch' that controls 3' trimming. Options are:
-   type=
-    "hard_trim" Trims all upto the very last nucleotide.
-    "hard_rm"   Same as 'hard_trim' but removes untrimmed sequences.
-    "hard_save" Same as 'hard_trim' but saves all untrimmed sequences in new fastq file.
-    "soft_trim" No trimming on the last 3' nucleotides equal to 1/2 of 'min'. 
-    "soft_rm"   Same as 'soft_trim' but removes untrimmed sequences.
-    "soft_save" Same as 'soft_trim' but saves all untrimmed sequences in new fastq file.
-   min=
-     Integer that controls the short adaptor/poly-G/concatamer trimming and
+'mismatch' that controls 3' trimming. As default,
+adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1). 
+
+Options for each input are: \describe{
+ \item{\strong{type}=}{
+     '\emph{hard_trim}': Trims all upto the very last nucleotide.\cr
+     '\emph{hard_rm}': Same as 'hard_trim' but removes untrimmed sequences.\cr
+     '\emph{hard_save}': Same as 'hard_trim' but saves all untrimmed sequences in new fastq file.\cr
+     '\emph{soft_trim}': No trimming on the last 3' nucleotides equal to 1/2 of 'min'.\cr
+     '\emph{soft_rm}': Same as 'soft_trim' but removes untrimmed sequences.\cr
+     '\emph{soft_save}': Same as 'soft_trim' but saves all untrimmed sequences in new fastq file.
+     }
+ \item{\strong{min}=}{Integer that controls the short adaptor/poly-G/concatamer trimming and
      soft trimming. When min=10, a short version of the adaptor is
      generated containing the 10 first nucleotides. The short version of
      the adaptor therefore controls the minimum number of overlaps between
      adaptor/poly-G. Short adaptor trimming will only occur on untrimmed
      reads that have failed trimming with full adaptor. The min option also
-     controls how many terminal nucleotides to save from trimming when
+     controls how many terminal nucleotides that will escape trimming when
      type is set to 'soft' (1/2 of min).
-   mismatch=
-     Numeric controling the percen of mismatch. For instance, if min=10 and
-     mismatch=0.1, then 1 mismatch is allowed in the minimum overlap.}
+     }
+     
+ \item{\strong{mismatch}=}{Numeric controling the percent mismatch. For instance, if min=10 and
+     mismatch=0.1, then 1 mismatch is allowed in the minimum overlap.
+     }
+   }}
 
 \item{adapt_5_set}{Currently not supported, but will be in future updates.
 Same as \code{adapt_5_set} but controls the behavior of 5' trimming when a
@@ -104,7 +110,7 @@ the range between 15-50 nucleotides after trimming. As defualt,
 \item{quality}{Numeric vector with two inputs named 'threshold' and 'percent'
 that controls the fastq quality filter. For example, if
 \code{quality=c(threshold=20, percent=0.8)} (default) the function will
-extract sequences that pass a fastq phred score >=20 in 80% of the
+extract sequences that pass a fastq phred score >=20 in 80 percent of the
 nucleotides after trimming. If \code{quality=c(threshold=NULL,
 percent=NULL)} then all sequences will be retained (not default!).}
 }

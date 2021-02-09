@@ -39,6 +39,23 @@
 #' 
 #' @export
 #' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' 
+#' ## 
+#' ## Keep sequences with 5 counts (threshold) in 100% (coverage) of samples in a group:
+
+#'  # Use PAC_filtsep to find sequences 
+#'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
+#'  
+#'  # Venn-diagram of the overlap
+#'  olap <- reshape2::melt(filtsep, measure.vars = c("Stage1", "Stage3", "Stage5"), na.rm=TRUE)
+#'  plot(venneuler::venneuler(data.frame(olap[,2], olap[,1]))) 
+#'  
+#'  # Filter by unique sequences passing filtsep  
+#'  filtsep <- unique(do.call("c", as.list(filtsep)))
+#'  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
+#' 
 PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, pheno_target=NULL){
   
                               ### Extract data ###

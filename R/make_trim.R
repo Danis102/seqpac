@@ -21,26 +21,32 @@
 #'   done on fragments that have failed to be trimmed by other means. Default=TRUE.
 #'   
 #' @param adapt_3_set Character vector with three inputs named 'type', 'min' and
-#'   'mismatch' that controls 3' trimming. Options are:
-#'      type=
-#'       "hard_trim" Trims all upto the very last nucleotide.
-#'       "hard_rm"   Same as 'hard_trim' but removes untrimmed sequences.
-#'       "hard_save" Same as 'hard_trim' but saves all untrimmed sequences in new fastq file.
-#'       "soft_trim" No trimming on the last 3' nucleotides equal to 1/2 of 'min'. 
-#'       "soft_rm"   Same as 'soft_trim' but removes untrimmed sequences.
-#'       "soft_save" Same as 'soft_trim' but saves all untrimmed sequences in new fastq file.
-#'      min=
-#'        Integer that controls the short adaptor/poly-G/concatamer trimming and
+#'   'mismatch' that controls 3' trimming. As default,
+#'   adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1). 
+#'   
+#'   Options for each input are: \describe{
+#'    \item{\strong{type}=}{
+#'        '\emph{hard_trim}': Trims all upto the very last nucleotide.\cr
+#'        '\emph{hard_rm}': Same as 'hard_trim' but removes untrimmed sequences.\cr
+#'        '\emph{hard_save}': Same as 'hard_trim' but saves all untrimmed sequences in new fastq file.\cr
+#'        '\emph{soft_trim}': No trimming on the last 3' nucleotides equal to 1/2 of 'min'.\cr
+#'        '\emph{soft_rm}': Same as 'soft_trim' but removes untrimmed sequences.\cr
+#'        '\emph{soft_save}': Same as 'soft_trim' but saves all untrimmed sequences in new fastq file.
+#'        }
+#'    \item{\strong{min}=}{Integer that controls the short adaptor/poly-G/concatamer trimming and
 #'        soft trimming. When min=10, a short version of the adaptor is
 #'        generated containing the 10 first nucleotides. The short version of
 #'        the adaptor therefore controls the minimum number of overlaps between
 #'        adaptor/poly-G. Short adaptor trimming will only occur on untrimmed
 #'        reads that have failed trimming with full adaptor. The min option also
-#'        controls how many terminal nucleotides to save from trimming when
+#'        controls how many terminal nucleotides that will escape trimming when
 #'        type is set to 'soft' (1/2 of min).
-#'      mismatch=
-#'        Numeric controling the percen of mismatch. For instance, if min=10 and
+#'        }
+#'        
+#'    \item{\strong{mismatch}=}{Numeric controling the percent mismatch. For instance, if min=10 and
 #'        mismatch=0.1, then 1 mismatch is allowed in the minimum overlap.
+#'        }
+#'      }
 #'
 #' @param adapt_5_set Currently not supported, but will be in future updates.
 #'   Same as \code{adapt_5_set} but controls the behavior of 5' trimming when a
@@ -58,15 +64,15 @@
 #'   'GGGGGGGGGGNNNNN...etc' with 10 percent mismatch will be removed from the
 #'   output fastq file.
 #'   
-#' @param concat Integer setting the threshold for trimmiing concatamere-like
+#' @param concat Integer setting the threshold for trimming concatamere-like
 #'   adaptors. Even when adaptor synthesis and ligation are strictly controlled,
 #'   concatamer-like ("di-") adaptor sequences are formed. When \code{concat} is
 #'   an integer, \code{make_trim} will search all trimmed sequnces for
 #'   additional adaptor sequence using a shorter version of the provided adaptor
 #'   in \code{adapt_3}. The length of the short adaptor is controlled by
 #'   \code{adapt_3_set$min}. If an additional, shorter, adaptor sequence is
-#'   found in a read, trimming will only occur if the resulting sequence is >=
-#'   \code{concat} shorter in length than the original trimmed sequence. Thus if
+#'   found in a read, trimming will only occur if the resulting sequence is <=
+#'   \strong{concat} shorter in length than the first trimmed sequence. Thus if
 #'   \code{concat}=12, a read with a NNNNN-XXXXX-YYYYYYYYY composition, where N
 #'   is 'real' nucleotides and X/Y are two independent adaptor sequences, the
 #'   trimming will result in NNNNN-XXXXX. If instead \code{concat}=5 then
@@ -74,7 +80,7 @@
 #'   result in trimming of real nucleotides that just happend to share sequence
 #'   with the adaptor. As default \code{concat}=12, which have been carefully
 #'   evaluated in relation to the risk of trimming real sequence. If
-#'   \code{concat}=NULL, concatamer-like adaptors trimming will not be done.                           
+#'   \code{concat}=NULL, concatamer-like adaptors trimming will not be done.
 #'                                            
 #' @param seq_range Numeric vector with two inputs named 'min' and 'max', that
 #'   controls the sequence size filter. For example, if
@@ -85,7 +91,7 @@
 #' @param quality Numeric vector with two inputs named 'threshold' and 'percent'
 #'   that controls the fastq quality filter. For example, if
 #'   \code{quality=c(threshold=20, percent=0.8)} (default) the function will
-#'   extract sequences that pass a fastq phred score >=20 in 80% of the
+#'   extract sequences that pass a fastq phred score >=20 in 80 percent of the
 #'   nucleotides after trimming. If \code{quality=c(threshold=NULL,
 #'   percent=NULL)} then all sequences will be retained (not default!).     
 #'
@@ -146,7 +152,7 @@
 
 make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, threads=1,
                       polyG=c(type=NULL, min=NULL, mismatch=NULL),
-                      adapt_3_set=c(type="trim", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
                       adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), adapt_5=NULL,
                       seq_range=c(min=NULL, max=NULL),
                       quality=c(threshold=20, percent=0.8)){
@@ -191,7 +197,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
   out_file <- file.path(output, nam_trim)
   out_dir <- list.files(output, pattern=nam_trim, recursive = FALSE)
   if(length(out_dir)>0){
-      stop(paste0("\n  Output trimmed fastq file names are identical to existing files in output:\n  ", out_dir, "\n  Please move or delete the file in the output folder."))
+      stop(paste0("\n  There are files in the output folder:\n  ", out_dir, "\n  Please move or delete the file in the output folder."))
   }
   
   # Make dir
@@ -211,7 +217,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
   cat(paste0("\n(progress may be followed in: ", output, ")"))
   doParallel::registerDoParallel(threads)  # Do not use parallel::makeClusters!!!
   `%dopar%` <- foreach::`%dopar%`
-  prog_report <- foreach::foreach(i=1:length(fls), .inorder = TRUE, .export= c("fls", "out_file", "nam_trim", "nam"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+  prog_report <- foreach::foreach(i=1:length(fls), .inorder = TRUE, .export= c("nam_trim", "nam"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
       # Save lists
       sav_lst <- list(NA)
       coord_lst <- list(NA)
@@ -255,10 +261,10 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
           coord_lst$polyG[[1]][logi_update] <- lgn[logi_update]
           rm(logi_update, end_vect)
         }
-        if(grepl("rm|save", tp)){
-        trim_filt$polyG  <- coord_lst$polyG[[1]] == lgn # Not polyG
+        if(grepl("rm|save|hard", tp)){
+          trim_filt$polyG  <- coord_lst$polyG[[1]] == lgn # Not polyG
         }
-      }
+       }
       gc(reset=TRUE)
       
 #####################################
@@ -389,9 +395,9 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
           coord_lst$trim_3[[1]][logi_update] <- lgn[logi_update]
           rm(logi_update, end_vect)
         }
-        if(grepl("rm|save", tp)){
-        trim_filt$trim_3  <- coord_lst$trim_3[[1]] == lgn # Not trim 3
-        }
+      if(grepl("rm|save|hard", tp)){
+          trim_filt$trim_3  <- coord_lst$trim_3[[1]] == lgn # Not trim 3
+      }
     }
       sav_lst$trim_3 <-  c(trimmed=sum(!trim_filt$trim_3[[1]]), adapt_3_set, adapt=adapt_3)
       

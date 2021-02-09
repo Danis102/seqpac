@@ -30,9 +30,9 @@
 #'                          meaning that categories will appear in the same
 #'                          order in the stacked bargraph. (default=NULL)
 #'                          
-#' @param colvec Character vector with rgb colour hex codes in the same length
+#' @param color Character vector with rgb colour hex codes in the same length
 #'   as the number of biotypes. For example see:
-#'   https://www.coolgenerator.com/rgb-color-generator. colvec=NULL will
+#'   https://www.coolgenerator.com/rgb-color-generator. color=NULL will
 #'   generate the default color scheme.
 #'   
 #' @param width Integer adjusting the width of the bars (default=1) 
@@ -76,7 +76,7 @@
 #' @export
 
 
-PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, colvec=NULL, width=1.0, no_anno=TRUE, total=TRUE, summary="samples"){
+PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, width=1.0, no_anno=TRUE, total=TRUE, summary="samples"){
   
   stopifnot(PAC_check(PAC))
   
@@ -149,7 +149,9 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, colvec=NULL, 
   # Anno
   bio <- anno_target[[2]] 
   extra <- which(bio %in% c("no_anno", "other"))
-  bio <- c(sort(bio[extra]), bio[-extra])
+  if(length(extra)>0){
+    bio <- c(sort(bio[extra]), bio[-extra])
+  }
   data_long_perc$Category <- factor(as.character(data_long_perc$Category), levels=bio)
     
   # Pheno
@@ -173,18 +175,20 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, colvec=NULL, 
   }
   
   ### Plot data
-  if(is.null(colvec)){
+  if(is.null(color)){
     n_extra  <- length(extra)
     colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
-    if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
-    if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
-    if(n_extra==0){colvec <- colfunc(length(bio))}
+    if(n_extra==1){color <- c(colfunc(length(bio)-1), "#6E6E6E")}
+    if(n_extra==2){color <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
+    if(n_extra==0){color <- colfunc(length(bio))}
+  }else{
+    color <- rev(color)
   }
   p1 <- ggplot2::ggplot(data_long_perc, ggplot2::aes(x=Sample, y=Percent, fill=Category)) +
     ggplot2::geom_bar(stat="identity", col="black", width=width, size=0.3) + 
     ggplot2::geom_text(ggplot2::aes(label=tot_counts), nudge_y=-3, nudge_x=0, angle = 0, color="black", size=4)+
     ggthemes::geom_rangeframe(ggplot2::aes(y=c(0, rep(1, length(Percent)-1))))+
-    ggplot2::scale_fill_manual(values=rev(colvec))+
+    ggplot2::scale_fill_manual(values=rev(color))+
     coord_cartesian(ylim=c(-2,100)) +
     ggplot2::ylab("Percent of total reads")+
     ggthemes::theme_tufte()+

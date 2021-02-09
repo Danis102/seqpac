@@ -156,8 +156,8 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
 ## PAC mapper using the reanno workflow
   if(mapper=="reanno"){
     # Make reanno object  
-    map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, type="internal", mismatches=mismatches,  import="genome", threads=threads, keep_temp=FALSE)
-    map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE, threads=threads)
+    map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, type="internal", threads=threads, mismatches=mismatches,  import="genome", keep_temp=FALSE)
+    map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
     stopifnot(length(map$Full_anno$mis0) == 1)
     # Reorganize reanno object to a PAC_mapper object
     align <- lapply(map$Full_anno, function(x){

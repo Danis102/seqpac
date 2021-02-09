@@ -370,7 +370,7 @@ pac_subset <- PAC_filter(pac_master, subset_only = TRUE,
 
 ###--------------------------------------------------------------------- 
 ## Extracts all sequences with >=10 counts in 100% of samples within each category of the 'type' column in Pheno.
-filtsep <- PAC_filtsep(pac_master, type="counts", threshold=5, coverage=100, pheno_target= list("stage"))
+filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
 
 pac_filt <- PAC_filter(pac_master, subset_only = TRUE,
                        anno_target= unique(do.call("c", as.list(filtsep))))
@@ -962,7 +962,7 @@ maximum number of alignments to be reported by \code{genome_max}
 ### Genomic coordinates using add_reanno 
 ##----------------------------------------
 
-## Output sperate tibble
+## Output separate tibble
 anno_genome <- add_reanno(reanno_genome, type="genome", genome_max=10, mismatches=3)
 ```
 ```{r, eval=TRUE, message=FALSE}
@@ -1399,25 +1399,29 @@ the current version of seqpac this only involves tRNA fragment analysis. We hope
 that this list will increase in future updates.
 
 <br>
-### 6.1 tRNA analysis in seqpac
-So far, tRNA classification of sRNA has only involved simple classification,
-whether reads map or not map to tRNA reference sequences. Advanced analysis of
-tRNA fragments depend on detailed mapping between a sequenced read and a list of
-full tRNA sequences. In this sence it resembles mapping against a reference
-genome. Obtaining the coordinates (where) of alignment allows us to plot
-coverage plot showing the coverage of sRNA across a full length tRNA.
+### 6.1 Advanced alignment analysis
+So far, classification of sRNA has only involved simple classification, whether
+reads map or not map to for example a tRNA reference sequences. Advanced
+analysis of detailed mapping between a sequenced read and list for references,
+where specific features in the references sequence are taken into acount when
+classifying the read. Advanced classifications like this involves for example
+tRNA type classification, such as 5', 3', i' and half, tRF, as discribed in the
+MINTmap tool \url{https://pubmed.ncbi.nlm.nih.gov/28220888/}. In this sence it
+resembles mapping against a reference genome. Obtaining the exact coordinates
+(where) a read align to the reference allows us to plot coverage plot showing
+the coverage of sRNA across the reference.
 
 <br>
 Conveniently, seqpac contains a backdoor to the reanno workflow, which allows
 the user to quickly obtain mapping coordinates of sequences in a PAC object that
-aligns to a refeference fasta file. This is done by the \code{PAC_mapper}
+aligns to a refeference fasta file. This is done by the \code{\link{PAC_mapper}}
 function. This wrapper uses temporary output files from bowtie to generate a
 map object, which simply lists the reads that mapped to each reference.
 
 <br>
-After a map object has been generated, the \code{PAC_covplot} function can then
-make coverage plots of reads mapping to each reference tRNA. Lets have a look
-on how it works using the test dataset:
+After a map object has been generated, the \code{\link{PAC_covplot}} function can then
+make coverage plots of reads mapping to each reference. Lets have a look
+on how it works in seqpac for advanced tRNA analysis using the test dataset:
 
 <br>
 ```{r, message=FALSE}
@@ -1430,16 +1434,15 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "se
 
 # First create an annotation blanc PAC with group means
 pac$Anno <- pac$Anno[,1, drop=FALSE]
-pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
+pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
 
 # Then reannotate only tRNA using the PAC_mapper function
 ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
-map_object <- PAC_mapper(pac, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
+map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
 
 ### Tip ######
 # By adding N_up ad N_down you can make sure that modified fragments (like 3'
 # -CAA in mature tRNA are included).
-
 
 ###########################################################
 ## Coverage plot of tRNA using PAC_covplot
@@ -1467,7 +1470,7 @@ reference file. Thus, it can easily be extracted from these names.
 Classification of cleavage products, like 5'and 3' halves etc, are more
 complicated. Such classification involves knowledge of where in the full tRNA
 sequence loops (A-loop, anticodon loop and T-loop) are likely to occur. There
-are external software that predict loop from models of secondary structure. One
+are external software that predict loop from models of secondary structures. One
 of the most popular tools for predicting tRNA secondary structures are
 tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}). The output from this
 software is an ss file, which stores loop information in the following format:
@@ -1484,15 +1487,17 @@ tRNA. Ss-files for most common genomes are readily available for download at
 \url{http://gtrnadb.ucsc.edu/}.
 
 <br>
-In seqpac, \code{map_rangetype} function is used to futher annotate the
-resulting map object from \code{PAC_mapper}. First, if tRNA reference names was
-provided in the tRNAscan-SE format (eg.
-"tRNA-Pro-CGG-2-1_chrX:18565764-18565835_(+): "name_genome_strand"), it will automatically extract
-the isodecoder (e.g. "Pro") and isoacceptor (e.g. "CGG") and make them seperate
-factors. It may also classify eached mapped PAC sequence in relation to
-the start and end terminals of the full length tRNA. Lastly, given an ss file,
-it can annotate PAC sequences in relation to tRNA loops. Lets have a look
-on how this is done:
+In seqpac, \code{\link{map_rangetype}} function is used to futher annotate the
+resulting map object from \code{\link{PAC_mapper}}. First, if tRNA reference
+names was provided in the tRNAscan-SE format (eg.
+"tRNA-Pro-CGG-2-1_chrX:18565764-18565835_(+): format: name -> genome coordinates
+-> strand), it will automatically extract the isodecoder (e.g. "Pro") and
+isoacceptor (e.g. "CGG") and make them seperate factors. It may also classify
+eached mapped PAC sequence in relation to the start and end terminals of the
+full length tRNA. Lastly, given an ss file, it can annotate PAC sequences in
+relation to tRNA loops. The \code{\link{tRNA_class}} fucntion can then combine
+the information in the mapping object and to classify each sequenced read in the
+PAC object. Lets have a look on how this is done:
 
 <br>
 ```{r, message=FALSE}
@@ -1517,10 +1522,10 @@ map_object_ss[[2]]
 # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
 
 # Does all tRNAs have 3 loops?
-table(unlist(lapply(map_object_ss, function(x){x$Alignments$n_ssloop})))
+table(unlist(lapply(map_object_ss, function(x){unique(x$Alignments$n_ssloop)})))
 
 # Set tolerance for classification as a terminal tRF
-terminal <- 5  # 2 nucleotides from start or end of full-length tRNA)
+tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
 
 ### Important:
 # We set N_up and N_down to "NNN" in the PAC_mapper step. To make sure
@@ -1528,63 +1533,22 @@ terminal <- 5  # 2 nucleotides from start or end of full-length tRNA)
 # we set terminal= 2+3 (5).  
 
 ## tRNA classifying function 
-# (you may need to change this depending on species specific tRNA reference names)
-tRNA_class <- function(PAC, map, terminal){
-      type_vector <- lapply(map, function(x){
-        # Setup
-          align <- x$Alignments
-          reference_length <- x$Ref_seq@ranges@width
-          ref_name <- x$Ref_seq@ranges@NAMES
-        # Classify according to terminal tolerance 
-          terminal_type <- ifelse(align$Align_start <= terminal, "5'",
-                                ifelse(reference_length - align$Align_end <= terminal, "3'", "i'"))
-        # Classify according to terminal tolerance 
-          half_type <- ifelse(align$type_start_loop2 == TRUE | align$type_end_loop2 == TRUE, "half", "tRF")
-          return(data.frame(tRNA_ref=ref_name, 
-                            seq=rownames(align), 
-                            class=paste(terminal_type, half_type, sep="-"),
-                            decoder=align$decoder,
-                            acceptor=align$acceptor))
-        })
-      # Merge all references
-      type_vector <- do.call("rbind", type_vector)
-      rownames(type_vector) <- NULL
-      # Split by sequence instead of references
-      type_vector <- split(type_vector, type_vector$seq)
-      # Collapse multimapping seqences into one column 
-      finished <-  lapply(type_vector, function(x){
-        df <- data.frame(seq=paste0(sort(unique(x$seq), collapse=";")), 
-                               class=paste0(sort(unique(x$class)), collapse=";"),
-                               decoder=paste0(sort(unique(x$decoder)), collapse=";"),
-                               acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
-                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
-      })
-      finished <- do.call("rbind", finished)
-      # Extract tRNAs from PAC and merge results
-      PAC$Anno$seq <- rownames(PAC$Anno)
-      pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), subset_only=TRUE)
-      # Before you merge make sure both dataframes are matching
-      stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
-      pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
-      return(pac_trna)
-}
-    
 # Apply the tRNA_class function and make a tRNA type column
-pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=terminal)
+pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
 pac_trna$Anno$type <- paste0(pac_trna$Anno$decoder, pac_trna$Anno$acceptor)
 head(pac_trna$Anno)
 
 ```
 
 <br>
-When classification on isoacceptor/decoder and cleavage type has been generated,
-the \code{PAC_trna} function is easily applied to generate pheno group
+When classification by isoacceptor/decoder and cleavage type has been done, the
+\code{\link{PAC_trna}} function is easily applied to generate pheno group
 differences in relation to tRNA fragmentation:
 
 <br>
 ```{r, message=FALSE}
 # Now use PAC_trna to generate some graphs based on grand means
-trna_result <- PAC_trna(pac_trna, norm="cpm", filter = 100,
+trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
   join = TRUE, top = 15, log2fc = TRUE,
   pheno_target = list("stage", c("Stage1", "Stage3")), 
   anno_target_1 = list("type"),
@@ -1600,7 +1564,7 @@ cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
                    nrow=1, ncol=3)
 
 # By setting join = FALSE you will get group means
-trna_result <- PAC_trna(pac_trna, norm="cpm", filter = 100,
+trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
   join = FALSE, top = 15, log2fc = TRUE,
   pheno_target = list("stage", c("Stage1", "Stage3")), 
   anno_target_1 = list("type"),

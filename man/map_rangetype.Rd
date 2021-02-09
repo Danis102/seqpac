@@ -108,6 +108,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
-\code{\link{PAC_trna}()}
+\code{\link{PAC_trna}()},
+\code{\link{tRNA_class}()}
 }
 \concept{PAC analysis}

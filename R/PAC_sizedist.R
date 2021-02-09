@@ -69,113 +69,178 @@
 #' @export
 
 PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
-                   
-                    ## Organize input
-                    anno <- PAC$Anno
-										if(!is.null(norm)){
-										    if(norm=="counts"){
-										      data <- PAC$Counts; labl <- "rawCounts"
-										    }else{
-										      if(is.null(summary_target)){ data <- PAC$norm[[norm]]; labl <- norm}}
-										}else{
-										  data <- PAC$summary[[summary_target[[1]]]]; labl <- paste0("mean_", summary_target[[1]])}
-                    
-                    if(length(summary_target)==1){
-                      summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])}
-                    if(!is.null(summary_target)){
-                      data <- data[,colnames(data) %in% summary_target[[2]], drop=FALSE]}   
+  
+  ## Organize input
+  # anno <- PAC$Anno
+  # if(!is.null(norm)){
+  #   if(norm=="counts|Counts"){
+  #     data <- PAC$Counts
+  #     labl <- "rawCounts"
+  #   }else{
+  #     if(is.null(summary_target)){ 
+  #       data <- PAC$norm[[norm]]
+  #       labl <- norm
+  #     }else{
+  #       stop("\nYou have specified both 'norm' and 'summary_target'.\nPlease specify one and set the other to 'NULL'.") 
+  #     }
+  #   }
+  # }else{
+  #   data <- PAC$summary[[summary_target[[1]]]]
+  #   labl <- summary_target[[1]]
+  # }
+  # 
+  # if(length(summary_target)==1){
+  #   summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])
+  # }
+  # if(!is.null(summary_target)){
+  #   data <- data[, colnames(data) %in% summary_target[[2]], drop=FALSE]
+  # }   
+  # 
+  # ## Add range filter
+  # if(is.null(range)){
+  #   range <- c(min(anno$Size), max(anno$Size))
+  # }
+  # filt <- anno$Size >= range[1] & anno$Size <= range[2] 
+  # anno <- anno[filt,]
+  # data <- data[filt,]
+  # 
+  # ## Reomve unwanted biotypes
+  # if(length(anno_target)==1){ 
+  #   anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))
+  # }
+  # filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
+  # anno <- anno[filt2,]
+  # data <- data[filt2,]
+  # 
+  # ## Remove unwanted samples
+  # if(!is.null(pheno_target)){ 
+  #   if(length(pheno_target)==1){ 
+  #     pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
+  #     filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
+  #     data <- data[,filt3,drop=FALSE]
+  #     ph <- PAC$Pheno[filt3,,drop=FALSE]
+  #     match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
+  #     data <- data[,match_pfilt,drop=FALSE]
+  #     ph <- ph[match_pfilt,,drop=FALSE]
+  # }else{ 
+  #   if(!is.null(summary_target)){
+  #     ph <- data.frame(colnames(data))
+  #     rownames(ph) <- ph[,1] 
+  #   }else{ 
+  #     ph <-PAC$Pheno 
+  #     }
+  #   }
+  
+  # Prepare filtered PAC
+  if(!is.null(pheno_target)){ 
+    if(length(pheno_target)==1){ 
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+     }
+    }
+  
+  if(!is.null(anno_target)){ 
+    if(length(anno_target)==1){ 
+      anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
+     }
+    }
+  if(is.null(range)){
+    range <- c(min(PAC$Anno$Size), max(PAC$Anno$Size))
+    }
+  
+  PAC <- seqpac::PAC_filter(PAC, size=range, pheno_target=pheno_target, anno_target=anno_target, subset_only=TRUE)
+  
+  stopifnot(PAC_check(PAC))
+  ph <- PAC$Pheno
+  anno <- PAC$Anno
+  
+  # Extract data
+  if(is.null(summary_target)){
+    if(is.null(norm)){
+      data <- PAC$Counts; labl <- "Counts"
+    }else{
+      if(norm=="counts"){
+        data <- PAC$Counts; labl <- "Counts"
+      }else{
+        data <- PAC$norm[[norm]]; labl <- norm
+      }
+    }
+  }else{
+    dat <- PAC$summary[[summary_target[[1]]]]; labl <- summary_target
+    }
+  
+  
+  stopifnot(identical(colnames(data), rownames(ph)))
+  stopifnot(identical(rownames(data), rownames(anno)))    
+  
+  
+  #### Summarize over size and biotype
+  bio_fact <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
+  seq_range <- seq(range[1], range[2])
+  size_fact <- factor(anno$Size, levels=seq_range)
+  size_lst <- lapply(as.list(data), function(x){
+    bio_agg <- aggregate(x, list(bio_fact, size_fact), sum)
+    colnames(bio_agg) <- c("biotype", "size", "data")
+    bio_agg_lst <- lapply(split(bio_agg, bio_agg$biotype), function(y){
+      if(any(!seq_range %in% y$size )){
+        y <- rbind(y, data.frame(biotype=as.character(unique(y$biotype)), size=seq_range[!seq_range %in% as.character(y$size)], data=0))
+      }
+      fin <- y[order(y$size),]  
+      stopifnot(identical(as.character(fin$size), as.character(seq_range)))
+      return(fin)
+    })
+    fin_df <- do.call("rbind", bio_agg_lst)
+    rownames(fin_df) <- NULL
+    return(fin_df)
+  })
+  
+  #### Generate individial histograms 
+  options(scipen=999)
+  require(RColorBrewer)
+  require(scales)
+  require(ggthemes)
+  require(extrafont)
+  require(ggplot2)  
+  #### Set up colors colors ###
+  if(is.null(colors)){
+    colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
+    rgb <- colfunc(sum(!anno_target[[2]] %in% c("other", "no_anno")))
+    rgb_vec <- NULL
+    cnt <- 0
+    for(i in 1:length(anno_target[[2]])){ 
+      if(anno_target[[2]][i] == "other"){
+        rgb_vec[i] <- "#808080";  cnt <- cnt+1}
+      if(anno_target[[2]][i] == "no_anno"){
+        rgb_vec[i] <- "#C0C0C0";  cnt <- cnt+1}
+      if(!anno_target[[2]][i] %in% c("other","no_anno")){
+        rgb_vec[i] <- rgb[i-cnt]}
+    }
+  }else{
+    rgb_vec <- colors
+    }
+  
+  #### Plot individual plots ###
+  histo_lst <- list(NA)
+  if(is.null(pheno_target)){
+    samp <- rownames(ph)
+  }else{
+    samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) 
+    }
+  for(i in 1:length(size_lst)){
+    histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
+      geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
+      geom_hline(yintercept=0, col="azure4")+
+      xlab("Size (nt)")+
+      ylab(paste0(labl))+
+      labs(subtitle = samp[i])+
+      scale_fill_manual(values=rgb_vec)+
+      #coord_cartesian(ylim=c(0,10000))+
+      #scale_y_continuous(breaks = seq(0, 10000, 2500))+
+      #ggthemes::geom_rangeframe(aes(x=range))+   
+      ggthemes::theme_tufte()+
+      theme_classic()+
+      theme(axis.text.x = element_text(angle = 0))
+    names(histo_lst)[i] <- names(size_lst)[i]
+  }
+  return(list(Histograms=histo_lst, Data=size_lst))
+}
 
-										## Add range filter
-										if(is.null(range)){range <- c(min(anno$Size), max(anno$Size))}
-										filt <- anno$Size >= range[1] & anno$Size <= range[2] 
-							      anno <- anno[filt,]
-										data <- data[filt,]
-										
-										## Reomve unwanted biotypes
-										if(length(anno_target)==1){ anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))}
-										filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
-							      anno <- anno[filt2,]
-										data <- data[filt2,]
-										
-										## Remove unwanted samples
-										if(!is.null(pheno_target)){ 
-										if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
-										filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
-										data <- data[,filt3,drop=FALSE]
-										ph <- PAC$Pheno[filt3,,drop=FALSE]
-										match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
-										data <- data[,match_pfilt,drop=FALSE]
-										ph <- ph[match_pfilt,,drop=FALSE]
-										  }else{ 
-										if(!is.null(summary_target)){
-										  ph <- data.frame(colnames(data)); rownames(ph) <- ph[,1] }else{ ph <-PAC$Pheno }}
-										
-										stopifnot(identical(colnames(data), rownames(ph)))
-										stopifnot(identical(rownames(data), rownames(anno)))    
-										
-										
-										#### Summarize over size and biotype
-										
-										bio_fact <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
-										seq_range <- seq(range[1], range[2])
-										size_fact <- factor(anno$Size, levels=seq_range)
-                    size_lst <- lapply(as.list(data), function(x){
-                                              bio_agg <- aggregate(x, list(bio_fact, size_fact), sum)
-                                              colnames(bio_agg) <- c("biotype", "size", "data")
-                                              bio_agg_lst <- lapply(split(bio_agg, bio_agg$biotype), function(y){
-                                                                  if(any(!seq_range %in% y$size )){
-                                                                  y <- rbind(y, data.frame(biotype=as.character(unique(y$biotype)), size=seq_range[!seq_range %in% as.character(y$size)], data=0))
-                                                                  }
-                                                                  fin <- y[order(y$size),]  
-                                                                  stopifnot(identical(as.character(fin$size), as.character(seq_range)))
-                                                                  return(fin)
-                                                                  })
-                                              fin_df <- do.call("rbind", bio_agg_lst)
-                                              rownames(fin_df) <- NULL
-                                              return(fin_df)
-                                              })
-										#### Generate individial histograms 
-                    options(scipen=999)
-                    require(RColorBrewer)
-                    require(scales)
-                    require(ggthemes)
-                    require(extrafont)
-                    require(ggplot2)  
-                    #### Set up colors colors ###
-                    if(is.null(colors)){
-                              colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
-                              rgb <- colfunc(sum(!anno_target[[2]] %in% c("other", "no_anno")))
-                              rgb_vec <- NULL
-                              cnt <- 0
-                              for(i in 1:length(anno_target[[2]])){ 
-                                                  if(anno_target[[2]][i] == "other"){rgb_vec[i] <- "#808080";  cnt <- cnt+1}
-                                                  if(anno_target[[2]][i] == "no_anno"){rgb_vec[i] <- "#C0C0C0";  cnt <- cnt+1}
-                                                  if(!anno_target[[2]][i] %in% c("other","no_anno")){rgb_vec[i] <- rgb[i-cnt]}
-                              }
-                    }else{rgb_vec <- colors}
-                    #### Plot individual plots ###
-										histo_lst <- list(NA)
-										if(is.null(pheno_target)){samp <- rownames(ph)} 
-										else {samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) }
-										for(i in 1:length(size_lst)){
-										                          # if(is.null(pheno_target)){ph <- names(size_lst)[i]} 
-										                          # else {ph <- paste(PAC$Pheno[,pheno_target[[1]]][i], names(size_lst)[i])}
- 										                          histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
-                                                              	    geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
-                                                              	    geom_hline(yintercept=0, col="azure4")+
-                                                                  	xlab("Size (nt)")+
- 										                                                ylab(paste0(labl))+
-                                                                    labs(subtitle = samp[i])+
-                                                                  	scale_fill_manual(values=rgb_vec)+
-                                                                  	#coord_cartesian(ylim=c(0,10000))+
-                                                                  	#scale_y_continuous(breaks = seq(0, 10000, 2500))+
- 										                                                #ggthemes::geom_rangeframe(aes(x=range))+   
-                                                                    ggthemes::theme_tufte()+
-                                                                  	theme_classic()+
-                                                                  	theme(axis.text.x = element_text(angle = 0))
- 			                                        names(histo_lst)[i] <- names(size_lst)[i]
-										                          }
- 			                return(list(Histograms=histo_lst, Data=size_lst))
-                      }
-#  			              if(is.null(pheno_target)){ph <- "NA"} else {ph <- PAC$Pheno[,pheno_target[[1]]]}
-# 										if(!is.null(pheno_target[[2]])){ph <- ph[ph %in% pheno_target[[2]]]}

@@ -66,8 +66,7 @@
 #' 
 #' @export
 
-PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
-  library(ggplot2, quietly=TRUE)
+PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm="counts", subset_only=FALSE, stat=FALSE, pheno_target=NULL, anno_target=NULL){
   options(scipen=999)
   strt <- nrow(PAC$Counts)
   nsamp <- ncol(PAC$Counts)
@@ -89,7 +88,12 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
     PAC$Pheno <- PAC$Pheno[ord_mch,,drop=FALSE]
     if(any(names(PAC)=="norm")){PAC$norm <- lapply(PAC$norm, function(x){x[, ord_mch, drop=FALSE]})}
     tab_pheno <- as.data.frame(table(sub_pheno))
-    cat(paste0("\n-- Pheno filter was specified, will retain: ", tab_pheno[tab_pheno[,1]==TRUE, 2], " of ", length(sub_pheno), " samples."))
+    passed <- tab_pheno[tab_pheno[,1]==TRUE, 2]
+    if(passed==0){
+      stop("Pheno filter resulted in 0 samples.") 
+    }else{
+    cat(paste0("\n-- Pheno target was specified, will retain: ", passed, " of ", length(sub_pheno), " seqs."))
+    }
   }  
   
   ### Subset data by Anno
@@ -108,7 +112,12 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
     if(any(names(PAC)=="norm")){PAC$norm <- lapply(PAC$norm, function(x){x[ord_mch,, drop=FALSE]})}
     if(any(names(PAC)=="summary")){PAC$summary <- lapply(PAC$summary, function(x){x[ord_mch,, drop=FALSE]})}
     tab_anno <- as.data.frame(table(sub_anno))
-    cat(paste0("\n-- Anno filter was specified, will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_anno), " seqs.")) 
+    passed <- tab_anno[tab_anno[,1]==TRUE, 2]
+    if(passed==0){
+      stop("Anno filter resulted in 0 sequences.") 
+    }else{
+    cat(paste0("\n-- Anno target was specified, will retain: ", passed, " of ", length(sub_anno), " seqs."))
+    }
   }  
   
   ### Subset data by Size
@@ -123,12 +132,16 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
     PAC$Counts  <- PAC$Counts[sub_size, , drop=FALSE] 
     PAC$Anno  <- PAC$Anno[sub_size, , drop=FALSE]
     tab_anno <- as.data.frame(table(sub_size))
-    cat(paste0("\n-- Size filter will retain: ", tab_anno[tab_anno[,1]==TRUE, 2], " of ", length(sub_size), " seqs."))
+    passed <- tab_anno[tab_anno[,1]==TRUE, 2]
+    if(passed==0){
+      stop("Size filter resulted in 0 sequences.") 
+    }else{
+    cat(paste0("\n-- Size filter will retain: ", passed, " of ", length(sub_size), " seqs."))
+    }
   }
   if(!subset_only==TRUE){   
     ### Extract essential information
-    if(!is.null(norm)){
-      if(!norm %in% c(names(PAC$norm),"counts", "Counts")){
+    if(!norm %in% c(names(PAC$norm),"counts", "Counts")){
         stop("The data specified in 'norm' was not avaiable in PAC.\nMake sure that name in 'norm' specifies a table name in \nPAC$Counts or PAC$norm$...")
       }
       if(norm %in% c("counts","Counts")){ 
@@ -164,18 +177,18 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
           filt_plot[i,2] <- tab$Freq[tab$Var1=="TRUE"]
         }
         ### Plot graph
-        suppressWarnings( p <- ggplot(filt_plot, aes(x=x_graph, y=n_features, fill=x_graph))+
-                            geom_line()+
-                            geom_point(cex=2, fill="blue")+
-                            geom_hline(yintercept=0)+
-                            scale_x_discrete(limit=filt_plot$x_graph, labels= as.character(filt_plot$filter))+
-                            ggtitle("User filter:")+					
-                            xlab(NULL)+
-                            theme_classic()+
-                            theme(axis.text.x = element_text(angle = 90, hjust = 0))+
-                            geom_vline(xintercept=threshold, col="red")+
-                            geom_label(x=50, y=max(filt_plot[,2])*0.95, label=paste0("n input sequences: ", strt, "\nn analyzed sequences: ", nrow(df), "\nn sequences after filter: ",idx_tab[idx_tab[,1]==TRUE, 2]), show.legend = FALSE)+
-                            theme(plot.margin=margin(t = 1, r = 1, b = 1, l = 1, unit="cm"), plot.title = element_text(color="red", size=10)) )
+        suppressWarnings( p <- ggplot2::ggplot(filt_plot, ggplot2::aes(x=x_graph, y=n_features, fill=x_graph))+
+                            ggplot2::geom_line()+
+                            ggplot2::geom_point(cex=2, fill="blue")+
+                            ggplot2::geom_hline(yintercept=0)+
+                            ggplot2::scale_x_discrete(limit=filt_plot$x_graph, labels= as.character(filt_plot$filter))+
+                            ggplot2::ggtitle("User filter:")+					
+                            ggplot2::xlab(NULL)+
+                            ggplot2::theme_classic()+
+                            ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 0))+
+                            ggplot2::geom_vline(xintercept=threshold, col="red")+
+                            ggplot2::geom_label(x=50, y=max(filt_plot[,2])*0.95, label=paste0("n input sequences: ", strt, "\nn analyzed sequences: ", nrow(df), "\nn sequences after filter: ",idx_tab[idx_tab[,1]==TRUE, 2]), show.legend = FALSE)+
+                            ggplot2::theme(plot.margin=ggplot2::margin(t = 1, r = 1, b = 1, l = 1, unit="cm"), plot.title = ggplot2::element_text(color="red", size=10)) )
         Sys.sleep(0.01)
         print(p)
         ### Promt for user input					
@@ -186,6 +199,10 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
       }
       
       ### Apply filter
+      passed <- idx_tab[idx_tab[,1]==TRUE, 2]
+      if(passed==0){
+      stop("The chosen filter resulted in 0 sequences.") 
+        }else{
       cat(paste0("\n-- The chosen filters will retain: ", idx_tab[idx_tab[,1]==TRUE, 2], " of ", strt, " seqs."))   
       if(any(names(PAC)=="norm")){
         PAC$norm <- lapply(as.list(PAC$norm), function(x){x[idx_filt,, drop=FALSE]})
@@ -195,8 +212,8 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm=NULL, subse
         }
       PAC$Counts  <- PAC$Counts[idx_filt,, drop=FALSE] 
       PAC$Anno  <- PAC$Anno[idx_filt,, drop=FALSE]
-    }
-    }
+        }
+  }
   ## Double check and return
   if(PAC_check(PAC)==TRUE){
     return(PAC)}

@@ -80,28 +80,43 @@
 #' 
 #' @export
 
-PAC_trna <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
+PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
   
   ## Setup ##
   if(!is.null(anno_target_1)){
-    if(!class(anno_target_1) =="list"){anno_target_1 <-list(anno_target_1)}  
-    if(length(anno_target_1)==1){anno_target_1[[2]] <- unique(PAC$Anno[, anno_target_1[[1]]])
-    }}else{stop("You have to provide a valid anno_target list object.")}
+    if(!class(anno_target_1) =="list"){
+      anno_target_1 <-list(anno_target_1)}  
+    if(length(anno_target_1)==1){
+      anno_target_1[[2]] <- unique(PAC$Anno[, anno_target_1[[1]]])
+    }
+    anno_target_1 <- lapply(anno_target_1, function(x){as.character(x)})
+    }else{
+      stop("You have to provide a invalid anno_target list object.")}
   
   if(!is.null(anno_target_2)){
-    if(!class(anno_target_2) =="list"){anno_target_2 <-list(anno_target_2)}  
-    if(length(anno_target_2)==1){anno_target_2[[2]] <- unique(PAC$Anno[, anno_target_2[[1]]])
-    }}else{stop("You have to provide a valid anno_target list object.")}
+    if(!class(anno_target_2) =="list"){
+      anno_target_2 <-list(anno_target_2)}  
+    if(length(anno_target_2)==1){
+      anno_target_2[[2]] <- unique(PAC$Anno[, anno_target_2[[1]]])
+    }
+    anno_target_2 <- lapply(anno_target_2, function(x){as.character(x)})
+    }else{
+      stop("You have to provide a invalid anno_target list object.")}
   
   if(!is.null(pheno_target)){
-    if(!class(pheno_target) =="list"){pheno_target <- list(pheno_target)}    
-    if(length(pheno_target)==1){pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])
-    }}else{stop("You have to provide a valid pheno_target list object.")}
+    if(!class(pheno_target) =="list"){
+      pheno_target <- list(pheno_target)}    
+    if(length(pheno_target)==1){
+      pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])
+      }
+    pheno_target <- lapply(pheno_target, function(x){as.character(x)})
+    }else{
+      stop("You have to provide a invalid pheno_target list object.")}
   
   PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, pheno_target=pheno_target) 
   PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_2) 
   if(!is.null(filter)){ 
-    PAC <- PAC_filter(PAC, threshold=filter, coverage=100)
+    PAC <- PAC_filter(PAC, norm=norm, threshold=filter, coverage=100)
     }
   
   PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])
@@ -159,14 +174,17 @@ PAC_trna <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
     spl_inside <- split(x, x$ann1)
     ann12_lst <- lapply(spl_inside, function(y){
       missing <- anno_target_2[[2]][!anno_target_2[[2]] %in% unique(y$ann2)]
-      df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), missing, sep="____"),
-                       variable= NA,
-                       value= 0,
-                       ann1= as.character(unique(y$ann1)),
-                       ann2= missing)
-      
-      df <- df[rep( 1:length(missing), times=length(unique(y$variable))),]
-      df$variable <- rep( unique(y$variable), each=length(missing))
+      if(length(missing)>0){
+        df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), missing, sep="____"),
+                         variable= NA,
+                         value= 0,
+                         ann1= as.character(unique(y$ann1)),
+                         ann2= missing)
+        df <- df[rep( 1:length(missing), times=length(unique(y$variable))),]
+        df$variable <- rep( unique(y$variable), each=length(missing))
+      }else{
+        df <- NULL
+      }
       df_fin <- rbind(y, df)
       df_fin_agg <- aggregate(df_fin$value, list(df_fin$Group.1), mean)
       names(df_fin_agg)[names(df_fin_agg)=="x"] <- "values"
@@ -213,16 +231,25 @@ PAC_trna <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
     names(dat)[names(dat)=="x"] <- "means"
     dat$SE <- (aggregate(x$value, list(x$Group.1), function(y){sd(y)/(sqrt(length(y)))}))$x
     dat$means[dat$means<1] <- 1
-    if(max(dat$means) < 10000){breaks <- c(1,10,100,1000,10000)}
-    if(max(dat$means) >= 100000 && max(dat$means) <1000000){breaks <- c(1,10,100,1000,10000,100000)}
-    if(max(dat$means) >= 1000000){breaks <- c(1,10,100,1000,10000,100000,1000000)}
+    set_max <- max(dat$means + dat$SE)
+    if(set_max < 10000){
+      breaks <- c(1,10,100,1000,10000)
+      }
+    if(set_max >= 10000 && set_max <100000){
+      breaks <- c(1,10,100,1000,10000,100000)
+      }
+    if(set_max >= 100000){
+      breaks <- c(1,10,100,1000,10000,100000,1000000)
+      }
     plot <- ggplot(dat, aes(x=Group.1, y=means, fill=Group.1 ,
-                            ymax = means + (means > 0)*SE,
-                            ymin = means - (means < 0)*SE)) +
-      geom_errorbar(width=0.5, size=1.0, colour="black") +
+                            #ymax = means + (means > 0)*SE,
+                            #ymin = means - (means < 0)*SE)) +
+                            ymax = means + SE,
+                            ymin = means - SE)) +
+      geom_errorbar(width=0.5, size=1.0, colour="black", position = "identity") +
       geom_col(width = 0.8, cex=0.2, colour="black")+
-      labs(title="Mean RPM")+
-      ylab("Log10 RPM +/- SE") +
+      labs(title=paste0("Mean ", norm))+
+      ylab(paste0("Log10 ", norm, " +/- SE")) +
       scale_fill_manual(values=rev(rgb_vec_ann1))+
       theme_classic()+
       theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_text(angle = 0, hjust = 0), axis.line.x =element_blank())+
@@ -275,7 +302,7 @@ PAC_trna <- function(PAC, norm="rpm", filter=100, join=FALSE, top=15, log2fc=FAL
       geom_errorbar(width=0.8, size=0.5, position = "identity") +
       geom_point(shape=21, size=4, position = "identity") +
       labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
-      ylab("Mean Log2FC between groups (RPM) +/- SE") + 
+      ylab(paste0("Log2FC between groups (", norm, ") +/- SE")) + 
       scale_fill_manual(values=rev(rgb_vec_ann1)) +
       scale_x_discrete(labels=levels(logfc$Group.1)) +
       theme_classic()+

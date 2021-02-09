@@ -4,7 +4,7 @@
 \alias{make_reanno}
 \title{Makes annotation from R imported reannotation mapping}
 \usage{
-make_reanno(reanno_path, PAC, mis_fasta_check = FALSE, threads = 1)
+make_reanno(reanno_path, PAC, mis_fasta_check = FALSE)
 }
 \arguments{
 \item{reanno_path}{Path to a directory where reannotation .Rdata files can be
@@ -42,7 +42,7 @@ reanno_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
 mis_fasta_check=TRUE
 threads=10
 PAC=pac_master
-Full_anno <- make_reanno(reanno_path, PAC=pac_master, mis_fasta_check=TRUE, threads=10)    # Complete use
+Full_anno <- make_reanno(reanno_path, PAC=pac_master, mis_fasta_check=TRUE)    # Complete use
 
 identical(rownames(PAC_master$Anno), rownames(Full_anno$Overview)) 
 

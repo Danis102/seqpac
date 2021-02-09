@@ -166,7 +166,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
     }
     
     ## Finish up
-    cat("\nCompiling everything into one table ...")
+    cat("\n\nCompiling everything into one table ...")
     gen_nam <- names(fin_lst[[1]])
     shrt <- lapply(as.list(gen_nam), function(x){
             df <- data.frame(matrix(NA, nrow=length(seq_nam), ncol=length(names(fin_lst))))

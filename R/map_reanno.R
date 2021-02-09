@@ -234,16 +234,16 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
         save(reanno, file= paste0(output_path, "/Full_reanno_", suffix, ".Rdata"))
         Biostrings::writeXStringSet(new_input, filepath=paste0(output_path, "/anno_", new_suffix, ".fa"), format="fasta")
         if(any(rm_no_hits)){cat(paste0("\n\n|--- All reference but ", names(rm_no_hits)[rm_no_hits], " generated hits"))
-        }else{cat(paste0("\n|--- All reference but generated hits"))}
+        }else{cat(paste0("\n|--- All reference generated hits"))}
         cat(paste0("\n|--- Mismatch ", mis_lst[[i]], " finished -----|"))
   }
 cat(paste0("\n\n******************************************************"))
-cat(paste0("\n Cleaning up ... "))
+cat(paste0("\nCleaning up ... "))
 if(keep_temp==FALSE){
   fls_temp <- list.files(output_path, full.names=TRUE, recursive = FALSE, patter=".out$")
   file.remove(fls_temp)}  
-cat(paste0("\n Reanno mapping finished at: ", format(Sys.time(), "%X")))
-cat(paste0("\n Output files are saved in:\n  ", paste0(output_path)))
+cat(paste0("\nReanno mapping finished at: ", format(Sys.time(), "%X")))
+cat(paste0("\nOutput files are saved in:\n  ", paste0(output_path)))
   
 }
 

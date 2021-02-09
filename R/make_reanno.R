@@ -56,7 +56,7 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
     names(reanno_lst)[i] <- paste0("mis", seqs[i])
   }
   
-  cat("\nReorganizing and matching reannotation files with PAC ...\n")
+  cat("\n\nReorganizing and matching reannotation files with PAC ...\n")
   PAC_seq <- rownames(PAC$Anno)
   reanno_lst_match <- lapply(reanno_lst, function(x){
     match_lst  <- lapply(x,  function(y){
