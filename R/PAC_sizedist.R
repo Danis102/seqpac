@@ -165,14 +165,10 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
       }
     }
   }else{
-    dat <- PAC$summary[[summary_target[[1]]]]; labl <- summary_target
+    data <- PAC$summary[[summary_target[[1]]]]; labl <- summary_target
     }
   
-  
-  stopifnot(identical(colnames(data), rownames(ph)))
-  stopifnot(identical(rownames(data), rownames(anno)))    
-  
-  
+
   #### Summarize over size and biotype
   bio_fact <- factor(anno[, anno_target[[1]]], levels=anno_target[[2]])
   seq_range <- seq(range[1], range[2])
@@ -220,11 +216,15 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
   
   #### Plot individual plots ###
   histo_lst <- list(NA)
-  if(is.null(pheno_target)){
-    samp <- rownames(ph)
+  if(!is.null(summary_target)){
+    samp <- colnames(data)
   }else{
-    samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) 
+    if(is.null(pheno_target)){
+      samp <- rownames(ph)
+    }else{
+      samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) 
     }
+  }
   for(i in 1:length(size_lst)){
     histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
       geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+

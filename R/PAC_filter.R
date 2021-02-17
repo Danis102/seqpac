@@ -92,7 +92,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, norm="counts", s
     if(passed==0){
       stop("Pheno filter resulted in 0 samples.") 
     }else{
-    cat(paste0("\n-- Pheno target was specified, will retain: ", passed, " of ", length(sub_pheno), " seqs."))
+    cat(paste0("\n-- Pheno target was specified, will retain: ", passed, " of ", length(sub_pheno), " samples."))
     }
   }  
   

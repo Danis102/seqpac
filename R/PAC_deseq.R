@@ -26,7 +26,7 @@
 #'   indicating the main target column in Pheno. 2nd object being a character
 #'   vector of the target group(s) in the target Pheno column (1st object).
 #'
-#'   Imprtant: In \code{PAC_deseq}, pheno_target controls the main comparative
+#'   Important: In \code{PAC_deseq}, pheno_target controls the main comparative
 #'   factor category from which a summarized table and plots will be generated.
 #'   If, for instance, a target column named "groups" in PAC$Pheno contains
 #'   "control" and "treatment" categories, setting pheno_target=list("groups",
@@ -149,7 +149,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
   logi_thresh <- ifelse(rowSums(cbind(res_DESeq2_df$padj <= 0.1, res_DESeq2_df$log2FoldChange <=-1 | res_DESeq2_df$log2FoldChange >=1))==2, "pass", "not_pass")
     df_plot <- data.frame(pval=res_DESeq2_df$pvalue, neglog_padj=-log10(res_DESeq2_df$padj), log2FC=res_DESeq2_df$log2FoldChange, DE=logi_thresh)
   
-  p <- ggplot2::ggplot(data=df_plot, aes(x=pval)) + 
+  p <- ggplot2::ggplot(data=df_plot, ggplot2::aes(x=pval)) + 
     ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
     ggplot2::labs(title="p-value destributions", 
                   subtitle=comp, x="p-value", y = "Number of features") +

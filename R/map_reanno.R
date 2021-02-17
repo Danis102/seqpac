@@ -199,8 +199,9 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
       ## Internal bowtie
         if(type=="internal"){
             cat("\n\n")
+
             bwt_exp <- paste0("Rbowtie::bowtie(sequences=input_file, index=ref_paths[[j]], ",
-                                                  paste0(parse_internal, ", v=", mis_lst[[i]], ", p=",threads),
+                                                  paste0(parse_internal, ", v=", mis_lst[[i]], ", p=", threads),
                                                   ", type ='single', outfile='", output_file,
                                                   "', force = TRUE, strict = TRUE)")
             eval(parse(text=bwt_exp)) 

@@ -95,6 +95,23 @@ rbenchmark::benchmark(
 
 
 ##########################################################################
+##### Plot benchmark results
+
+res_bench <- read.delim("/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/long_benchmark.csv", header=TRUE, sep=",")
+
+library(ggplot2)
+
+ggplot(res_bench, aes(x=treatment, y=s, fill=treatment)) +
+   							stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") +
+							stat_summary(geom = "bar", fun = mean, position = "dodge") +
+							geom_jitter(col = "black", size=4, position=position_jitter(w=0.2, h=0.2)) +
+                            scale_fill_manual(values=c("#094A6B", "grey", "blue"))+
+							scale_color_manual(values=c("black", "black", "black"))+
+							theme_bw()+
+							theme(legend.position="none", axis.line.x =element_blank())
+
+
+##########################################################################
 ##### Kang et al with Illumina adaptor ####### input =
 "/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/fastq/"
 
@@ -489,12 +506,15 @@ output_path = "/home/danis31/Desktop/Temp_docs/temp"
 
 ### Genome
 ref_paths_gen <- list(hg38="/data/Data_analysis/Genomes/Humans/Ensembl/CRCh38.101/Homo_sapiens.GRCh38.dna.toplevel.fa",
-                      Myco.orale="/data/Data_analysis/Genomes/Other/Mycoplasma orale/GCF_900660435.1_50465_D02-3_genomic.fa")
+                      Myco.orale="/data/Data_analysis/Genomes/Other/Mycoplasma orale/GCF_900660435.1_50465_D02-3_genomic.fa",
+                      M.hyorhinis="/data/Data_analysis/Genomes/Other/Mycoplasma hyorhinis ATCC/GCF_000383515.1_ASM38351v1_genomic.fa")
+
 map_reanno(pac_filt, type = "internal", output_path, ref_paths = ref_paths_gen,
            mismatches = 3, threads = 12, import="genome")
 reanno_seq <- make_reanno(reanno_path=output_path, PAC=pac_filt, mis_fasta_check = TRUE)
 pac_filt <- add_reanno(reanno=reanno_seq, mismatches = 3,  merge_pac=pac_filt, type = "genome", genome_max = 10)
 
+pac_filt$Anno[ rownames(pac_filt$Anno) == "TCCCTGTGGTCTAGTGGTTAGGATTCGGCGCA",]
 
 # Rbowtie::bowtie_build("/data/Data_analysis/Genomes/Other/Mycoplasma orale/GCF_900660435.1_50465_D02-3_genomic.fa", 
 #                       outdir="/data/Data_analysis/Genomes/Other/Mycoplasma orale/",
@@ -528,35 +548,34 @@ load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cel
 ## Use refseq gtf (more RNA annotations)
 # Found at: refSeq https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/
 
-gtf <- tibble::as_tibble(rtracklayer::readGFF("/data/Data_analysis/Genomes/Humans/NCBI/GRCh38_latest_genomic.gtf"))
-gtf_genes <- gtf[gtf$type == "gene",]
-gtf_rrna <- gtf_genes[grepl("^RNA", gtf_genes$description),]
-gtf_rrna <- gtf_rrna[grepl("ribosomal", gtf_rrna$description),]
-table(gtf$gene_biotype)
-table(gtf_genes$gene_biotype)
-table(gtf_rrna$gene_biotype)
-gtf_rrna$description
-rtracklayer::export(gtf_rrna, "/data/Data_analysis/Genomes/Humans/NCBI/rRNA_extract.gtf", format="gtf")
+# gtf <- tibble::as_tibble(rtracklayer::readGFF("/data/Data_analysis/Genomes/Humans/NCBI/GRCh38_latest_genomic.gtf"))
+# gtf_genes <- gtf[gtf$type == "gene",]
+# gtf_rrna <- gtf_genes[grepl("^RNA", gtf_genes$description),]
+# gtf_rrna <- gtf_rrna[grepl("ribosomal", gtf_rrna$description),]
+# table(gtf$gene_biotype)
+# table(gtf_genes$gene_biotype)
+# table(gtf_rrna$gene_biotype)
+# gtf_rrna$description
+# rtracklayer::export(gtf_rrna, "/data/Data_analysis/Genomes/Humans/NCBI/rRNA_extract.gtf", format="gtf")
 
 ## Load converter file and extract available chrom
-conv <- read.delim("/data/Data_analysis/Genomes/Humans/Convert_refSeq_UCSC_Enembl_hg38.csv", header=TRUE, sep="\t")
-conv <- conv[!nchar(as.character(conv$Ensembl))==0,]    # Removes not avaialble chromosomes in Ensembl
-identical(conv$UCSC, conv$UCSC2)                        # Check UCSC chrom columns connecting refseq with Ensembl
-table(as.character(gtf_rrna$seqid) %in% as.character(conv$refSeq)) # 53 Not avaialble
-availb <- as.character(gtf_rrna$seqid) %in% as.character(conv$refSeq)
-gtf_rrna <- gtf_rrna[availb,]
-gtf_rrna$seqid  <- as.character(conv$Ensembl[match(as.character(gtf_rrna$seqid), as.character(conv$refSeq))]) # Update seqid in 
-
-rtracklayer::export(gtf_rrna, "/data/Data_analysis/Genomes/Humans/NCBI/rRNA_extract_chrom_conv.gtf", format="gtf")
+# conv <- read.delim("/data/Data_analysis/Genomes/Humans/Convert_refSeq_UCSC_Enembl_hg38.csv", header=TRUE, sep="\t")
+# conv <- conv[!nchar(as.character(conv$Ensembl))==0,]    # Removes not avaialble chromosomes in Ensembl
+# identical(conv$UCSC, conv$UCSC2)                        # Check UCSC chrom columns connecting refseq with Ensembl
+# table(as.character(gtf_rrna$seqid) %in% as.character(conv$refSeq)) # 53 Not avaialble
+# availb <- as.character(gtf_rrna$seqid) %in% as.character(conv$refSeq)
+# gtf_rrna <- gtf_rrna[availb,]
+# gtf_rrna$seqid  <- as.character(conv$Ensembl[match(as.character(gtf_rrna$seqid), as.character(conv$refSeq))]) # Update seqid in 
+# rtracklayer::export(gtf_rrna, "/data/Data_analysis/Genomes/Humans/NCBI/rRNA_extract_chrom_conv.gtf", format="gtf")
 
 # Run PAC_gtf using refseq gtf
+gtf_rrna <- tibble::as_tibble(rtracklayer::readGFF("/data/Data_analysis/Genomes/Humans/NCBI/rRNA_extract_chrom_conv.gtf"))
 gtf_anno_mis0 <- PAC_gtf(PAC=pac_filt, genome="/data/Data_analysis/Genomes/Humans/Ensembl/CRCh38.101/Homo_sapiens.GRCh38.dna.toplevel.fa", 
           mismatches=0, gtf_other=list(rrna=gtf_rrna), target_other=list(rrna=c("gene", "gene_id", "gene_biotype", "description")), threads=12, return="simplify" )
 
 gtf_anno_mis3 <- PAC_gtf(PAC=pac_filt, genome="/data/Data_analysis/Genomes/Humans/Ensembl/CRCh38.101/Homo_sapiens.GRCh38.dna.toplevel.fa", 
           mismatches=3, gtf_other=list(rrna=gtf_rrna), target_other=list(rrna=c("gene", "gene_id", "gene_biotype", "description")), threads=12, return="simplify" )
 
-  
 head(pac_filt$Anno)
 table(pac_filt$Anno$mis0_bio)
 identical(rownames(pac_filt$Anno), as.character(gtf_anno_mis0$seqs))
@@ -580,7 +599,6 @@ pac_filt_ext <- simplify_reanno(pac_filt_ext, hierarchy=hierarchy, mismatches = 
 ###########################################################
 ## Make sizedist biotype plots Cancer cell lines dataset
 library(seqpac)
-load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_20_in_10.Rdata")
 load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_20_in_10_refseq_rRNA.Rdata")
 pac_filt <- pac_filt_ext
 
@@ -622,13 +640,16 @@ out_sizedist_mis0_ext <- PAC_sizedist(pac_filt, norm = NULL, anno_target= list("
 cowplot::plot_grid(plotlist=out_sizedist_mis0_ext$Histograms)
 
 
+
 ## Plot percent mycoplasma
 pac_filt$Anno$genome_hit <- ifelse(grepl("mis",  pac_filt$Anno$hg38_genome), "human",
-                              ifelse(grepl("mis",  pac_filt$Anno$Myco.orale_genome), "mycoplasma", "no_hit"))
+                              ifelse(grepl("mis",  pac_filt$Anno$M.hyorhinis_genome), "mycoplasma",
+                                     ifelse(grepl("mis",  pac_filt$Anno$Myco.orale_genome), "mycoplasma", "no_hit")))
+                                     
+
+
 ord <-  c("no_hit", "mycoplasma", "human")
 PAC_stackbar(pac_filt, anno_target= list("genome_hit", ord),  pheno_target=list("type"), color=c("#BCBCBD", "#9D0014","#094A6B"))
-PAC_stackbar(pac_filt, anno_target= list("genome_hit", ord),  pheno_target=list("cell_type"), color=c("#BCBCBD", "#9D0014","#094A6B"))
-
 
 #######################
 #### Remove no-annotated and filter on range (Cancer cell lines dataset)
@@ -637,22 +658,20 @@ load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cel
 pac_filt <- pac_filt_ext
 
 pac_filt$Anno$genome_hit <- ifelse(grepl("mis",  pac_filt$Anno$hg38_genome), "human",
-                              ifelse(grepl("mis",  pac_filt$Anno$Myco.orale_genome), "mycoplasma", "no_hit"))
+                              ifelse(grepl("mis",  pac_filt$Anno$M.hyorhinis_genome), "mycoplasma",
+                                     ifelse(grepl("mis",  pac_filt$Anno$Myco.orale_genome), "mycoplasma", "no_hit")))
 
-filt <- unique(as.character(pac_filt$Anno$Biotype_mis3_refseq))
-filt <-  filt[!filt %in% "no_anno"]
+pure_filt <- 
+  as.data.frame(
+    cbind(grepl("mis",  pac_filt$Anno$hg38_genome),
+          grepl("mis",  pac_filt$Anno$M.hyorhinis_genome),
+          grepl("mis",  pac_filt$Anno$Myco.orale_genome)))
 
-filt2 <- unique(as.character(pac_filt$Anno$genome_hit))
-filt2 <-  filt2[!filt2 %in% "mycoplasma"]
+pure_filt <- apply(pure_filt, 1,  function(x){paste(x, collapse="_")}) == "TRUE_FALSE_FALSE"
+pac_filt$Anno$pure<- ifelse(pure_filt==TRUE, "pure_human", "not")
+pac_filt  <- PAC_filter(pac_filt, size = c(16,45), anno_target=list("pure", "pure_human"))
 
-filt <- unique(as.character(pac_filt$Anno$genome_hit))
-filt <-  filt[filt %in% "human"]
-
-pac_filt  <- PAC_filter(pac_filt, size = c(16,45), anno_target=list("Biotype_mis3_refseq", filt))
-pac_filt  <- PAC_filter(pac_filt, size = c(16,45), anno_target=list("genome_hit", filt2))
-pac_filt  <- PAC_filter(pac_filt, size = c(16,45), anno_target=list("genome_hit", "human"))
-
-
+# Test
 ord <-  c("no_hit", "mycoplasma", "human")
 PAC_stackbar(pac_filt, anno_target= list("genome_hit", ord),  pheno_target=list("type"), color=c("#BCBCBD", "#9D0014","#094A6B"))
 
@@ -661,36 +680,150 @@ pac_filt$norm <- pac_filt$norm[!names(pac_filt$norm) %in% "vst"]
 pac_filt <- PAC_norm(pac_filt, norm = "vst")
 
 pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), graphs=TRUE)
-pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("cell_type"), graphs=TRUE)
+pca_out <- PAC_pca(pac_filt, norm="cpm", pheno_target=list("type"), graphs=TRUE)
 pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), label=pac_filt$Pheno$cell_type, graphs=TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+pca_out <- PAC_pca(pac_filt, norm="cpm", pheno_target=list("type"), label=pac_filt$Pheno$cell_type, graphs=TRUE)
+pca_out <- PAC_pca(pac_filt, norm="counts", pheno_target=list("type"), label=pac_filt$Pheno$cell_type, graphs=TRUE)
+#save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_pure.Rdata")
 
 
 ###########################################################
-## Coverage plot of tRNA using PAC_covplot  Cancer cell lines dataset
+## Coverage plot of rRNA Cancer cell lines dataset
+library(seqpac)
+#load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_pure.Rdata") # Range filtered will not work.
+load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_20_in_10_refseq_rRNA.Rdata")
+pac_filt <- pac_filt_ext
+ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
+map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+
+pac_filt <- PAC_summary(pac_filt, norm="cpm", pheno_target=list("type"))
+pac_filt_sub <- PAC_filter(pac_filt, pheno_target=list("type", "cell"))
+pac_filt_sub$summary$cpmCell <- pac_filt_sub$norm$cpm
+names(pac_filt_sub$summary$cpmCell) <- pac_filt_sub$Pheno$cell_name
+
+
+out_covp_sub <- PAC_covplot(pac_filt_sub, map=map_object, summary_target=list("cpmCell"), xseq = FALSE)
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target=list("cpmMeans_type"), xseq = FALSE)
+out_covp[1]
+cowplot::plot_grid(plotlist=out_covp[2:5], nrow=4, ncol=1)
+out_covp[2]
+out_covp_sub[2]
 
 
 
 
 
-# Then reannotate only tRNA using the PAC_mapper function
-ref <- "/data/Data_analysis/Genomes/Humans/GtRNAdb/hg38/hg38-tRNAs/hg38-tRNAs_seqpac_fixed.fa"
-map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
+# Only HeLa
+pac_sub <- PAC_filter(pac_filt, pheno_target=list("cell_type", "HeLa"))
+pac_sub$summary$cpm <- pac_sub$norm$cpm
+names(pac_sub$summary$cpm) <- pac_sub$Pheno$name
+out_covp <- PAC_covplot(pac_sub, map=map_object, summary_target=list("cpm"), xseq = FALSE)
+out_covp[1]
+cowplot::plot_grid(plotlist=out_covp[2:5], nrow=4, ncol=1)
+out_covp[2]
+out_covp[3]
+out_covp[4]
+out_covp[5]
+
+# Only cells
+pac_sub <- PAC_filter(pac_filt, pheno_target=list("type", "cell"))
+pac_sub$summary$cpm <- pac_sub$norm$cpm
+names(pac_sub$summary$cpm) <- pac_sub$Pheno$name
+out_covp <- PAC_covplot(pac_sub, map=map_object, summary_target=list("cpm"), xseq = FALSE)
+out_covp[1]
+cowplot::plot_grid(plotlist=out_covp[2:5], nrow=4, ncol=1)
+out_covp[2]
+out_covp[3]
+out_covp[4]
+out_covp[5]
+
+
+
+######################################
+## Patient cervical cancer Sneok et al 2018 dataset
+library(seqpac)
+input <- "/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/fastq"
+output <- "/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/trimmed_seqpac"
+
+# They used Illumina TrueSeq; SRA run selector says average size 50 nt (use hard_trim)
+parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
+                        adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1),
+                        adapt_3="TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC",
+                        seq_range=c(min=14, max=70),
+                        quality=c(threshold=20, percent=0.8),
+                        indels=TRUE, concat=12, check_mem=TRUE)
+
+count_list <- make_counts(input=input, type = "fastq", trimming="seqpac", 
+                          parse=parse, threads=1, save_temp = TRUE)
+
+save(count_list, file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/counts.Rdata")
+anno <- make_anno(count_list, type = "counts", stat = TRUE)
+pheno <- make_pheno("/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/pheno.csv",
+                    counts=count_list$counts,
+                    progress_report=count_list$progress_report)
+pac  <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=count_list$counts)
+#save(pac, file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_master.Rdata")
+
+
+table(pheno$histology)
+table(pheno$source_name)
+
+
+pac_filt  <- PAC_filter(pac, size = c(16,60), threshold=10, coverage=50, pheno_target=list("histology", c("CIN3", "normal")), stat=TRUE)
+pac_filt  <- PAC_norm(pac_filt, norm = "cpm")
+pac_filt  <- PAC_norm(pac_filt, norm = "vst")
+pac_filt  <- PAC_summary(pac_filt, norm = "cpm", pheno_target=list("histology"))
+
+nbias_out <- PAC_nbias(pac_filt, summary_target= list("cpmMeans_histology", c("CIN3", "normal")))
+cowplot::plot_grid(plotlist=nbias_out$Histograms)
+
+#save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_filt.Rdata")
+
+#########################################################3
+### rRNA frament in cancer dataset
+# Load hela cell dataset and extract 
+library(seqpac)
+load(file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_filt.Rdata")
+load(file="/data/Data_analysis/Projects/Human/nov_HeLa_human_201111/R/pac_filt_pure.Rdata")
+load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_pure.Rdata")
+
+## Get fragemtns  from HeLa experiment
+ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
+map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+map_object_pure <- PAC_mapper(pac_pure, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_histology", c("CIN3", "normal")), xseq = TRUE)
+
+out_covp[[1]]
+
+
+
+pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), graphs=TRUE)
+
+
+pac
+
+test <- PAC_filter(pac, anno_target="CGCGACCTCAGATCAGACGTG")
+
+
+cbind(test$Pheno, t(test$Counts[1,]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###########################################################
 ## Coverage plot of tRNA using PAC_covplot  Cancer cell lines dataset

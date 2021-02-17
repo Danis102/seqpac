@@ -160,6 +160,7 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
     map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
     stopifnot(length(map$Full_anno$mis0) == 1)
     # Reorganize reanno object to a PAC_mapper object
+    tRNA_test <- 0 
     align <- lapply(map$Full_anno, function(x){
       x <- x[[1]][!is.na(x[[1]]$ref_hits),]
       splt_x <- strsplit(x[[4]], "(?<=;\\+\\||;-\\|)", perl=TRUE)
@@ -168,16 +169,29 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
         y <- gsub("\\|$", "", y)
         temp <- do.call("rbind", strsplit(y, ";"))
         nams <- temp[,1]
-        strnd <- do.call("rbind", strsplit(nams, "\\d_\\("))[,2]
-        strnd <- gsub("\\)", "", strnd)
-        start_align <- as.numeric(gsub("start=", "", temp[,2]))
-        strnd_align <- temp[,3]
-        strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
-        df <- data.frame(trna_name = nams,
-                         trna_strand = strnd,
-                         align_start = start_align,
-                         align_strand = strnd_align)
-      })
+        type_test1 <- grepl("tRNA", nams)
+        type_test2 <- grepl("_\\(\\+\\)|_\\(-\\)", nams)
+        if(sum(type_test1, type_test2) == 2 ){
+          tRNA_test <- tRNA_test+1
+          strnd_ref <- do.call("rbind", strsplit(nams, "\\d_\\("))[,2]
+          strnd_ref <- gsub("\\)", "", strnd_ref)
+          start_align <- as.numeric(gsub("start=", "", temp[,2]))
+          strnd_align <- temp[,3]
+          strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
+          df <- data.frame(ref_name = nams,
+                           ref_strand = strnd_ref,
+                           align_start = start_align,
+                           align_strand = strnd_align)
+        }else{
+          start_align <- as.numeric(gsub("start=", "", temp[,2]))
+          strnd_align <- temp[,3]
+          strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
+          df <- data.frame(ref_name = nams,
+                           ref_strand = "*",
+                           align_start = start_align,
+                           align_strand = strnd_align)
+          }          
+        })
       df_align <- do.call("rbind", lst_align)
     })
     for(i in 1:length(align)){
@@ -185,14 +199,15 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
       align[[i]]$mismatch <- names(align)[i]
     }
     align <- do.call("rbind", align)
-    align_splt <- split(align, align$trna_name)
+    align_splt <- split(align, align$ref_name)
     align <- lapply(align_splt, function(x){
-      multi <- table(x$seqs) > 1
+      dup_tab <- table(x$seqs)
+      nam_multi <- names(dup_tab)[dup_tab > 1]
       ## Sequences mapping multiple times are removed
-      if(any(multi)){
-        warning("The following input sequences were removed since they mapped >1 to the same reference sequence:",  immediate. = FALSE)
-        print(x[multi,])
-        x <- x[!multi,]
+      if(length(nam_multi) > 0){
+        warning("Sequences were removed since they mapped >1 to the same reference sequence:",  immediate. = TRUE)
+        print(x[x$seqs %in% nam_multi,])
+        x <- x[!x$seqs %in% nam_multi,]
       }
       df <- data.frame(n_hits=1, Align_start=x$align_start, Align_end=x$align_start+nchar(x$seqs)-1, Align_width=nchar(x$seqs))  
       rownames(x) <- x$seqs
@@ -200,11 +215,15 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
       return(df)
     })
     
-    ## Add full length reference
-    nam_match <- match(names(full), names(align))
+    # Fix bowtie names and match with original reference
+    splt_nam <- strsplit(names(full), " ")
+    splt_nam <- unlist(lapply(splt_nam, function(x){x[1]}))
+    nam_match <- match(splt_nam, names(align))
     align_lst <- align[nam_match]
-    stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  names(full)[!is.na(names(align_lst))]))
-    names(align_lst)[is.na(names(align_lst))] <- names(full)[is.na(names(align_lst))]
+    stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  splt_nam[!is.na(names(align_lst))]))
+    
+    ## Add full length reference
+    names(align_lst)[is.na(names(align_lst))] <- splt_nam[is.na(names(align_lst))]
     fin_lst <- list(NULL)
     for(i in 1:length(align_lst)){
       if(is.null(align_lst[[i]])){
