@@ -26,37 +26,25 @@
 #'
 #' @examples
 #' 
-#' load("~/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' #examples are built with pac_master from seqpac package
 #' 
-#' PAC_filt$summary$pheno <- PAC_filt$Pheno
-#' PAC_filt$summary$pheno_trans <- t(PAC_filt$Pheno)
-#' PAC_filt$summary$pheno_trans2 <- t(PAC_filt$Pheno)[,-1]
-#' PAC_filt$summary$pheno_rev <- PAC_filt$Pheno[rev(seq(PAC_filt$Pheno)),]
+#' pac_master_example<-pac_master
+#' pac_master_example$Pheno<-pac_master$Pheno[-1,]
+#'
+#' PAC_check(pac_master, sample_check="Pheno") # TRUE
+#' PAC_check(pac_master_example, sample_check = "Pheno") # Error - with hint that samples may be missing
 #' 
+#' pac_master_example$Pheno<-t(pac_master$Pheno)
+#' PAC_check(pac_master_example, sample_check = "Pheno") # TRUE - Automatically looking for samples in columns instead
 #' 
-#' PAC_check(PAC_filt, sample_check="pheno") # TRUE
-#' PAC_check(PAC_filt, sample_check="pheno_trans") # TRUE (Automatically looking for samples in columns instead)
-#' PAC_check(PAC_filt, sample_check="pheno_trans2") #Error with hint
-#' PAC_check(PAC_filt, sample_check="pheno_rev") #Error not identical
+#' pac_master_example$Anno<-t(pac_master$Anno)
+#'
+#' PAC_check(pac_master, seq_check="Anno") # TRUE
+#' PAC_check(pac_master_example, seq_check="Anno") # Error - with hint that samples may be missing
+#'
+#' pac_master_example$Anno<-pac_master$Anno[-567,]
+#' PAC_check(pac_master_example, seq_check="Anno") # Error - with hint that samples may be missing
 #' 
-#' PAC_filt$summary$anno <- PAC_filt$Anno
-#' PAC_filt$summary$anno_trans <- t(PAC_filt$Anno)
-#' PAC_filt$summary$anno_mis <- PAC_filt$Anno[-567,]
-#' 
-#' PAC_check(PAC_filt, seq_check="anno") # TRUE
-#' PAC_check(PAC_filt, seq_check="anno_trans") # Error not identical
-#' PAC_check(PAC_filt, seq_check="anno_mis") # Error not identical
-#' 
-#' PAC_check(PAC_filt, seq_check=PAC_filt$summary$anno) #TRUE
-#' PAC_check(PAC_filt, seq_check=PAC_filt$summary$anno_trans)  # Error not identical
-#' PAC_check(PAC_filt, seq_check=PAC_filt$summary$pheno) #Error not identical
-#' PAC_check(PAC_filt, sample_check=PAC_filt$summary$pheno_rev) # Error not identical
-#' PAC_check(PAC_filt, sample_check=PAC_filt$summary$pheno_trans) # TRUE (Automatically looking for samples in columns instead)
-#' PAC_check(PAC_filt, sample_check=rownames(PAC_filt$summary$pheno)) # TRUE
-#' PAC_check(PAC_filt, sample_check=rownames(PAC_filt$summary$pheno_trans)) # Error not identical
-#' 
-#' PAC_check(PAC_filt, sample_check=as.integer(13))
-#' PAC_check(PAC_filt, sample_check=list(13,45))
 #' 
 #' @export
 
