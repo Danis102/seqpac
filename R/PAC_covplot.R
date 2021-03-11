@@ -53,37 +53,27 @@
 #' @examples
 #' 
 #' ### Load data ###
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
+#' # Using pac_master drosophila_sRNA_pac example data
 #' 
-#' PAC_filt <- PAC_filter(PAC_all, size=c(16,70), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_filter(PAC_filt, size=c(16,70), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+#' pac_master <- PAC_filter(pac_master, size=c(16,70), threshold=10, coverage=5, norm="counts", stat=FALSE)
+#' pac_master <- PAC_norm(pac_master, norm="cpm")
+#' pac_master <- PAC_filter(pac_master, size=c(16,70), threshold=10, coverage=5, norm="cpm", stat=FALSE) 
 #' 
-#' ## Remove corrupt samples and make means 
-#' Ph_trg <- as.character(PAC_filt$Pheno$Sample[!PAC_filt$Pheno$Sample %in% "Inx24_200130_S12"])
-#' PAC_filt <- PAC_filter(PAC_filt, pheno_target= list("Sample", Ph_trg))
+#' # Make summaries of changes between ovaries and sperm samples
+#' pac_master <- PAC_summary(pac_master, norm = "cpm", type = "means", pheno_target=list("type", c("Ovaries", "Sperm")))
 #' 
-#' PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
+#' # Mapping
+#' map_rRNA <- PAC_mapper(pac_master, ref="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
 #' 
-#' ## Make summaries
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))
-#' 
-#' ## Mapping
-#' map_rRNA <- PAC_mapper(PAC_filt, ref_path="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
-#' 
-#' All_plots <- lapply(as.list(Smry_trg_all), function(x){PAC_covplot(PAC_filt, map_rRNA, summary_target = list("means_[Groups]", x), xseq=FALSE, style="line", color="red")})
+#' All_plots <- PAC_covplot(pac_master, map_rRNA, summary_target=list("Means_type", c("Ovaries", "Sperm")), xseq=TRUE, style="line")
 #'
-#' cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
-#'                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],
-#'                   All_plots[[7]][[7]], All_plots[[8]][[7]], All_plots[[9]][[7]], 
-#'                   All_plots[[10]][[7]], All_plots[[11]][[7]], All_plots[[12]][[7]],
-#'                   All_plots[[13]][[7]], All_plots[[14]][[7]], All_plots[[15]][[7]],
+#' # Plotting
+#' y<-c(1,15)
+#' cowplot::plot_grid(plotlist=All_plots[y],
 #'                   nrow = 5, ncol = 3)
 #' 
-#' 
 #'
-#' 
+#'
 #' @export
 
 PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=NULL, check_overide=FALSE){
