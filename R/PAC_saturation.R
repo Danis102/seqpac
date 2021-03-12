@@ -43,18 +43,17 @@
 #'
 #' @export
 #'
-PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4, par_type="PSOCK"){
+PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4){
               ###################### Setting up data ######################
-                              require("foreach")
+                              doParallel::registerDoParallel(threads) 
+                              `%dopar%` <- foreach::`%dopar%`
+                              
                               cat("\nOrganizing data...\n") 
                               df <- data.frame(seq=rownames(PAC$Counts), mean_counts=as.integer(rowMeans(PAC$Counts)))
                               rep_vect <- as.character(rep(df$seq, time=df$mean_counts))
                               size <- length(rep_vect)
                               x_vect <-  round(seq(0, 100, length.out=steps+1), digits=0)
                               x_vect <- x_vect[-1]
-                              
-                              cl <- parallel::makeCluster(threads, type = par_type)
-                              doParallel::registerDoParallel(cl)
                               
               ###################### Generate data ######################
                               cat(paste0("\nPermutations will be generated using ", threads, " of ", parallel::detectCores(), " available core workers.")) 
@@ -79,7 +78,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
                                                                             df$perc <- x_vect[i]
                                                                             return(df)
                               }
-                              closeAllConnections()
+                               doParallel::stopImplicitCluster()
                               dat <- as.data.frame(do.call("rbind", resampl_sub_lst))
                               ## Add intercept and fix classes  
                               intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),]
@@ -137,7 +136,6 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
                                                 }) 
 
                              return(plots)
-                             parallel::stopCluster(cl)
                              options(scipen=0)
                             }
 

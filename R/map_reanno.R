@@ -154,6 +154,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   drs <- list.dirs(output_path, full.names = FALSE, recursive = FALSE) 
   fls <- list.files(output_path, recursive = FALSE)
   if(length(fls[!fls %in% drs])>0){
+      cat("\n")
       warning(paste0("\n  There are files in the output folder:\n  ", output_path,  "\n  Is it ok to delete them? (y/n)"), immediate.=TRUE, call.=FALSE)
       response <- readline()
       if(!response %in% c("y", "Y")){stop(paste0("Please move or delete the files in the output folder."))}

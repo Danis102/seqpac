@@ -112,8 +112,8 @@ ggplot(res_bench, aes(x=treatment, y=s, fill=treatment)) +
 
 
 ##########################################################################
-##### Kang et al with Illumina adaptor ####### input =
-"/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/fastq/"
+##### Kang et al with Illumina adaptor ####### 
+input = "/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/fastq/"
 
 output = "/home/danis31/Desktop/Temp_docs/temp/test/cutadapt"
 prog_report  <- make_cutadapt(input, output, threads=7,
@@ -129,8 +129,8 @@ prog_report  <- make_trim(input=input, output=output, threads=7, indels=TRUE, co
 
 
 ##########################################################################
-######### Seqpac drosophila NEBNext adator dataset ############## input <-
-system.file("extdata", package = "seqpac", mustWork = TRUE)
+######### Seqpac drosophila NEBNext adator dataset ############## 
+input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
 
 output = "/home/danis31/Desktop/Temp_docs/temp/test2/cutadapt/"
 prog_report <-  make_cutadapt(input, output, threads=7,
@@ -234,7 +234,7 @@ pac_seq <- make_PAC(pheno_input=pheno_seq, anno_input=anno_seq, counts_input=cou
 ##########################################################################
 ##### Kang et al reanno genome  #######
 load("/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/pac_master_seqpac.Rdata")
-load("/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/pac_master_cutadpt.Rdata")
+load("/data/Data_analysis/Projeimportcts/Human/SRA_download/Kang_2018_KTH_miRTrace/R/pac_master_cutadpt.Rdata")
 
 output_path = "/home/danis31/Desktop/Temp_docs/temp"
 
@@ -315,14 +315,17 @@ bio_search <- list( dm6_Ensembl=c("lincRNA", "miRNA", "rRNA", "pre_miRNA", "snoR
 
 hierarchy <- list(rRNA="rRNA", tRNA="tRNA", miRNA ="miRNA", snoRNA="snoRNA", snRNA="snRNA", lncRNA="lncRNA|lincRNA", piRNA="piRNA" )
 
+hierarchy <- list(piRNA="piRNA", rRNA="rRNA", tRNA="tRNA", miRNA ="miRNA", snoRNA="snoRNA", snRNA="snRNA", lncRNA="lncRNA|lincRNA")
+
 
 ### seqpac
-map_reanno(pac_seq, type = "internal", output_path, ref_paths=ref_paths_bio, mismatches = 3, threads = 7, import="biotype")
-reanno_seq <- make_reanno(reanno_path=output_path, PAC=pac_seq, mis_fasta_check = TRUE, threads = 7)
+#map_reanno(pac_seq, type = "internal", output_path, ref_paths=ref_paths_bio, mismatches = 3, threads = 7, import="biotype")
+#reanno_seq <- make_reanno(reanno_path=output_path, PAC=pac_seq, mis_fasta_check = TRUE, threads = 7)
 #save(reanno_seq, file="/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/reanno_biotype_seqpac.Rdata")
+load("/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/reanno_biotype_seqpac.Rdata")
 
 pac_seq <- add_reanno(reanno_seq, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 0, merge_pac=pac_seq)
-pac_seq <- simplify_reanno(pac_seq, hierarchy=hierarchy, mismatches = 0, bio_name = "Biotype", merge_pac = TRUE)
+pac_seq <- simplify_reanno(pac_seq, hierarchy=hierarchy, mismatches = 0, bio_name = "Biotype_hir2", merge_pac = TRUE)
 
 
 #save(pac_seq, file="/data/Data_analysis/Projects/Human/SRA_download/Kang_2018_KTH_miRTrace/R/pac_master_seqpac_anno.Rdata")
@@ -377,6 +380,7 @@ bias_cut <- PAC_nbias(pac_cut) cowplot::plot_grid(plotlist=nbias_cut$Histograms)
 ## Size dist seqpac 
 ord <- c("no_anno", "other", "miRNA", "tRNA", "snoRNA", "piRNA" , "snRNA", "lncRNA", "rRNA")
 sizebio_seq <- PAC_sizedist(pac_seq, anno_target=list("Biotype", ord))
+sizebio_seq <- PAC_sizedist(pac_seq, anno_target=list("Biotype_hir2", ord))
 cowplot::plot_grid(plotlist=sizebio_seq$Histograms)
 
 
@@ -506,7 +510,6 @@ output_path = "/home/danis31/Desktop/Temp_docs/temp"
 
 ### Genome
 ref_paths_gen <- list(hg38="/data/Data_analysis/Genomes/Humans/Ensembl/CRCh38.101/Homo_sapiens.GRCh38.dna.toplevel.fa",
-                      Myco.orale="/data/Data_analysis/Genomes/Other/Mycoplasma orale/GCF_900660435.1_50465_D02-3_genomic.fa",
                       M.hyorhinis="/data/Data_analysis/Genomes/Other/Mycoplasma hyorhinis ATCC/GCF_000383515.1_ASM38351v1_genomic.fa")
 
 map_reanno(pac_filt, type = "internal", output_path, ref_paths = ref_paths_gen,
@@ -696,22 +699,19 @@ pac_filt <- pac_filt_ext
 ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
 map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
 
-pac_filt <- PAC_summary(pac_filt, norm="cpm", pheno_target=list("type"))
-pac_filt_sub <- PAC_filter(pac_filt, pheno_target=list("type", "cell"))
-pac_filt_sub$summary$cpmCell <- pac_filt_sub$norm$cpm
-names(pac_filt_sub$summary$cpmCell) <- pac_filt_sub$Pheno$cell_name
 
+# Remove contaminated samples and make summaries
+sampl <- as.character(unique(pac_filt$Pheno$cell_name))
+sampl <- sampl[!sampl %in%  c("SCC-154", "SCC-4")]
+pac_filt_sub <- PAC_filter(pac_filt, pheno_target=list("cell_name", sampl))
+pac_filt_sub <- PAC_summary(pac_filt_sub, norm="cpm", pheno_target=list("type"))
 
-out_covp_sub <- PAC_covplot(pac_filt_sub, map=map_object, summary_target=list("cpmCell"), xseq = FALSE)
-out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target=list("cpmMeans_type"), xseq = FALSE)
-out_covp[1]
+# Plot coverage plots
+out_covp_sub <- PAC_covplot(pac_filt_sub, map=map_object, summary_target=list("cpmMeans_type"), xseq = FALSE)
+out_covp_sub[1]
 cowplot::plot_grid(plotlist=out_covp[2:5], nrow=4, ncol=1)
-out_covp[2]
 out_covp_sub[2]
-
-
-
-
+out_covp_sub[6]
 
 # Only HeLa
 pac_sub <- PAC_filter(pac_filt, pheno_target=list("cell_type", "HeLa"))
@@ -725,22 +725,9 @@ out_covp[3]
 out_covp[4]
 out_covp[5]
 
-# Only cells
-pac_sub <- PAC_filter(pac_filt, pheno_target=list("type", "cell"))
-pac_sub$summary$cpm <- pac_sub$norm$cpm
-names(pac_sub$summary$cpm) <- pac_sub$Pheno$name
-out_covp <- PAC_covplot(pac_sub, map=map_object, summary_target=list("cpm"), xseq = FALSE)
-out_covp[1]
-cowplot::plot_grid(plotlist=out_covp[2:5], nrow=4, ncol=1)
-out_covp[2]
-out_covp[3]
-out_covp[4]
-out_covp[5]
-
-
 
 ######################################
-## Patient cervical cancer Sneok et al 2018 dataset
+## Patient cervical cancer Snoek et al 2018 dataset
 library(seqpac)
 input <- "/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/fastq"
 output <- "/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/trimmed_seqpac"
@@ -764,12 +751,11 @@ pheno <- make_pheno("/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_
 pac  <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=count_list$counts)
 #save(pac, file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_master.Rdata")
 
+table(pac$Pheno$histology)
+table(pac$Pheno$source_name)
+table(pac$Anno$Size)
 
-table(pheno$histology)
-table(pheno$source_name)
-
-
-pac_filt  <- PAC_filter(pac, size = c(16,60), threshold=10, coverage=50, pheno_target=list("histology", c("CIN3", "normal")), stat=TRUE)
+pac_filt  <- PAC_filter(pac, size = c(14,70), threshold=3, coverage=50, pheno_target=list("histology", c("CIN3", "normal")), stat=TRUE)
 pac_filt  <- PAC_norm(pac_filt, norm = "cpm")
 pac_filt  <- PAC_norm(pac_filt, norm = "vst")
 pac_filt  <- PAC_summary(pac_filt, norm = "cpm", pheno_target=list("histology"))
@@ -779,41 +765,320 @@ cowplot::plot_grid(plotlist=nbias_out$Histograms)
 
 #save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_filt.Rdata")
 
-#########################################################3
-### rRNA frament in cancer dataset
-# Load hela cell dataset and extract 
 library(seqpac)
 load(file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_filt.Rdata")
-load(file="/data/Data_analysis/Projects/Human/nov_HeLa_human_201111/R/pac_filt_pure.Rdata")
-load("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_pure.Rdata")
 
 ## Get fragemtns  from HeLa experiment
 ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
 map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
-map_object_pure <- PAC_mapper(pac_pure, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
 
-out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_histology", c("CIN3", "normal")), xseq = TRUE)
 
+pac_filt$summary$cpm <- pac_filt$norm$cpm
+
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_histology", c("CIN3", "normal")), xseq = FALSE)
 out_covp[[1]]
-
-
-
 pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), graphs=TRUE)
 
+nchar("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA") # Main fragment
 
-pac
-
-test <- PAC_filter(pac, anno_target="CGCGACCTCAGATCAGACGTG")
-
-
-cbind(test$Pheno, t(test$Counts[1,]))
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", rownames(pac_filt$Anno)))
+table(grepl("TCGTGATCGATGTGGTGACG", rownames(pac_filt$Anno)))
+table(grepl("GTGATCGATG", rownames(pac_filt$Anno))) # The fragment is completely missing
 
 
+library(seqpac)
+load(file="/data/Data_analysis/Projects/Human/SRA_download/Snoek_2018_Cervical_cancer_patients/R/pac_filt.Rdata")
+
+## Get fragemtns  from HeLa experiment
+ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
+map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+map_object[[2]]
+
+
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_tissue_type", c("cervical_tumor", "normal_cervical")), xseq = FALSE)
+out_covp[[1]] # Much variability 
+out_covp[[2]]
+out_covp[[3]]
+out_covp[[4]]
+out_covp[[5]]
+out_covp[[6]]
+
+
+
+
+######################################
+## Patient cervical Xu et al dataset
+library(seqpac)
+
+#### Initial check
+## Control
+fls <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_XXX_cervical_patient_both_RNA_sRNA/fastq/ena_files/sRNA_seq/read_1/SRR11095741/SRR11095741_1.fastq.gz" 
+fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls, withIds=FALSE))) 
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", fstq)) # TRUE 78
+table(grepl("TCGTGATCGATGTGGTGACG", fstq)) # TRUE 1423
+
+## Tumor
+# sRNA:
+fls_2 <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_XXX_cervical_patient_both_RNA_sRNA/fastq/ena_files/sRNA_seq/read_1/SRR11095745/SRR11095745_1.fastq.gz"
+#fls_2 <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_XXX_cervical_patient_both_RNA_sRNA/fastq/ena_files/sRNA_seq/read_2/SRR11095745/SRR11095745_2.fastq.gz" # the paired read found 0
+fstq_2 <- paste0(ShortRead::sread(ShortRead::readFastq(fls_2, withIds=FALSE))) 
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", fstq_2)) # TRUE 107
+table(grepl("TCGTGATCGATGTGGTGACG", fstq_2))  # TRUE 5916
+# long RNA
+fls_2_long <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_XXX_cervical_patient_both_RNA_sRNA/fastq/ena_files/RNA_seq/SRR11095733/SRR11095733_1.fastq.gz"
+fstq_2_long <- paste0(ShortRead::sread(ShortRead::readFastq(fls_2_long, withIds=FALSE))) 
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", fstq_2_long)) # TRUE 0
+table(grepl("TCGTGATCGATGTGGTGACG", fstq_2_long))  # TRUE 0
+
+### NEB next adaptor:
+# TGAGATGAAGCACTGTAGCTCAGATCGGAAGAGCACACGTCTGAACTCCAGTCACTCCCGAATCTCGTATGCCGTCTTCTGCTTGAAAAAAACCCCCCCGTGCCCCCGCCCGCCCCCCCCCCCACCGCCCCCTCTCCCCCCTCCCCTCCCC
+#                      AGATCGGAAGAGCACACGTCTGAACTCCA
+
+input <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/fastq/ena_files/sRNA_seq/read_1"
+output <- "/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/trimmed_seqpac_read_1_sRNA"
+
+# Only  
+parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
+                        adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1),
+                        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA",
+                        seq_range=c(min=14, max=70),
+                        quality=c(threshold=20, percent=0.8),
+                        indels=TRUE, concat=12, check_mem=TRUE)
+
+count_list <- make_counts(input=input, type = "fastq", trimming="seqpac", 
+                          parse=parse, threads=3, save_temp = TRUE)
+
+#save(count_list, file="/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/R/counts_list.Rdata")
+anno <- make_anno(count_list, type = "counts", stat = TRUE)
+pheno <- make_pheno("/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/pheno_sRNA_read_1.csv",
+                    counts=count_list$counts,
+                    progress_report=count_list$progress_report)
+pac  <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=count_list$counts)
+#save(pac, file="/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/R/pac_master.Rdata")
+
+table(pac$Pheno$tissue_type)
+table(pac$Anno$Size)
+
+pac_filt  <- PAC_filter(pac, size = c(16,70), threshold=3, coverage=50, pheno_target=list("tissue_type", c("cervical_tumor", "normal_cervical")), stat=TRUE)
+pac_filt  <- PAC_norm(pac_filt, norm = "cpm")
+pac_filt  <- PAC_norm(pac_filt, norm = "vst")
+pac_filt  <- PAC_summary(pac_filt, norm = "cpm", pheno_target=list("tissue_type"))
+#save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/R/pac_filt.Rdata")
+
+nbias_out <- PAC_nbias(pac_filt, summary_target= list("cpmMeans_tissue_type", c("cervical_tumor", "normal_cervical")))
+cowplot::plot_grid(plotlist=nbias_out$Histograms)
+
+library(seqpac)
+load(file="/data/Data_analysis/Projects/Human/SRA_download/Xu_et_at_2020_cervical_patient_both_RNA_sRNA/R/pac_filt.Rdata")
+
+## Peak 1 from HeLa experiment
+ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
+map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+map_object[[2]]
+
+
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_tissue_type", c("cervical_tumor", "normal_cervical")), xseq = FALSE)
+out_covp[[1]] # Much variability 
+out_covp[[2]]
+out_covp[[3]]
+out_covp[[4]]
+out_covp[[5]]
+out_covp[[6]]
+
+
+##  Plots error bars 
+# Create new variable
+logi_peak1<- rownames(pac_filt$Anno) %in% rownames(map_object[[2]]$Alignments)
+table(logi_peak1)
+
+pac_filt$Anno$rRNA_peak_1 <- ifelse(logi_peak1, "peak1", "not_peak")
+pac_peaks <- PAC_filter(pac_filt, anno_target=list("rRNA_peak_1", c("peak1")))
+
+dt_wide <- aggregate(pac_peaks$norm$cpm, list(pac_peaks$Anno$rRNA_peak_1), sum)
+nam_peaks <-  dt_wide[,1]
+dt_wide <- as.data.frame(t(dt_wide[,-1]))
+colnames(dt_wide) <- nam_peaks 
+identical(rownames(dt_wide), rownames(pac_peaks$Pheno))
+dt_wide <- cbind(dt_wide, pac_peaks$Pheno$tissue_type)
+colnames(dt_wide)[2] <- "type"
+library(ggplot2)
+ggplot(dt_wide, aes(x=type, y=peak1, fill=type)) +
+   							stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") +
+							stat_summary(geom = "bar", fun = mean, position = "dodge") +
+							geom_jitter(col = "black", size=4, position=position_jitter(w=0.2, h=0.2)) +
+							scale_fill_manual(values=c("#094A6B", "grey", "blue"))+
+							scale_color_manual(values=c("black", "black", "black"))+
+							theme_bw()+
+							theme(legend.position="none", axis.line.x =element_blank())
 
 
 
 
 
+
+######################################
+## Patient leukemia Veneziano et al 2019 dataset
+library(seqpac)
+
+#### Initial check
+table(grepl("TCGTGATCGATGTGGTGACG", fstq_2))  # TRUE 5916
+# long RNA
+fls <- "/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/fastq/ena_files/SRR10282933/SRR10282933.fastq.gz"
+fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls, withIds=FALSE))) 
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", fstq)) # TRUE 0
+table(grepl("TCGTGATCGATGTGGTGACG", fstq))  # TRUE 4490
+
+
+fls <- "/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/trimmed_fastq/SRR10282918.trim.fastq.gz"
+fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls, withIds=FALSE))) 
+table(grepl("CTTCGTGATCGATGTGGTGACGTCGTGCTCTCCCGGGCCGGGTCCGAGCCGCGACGGGCGA", fstq)) # TRUE 0
+table(grepl("TCGTGATCGATGTGGTGACG", fstq)) 
+
+# NEBNext adaptor
+# CTTCGAGGAACTGTAGGCACCATCAATCCCCCCTAAGTAAGATCGGAAGA
+#                                         AGATCGGAAGAGCACACGTCTGAACTCCA
+
+input <- "/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/fastq"
+output <- "/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/trimmed_fastq"
+
+# Only  
+parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
+                        adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1),
+                        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA",
+                        seq_range=c(min=14, max=70),
+                        quality=c(threshold=20, percent=0.8),
+                        indels=TRUE, concat=12, check_mem=TRUE)
+
+count_list <- make_counts(input=input, type = "fastq", trimming="seqpac", 
+                          parse=parse, threads=4, save_temp = TRUE)
+
+count_list <- make_counts(input=output, type = "fastq", trimming=NULL, threads=3)
+
+#save(count_list, file="/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/R/counts_list.Rdata")
+anno <- make_anno(count_list, type = "counts", stat = TRUE)
+pheno <- make_pheno("/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/pheno.csv",
+                    counts=count_list$counts,
+                    progress_report=count_list$progress_report)
+pac  <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=count_list$counts)
+#save(pac, file="/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/R/pac_master.Rdata")
+
+table(pac$Pheno$Diagnosis)
+table(pac$Anno$Size)
+
+pac_filt  <- PAC_filter(pac, size = c(16,70), threshold=3, coverage=50, pheno_target=list("Diagnosis", c("Chronic lymphocytic leukemia", "Healthy")), stat=TRUE)
+pac_filt  <- PAC_norm(pac_filt, norm = "cpm")
+pac_filt  <- PAC_norm(pac_filt, norm = "vst")
+pac_filt  <- PAC_summary(pac_filt, norm = "cpm", pheno_target=list("Diagnosis"))
+
+nbias_out <- PAC_nbias(pac_filt, summary_target= list("cpmMeans_Diagnosis", c("Chronic lymphocytic leukemia", "Healthy")))
+cowplot::plot_grid(plotlist=nbias_out$Histograms)
+
+#save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/R/pac_filt.Rdata")
+
+library(seqpac)
+load(file="/data/Data_analysis/Projects/Human/SRA_download/Veneziano_et_al_2019_PNAS_leukemia/R/pac_filt.Rdata")
+
+## Get fragemtns  from HeLa experiment
+ref <- "/data/Data_analysis/Genomes/Humans/rRNA/rRNA_Peaks1-4_45S.fa"
+map_object <- PAC_mapper(pac_filt, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+
+
+out_covp <- PAC_covplot(pac_filt, map=map_object, summary_target= list("cpmMeans_Diagnosis", c("Chronic lymphocytic leukemia", "Healthy")), xseq = FALSE)
+out_covp[[1]] # Much variability 
+out_covp[[2]]
+out_covp[[3]]
+out_covp[[4]]
+out_covp[[5]]
+
+load(file="/data/Data_analysis/Projects/Human/nov_HeLa_human_201111/R/pac_filt_pure.Rdata")
+map_object_pure <- PAC_mapper(pac_pure, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=FALSE)
+
+##  Plots error bars 
+
+
+# Create new variable
+logi_peak1<- rownames(pac_filt$Anno) %in% rownames(map_object_pure[[2]]$Alignments)
+table(logi_peak1)
+
+pac_filt$Anno$rRNA_peak_1 <- ifelse(logi_peak1, "peak1", "not_peak")
+pac_peaks <- PAC_filter(pac_filt, anno_target=list("rRNA_peak_1", c("peak1")))
+
+dt_wide <- aggregate(pac_peaks$norm$cpm, list(pac_peaks$Anno$rRNA_peak_1), sum)
+nam_peaks <-  dt_wide[,1]
+dt_wide <- as.data.frame(t(dt_wide[,-1]))
+colnames(dt_wide) <- nam_peaks 
+identical(rownames(dt_wide), rownames(pac_peaks$Pheno))
+dt_wide <- cbind(dt_wide, pac_peaks$Pheno$tissue_type)
+colnames(dt_wide)[2] <- "type" 
+ggplot(dt_wide, aes(x=type, y=peak1, fill=type)) +
+   							stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") +
+							stat_summary(geom = "bar", fun = mean, position = "dodge") +
+							geom_jitter(col = "black", size=4, position=position_jitter(w=0.2, h=0.2)) +
+							scale_fill_manual(values=c("#094A6B", "grey", "blue"))+
+							scale_color_manual(values=c("black", "black", "black"))+
+							theme_bw()+
+							theme(legend.position="none", axis.line.x =element_blank())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+path_to_fastq <- "/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/fastq/ena_files"
+
+# Need to run "hard_trim" (not default_NEB) since only 50 nt reads
+parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
+                        adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1),
+                        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA",
+                        seq_range=c(min=14, max=70),
+                        quality=c(threshold=20, percent=0.8),
+                        indels=TRUE, concat=12, check_mem=FALSE)
+
+count_list <- make_counts(input=path_to_fastq, type = "fastq", trimming="seqpac", 
+                          parse=parse, threads=12, save_temp = TRUE)
+anno <- make_anno(count_list, type = "counts", stat = TRUE)
+pheno <- make_pheno("/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/pheno.csv",
+                    counts=count_list$counts,
+                    progress_report=count_list$progress_report)
+pac  <- make_PAC(pheno_input=pheno, anno_input=anno, counts_input=count_list$counts)
+table(pac$Pheno$cell_type)
+
+# Check nbias
+nbias_out <- PAC_nbias(pac)
+nbias_out$Histograms[[1]]
+cowplot::plot_grid(plotlist=nbias_out$Histograms[1:12], nrow=3, ncol=4)
+cowplot::plot_grid(plotlist=nbias_out$Histograms[13:24], nrow=3, ncol=4)
+cowplot::plot_grid(plotlist=nbias_out$Histograms[25:36], nrow=3, ncol=4)
+cowplot::plot_grid(plotlist=nbias_out$Histograms[37:42], nrow=3, ncol=4)
+
+#save(pac, file="/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_master.Rdata")
+#load(file="/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_master.Rdata")
+
+pheno_ord <- c("C33A", "C41", "Caski", "HeLa", "HT-3", "SiHa", "SW756", "SCC-090", "SCC-1", "SCC-154", "SCC-4", "SCC-47", "UPCI-017", "UPCI-068")
+
+pac_filt  <- PAC_filter(pac, size = c(16,50), threshold=10, coverage=50, pheno_target=list("cell_type", pheno_ord), stat=TRUE)
+pac_filt  <- PAC_norm(pac_filt, norm = "cpm")
+pac_filt  <- PAC_norm(pac_filt, norm = "vst")
+
+pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), graphs=TRUE)
+pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("cell_type"), graphs=TRUE)
+pca_out <- PAC_pca(pac_filt, norm="vst", pheno_target=list("type"), label=pac_filt$Pheno$cell_type, graphs=TRUE)
+
+#save(pac_filt, file="/data/Data_analysis/Projects/Human/SRA_download/Tong_et_al_2020_Cancer_cell_lines_exosomes/R/pac_filt_20_in_10.Rdata")
 
 
 

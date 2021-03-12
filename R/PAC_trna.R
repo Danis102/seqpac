@@ -241,21 +241,29 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     if(set_max >= 100000){
       breaks <- c(1,10,100,1000,10000,100000,1000000)
       }
-    plot <- ggplot(dat, aes(x=Group.1, y=means, fill=Group.1 ,
+    plot <- ggplot2::ggplot(dat, ggplot2::aes(x=Group.1, y=means, fill=Group.1 ,
                             #ymax = means + (means > 0)*SE,
                             #ymin = means - (means < 0)*SE)) +
                             ymax = means + SE,
                             ymin = means - SE)) +
-      geom_errorbar(width=0.5, size=1.0, colour="black", position = "identity") +
-      geom_col(width = 0.8, cex=0.2, colour="black")+
-      labs(title=paste0("Mean ", norm))+
-      ylab(paste0("Log10 ", norm, " +/- SE")) +
-      scale_fill_manual(values=rev(rgb_vec_ann1))+
-      theme_classic()+
-      theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_text(angle = 0, hjust = 0), axis.line.x =element_blank())+
-      scale_y_log10(limits = c(min(breaks),max(breaks)), breaks=breaks)+
-      coord_flip()
-    if(!is.null(ymax_1)){plot <- plot + scale_y_continuous(limits=c(0,ymax_1))}
+      ggplot2:: geom_errorbar(width=0.5, size=1.0, colour="black", position = "identity") +
+      ggplot2::geom_col(width = 0.8, cex=0.2, colour="black")+
+      ggplot2::labs(title=paste0("Mean ", norm))+
+      ggplot2::ylab(paste0("Log10 ", norm, " +/- SE")) +
+      ggplot2::scale_fill_manual(values=rev(rgb_vec_ann1))+
+      ggplot2::theme_classic()+
+      ggplot2::theme(legend.position="none", 
+                     axis.title.y= ggplot2::element_blank(), 
+                     panel.grid.major.y =ggplot2:: element_line(linetype="dashed", colour="grey", size=0.5), 
+                     panel.grid.major.x = ggplot2::element_line(colour="grey", size=0.5), 
+                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
+                     axis.text.y = ggplot2::element_text(angle = 0, hjust = 0), 
+                     axis.line.x = ggplot2::element_blank())+
+      ggplot2::scale_y_log10(limits = c(min(breaks),max(breaks)), breaks=breaks)+
+      ggplot2::coord_flip()
+    if(!is.null(ymax_1)){
+      plot <- plot + ggplot2::scale_y_continuous(limits=c(0,ymax_1))
+      }
     return(plot)
   })               
   
@@ -297,26 +305,25 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
     logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
     lim <- max(sqrt(logfc$value^2))
-    plot_lst$Log2FC_Anno_1 <- ggplot(logfc, aes(x=Group.1, y=value, fill=Group.1, ymin=value, ymax=value)) +
-      geom_hline(yintercept = 0, linetype="dashed", size=1, color="azure4")+
-      geom_errorbar(width=0.8, size=0.5, position = "identity") +
-      geom_point(shape=21, size=4, position = "identity") +
-      labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
-      ylab(paste0("Log2FC between groups (", norm, ") +/- SE")) + 
-      scale_fill_manual(values=rev(rgb_vec_ann1)) +
-      scale_x_discrete(labels=levels(logfc$Group.1)) +
-      theme_classic()+
-      theme(legend.position="none", 
-            axis.title.y= element_blank(), 
-            panel.grid.major.y =  element_line(linetype="dashed", 
-                                               colour="grey", size=0.5), 
-            panel.grid.major.x = element_line(colour="grey", size=0.5), 
-            axis.text.x = element_text(angle = 0, hjust = 0), 
-            axis.text.y = element_blank(),
-            axis.line.x =element_blank(), 
-            axis.line.y =element_blank())+
+    plot_lst$Log2FC_Anno_1 <- ggplot2::ggplot(logfc, ggplot2::aes(x=Group.1, y=value, fill=Group.1, ymin=value, ymax=value)) +
+      ggplot2::geom_hline(yintercept = 0, linetype="dashed", size=1, color="azure4")+
+      ggplot2::geom_errorbar(width=0.8, size=0.5, position = "identity") +
+      ggplot2::geom_point(shape=21, size=4, position = "identity") +
+      ggplot2::labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
+      ggplot2::ylab(paste0("Log2FC between groups (", norm, ") +/- SE")) + 
+      ggplot2::scale_fill_manual(values=rev(rgb_vec_ann1)) +
+      ggplot2::scale_x_discrete(labels=levels(logfc$Group.1)) +
+      ggplot2::theme_classic()+
+      ggplot2::theme(legend.position="none", 
+                     axis.title.y = ggplot2::element_blank(), 
+                     panel.grid.major.y = ggplot2::element_line(linetype="dashed", colour="grey", size=0.5), 
+                     panel.grid.major.x = ggplot2::element_line(colour="grey", size=0.5), 
+                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
+                     axis.text.y = ggplot2::element_blank(),
+                     axis.line.x = ggplot2::element_blank(), 
+                     axis.line.y = ggplot2::element_blank())+
       #coord_flip(ylim=c(-lim, lim))
-      coord_flip(ylim=c(-13, 13))
+      ggplot2::coord_flip(ylim=c(-13, 13))
   } 
   ## Error bars for differencs in RPM - independent
   # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
@@ -349,14 +356,17 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
   plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
     x$ann1 <- factor(x$ann1, levels=rev(unique(x$ann1)))
     x$ann2 <- factor(x$ann2, levels=rev(anno_target_2[[2]]))
-    plot <- ggplot(x, aes(x=ann1, y=perc, fill=ann2)) +
-      geom_col(width = 0.9, cex=0.2, colour="black", position="fill")+
-      labs(title="Mean percent content")+
-      ylab("%") +
-      scale_fill_manual(values=rev(rgb_vec_ann2))+
-      theme_classic()+
-      theme(axis.title.y= element_blank(), axis.text.x = element_text(angle = 0, hjust = 0),axis.line.x =element_blank(), axis.line.y =element_blank())+
-      coord_flip(ylim=c(0, 1))
+    plot <- ggplot2::ggplot(x, ggplot2::aes(x=ann1, y=perc, fill=ann2)) +
+      ggplot2::geom_col(width = 0.9, cex=0.2, colour="black", position="fill")+
+      ggplot2::labs(title="Mean percent content")+
+      ggplot2::ylab("%") +
+      ggplot2::scale_fill_manual(values=rev(rgb_vec_ann2))+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.title.y= ggplot2::element_blank(), 
+                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0),
+                     axis.line.x = ggplot2::element_blank(), 
+                     axis.line.y = ggplot2::element_blank())+
+      ggplot2::coord_flip(ylim=c(0, 1))
     return(plot)
   })
   return(list(plots=plot_lst[-1], data=list(anno_target_1=Ann1_agg_lst, annot_target_2=Ann2_agg_lst, Percent=Ann12_perc)))

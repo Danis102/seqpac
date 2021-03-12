@@ -214,8 +214,8 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colvec=NULL, no_an
     return(rp)
     }))
   df <- data.frame(types=prec_lst[[1]]$Category, variables=prec_lst[[1]]$Category, levels=levels(prec_lst[[1]]$Category)) 
-  leg <- cowplot::get_legend(ggplot(df, aes(x=types, fill=variables)) + 
-                               geom_bar(color="black") + 
-                               scale_fill_manual(values=rev(colvec))) 
+  leg <- cowplot::get_legend(ggplot2::ggplot(df, ggplot2::aes(x=types, fill=variables)) + 
+                               ggplot2::geom_bar(color="black") + 
+                               ggplot2::scale_fill_manual(values=rev(colvec))) 
   return(c(plt_lst, list(legend=leg)))
 }
