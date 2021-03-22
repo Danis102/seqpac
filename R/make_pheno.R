@@ -97,11 +97,18 @@ make_pheno<- function(pheno_input, type="manual", counts=NULL, progress_report=N
   if(type=="manual"){
     if(is.data.frame(pheno_input)){
       pheno <- pheno_input
+      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", colnames(pheno)))
+      if(!length(header) == 1){
+        stop("Cannot find column named 'Sample_ID' \nor you have >1 columns named 'Sample_ID'")
+      }
+      colnames(pheno)[header] <- "Sample_ID"
+      
     }else{
       lines <- readLines(pheno_input, n=20)
-      header <- which(grepl("^Sample_ID", lines))
+      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", lines))
       if(!length(header) == 1){
-        stop("Error! Cannot find comma seperated header with first column named 'Sample_ID'")}
+        stop("Cannot find comma seperated header with first column \nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
+        }
       head_1 <- stringr::str_count (lines[header], ",")
       row_1 <- stringr::str_count (lines[header+1], ",")
       if(head_1-row_1==0){

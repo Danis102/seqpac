@@ -186,7 +186,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     cov_lst[[i]] <- lapply(as.list(1:length(summary_target[[2]])), function(x){
       df <- df[rep_lst[[i]][[x]],]
       if(nrow(df)==0){
-        fin <- data.frame(Postion=as.factor(1:width(sub_map[[i]]$Ref_seq)), Coverage=0)
+        fin <- data.frame(Postion=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), Coverage=0)
       }
       if(nrow(df)>0){  
         gr <- GenomicRanges::GRanges(df)

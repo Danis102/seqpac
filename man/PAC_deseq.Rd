@@ -46,7 +46,7 @@ of log dispersions), "mean" (mean of gene-wise dispersion). See
   indicating the main target column in Pheno. 2nd object being a character
   vector of the target group(s) in the target Pheno column (1st object).
 
-  Imprtant: In \code{PAC_deseq}, pheno_target controls the main comparative
+  Important: In \code{PAC_deseq}, pheno_target controls the main comparative
   factor category from which a summarized table and plots will be generated.
   If, for instance, a target column named "groups" in PAC$Pheno contains
   "control" and "treatment" categories, setting pheno_target=list("groups",

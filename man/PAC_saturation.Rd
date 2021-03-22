@@ -4,14 +4,7 @@
 \alias{PAC_saturation}
 \title{Filter a PAC object on sequence size and coverage}
 \usage{
-PAC_saturation(
-  PAC,
-  resample = 10,
-  steps = 10,
-  thresh = c(1, 10),
-  threads = 4,
-  par_type = "PSOCK"
-)
+PAC_saturation(PAC, resample = 10, steps = 10, thresh = c(1, 10), threads = 4)
 }
 \arguments{
 \item{PAC}{PAC-list object containing a Counts data.frame with sequences as
