@@ -63,7 +63,6 @@ load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mus
  filtsep <- unique(do.call("c", as.list(filtsep)))
  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
  
- @export
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

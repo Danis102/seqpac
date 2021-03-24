@@ -19,8 +19,8 @@
 #' @param model Character vector describing the statistical model based on
 #'   column names in Pheno.
 #'
-#' @param deseq_norm Logical whether to return deseq normalized values or not
-#'   (default=TRUE).
+#' @param deseq_norm Logical whether to return deseq normalized values or raw
+#'   counts (default=FALSE).
 #'
 #' @param pheno_target (optional) List with: 1st object being a character
 #'   indicating the main target column in Pheno. 2nd object being a character
@@ -66,24 +66,30 @@
 #'library(seqpac)
 #'load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #'
+#'#' pac <- PAC_norm(pac, type="rpm")
+#' pheno_target <- list("stage", c("Stage1", "Stage3"))
+#' pheno_target <- list("stage", c("Stage1", "Stage5"))
+#' pheno_target <- list("stage", c("Stage5", "Stage1"))
+#' 
+#' model=~stage
+#' model=~stage+batch  
 #'
-#'## Simple model testing Ovaries against Sperm using Wald test with local fit (default)
-#'table(pac$Pheno$type)
-#'output_deseq <- PAC_deseq(pac, model= ~type, threads=6)
 #'
-#'## More complicated, but still graphs will be generated from 'type' since it is first in model  
-#'output_deseq <- PAC_deseq(pac, model= ~type + replicate)
+#'## Simple model testing embryonic stages using Wald test with local fit (default)
+#'table(pac$Pheno$stage)
+#'output_deseq <- PAC_deseq(pac, model= ~stage, threads=6)
 #'
-#'## More complicated, but still graphs will be generated from 'type' since it is first in model  
-#'output_deseq <- PAC_deseq(pac, model= ~type + replicate)   # (generates a warning)
+#'## Batch corrected, but still graphs will be generated from 'stage' since it is first in the model  
+#'output_deseq <- PAC_deseq(pac, model= ~stage + batch)
 #'
 #'## Using pheno_target we can change focus
-#'output_deseq <- PAC_deseq(pac, model= ~type + replicate, pheno_target=list("replicate"))
-#'
+#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target=list("batch"))
 #'
 #'## With pheno_target we can also change the direction fo the comparision change focus
-#'# Sperm vs Ovaries:
-#'output_deseq <- PAC_deseq(pac, model= ~type, threads=6)   
+#'# Stage1 vs Stage3:
+#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage1", "Stage3")),  threads=6)   
+
+
 #'# Ovaries vs Sperm:
 #'output_deseq <- PAC_deseq(pac, model= ~type, pheno_target=list("type", c("Ovaries", "Sperm")), threads=6)
 #'

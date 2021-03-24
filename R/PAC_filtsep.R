@@ -53,7 +53,8 @@
 #'  filtsep <- unique(do.call("c", as.list(filtsep)))
 #'  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
 #'  
-#'  @export
+#' @export
+
 PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, pheno_target=NULL){
   
                               ### Extract data ###
