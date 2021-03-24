@@ -191,11 +191,6 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
   
   #### Generate individial histograms 
   options(scipen=999)
-  require(RColorBrewer)
-  require(scales)
-  require(ggthemes)
-  require(extrafont)
-  require(ggplot2)  
   #### Set up colors colors ###
   if(is.null(colors)){
     colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
@@ -226,19 +221,19 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
     }
   }
   for(i in 1:length(size_lst)){
-    histo_lst[[i]] <- ggplot(size_lst[[i]], aes(x=size, y=data, fill=biotype))+
-      geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
-      geom_hline(yintercept=0, col="azure4")+
-      xlab("Size (nt)")+
-      ylab(paste0(labl))+
-      labs(subtitle = samp[i])+
-      scale_fill_manual(values=rgb_vec)+
+    histo_lst[[i]] <- ggplot2::ggplot(size_lst[[i]], ggplot2::aes(x=size, y=data, fill=biotype))+
+      ggplot2::geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
+      ggplot2::geom_hline(yintercept=0, col="azure4")+
+      ggplot2::xlab("Size (nt)")+
+      ggplot2::ylab(paste0(labl))+
+      ggplot2::labs(subtitle = samp[i])+
+      ggplot2::scale_fill_manual(values=rgb_vec)+
       #coord_cartesian(ylim=c(0,10000))+
       #scale_y_continuous(breaks = seq(0, 10000, 2500))+
       #ggthemes::geom_rangeframe(aes(x=range))+   
       ggthemes::theme_tufte()+
-      theme_classic()+
-      theme(axis.text.x = element_text(angle = 0))
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 0))
     names(histo_lst)[i] <- names(size_lst)[i]
   }
   return(list(Histograms=histo_lst, Data=size_lst))

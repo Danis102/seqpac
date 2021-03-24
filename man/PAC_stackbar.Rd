@@ -8,7 +8,7 @@ PAC_stackbar(
   PAC,
   anno_target = NULL,
   pheno_target = NULL,
-  colvec = NULL,
+  color = NULL,
   width = 1,
   no_anno = TRUE,
   total = TRUE,
@@ -34,9 +34,9 @@ Important, the 2nd object is order sensitive,
 meaning that categories will appear in the same
 order in the stacked bargraph. (default=NULL)}
 
-\item{colvec}{Character vector with rgb colour hex codes in the same length
+\item{color}{Character vector with rgb colour hex codes in the same length
 as the number of biotypes. For example see:
-https://www.coolgenerator.com/rgb-color-generator. colvec=NULL will
+https://www.coolgenerator.com/rgb-color-generator. color=NULL will
 generate the default color scheme.}
 
 \item{width}{Integer adjusting the width of the bars (default=1)}

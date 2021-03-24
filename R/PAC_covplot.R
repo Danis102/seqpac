@@ -77,172 +77,208 @@
 #' @export
 
 PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=NULL, check_overide=FALSE){
-                            require("GenomicRanges")
-                            require("ggplot2")
-                            require("stringr")
-                            if(is.null(summary_target[[1]])){stop("Error: You need to specify a target object in PAC$summary with summary_target.")}
-                            if(is.null(names(PAC$summary[[summary_target[[1]]]]))){stop("You need to specify a valid summary_target.\n(Hint: Double check correct object name in PAC$summary or rerun the 'PAC_summary' function.)")}
-                            if(length(summary_target)==1){summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])}
-                            if(is.null(map_target)){map_target <- names(map)}
+  if(is.null(summary_target[[1]])){
+    stop("Error: You need to specify a target object in PAC$summary with summary_target.")
+  }
+  if(is.null(names(PAC$summary[[summary_target[[1]]]]))){
+    stop("You need to specify a valid summary_target.\n(Hint: Double check correct object name in PAC$summary or rerun the 'PAC_summary' function.)")
+  }
+  if(length(summary_target)==1){
+    summary_target[[2]] <- names(PAC$summary[[summary_target[[1]]]])
+  }
+  if(is.null(map_target)){
+    map_target <- names(map)
+  }
+  norm  <- summary_target[[1]]
   
-                            norm  <- summary_target[[1]]
-
-                            ## Subsetting data
-                            smry <- PAC$summary[[summary_target[[1]]]]
-                            data <- smry[,summary_target[[2]], drop=FALSE]
-                            data$empty_ <- 0 # Avoids problems with automatic vectorization
-                            
-                            sub_map <- map[names(map) %in% map_target]
-                            if(length(sub_map)==1){sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]}
-                            uni_map <- unique(do.call("c", lapply(sub_map, function(x){rownames(x$Alignments)})))
-                            uni_map <- uni_map[!uni_map == "1"]
-                            PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
-                            if(!nrow(PAC$Anno) == length(uni_map)){warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceed with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")}               
-
-                            ## Remove empty references
-                            rm_filt <- !do.call("c", lapply(sub_map, function(x){as.character(x$Alignments[1,1]) == "no_hits"}))
-                            cat(paste0("\nOf ", length(rm_filt), " references analyzed, ", length(rm_filt[rm_filt==TRUE]), " was covered\n"))
-                            cat(paste0("by one or more query sequence in PAC.\n"))
-                            if(length(names(sub_map)[!rm_filt]) > 0 ){
-                            if(length(names(sub_map)[!rm_filt]) > 30){cat("References with no coverage will be ignored.\n")}
-                            if(length(names(sub_map)[!rm_filt]) <= 30){
-                                                cat("These reference names was not covered by any query sequence:\n")
-                                                print(names(sub_map)[!rm_filt])}}
-                            sub_map <- sub_map[rm_filt]
-                            
-                            ## Check for multialigning sequences
-                            multi_seq_lst <- lapply(sub_map, function(x){ grepl("\\.\\d", rownames(x$Alignments))})
-                            if(any(do.call("c", multi_seq_lst))){
-                                    lst <- list(NA)
-                                    for(i in 1:length(multi_seq_lst)){lst[[i]] <-  sub_map[[i]]$Alignments[multi_seq_lst[[i]],]}
-                                    names(lst) <- names(multi_seq_lst)
-                                    warning("Occurens of multiple identical alignments within the same reference was detected.\nWill proceed anyway, but the multiple alignment(s) are listed above.\n")
-                                    print(lst[do.call("c", lapply(multi_seq_lst, any))])
-                                }
-                            sub_map <- lapply(sub_map, function(x){x$Alignments$seqs <- gsub(".\\d", "", rownames(x$Alignments)); return(x)}) 
-                            ref_data_lst <- lapply(sub_map, function(x){
-                                                                sub_data <- data[rownames(data) %in% x$Alignments$seqs,]
-                                                                fin <- sub_data[match(x$Alignments$seqs, rownames(sub_data)),]
-                                                                return(fin)})
-                            if(check_overide==TRUE){for(i in 1:length(ref_data_lst)){
-                                                                rownames(ref_data_lst[[i]]) <- rownames(sub_map[[i]]$Alignments)
-                                                                ref_data_lst[[i]][is.na(ref_data_lst[[i]])] <- 0
-                                                                }}
-                            stopifnot(identical(do.call("c", lapply(ref_data_lst, function(x){gsub("\\.\\d", "", rownames(x))})), do.call("c", lapply(sub_map, function(x){x$Alignments$seqs}))))
-                            stopifnot(identical(length(ref_data_lst), length(sub_map)))
-
-                            ## Generate coverage files using granges
-                            rep_lst <- lapply(ref_data_lst, function(x){
-                                            lapply(as.list(x), function(y){
-                                                                  rep_vect <- rep(seq_along(rownames(x)), time=round(y))
-                                                                  if(length(rep_vect)<1){ rep_vect <- 0}
-                                                                  return(rep_vect)
-                                                                  })
-                                                            })
-                                                              
-                            
-                            cov_lst <- list(NA)
-                            for(i in 1:length(sub_map)){
-                                                       df <- data.frame(seqnames="sequence",
-                                                                        start=sub_map[[i]]$Alignments$Align_start,
-                                                                        end=sub_map[[i]]$Alignments$Align_end,
-                                                                        ID=sub_map[[i]]$Alignments$seqs)
-                                                       
-                                                       cov_lst[[i]] <- lapply(as.list(1:length(summary_target[[2]])), function(x){
-                                                                                                          df <- df[rep_lst[[i]][[x]],]
-                                                                                                          if(nrow(df)==0){
-                                                                                                              fin <- data.frame(Postion=as.factor(1:width(sub_map[[i]]$Ref_seq)), Coverage=0)
-                                                                                                              }
-                                                                                                          if(nrow(df)>0){  
-                                                                                                              gr <- GRanges(df)
-                                                                                                              seqlengths(gr) <- as.numeric(width(sub_map[[i]]$Ref_seq))
-                                                                                                              cov <- as.numeric(coverage(gr)[[1]])
-                                                                                                              fin <- data.frame(Postion=ordered(as.factor(1:length(cov))), Coverage=cov)
-                                                                                                              }
-                                                                                                          return(fin)
-                                                                                                          })
-                                                       names(cov_lst[[i]]) <- summary_target[[2]]
-                                                       names(cov_lst)[i] <- names(sub_map)[i]
-                                                      }
-
-                            ## Plot graphs
-                            # Setup colors
-                            if(is.null(color)){
-                                      n_colrs  <- length(summary_target[[2]])
-                                      colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
-                                      color <- colfunc(n_colrs)
-                                      names(color) <- summary_target[[2]]
-                                      }
-                                     
-                            
-                            # Plot
-                            plot_lst <- list(NA)
-                            for(i in 1:length(cov_lst)){
-                                    cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
-                                    cov_df <- reshape2::melt(cov_df, id.vars="Position")
-                                    colnames(cov_df) <- c("Postion", "Group", "Coverage")
-                                    if(xseq==TRUE){
-                                       x_lab <- c(unlist(str_split(as.character(sub_map[[i]]$Ref_seq), "", n = Inf, simplify = FALSE)))
-                                       tcks <- element_line()
-                                       }else{x_lab<-NULL; tcks <- element_blank()}
-
-                                    ########### Solid style ##########
-                                    if(style=="solid"){
-                                        if(max(cov_df$Coverage) >= 100){
-                                          plot_lst[[i]] <- ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
-                                                            geom_line(size=0.3) +
-                                                            geom_ribbon(data=cov_df, aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-                                                            scale_fill_manual(name='', values=color)+
-                                                            geom_abline(intercept =0, slope=0)+
-                                                            ylab(paste0("mean_", norm)) +
-                                                            xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
-                                                            scale_x_discrete(labels=x_lab)+
-                                                            theme_classic()+
-                                                            theme(axis.ticks.x=tcks, axis.text.x = element_text(size=8), plot.title = element_text(size=10))}
-                                        if(max(cov_df$Coverage) < 100){
-                                          plot_lst[[i]] <- ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
-                                                            geom_line(size=0.3) +
-                                                            geom_ribbon(data=cov_df, aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-                                                            scale_fill_manual(name='', values=color)+
-                                                            coord_cartesian(ylim=c(0,100))+
-                                              							scale_y_continuous(breaks = seq(0, 100, 30))+
-                                                            geom_abline(intercept =0, slope=0)+
-                                                            ylab(paste0("mean_", norm)) +
-                                                            xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
-                                                            scale_x_discrete(labels=x_lab)+
-                                                            theme_classic()+
-                                                            theme(axis.ticks.x=tcks, axis.text.x = element_text(size=8), plot.title = element_text(size=10))}
-                                                      }
-
-                                    ########### Line style ##########
-                                    if(style=="line"){
-                                        if(max(cov_df$Coverage) >= 100){
-                                          plot_lst[[i]] <- 	ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
-                                            								geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-                                            								scale_color_manual(values=color)+
-                                            								labs(title=names(sub_map)[i])+
-                                              							ylab(paste0("mean_", norm)) +
-                                            								expand_limits(y=max(cov_df$Coverage)+20) +
-                                            								scale_x_discrete(labels=x_lab)+
-                                            								theme_classic()+
-                                            								theme(axis.ticks.x=tcks, axis.text.x = element_text(size=8), plot.title = element_text(size=10))}
-
-                                        if(max(cov_df$Coverage) < 100){
-                                          plot_lst[[i]] <-  ggplot(cov_df, aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
-                                            								geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-                                            								scale_color_manual(values=color)+
-                                                            coord_cartesian(ylim=c(0,100))+
-                                              							scale_y_continuous(breaks = seq(0, 100, 30))+
-                                            								labs(title=names(sub_map)[i])+
-                                              							ylab(paste0("mean_", norm)) +
-                                            								expand_limits(y=max(cov_df$Coverage)+20) +
-                                            								scale_x_discrete(labels=x_lab)+
-                                            								theme_classic()+
-                                            								theme(axis.ticks.x=tcks, axis.text.x = element_text(size=8), plot.title = element_text(size=10))}
-                                    names(plot_lst)[i] <- names(cov_lst)[i]
-                                    plot_lst[[i]]$seqs_rpm <-  ref_data_lst[[i]]
-                                    }
-                            }
-                            names(plot_lst) <- names(sub_map)
-                            return(plot_lst)
+  ## Subsetting data
+  smry <- PAC$summary[[summary_target[[1]]]]
+  data <- smry[,summary_target[[2]], drop=FALSE]
+  data$empty_ <- 0 # Avoids problems with automatic vectorization
+  
+  sub_map <- map[names(map) %in% map_target]
+  if(length(sub_map)==1){
+    sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]
+  }
+  uni_map <- unique(do.call("c", lapply(sub_map, function(x){
+    rownames(x$Alignments)
+  })))
+  uni_map <- uni_map[!uni_map == "1"]
+  PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
+  if(!nrow(PAC$Anno) == length(uni_map)){
+    warning("Only ", nrow(PAC$Anno), " of ", length(uni_map), " mapped sequences were found in PAC.\n  Will proceed with the ones that were found.\n  (Hint: Did you subset the PAC object after you generated the map?)")
+  }               
+  
+  ## Remove empty references
+  rm_filt <- !do.call("c", lapply(sub_map, function(x){
+    as.character(x$Alignments[1,1]) == "no_hits"
+  }))
+  cat(paste0("\nOf ", length(rm_filt), " references analyzed, ", length(rm_filt[rm_filt==TRUE]), " was covered\n"))
+  cat(paste0("by one or more query sequence in PAC.\n"))
+  if(length(names(sub_map)[!rm_filt]) > 0 ){
+    if(length(names(sub_map)[!rm_filt]) > 30){cat("References with no coverage will be ignored.\n")
+    }
+    if(length(names(sub_map)[!rm_filt]) <= 30){
+      cat("These reference names was not covered by any query sequence:\n")
+      print(names(sub_map)[!rm_filt])
+    }
+  }
+  sub_map <- sub_map[rm_filt]
+  
+  ## Check for multialigning sequences
+  multi_seq_lst <- lapply(sub_map, function(x){ 
+    grepl("\\.\\d", rownames(x$Alignments))
+  })
+  if(any(do.call("c", multi_seq_lst))){
+    lst <- list(NA)
+    for(i in 1:length(multi_seq_lst)){
+      lst[[i]] <-  sub_map[[i]]$Alignments[multi_seq_lst[[i]],]
+    }
+    names(lst) <- names(multi_seq_lst)
+    warning("Occurens of multiple identical alignments within the same reference was detected.\nWill proceed anyway, but the multiple alignment(s) are listed above.\n")
+    print(lst[do.call("c", lapply(multi_seq_lst, any))])
+  }
+  sub_map <- lapply(sub_map, function(x){
+    x$Alignments$seqs <- gsub(".\\d", "", rownames(x$Alignments)); return(x)
+  }) 
+  ref_data_lst <- lapply(sub_map, function(x){
+    sub_data <- data[rownames(data) %in% x$Alignments$seqs,]
+    fin <- sub_data[match(x$Alignments$seqs, rownames(sub_data)),]
+    return(fin)
+  })
+  if(check_overide==TRUE){
+    for(i in 1:length(ref_data_lst)){
+      rownames(ref_data_lst[[i]]) <- rownames(sub_map[[i]]$Alignments)
+      ref_data_lst[[i]][is.na(ref_data_lst[[i]])] <- 0
+    }}
+  stopifnot(identical(do.call("c", lapply(ref_data_lst, function(x){gsub("\\.\\d", "", rownames(x))})), do.call("c", lapply(sub_map, function(x){x$Alignments$seqs}))))
+  stopifnot(identical(length(ref_data_lst), length(sub_map)))
+  
+  ## Generate coverage files using granges
+  rep_lst <- lapply(ref_data_lst, function(x){
+    lapply(as.list(x), function(y){
+      rep_vect <- rep(seq_along(rownames(x)), time=round(y))
+      if(length(rep_vect)<1){ 
+        rep_vect <- 0
+      }
+      return(rep_vect)
+    })
+  })
+  
+  
+  cov_lst <- list(NA)
+  for(i in 1:length(sub_map)){
+    df <- data.frame(seqnames="sequence",
+                     start=sub_map[[i]]$Alignments$Align_start,
+                     end=sub_map[[i]]$Alignments$Align_end,
+                     ID=sub_map[[i]]$Alignments$seqs)
+    
+    cov_lst[[i]] <- lapply(as.list(1:length(summary_target[[2]])), function(x){
+      df <- df[rep_lst[[i]][[x]],]
+      if(nrow(df)==0){
+        fin <- data.frame(Postion=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), Coverage=0)
+      }
+      if(nrow(df)>0){  
+        gr <- GenomicRanges::GRanges(df)
+        GenomeInfoDb::seqlengths(gr) <- as.numeric(IRanges::width(sub_map[[i]]$Ref_seq))
+        cov <- as.numeric(GenomicRanges::coverage(gr)[[1]])
+        fin <- data.frame(Postion=ordered(as.factor(1:length(cov))), Coverage=cov)
+      }
+      return(fin)
+    })
+    names(cov_lst[[i]]) <- summary_target[[2]]
+    names(cov_lst)[i] <- names(sub_map)[i]
+  }
+  
+  ## Plot graphs
+  # Setup colors
+  if(is.null(color)){
+    n_colrs  <- length(summary_target[[2]])
+    colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
+    color <- colfunc(n_colrs)
+    names(color) <- summary_target[[2]]
+  }
+  
+  
+  # Plot
+  plot_lst <- list(NA)
+  for(i in 1:length(cov_lst)){
+    cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
+    cov_df <- reshape2::melt(cov_df, id.vars="Position")
+    colnames(cov_df) <- c("Postion", "Group", "Coverage")
+    if(xseq==TRUE){
+      #x_lab <- c(unlist(stringr::str_split(as.character(sub_map[[i]]$Ref_seq), "", n = Inf, simplify = FALSE)))
+      x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), "")))
+      tcks <- ggplot2::element_line()
+    }else{
+      x_lab <- NULL 
+      tcks <- ggplot2::element_blank()}
+    
+    ########### Solid style ##########
+    if(style=="solid"){
+      if(max(cov_df$Coverage) >= 100){
+        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
+          ggplot2::geom_line(size=0.3) +
+          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
+          ggplot2::scale_fill_manual(name='', values=color)+
+          ggplot2::geom_abline(intercept =0, slope=0)+
+          ggplot2::ylab(paste0("mean_", norm)) +
+          ggplot2::xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
+          ggplot2::scale_x_discrete(labels=x_lab)+
+          ggplot2::theme_classic()+
+          ggplot2::theme(axis.ticks.x=tcks, 
+                         axis.text.x = ggplot2::element_text(size=8), 
+                         plot.title = ggplot2::element_text(size=10))}
+      if(max(cov_df$Coverage) < 100){
+        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
+          ggplot2::geom_line(size=0.3) +
+          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
+          ggplot2::scale_fill_manual(name='', values=color)+
+          ggplot2::coord_cartesian(ylim=c(0,100))+
+          ggplot2::scale_y_continuous(breaks = seq(0, 100, 30))+
+          ggplot2::geom_abline(intercept =0, slope=0)+
+          ggplot2::ylab(paste0("mean_", norm)) +
+          ggplot2::xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
+          ggplot2::scale_x_discrete(labels=x_lab)+
+          ggplot2::theme_classic()+
+          ggplot2::theme(axis.ticks.x=tcks, 
+                         axis.text.x = ggplot2::element_text(size=8), 
+                         plot.title = ggplot2::element_text(size=10))}
+    }
+    
+    ########### Line style ##########
+    if(style=="line"){
+      if(max(cov_df$Coverage) >= 100){
+        plot_lst[[i]] <- 	ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
+          ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
+          ggplot2::scale_color_manual(values=color)+
+          ggplot2::labs(title=names(sub_map)[i])+
+          ggplot2::ylab(paste0("mean_", norm)) +
+          ggplot2::expand_limits(y=max(cov_df$Coverage)+20) +
+          ggplot2::scale_x_discrete(labels=x_lab)+
+          ggplot2::theme_classic()+
+          ggplot2::theme(axis.ticks.x=tcks, 
+                         axis.text.x = ggplot2::element_text(size=8), 
+                         plot.title = ggplot2::element_text(size=10))}
+      
+      if(max(cov_df$Coverage) < 100){
+        plot_lst[[i]] <-  ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
+          ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
+          ggplot2::scale_color_manual(values=color)+
+          ggplot2::coord_cartesian(ylim=c(0,100))+
+          ggplot2::scale_y_continuous(breaks = seq(0, 100, 30))+
+          ggplot2::labs(title=names(sub_map)[i])+
+          ggplot2::ylab(paste0("mean_", norm)) +
+          ggplot2::expand_limits(y=max(cov_df$Coverage)+20) +
+          ggplot2::scale_x_discrete(labels=x_lab)+
+          ggplot2::theme_classic()+
+          ggplot2::theme(axis.ticks.x = tcks, 
+                         axis.text.x = ggplot2::element_text(size=8), 
+                         plot.title = ggplot2::element_text(size=10))}
+      names(plot_lst)[i] <- names(cov_lst)[i]
+      plot_lst[[i]]$seqs_rpm <-  ref_data_lst[[i]]
+    }
+  }
+  names(plot_lst) <- names(sub_map)
+  return(plot_lst)
 }

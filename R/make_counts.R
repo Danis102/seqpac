@@ -334,7 +334,8 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     }
     `%dopar%` <- foreach::`%dopar%`
     doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-    seq_lst   <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+    seq_lst   <- foreach::foreach(i=1:length(fls), .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+  
       if(evidence[2]>1){
         fstq <- ShortRead::readFastq(fls[[i]], withIds=FALSE)
         tab <- table(paste0(ShortRead::sread(fstq)))
@@ -395,8 +396,10 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     cat(paste0("\nAlso saves sequences with less evidence but >= ", evidence[2], " counts in a single sample."))
     cat(paste0("\n(Please set evidence$sample == 1 if this was not intended.)"))
   }
+  gc(reset=TRUE)  
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-  reads_lst <- foreach::foreach(i=1:length(fls), .packages=c("ShortRead"),.final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+  reads_lst <- foreach::foreach(i=1:length(fls),.final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+  
     stat_mat <- as.data.frame(matrix(NA, nrow=1, ncol=3))
     colnames(stat_mat) <- c("tot_reads", "reads_pass_evidence", "uniseqs_pass_evidence")
     reads <- ShortRead::readFastq(fls[i], withIds=FALSE)
@@ -411,12 +414,12 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     rm(reads_keep)
     
     n_reads <- n_reads[match(seqs_keep, n_reads$reads),]
-    rownames(n_reads) <- seqs_keep
     n_reads$Freq[is.na(n_reads$Freq)] <- 0
-    dt <- data.frame(N=n_reads[,2])
-    rownames(dt) <- rownames(n_reads)
+    dt <- tibble::tibble(N=n_reads[,2])
+    rm(n_reads)
     return(list(counts=dt, stat=stat_mat))
-  }
+    gc()
+    }
   doParallel::stopImplicitCluster()
   gc(reset=TRUE)
 
@@ -436,8 +439,8 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
   }
   ordCount_df <- as.data.frame(do.call("cbind", lapply(reads_lst, function(x){x$counts})))
   colnames(ordCount_df) <- names(reads_lst)
-  stopifnot(!any(!do.call("c", lapply(reads_lst, function(x){identical(rownames(ordCount_df), rownames(x$counts))}))))
-  
+  rownames(ordCount_df) <- seqs_keep
+
   if(trimming=="trimmed"){
     prog_report <- "no_trimming_was_done"
     }

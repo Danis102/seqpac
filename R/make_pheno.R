@@ -97,31 +97,94 @@ make_pheno<- function(pheno_input, type="manual", counts=NULL, progress_report=N
   if(type=="manual"){
     if(is.data.frame(pheno_input)){
       pheno <- pheno_input
+      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", colnames(pheno)))
+      if(!length(header) == 1){
+        stop("Cannot find column named 'Sample_ID' \nor you have >1 columns named 'Sample_ID'")
+      }
+      colnames(pheno)[header] <- "Sample_ID"
+      
     }else{
       lines <- readLines(pheno_input, n=20)
-      header <- which(grepl("^Sample_ID", lines))
+      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", lines))
       if(!length(header) == 1){
-        stop("Error! Cannot find comma seperated header with first column named 'Sample_ID'")}
-      pheno <- read.delim(pheno_input,  header=TRUE, sep=",")
+        stop("Cannot find comma seperated header with first column \nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
+        }
+      head_1 <- stringr::str_count (lines[header], ",")
+      row_1 <- stringr::str_count (lines[header+1], ",")
+      if(head_1-row_1==0){
+            pheno <- read.delim(pheno_input,  header=TRUE, sep=",")
+      }else{
+            pheno <- read.delim(pheno_input,  header=TRUE, sep="\t")
+      }
     }
-  }
+    pheno$Sample_ID <- as.character(gsub("-", "_", as.character(pheno$Sample_ID)))
+    }
   
-  ## Order as counts
+  
+  ## Order as counts using grepl
   if(!is.null(counts)){
-    pheno_ord <- unlist(lapply(as.list(as.character(pheno$Sample_ID)), function(x){
-      logi_colnam <- grepl(x, colnames(counts))
+    # Search column names in pheno$Sample_ID
+    typ <- "pheno"
+    ord <- unlist(lapply(as.list(colnames(counts)), function(x){
+      logi_colnam <- grepl(x, pheno$Sample_ID)
       if(sum(logi_colnam)>1){
         stop("Input pheno does not have unique Sample_IDs")
       }
-      return(which(logi_colnam))
+      if(sum(logi_colnam) == 0){
+        return(0)
+      }else{
+        return(which(logi_colnam))
+      }
     }))
-    if(any(duplicated(pheno_ord))){
+    # If n matches does not match n pheno do the other way around
+    # Save what type you have done until later
+    if(!length(ord[!ord==0])==nrow(pheno)){
+      typ <- "counts"
+      ord <- unlist(lapply(as.list(pheno$Sample_ID), function(x){
+        logi_colnam <- grepl(x,  colnames(counts))
+        if(sum(logi_colnam)>1){
+          stop("Input pheno does not have unique Sample_IDs")
+        }
+        return(which(logi_colnam))
+      }))
+    }
+    
+    # Double check everything and report missing samples from typ=pheno 
+    if(any(duplicated(ord[!ord==0]))){
       stop("Sample_IDs were not unique in pheno input.")
     }
-    rownames(pheno) <- colnames(counts)[pheno_ord]
-    pheno <- pheno[match(colnames(counts), rownames(pheno)),]
+    if(!length(ord[!ord==0])==nrow(pheno)){
+      stop("\nNot all Sample_ID in pheno were available in counts column names.\nDouble check your Sample_ID column in pheno input.") 
+    }
+    
+    
+    # Reorder pheno according to counts sample names
+    # Don't forget what type
+    df <- as.data.frame(matrix(NA, nrow=ncol(counts), ncol=ncol(pheno)))
+    rownames(df) <- colnames(counts)
+    colnames(df) <- colnames(pheno)
+    
+    if(typ=="pheno"){
+      for(i in 1:nrow(df)){
+        if(!ord[i] == 0){
+          df[i,] <- as.character(t(pheno[ord[i],]))
+         }
+      }
+    }
+    if(typ=="counts"){
+      for(i in 1:nrow(df)){
+       df[ord[i],] <- as.character(t(pheno[i,]))
+      }
+    }
+    pheno <- df
+      
+    # Report outcome
     stopifnot(identical(rownames(pheno), colnames(counts)))
-    cat("Of", length(colnames(counts)), "sample names in counts,", sum(as.numeric(rownames(pheno) %in% colnames(counts))), "were found in pheno file path.\n")
+    logi_miss <- ord %in% 0
+    if(any(logi_miss)){
+      warning("Not all samples in counts were represented in pheno input.\n  These will have 'NA' in pheno.")
+      }
+    cat("Of", length(colnames(counts)), "sample names in counts,", sum(logi_miss), "were found in pheno file path.\n")
     cat("\n")
     print(data.frame(pheno=as.character(pheno$Sample_ID), counts=colnames(counts)))
   }else{

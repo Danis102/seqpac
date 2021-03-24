@@ -67,7 +67,7 @@
 #' @export
 #'
 PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colvec=NULL, box=TRUE){
-                                        					require(ggplot2)
+                                        					
                                                   if(!PAC_check(PAC)){stop("Input was not a PAC object.")}
   
                                                   if(is.null(summary_target[[1]])){stop("Error: You need to specify a target in PAC$summary with summary_target.")}
@@ -117,35 +117,42 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                                   if(is.null(limits)){limits <- c((mima[1]*1.2),  max_lim)}
                                                                   
                                                 							    if(type=="jitter"){
-                                                                  p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
-                                                								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
-                                                								        geom_jitter(position=position_jitter(0.2), cex=1.5)+
-                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
-                                                												geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
-                                                												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
-                                                												theme_classic()+
-                                                												scale_y_continuous(limits =limits) +
-                                                												theme(legend.position="none", axis.title.x = element_text(size=15), axis.text.x = element_text(angle = 45, hjust = 0.95, size=13), axis.title.y = element_text(size=15) ,  axis.text.y = element_text(size=13))+
-                                                												scale_color_manual(values=colvec)
+                                                                  p <- ggplot2::ggplot(data, ggplot2::aes(x=biotype, y=values, col=biotype, fill=biotype))+
+                                                								        ggplot2::geom_hline(yintercept=0, col="#707177", cex=0.6) +
+                                                								        ggplot2::geom_jitter(position=position_jitter(0.2), cex=1.5)+
+                                                	                      ggplot2::stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                												ggplot2::geom_text(stat="count", ggplot2::aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
+                                                												ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
+                                                												ggplot2::theme_classic()+
+                                                												ggplot2::scale_y_continuous(limits =limits) +
+                                                												ggplot2::theme(legend.position="none", axis.title.x = element_text(size=15), 
+                                                												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
+                                                												               axis.title.y = ggplot2::element_text(size=15) , 
+                                                												               axis.text.y = ggplot2::element_text(size=13))+
+                                                												ggplot2::scale_color_manual(values=colvec)
                                                 								        #coord_flip()
                                                                   if(box==TRUE){
-                                                                        p <- p+geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
+                                                                        p <- p+ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
 
                                                 							    }
                                                                   if(type=="violin"){
-                                                                  p <- ggplot(data, aes(x=biotype, y=values, col=biotype, fill=biotype))+
-                                                								        geom_hline(yintercept=0, col="#707177", cex=0.6) +
-                                                								        geom_violin (width=0.9, trim=TRUE, scale="width", color="black")+
-                                                	                      stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
-                                                                        geom_text(stat="count", aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
-                                                												labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
-                                                												theme_classic()+
-                                                												scale_y_continuous(limits =limits) +
-                                                												theme(legend.position="none", axis.title.x = element_text(size=15), axis.text.x = element_text(angle = 45, hjust = 0.95, size=13), axis.title.y = element_text(size=15) ,  axis.text.y = element_text(size=13))+
-                                                												scale_fill_manual(values=colvec)
+                                                                  p <- ggplot2::ggplot(data, ggplot2::aes(x=biotype, y=values, col=biotype, fill=biotype))+
+                                                								        ggplot2::geom_hline(yintercept=0, col="#707177", cex=0.6) +
+                                                								        ggplot2::geom_violin(width=0.9, trim=TRUE, scale="width", color="black")+
+                                                	                      ggplot2::stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                                        ggplot2::geom_text(stat="count", ggplot2::aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
+                                                												ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
+                                                												ggplot2::theme_classic()+
+                                                												ggplot2::scale_y_continuous(limits =limits) +
+                                                												ggplot2::theme(legend.position="none", 
+                                                												               axis.title.x = ggplot2::element_text(size=15), 
+                                                												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
+                                                												               axis.title.y = ggplot2::element_text(size=15) ,  
+                                                												               axis.text.y = ggplot2::element_text(size=13))+
+                                                												ggplot2::scale_fill_manual(values=colvec)
                                                 								        #coord_flip() 
                                                                   if(box==TRUE){
-                                                                        p <- p+geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
+                                                                        p <- p + ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
                                                 							    
                                                                       }
                                                                 return(p)

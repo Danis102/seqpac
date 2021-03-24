@@ -37,14 +37,11 @@
 #'   
 #' @examples
 #' 
-#' @export
-#' 
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
 #' ## 
 #' ## Keep sequences with 5 counts (threshold) in 100% (coverage) of samples in a group:
-
 #'  # Use PAC_filtsep to find sequences 
 #'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
 #'  
@@ -55,7 +52,8 @@
 #'  # Filter by unique sequences passing filtsep  
 #'  filtsep <- unique(do.call("c", as.list(filtsep)))
 #'  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
-#' 
+#'  
+#'  @export
 PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, pheno_target=NULL){
   
                               ### Extract data ###

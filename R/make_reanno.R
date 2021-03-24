@@ -121,17 +121,29 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
   if(mis_fasta_check==TRUE){
     cat("\nChecking the last anno_mis fasta file.\n")
     anno_mis_fls <- list.files(reanno_path, pattern = "anno_mis\\d.fa")
-    ns <- max(as.integer(gsub("anno_mis|.fa", "", anno_mis_fls)))
-    file_nam <- paste0("anno_mis", ns, ".fa")
-    if(!file_nam %in% basename(anno_mis_fls)){stop(paste0("\nThe last anno_mis fasta ('leftover') file, named ", file_nam, ", was not found in reanno path.\nIf it was deleted, set mis_fasta_check=FALSE."))}                
+    outfile_fls <- list.files(reanno_path, pattern = "Full_reanno_mis\\d.Rdata")
+    ns_fa <- max(as.integer(gsub("anno_mis|.fa", "", anno_mis_fls)))
+    ns_rdata <- max(as.integer(gsub("Full_reanno_mis|.Rdata", "", outfile_fls)))
+    file_nam <- paste0("anno_mis", ns_fa, ".fa")
+    if(!ns_fa == ns_rdata+1){
+      stop(paste0("\nThe last anno_mis fasta ('leftover') file, named ", file_nam, ", was not found in reanno path.\nIf it was deleted, set mis_fasta_check=FALSE."))
+      }                
     noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", file_nam))
     logi_no_anno <- df_fin$Any=="No_anno"
     logi_olap <-  df_fin$seq[df_fin$Any=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
-    perc <-  round(length(logi_olap[logi_olap==TRUE])  / length(logi_no_anno[logi_no_anno==TRUE])*100, digits=2)
-    cat("Of the ", length(logi_no_anno[logi_no_anno==TRUE]), "missing sequences in the reannotation\n")
-    cat(paste0("files ", perc, "% were found in ", file_nam, ".\n"))
-    if(!perc==100){warning(paste0(" Not all missing annotations were found in ", file_nam, ".\n This indicates that something has went wrong in the reannotation workflow.\n"))
-    }else{cat("Passed fasta check!\n")}
+    if(length(noAnno_fasta) + sum(logi_no_anno)==0){
+      cat("Congratulation, all sequences recieved an annotation.\n")
+      perc<-100
+    }else{
+      perc <-  round(sum(logi_olap)  / sum(logi_no_anno)*100, digits=2)
+      cat("Of the ",  sum(logi_no_anno), "missing sequences in the reannotation\n")
+      cat(paste0("files ", perc, "% were found in ", file_nam, ".\n"))
+    }
+    if(!perc==100){
+      warning(paste0(" Not all missing annotations were found in ", file_nam, ".\n This indicates that something has went wrong in the reannotation workflow.\n"))
+    }else{
+      cat("Passed fasta check!\n")
+        }
   }
   return(list(Overview=df_fin, Full_anno=reanno_lst_match))
 }

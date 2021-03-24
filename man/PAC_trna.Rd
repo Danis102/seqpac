@@ -6,7 +6,7 @@
 \usage{
 PAC_trna(
   PAC,
-  norm = "rpm",
+  norm = "cpm",
   filter = 100,
   join = FALSE,
   top = 15,

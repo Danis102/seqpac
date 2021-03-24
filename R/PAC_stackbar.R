@@ -189,7 +189,7 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
     ggplot2::geom_text(ggplot2::aes(label=tot_counts), nudge_y=-3, nudge_x=0, angle = 0, color="black", size=4)+
     ggthemes::geom_rangeframe(ggplot2::aes(y=c(0, rep(1, length(Percent)-1))))+
     ggplot2::scale_fill_manual(values=rev(color))+
-    coord_cartesian(ylim=c(-2,100)) +
+     ggplot2::coord_cartesian(ylim=c(-2,100)) +
     ggplot2::ylab("Percent of total reads")+
     ggthemes::theme_tufte()+
     ggplot2::theme(
