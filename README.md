@@ -1,2 +1,2 @@
 # seqpac
-seqpac: Group-based Analysis of sRNA in R using Short Read Counts
+Seqpac: A Framework for small RNA analysis in R using Sequence-Based Counts
