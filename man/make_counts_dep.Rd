@@ -50,14 +50,8 @@ this function will generate a raw countTable (columns=sample, rows=sequence).
   documentation about running Sports. \url{https://github.com/Danis102} for
   updates on the current package.
 
-Other PAC generation: 
+Other PAC sports: 
 \code{\link{import_sports}()},
-\code{\link{make_PAC}()},
-\code{\link{make_anno}()},
-\code{\link{make_counts}()},
-\code{\link{make_cutadapt}()},
-\code{\link{make_pheno}()},
-\code{\link{make_trim}()},
-\code{\link{progress_report}()}
+\code{\link{make_anno_sports}()}
 }
-\concept{PAC generation}
+\concept{PAC sports}

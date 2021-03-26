@@ -50,14 +50,14 @@ List of data frames with additional information from reannotation
 This function imports bowtie output and summarizes the content.
 }
 \details{
-Given the path to alignment outputs from bowtie, \code{import_reanno} will
+Given the path to alignment outputs from bowtie, \code{\link{import_reanno}} will
 attempt to read these files into R and generate a list of unordered
 data.frames where each row summarizes all annotations for a given sequence.
-It is called by \code{map_reanno} to generate summarized data from bowtie
+It is called by \code{\link{map_reanno}} to generate summarized data from bowtie
 output saved as .Rdata files. These files can then be re-imported into R
-where information is organized using \code{make_reanno}
+where information is organized using \code{\link{make_reanno}}
 and finally added to the annotation table (PAC$Anno) of the original PAC-list
-object using \code{add_reanno}.
+object using \code{\link{add_reanno}}.
 }
 \section{Important}{
  Re-annotation must have been done using Bowtie default

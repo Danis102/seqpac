@@ -31,41 +31,54 @@ across Pheno, Anno and Counts.
 }
 \examples{
 
-load("~/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-PAC_filt$summary$pheno <- PAC_filt$Pheno
-PAC_filt$summary$pheno_trans <- t(PAC_filt$Pheno)
-PAC_filt$summary$pheno_trans2 <- t(PAC_filt$Pheno)[,-1]
-PAC_filt$summary$pheno_rev <- PAC_filt$Pheno[rev(seq(PAC_filt$Pheno)),]
+PAC_check(pac)  # TRUE
 
+new_Anno <- pac$Anno[-1,]             # Remove first row in Anno
+PAC_check(pac, seq_check=new_Anno)    # Throws error explaining the problem with sequence compatibility
 
-PAC_check(PAC_filt, sample_check="pheno") # TRUE
-PAC_check(PAC_filt, sample_check="pheno_trans") # TRUE (Automatically looking for samples in columns instead)
-PAC_check(PAC_filt, sample_check="pheno_trans2") #Error with hint
-PAC_check(PAC_filt, sample_check="pheno_rev") #Error not identical
+pac$Anno <- new_Anno                  # Add to pac
+PAC_check(pac)                        # Throws error that Counts and Anno is not identical
 
-PAC_filt$summary$anno <- PAC_filt$Anno
-PAC_filt$summary$anno_trans <- t(PAC_filt$Anno)
-PAC_filt$summary$anno_mis <- PAC_filt$Anno[-567,]
+# Reload data
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+PAC_check(pac)  # TRUE
 
-PAC_check(PAC_filt, seq_check="anno") # TRUE
-PAC_check(PAC_filt, seq_check="anno_trans") # Error not identical
-PAC_check(PAC_filt, seq_check="anno_mis") # Error not identical
+new_norm <- pac$norm$cpm[,-1]         # Remove a sample column in normalized table 
+PAC_check(pac, seq_check=new_norm)    # All sequences are good
+PAC_check(pac, sample_check=new_norm) # But samples are not
 
-PAC_check(PAC_filt, seq_check=PAC_filt$summary$anno) #TRUE
-PAC_check(PAC_filt, seq_check=PAC_filt$summary$anno_trans)  # Error not identical
-PAC_check(PAC_filt, seq_check=PAC_filt$summary$pheno) #Error not identical
-PAC_check(PAC_filt, sample_check=PAC_filt$summary$pheno_rev) # Error not identical
-PAC_check(PAC_filt, sample_check=PAC_filt$summary$pheno_trans) # TRUE (Automatically looking for samples in columns instead)
-PAC_check(PAC_filt, sample_check=rownames(PAC_filt$summary$pheno)) # TRUE
-PAC_check(PAC_filt, sample_check=rownames(PAC_filt$summary$pheno_trans)) # Error not identical
+pac$norm$cpm <- new_norm              # Add to pac
+PAC_check(pac)                        # Now norm table is incompatible 
 
-PAC_check(PAC_filt, sample_check=as.integer(13))
-PAC_check(PAC_filt, sample_check=list(13,45))
+# Reload data
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+PAC_check(pac)  # TRUE
+
+seq_names <- rownames(pac$Counts)
+sample_names <- colnames(pac$Counts) 
+
+PAC_check(pac, seq_check=seq_names)
+PAC_check(pac, sample_check=sample_names) 
+
+PAC_check(pac, seq_check=rev(seq_names))
+PAC_check(pac, sample_check=rev(sample_names)) 
+
 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current
   package.
+
+Other PAC generation: 
+\code{\link{make_PAC}()},
+\code{\link{make_anno}()},
+\code{\link{make_counts}()},
+\code{\link{make_cutadapt}()},
+\code{\link{make_pheno}()},
+\code{\link{make_trim}()},
+\code{\link{progress_report}()}
 }
-\concept{}
+\concept{PAC generation}

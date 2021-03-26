@@ -39,14 +39,8 @@ fastq file (input file for Sports). Files will be imported
   documentation about running Sports. \url{https://github.com/Danis102} for
   updates on the current package.
 
-Other PAC generation: 
-\code{\link{make_PAC}()},
-\code{\link{make_anno}()},
-\code{\link{make_counts_dep}()},
-\code{\link{make_counts}()},
-\code{\link{make_cutadapt}()},
-\code{\link{make_pheno}()},
-\code{\link{make_trim}()},
-\code{\link{progress_report}()}
+Other PAC sports: 
+\code{\link{make_anno_sports}()},
+\code{\link{make_counts_dep}()}
 }
-\concept{PAC generation}
+\concept{PAC sports}

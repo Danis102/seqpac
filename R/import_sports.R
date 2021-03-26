@@ -8,7 +8,7 @@
 #' data.frames. This is done while perserving the basenames of the original
 #' fastq file (input file for Sports). Files will be imported
 #'
-#' @family PAC generation
+#' @family PAC sports
 #'
 #' @seealso \url{https://github.com/junchaoshi/sports1.0} for download and
 #'   documentation about running Sports. \url{https://github.com/Danis102} for

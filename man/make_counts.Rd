@@ -16,36 +16,28 @@ make_counts(
 )
 }
 \arguments{
-\item{input}{If type="fastq" the input is a path to a directory containing
-input fastq-files. The script will recursively search this directory for
-the .fastq|.fastq.gz extension. If type="sports" input is a list containing
-imported data frames from Sports output. This list can be generated using
-\code{import_sports}.}
-
-\item{type}{Character indicating what input that should be used. If
-type="fastq", the scripts will generate a count table based on fastq files
-stored in the input path. If type="sports", a count table is generated from
-a list object created using \code{import_sports} contain imported sports
-output files.}
+\item{input}{A path to a directory containing input fastq-files. The script
+will recursively search this directory for the .fastq|.fastq.gz extension.}
 
 \item{trimming}{Character indicating what type of trimming tool that should
 be used. If \code{trimming="seqpac"}, fastq files will be sent to the
-\code{make_trim} function in seqpac, while if \code{trimming="cutadapt"}
-fastq files will be sent to the \code{make_cutadapt} function. Note that
-\code{trimming="seqpac"} runs independently of external software, while
-\code{trimming="cutadapt"} is dependent on an externally installed version
-of cutadapt and fastq_quality_filter. Trimmed fastq files are stored
-temporarily in the systems default temporary folder. Please, run
-\code{make_trim} and \code{make_cutadapt} seperately for perminant storage
-options, or set \code{save_temp=TRUE} to avoid that \code{make_counts} will
-delete all temporary files.  As default trimming=NULL, which indicates that
-input fastq files has already been trimmed.}
+\code{\link{make_trim}} function in seqpac, while if
+\code{trimming="cutadapt"} fastq files will be sent to the
+\code{\link{make_cutadapt}} function. Note that \code{trimming="seqpac"}
+runs independently of external software, while \code{trimming="cutadapt"}
+is dependent on an externally installed version of cutadapt and
+fastq_quality_filter. Trimmed fastq files are stored temporarily in the
+systems default temporary folder. Please, run \code{\link{make_trim}} and
+\code{\link{make_cutadapt}} seperately for perminant storage options, or
+set \code{save_temp=TRUE} to avoid that \code{make_counts} will delete all
+temporary files.  As default trimming=NULL, which indicates that input
+fastq files has already been trimmed.}
 
 \item{threads}{Integer stating the number of parallell jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 file. To avoid crashing the system due to memory shortage, make sure that
 each thread on the machine have at least 10 Gb of memory availabe, unless
-your fastq files are very small.Use \code{parallel::detectcores()} to see
+your fastq files are very small. Use \code{parallel::detectcores()} to see
 available threads on the machine.}
 
 \item{plot}{Logical whether evidence plots should be printed and saved in the
@@ -54,7 +46,7 @@ returned list (default=TRUE).}
 \item{parse}{Character strings defining the command that should be parsed to
 \code{\link{make_trim}} or \code{\link{make_cutadapt}}. This will allow
 you to customize your trimming according to 3' adaptor sequence and
-platform specifics etc. Please see examples below and the manuals for
+platform standards etc. Please see examples below and the manuals for
 \code{\link{make_trim}} and \code{\link{make_cutadapt}} for more details.
 For convenience, \code{parse} also have two default mode for sRNA trimming,
 using Illumina and New England Biotype (neb) type small RNA adaptors.
@@ -64,14 +56,14 @@ and 3' adaptor trimming, with a 0.1 tolerance for mismatch/indels. If
 parse="default_illumina", then the "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC" 3'
 adaptor is trimmed and untrimmed sequences are removed. If
 parse="default_neb", then "AGATCGGAAGAGCACACGTCTGAACTCCA" is trimmed and
-untrimmed sequences are removed. Removing untrimmed sequences are often
-mandatory for sRNA sequencing.}
+untrimmed sequences are removed. Removing untrimmed sequences is
+recommended for sRNA sequencing.}
 
 \item{evidence}{Character vector with two inputs named 'experiment' and
-'sample' that controls the low level evidence filter. Users may already at
+'sample' that controls the low-level evidence filter. Users may already at
 this point markly reduce the level of noise in the counts table by
 specifying the number of independent evidence that a specific sequence must
-have to be included in the counts table. As default,
+have to be included. As default,
 \code{evidence=c(experiment=2, sample=1)} will include all sequences that
 have >=1 count in at least 2 independent fastq files. Thus 'experiment'
 controls the number of independent fastq evidence needed across the whole
@@ -97,9 +89,9 @@ A list containing three objects:
 \code{make_counts} uses parallel processing to generate a count table.
 }
 \details{
-Given a list of imported Sports output data.frames (generated by
-\code{import_sports}), and an annotation file (generated by \code{make_anno}
-this function will generate a raw countTable (columns=sample, rows=sequence).
+Given a paths to fastq this function performs low-level evidence filtering,
+generates a counts table of sequences passing the filter and plots summary
+statistics.
 }
 \examples{
  library(seqpac)
@@ -108,7 +100,6 @@ this function will generate a raw countTable (columns=sample, rows=sequence).
 ### Seqpac fastq trimming with the make_trim function 
 ### using default settings for NEBNext small RNA adaptor 
 
-input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Merged_fastq/"
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 
 counts  <- make_counts(input, threads=6, parse="default_neb",
@@ -157,27 +148,25 @@ counts  <-  make_counts(input, threads=6,
  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
- test$counts[extras==1,]  # No single sample sequence reaches 10 counts
+ test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
  
  
  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
- test$counts[extras==1,] # A few hundred single sample sequences reach 3 counts
+ test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
  
  
  
 }
 \seealso{
-\url{https://github.com/junchaoshi/sports1.0} for download and
-  documentation about running Sports. \url{https://github.com/Danis102} for
-  updates on the current package.
+\url{https://github.com/Danis102} for updates on the current
+  package.
 
 Other PAC generation: 
-\code{\link{import_sports}()},
+\code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts_dep}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
 \code{\link{make_trim}()},

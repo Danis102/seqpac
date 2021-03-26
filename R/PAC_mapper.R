@@ -55,64 +55,90 @@
 #' @examples
 #' 
 #' 
+#' # More details on the examples can be found in the vignette.
 #' 
-#' #-------------------------------------------------------------------------#
-#' ### For coverage plots ###
-#' #-------------------------------------------------------------------------#
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
+#' ###########################################################
+#' ### tRNA analysis in seqpac 
+#' ##----------------------------------------
 #' 
+#' # First create an annotation blanc PAC with group means
+#' pac$Anno <- pac$Anno[,1, drop=FALSE]
+#' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
 #' 
-#' 
-#' PAC_filt <- PAC_filter(PAC_all, size=c(16,70), threshold=10, coverage=5, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_filter(PAC_filt, size=c(16,70), threshold=10, coverage=5, type="rpm", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' 
-#' ## Remove corrupt samples and make means 
-#' Ph_trg <- as.character(PAC_filt$Pheno$Sample[!PAC_filt$Pheno$Sample %in% "Inx24_200130_S12"])
-#' PAC_filt <- PAC_filter(PAC_filt, pheno_target= list("Sample", Ph_trg))
-#' 
-#' PAC_filt$Pheno$Groups <- paste(do.call("rbind", strsplit(as.character(PAC_filt$Pheno$SampleProject), "_" ))[,1], PAC_filt$Pheno$Method, PAC_filt$Pheno$Method_tag, PAC_filt$Pheno$Tag, sep="_")
-#' 
-#' ## Make summaries
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Groups", unique(PAC_filt$Pheno$Groups)))
-#' 
-#' ## Mapping
-#' map_rRNA <- PAC_mapper(PAC_filt, ref="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa", threads=12)
-#' 
-#' All_plots <- lapply(as.list(Smry_trg_all), function(x){
-#'                             PAC_covplot(PAC_filt, map_rRNA, 
-#'                             summary_target = list("means_[Groups]", x), 
-#'                             xseq=FALSE, style="line", colour="red")})
-#'
-#' cowplot::plot_grid(All_plots[[1]][[7]], All_plots[[2]][[7]], All_plots[[3]][[7]], 
-#'                   All_plots[[4]][[7]], All_plots[[5]][[7]], All_plots[[6]][[7]],
-#'                   All_plots[[7]][[7]], All_plots[[8]][[7]], All_plots[[9]][[7]], 
-#'                   All_plots[[10]][[7]], All_plots[[11]][[7]], All_plots[[12]][[7]],
-#'                   All_plots[[13]][[7]], All_plots[[14]][[7]], All_plots[[15]][[7]],
-#'                   nrow = 5, ncol = 3)
-#'
-#'
-#' #-------------------------------------------------------------------------#
-#' #' ### For mismap ###
-#' #-------------------------------------------------------------------------#
-#' 
-#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
-#' 
-#' ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
-#' full <- Biostrings::readDNAStringSet(ref_path)
-#' ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1", names(full))]
-#' 
-#' 
-#' #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-#' 
-#' map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
-#' 
-#' 
+#' # Then reannotate only tRNA using the PAC_mapper function
 #' ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
+#' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
 #' 
 #' 
+#' ###########################################################
+#' ## Coverage plot of tRNA using PAC_covplot
+#' 
+#' # Single tRNA targeting a summary dataframe 
+#' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+#' 
+#' # Find tRNAs with many fragments
+#' n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
+#' selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
+#' cov_plt <- PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target=selct)
+#' cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
+#' 
+#' 
+#' ###########################################################
+#' ## Analyze range types with map_rangetype and PAC_trna functions
+#' 
+#' # Download ss object from GtRNAdb 
+#' dest_path <- file.path("/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
+#' download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", destfile=dest_path)
+#' untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
+#' ss_file <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
+#' 
+#' # Classify fragments according to loop cleavage (small loops are omitted)       
+#' map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, min_loop_width=4)   # Generates warning         
+#' 
+#' # Remove reference tRNAs with no hits
+#' map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){x[[2]][1,1] == "no_hits"}))]
+#' map_object_ss[[2]]
+#' 
+#' 
+#' ###########################################################
+#' # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
+#' 
+#' # Set tolerance for classification as a terminal tRF
+#' tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
+#' 
+#' # Apply the tRNA_class function and make a tRNA type column
+#' pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
+#' pac_trna$Anno$type <- paste0(pac_trna$Anno$decoder, pac_trna$Anno$acceptor)
+#' head(pac_trna$Anno)
+#' 
+#' # Now use PAC_trna to generate some graphs based on grand means
+#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#'   join = TRUE, top = 15, log2fc = TRUE,
+#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'   anno_target_1 = list("type"),
+#'   anno_target_2 = list("class"))
+#' 
+#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
+#'                    trna_result$plots$Log2FC_Anno_1,
+#'                    trna_result$plots$Percent_bars$Grand_means,
+#'                    nrow=1, ncol=3)
+#' 
+#' # By setting join = FALSE you will get group means
+#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#'   join = FALSE, top = 15, log2fc = TRUE,
+#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'   anno_target_1 = list("type"),
+#'   anno_target_2 = list("class"))
+#' 
+#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
+#'                    trna_result$plots$Expression_Anno_1$Stage3,
+#'                    trna_result$plots$Log2FC_Anno_1,
+#'                    trna_result$plots$Percent_bars$Stage1,
+#'                    trna_result$plots$Percent_bars$Stage3,
+#'                    nrow=1, ncol=5)
 #' @export
 
 PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up="", N_down="", report_string=FALSE){

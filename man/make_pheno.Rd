@@ -4,19 +4,19 @@
 \alias{make_pheno}
 \title{Make Phenotype File}
 \usage{
-make_pheno(pheno_input, type = "manual", counts = NULL, progress_report = NULL)
+make_pheno(pheno, type = "manual", counts = NULL, progress_report = NULL)
 }
 \arguments{
-\item{pheno_input}{Character vector with the path to a .csv file or a
-dataframe with rownames as sample names.}
+\item{pheno}{Character vector with the path to a .csv file or a
+data.frame with a column named "Sample_ID".}
 
 \item{type}{Character indicating what type to file to expect. If
-\emph{type="basespace"} the function will attempt to read nd join
-information from 'SampleSheetUsed.csv' and 'Samples_stat.txt' in
-pheno_input that have been downloaded from Illumina Basespace. If
 type="manual", the function will attempt to read a file named 'pheno.csv',
-in which the first column has been named 'Sample_ID' containing the exact
-sample names matching basenames of the fastq sample files.}
+in which the a column has been named 'Sample_ID' containing the exact
+sample names matching basenames of the fastq sample files. If
+\emph{type="basespace"} the function will attempt to read and join
+information from 'SampleSheetUsed.csv' and 'Samples_stat.txt' in
+pheno that have been downloaded from Illumina Basespace.}
 
 \item{counts}{Data.frame object with the same column names as in
 Sample_ID column of the .csv file.}
@@ -32,11 +32,12 @@ metadata for unique samples.
 }
 \details{
 Given the path to a directory with a single csv file, the function will read
-the file. If provided with a countTable (see \code{make_countTable}), it will
-attempt to organize the the row names according to the column names in the
-countTable.
+the file. Alternatively, a data.frame with sample information can be
+provided. If provided with a count table, (see \code{\link{make_counts}}), it
+will attempt to organize the the row names according to the column names in
+the counts table.
 
-The function was specifically written for Illumina SampleSheetUsed.csv files
+The function was originally written for Illumina SampleSheetUsed.csv files
 downloaded from the BaseSpace server using the basemount software. It will,
 however, be compatible with any comma seperated text file with any of its
 first lines containing a header with the first column named 'Sample_ID'.
@@ -44,26 +45,35 @@ first lines containing a header with the first column named 'Sample_ID'.
 The function will also attempt to read a 'Samples_stat.txt' (tab seperate
 file) file also downloaded from Illumina BaseSpace. This file will add
 original number of reads (past filter) generated in the sequencing. If
-provided with a Sports progress_report object (see \code{progress_report} the
+provided with a progress_report object (see \code{\link{make_counts}} the
 script will attempt to add this data to the Pheno data.frame.
 }
 \examples{
 
-### Sports input
-  path_sport <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20"
+library(seqpac) 
 
-sports_lst <- import_sports("/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/Processed_Pipeline31_05-03-20", threads=8)
+### First make counts 
 
-anno <- make_anno(sports_lst = sports_lst, threads = 10, filt = 2, stat = TRUE)
-counts <- make_counts(sports_lst = sports_lst, anno = anno, threads = 10)
-report <- progress_report(path_sport)
+input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+counts  <- make_counts(input, threads=6, parse="default_neb", type="fastq",
+                       trimming="seqpac", plot=TRUE, evidence=c(experiment=2, sample=1))
 
-pheno <- make_pheno(<your_path_to_sports_output_directory>)
 
-pheno_input <- "/data/Data_analysis/Projects/Pigs/Specific_projects/SRA_download/SRP135969_Sperm_Exosomes_Hemicastration/summary"
-pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type="manual")
+### Then generate a phenotype table with make_pheno (herre using file names)
 
-### Simple manual
+#  Note:  'Sample_ID' column need to be the same IDs as colnames in the counts table.
+
+pheno <- as.data.frame(do.call("rbind", strsplit(list.files(input,pattern="*.fastq.gz"), "_|\\\\."))[,c(1,2,3,4)]) 
+colnames(pheno) <- c("stage", "batch", "index", "sample") 
+pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
+pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, counts=counts$counts)
+
+ 
+### Lastly combine into PAC
+
+# Note: a simple annotation table will be added automatically.
+
+pac <- make_PAC(pheno=pheno, counts=counts, anno=NULL)
 
 }
 \seealso{
@@ -72,10 +82,9 @@ pheno <- make_pheno(pheno_path, countTable=counts, progress_report=report, type=
   updates on the current package.
 
 Other PAC generation: 
-\code{\link{import_sports}()},
+\code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_trim}()},

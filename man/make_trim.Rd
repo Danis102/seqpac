@@ -39,7 +39,7 @@ additional adaptor sequence using a shorter version of the provided adaptor
 in \code{adapt_3}. The length of the short adaptor is controlled by
 \code{adapt_3_set$min}. If an additional, shorter, adaptor sequence is
 found in a read, trimming will only occur if the resulting sequence is <=
-\strong{concat} shorter in length than the first trimmed sequence. Thus if
+\strong{concat} shorter in length than the first trimmed sequence. Thus, if
 \code{concat}=12, a read with a NNNNN-XXXXX-YYYYYYYYY composition, where N
 is 'real' nucleotides and X/Y are two independent adaptor sequences, the
 trimming will result in NNNNN-XXXXX. If instead \code{concat}=5 then
@@ -47,13 +47,19 @@ trimming will result in NNNNN. Note that setting \code{concat} too low will
 result in trimming of real nucleotides that just happend to share sequence
 with the adaptor. As default \code{concat}=12, which have been carefully
 evaluated in relation to the risk of trimming real sequence. If
-\code{concat}=NULL, concatamer-like adaptors trimming will not be done.}
+\code{concat}=NULL, concatamer-like adaptor trimming will not be done.}
 
-\item{threads}{Integer stating the number of parallell jobs. reading
-multiple fastq files drains memory fast, using up to 10Gb per fastq file.
-To avoid crashing the system due to memory shortage, make sure that each
-thread on the machine have at least 10 Gb of memory availabe, unless your
-fastq files are very small or very large files. Use
+\item{check_mem}{Logical whether a memory check should be performed. A memory
+check estimates the approximate memory usage given the fastq file sizes and
+number of threads. The check happens before entering the parallell trimming
+loop, and will give an immedaite warning given intermedialty risky memory
+estimates, and an error if the is risk very high. (default=TRUE)}
+
+\item{threads}{Integer stating the number of parallell jobs. Note, that
+reading multiple fastq files drains memory, using up to 10Gb per fastq
+file. To avoid crashing the system due to memory shortage, make sure that
+each thread on the machine have at least 10 Gb of memory availabe, unless
+your fastq files are very small or very large. Use
 \code{parallel::detectcores()} to see available threads on the machine.
 Never ever use all threads!}
 
@@ -64,7 +70,7 @@ Never ever use all threads!}
   failure sometimes also results in long stratches of 'no-signal-Gs'.
 
   Works similar to \code{adapt_3_set} but instead of an adaptor sequence a
-  poly 'G' string is constructed from the 'min' input option. Thus if
+  poly 'G' string is constructed from the 'min' input option. Thus, if
   polyG=c(type="hard_rm", min=10, mismatch=0.1) then sequences containing
   'GGGGGGGGGGNNNNN...etc' with 10 percent mismatch will be removed from the
   output fastq file.}
@@ -98,7 +104,7 @@ Options for each input are: \describe{
    }}
 
 \item{adapt_5_set}{Currently not supported, but will be in future updates.
-Same as \code{adapt_5_set} but controls the behavior of 5' trimming when a
+Same as \code{adapt_3_set} but controls the behavior of 5' trimming when a
 sequence is provided in \code{adapt_5}.}
 
 \item{seq_range}{Numeric vector with two inputs named 'min' and 'max', that
@@ -115,10 +121,11 @@ nucleotides after trimming. If \code{quality=c(threshold=NULL,
 percent=NULL)} then all sequences will be retained (not default!).}
 }
 \value{
-Exports a compressed trimmed fastq file to output folder (file name:
-  basename+trim.fastq.gz). If any type="save" has been set, an additional
-  fastq file (file name includes 'REMOVED') will be exported. In addition,
-  overview statisics will be returned as a data frame.
+Exports a compressed trimmed fastq file to the output folder (file
+  name: basename+trim.fastq.gz). If any type="save" has been set, an
+  additional fastq file (file name includes 'REMOVED') will be exported. In
+  addition, overview statisics (progress report) will be returned as a
+  data.frame.
 }
 \description{
 \code{make_trim} uses parallel processing to generate trimmed reads.
@@ -130,11 +137,6 @@ and then apply sequence size and phred score quality filters.
 }
 \examples{
 library(seqpac)
-
-input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Double/Long/Merged_fastq/"
-input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/Data/Single/Merged_fastq/"
-input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Single/Merged_fastq"  # Large POOH
-input = "/data/Data_analysis/Projects/Drosophila/Other/IOR/Drosophila_Sep_IOR_190912/Data/Single"
 
 input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
 output <- "/home/danis31/Desktop/Temp_docs/temp"
@@ -173,10 +175,9 @@ i <- 1
 \url{https://github.com/Danis102} for updates on the current package.
 
 Other PAC generation: 
-\code{\link{import_sports}()},
+\code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

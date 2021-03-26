@@ -1,6 +1,6 @@
 #' Trims/filter fastq using external cutadapt/fastq_quality_filter
 #'
-#'\code{make_trim} cutadapt/fastq_quality_filter
+#'\code{make_cuadapt} cutadapt/fastq_quality_filter
 #'
 #' Given a path to sequence files in fastq format this function will trim adaptor
 #' and remove sequences with low quality.
@@ -11,22 +11,22 @@
 #'   \url{https://cutadapt.readthedocs.io/en/stable/} for download and
 #'   documentation on cutadapt. 
 #'   \url{http://hannonlab.cshl.edu/fastx_toolkit/commandline.html} for download and
-#'   documentation on fastq_quality_filter.#'   
+#'   documentation on fastq_quality_filter.   
 #'   \url{https://github.com/Danis102} for updates on seqpac.
 #'
-#' @param input Character path to a directory containing
-#'   input fastq-files. The script will recursively search this directory for
-#'   the .fastq|.fastq.gz extension.
+#' @param input Character path to a directory containing input fastq-files. The
+#'   script will recursively search this directory for the .fastq|.fastq.gz
+#'   extension.
 #'
-#' @param input Character path to a directory the output directory where trimmed
-#'   fastq files will be stored and temporary files will be generated.
+#' @param input Character path to the output directory where trimmed fastq files
+#'   will be stored and temporary files will be generated.
 #'   
 #' @param parse List with two character string expressions. The first will be
 #'   parsed to cutadapt while the other is be parsed to fastq_quality_filter. If
-#'   any is NULL, then no make_cutadapt will pass the command and the trimming
+#'   any is NULL, then the function will not pass the command and the trimming
 #'   or filtering will not be applied. Thus, if parse = list(cutadapt=NULL,
 #'   fastq_quality_filter="-q 20 -p 80"), then only the quality filter will be
-#'   applied, and vice versa.
+#'   applied.
 #'   
 #' @param threads Integer stating the number of parallell jobs. Note, that
 #'   reading multiple fastq files drains memory fast, using up to 10Gb per fastq
@@ -51,7 +51,6 @@
 #'  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #'  output =  "/home/danis31/Desktop/Temp_docs/temp"
 #'  
-#'  
 #'  # Parse for make_cutadapt is a list of 2 character string expressions.
 #'  # The first is parsed to cutadapt and the other to fastq_quality_filter 
 #'  # For parallel processes '-j 1' is recommended since seqpac will   
@@ -64,13 +63,6 @@
 #'               
 #'             
 #'  logs  <-  make_cutadapt(input, output, threads=6, parse=parse)
-#'                      
-#'                      
-#'                      
-#'                      
-#' parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
-#'               fastq_quality_filter="-q 20 -p 80") 
-#'  
 #'  
 #' @export
 

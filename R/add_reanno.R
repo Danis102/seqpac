@@ -63,66 +63,124 @@
 #'   \code{\link{symplify_reanno}} function.
 #'   
 #' @examples
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' ## Genome annotation ##
-#' outpath_genome="/home/Desktop/Temp_docs/reanno_genome"
-#' reanno <- make_reanno(outpath_genome, PAC=pac_master, mis_fasta_check = TRUE)
-#' ls.str(reanno)
-#' names(reanno$Full_anno$mis0)
-#' anno <- add_reanno(reanno, type="genome", mismatches = 3, genome_max=10)
-#' pac_master <- add_reanno(reanno, type="genome", mismatches = 3, genome_max=10, merge_pac=pac_master)
-#' 
-#' ## Biotype annotation ##
-#' outpath_snc="/home/Desktop/Temp_docs/reanno_srna"
-#' reanno <- make_reanno(outpath_snc, PAC=pac_master, mis_fasta_check = TRUE, threads=8)
-#' ls.str(reanno)
-#' names(reanno$Full_anno$mis0)
-#' bio_search <- list(
-#'                  Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA"),
-#'                  miRNA="dme-",
-#'                  tRNA =c("^tRNA", "mt:tRNA")      # ^= regular expression for start of string  
-#'                  )
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=TRUE, mismatches = 3) # Throughs an error
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)  
+#'######################################################## 
+#'#### Example type = "internal" for genome alignment #### 
 #'
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt.Rdata", package = "seqpac", mustWork = TRUE))
+#' pac <- pac_cpm_filt
+#' 
+#' ## Path to bowtie indexed reference genome fasta 
+#' ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
+#' 
+#' ## Path to output folder:
+#' output_genome <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#' 
+#' ## Run map_reanno internally for genome mapping
+#' map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output_genome, 
+#'            type="internal", mismatches=3, import="genome", threads=8, keep_temp=TRUE)
+#' 
+#' ## Subsequent reannotion workflow for genome
+#' reanno <- make_reanno(reanno_path=output_genome, PAC=pac, mis_fasta_check = TRUE)
+#' pac <- add_reanno(reanno=reanno, mismatches = 3,  merge_pac=pac, type = "genome", genome_max = 10)
+#'   
+#'########################################################################### 
+#'#### Example type= external for biotype classification with 0 mismatch #### 
+#'
+#' ## Path to bowtie indexed fasta references   
+#' ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
+#'                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
+#'                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
+#'                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa",
+#'                   piRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa")
+#' 
+#' ## Path to output folder:
+#' output_bio <- "/home/danis31/Desktop/Temp_docs/reanno_biotype"
+#' 
+#' ## Run map_reanno for biotype classification
+#' map_reanno(pac, ref_paths=ref_paths, output_path=output_bio, 
+#'            type="external", mismatches=0,  import="biotype", threads=8)
+#'
+#' ## Subsequent reannotion workflow for sequence classification
+#' bio_search <- list(
+#'                 miRNA="dme-",
+#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
+#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
+#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
+#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
+#'                 rRNA    =c("5.8S", "28S", "18S"),
+#'                 tRNA    =c("^tRNA", "MT"),
+#'                 piRNA   =c("piR-"))
+#'                 
+#' reanno <- make_reanno(reanno_path=output_bio, PAC=pac, mis_fasta_check = TRUE)
+#' pac <- add_reanno(reanno, merge_pac=pac, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 0)
+#' 
+#' head(pac$Anno)
 #'
 #' ## Merge with PAC object
 #' pac_master <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3, merge_pac=pac_master) 
 #' head(pac_master$Anno)
 #' 
 #' 
-#' ## The trick to succeed with bio_perfect=TRUE ##
-#' # Run with bio_perfect="FALSE" (look where "Other=XX" occurs)
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
 #' 
-#' # Find sequences that has been classified as other 
-#' other_seqs  <- anno[grepl("other", anno$mis0),]$seq
+#' ####################################################
+#' #### The trick to succeed with bio_perfect=TRUE ####
 #' 
-#' # Extract sequences from the non-classified reanno object: 
-#' tab <- reanno_srna$Full_anno$mis0$Ensembl
-#' tab[tab$seq %in% other_seqs,]
-#' 
-#' # Add new search terms and repeat until perfect hits 
+#' ## Run add_reanno with bio_perfect="FALSE" (look where "Other=XX" occurs)
+#'
 #' bio_search <- list(
-#'                  Ensembl=c("lncRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", "snRNA", "tRNA", "snmRNA", "asRNA", "hpRNA"),
-#'                  miRNA="dme-",
-#'                  tRNA =c("^tRNA", "mt:tRNA")      # ^= regular expression for start of string  
-#'                  )
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 3)
+#'                 miRNA="dme-",
+#'                 Ensembl =c("miRNA", "pre_miRNA", "rRNA", "snoRNA", 
+#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
+#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
+#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
+#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
+#'                 tRNA    =c("^tRNA"),
+#'                 piRNA   =c("piR-"))
+#' 
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 0)
+#' 
+#' ## Find sequences that has been classified as other 
+#' other_seqs  <- anno[grepl("other", anno$mis0_bio),]$seq_bio
+#' tab <- reanno$Full_anno$mis0$Ensembl
+#' tab[tab$seq %in% other_seqs,]         # lincRNA don't have a search term
+#' 
+#' 
+#' ## Add a search terms that catches all lincRNA 
+#' 
+#' bio_search <- list(
+#'                 miRNA="dme-",
+#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
+#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
+#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
+#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
+#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
+#'                 tRNA    =c("^tRNA"),
+#'                 piRNA   =c("piR-"))
+#'                 
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=FALSE, mismatches = 0)
+#' 
+#' ## Repeat search until no "Other" appear when running add_reanno, then run  bio_perfect=TRUE: 
+#' 
+#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", bio_perfect=TRUE, mismatches = 0)
 #'
 #' @export
 
 
 add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perfect=FALSE, genome_max=10, merge_pac=NULL){
   suppressPackageStartupMessages(require(tidyverse, quietly=TRUE))
+ 
   ## General setup ###############################
   stopifnot(any(do.call("c", lapply(reanno$Full_anno, function(x){do.call("c", lapply(x, function(y){identical(reanno$Overview$seq, y$seq)}))}))))
   seq_nam <- reanno$Overview$seq
   cat(paste0("\nSequences in total: ", length(seq_nam)))
   fin_lst <- list(NA)
-  
+  if(length(reanno[[2]])-1 < mismatches){
+    cat("\n")
+    stop("\nToo many mismatches were specify.\nPlease specify mismatches <= to mismatches used \nwhen the reanno object was generated using map_reanno.") 
+  }
+    
   ## Extract genome ###############################
   if(type=="genome"){
     cat("\nExtracting genome(s) ...")
@@ -204,7 +262,8 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
         strand_lst[[a]] <- paste0(ifelse(sns, "s", ""), ifelse(antisns, "a", ""))
         
         ## Now classify with search terms
-        if(!length(extracted) == 1){stop("\nThe names in bio_search did not match the names in the reanno tables.\nPlease modify your reference input names in bio_search.")}
+        if(!length(extracted) == 1){
+          stop("\nThe names in bio_search did not match the names in the reanno tables.\nPlease modify your reference input names in bio_search.")}
         if(length(bio_search[[a]])==1){
           bio_df <- do.call("cbind", lapply(as.list(bio_search[[a]]), function(x){ return(ifelse(grepl(x, extracted[[1]]$ref_hits), paste0(bio_nam[a]), "<NA>"))}))
         }
@@ -299,7 +358,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, bio_perf
     if(!identical(rownames(reanno), rownames(merge_pac$Anno))){
       stop("\nReanno sequence (row) names do not match PAC sequence names.\nDid you use another PAC object as input for map_reanno?")
     }  
-    merge_pac$Anno <- cbind(merge_pac$Anno, reanno)
+    merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
     PAC_check(merge_pac)
     return(merge_pac)
   }else{

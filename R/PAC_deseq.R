@@ -34,46 +34,38 @@
 #'   factor levels, making for example log2FC appear as "treatment vs control".
 #'   As default, pheno_target=NULL will result in the factor levels being
 #'   automatically sorted in ascending order, which in the example above would
-#'   result in control vs treatment log2FC. If no pheno_target is given, the
+#'   result in control vs treatment. If no pheno_target is given, the
 #'   first feature in the model will also be the main comparison presented in
 #'   the graphs and summary tables.
 #'
-#' @param anno_target (optional) List with: 1st object being a character vector
-#'   of target column in Anno 2nd object being a character vector of the target
-#'   type/biotypes(s) in the target Anno column (1st object). (default=NULL)
-#'
-#' @param test Character parsed directly to \code{DESeq2::DESeq} that
+#' @param test Character parsed directly to \code{\link[DESeq2]{DESeq}} that
 #'   controls what type of statistical test that should be used. Alternatives
 #'   are either "Wald" (Wald significance test) or "LTR" (likelihood ratio
-#'   test/chi-squared test). See \code{DESeq2::DESeq} for more details.
+#'   test/chi-squared test). See \code{\link[DESeq2]{DESeq}} for more details.
 #'   (Default="Wald")
 #'
-#' @param fitType Character parsed directly to \code{DESeq2::DESeq} that
+#' @param fitType Character parsed directly to \code{\link[DESeq2]{DESeq}} that
 #'   controls what type of despersion fit that should be used. Alternatives are
 #'   either "parametric" (dispersion-mean relation), "local" (local regression
 #'   of log dispersions), "mean" (mean of gene-wise dispersion). See
-#'   \code{DESeq2::DESeq} for more details. (Default="local")
+#'   \code{\link[DESeq2]{DESeq}} for more details. (Default="local")
 #'
 #' @param threads Integer number of threads to run in parallel.
 #'
 #' @return A list of objects: 
 #'    1st object - Summarized result table merged with PAC$Anno 
 #'    2nd object - Target graphs (p-val distribution and volcano) 
-#'    3rd object - All output from DESeq2::DESeq
+#'    3rd object - All output from \code{\link[DESeq2]{DESeq}}
 #'    
 #' @examples
 #' 
+#'## Note, these examples will generate some warnings since data is based on
+#'heavily down-sampled fastq files, where many sequences recieves low counts in
+#'specific groups.
+#'
+#'## Load test data
 #'library(seqpac)
 #'load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
-#'
-#'#' pac <- PAC_norm(pac, type="rpm")
-#' pheno_target <- list("stage", c("Stage1", "Stage3"))
-#' pheno_target <- list("stage", c("Stage1", "Stage5"))
-#' pheno_target <- list("stage", c("Stage5", "Stage1"))
-#' 
-#' model=~stage
-#' model=~stage+batch  
-#'
 #'
 #'## Simple model testing embryonic stages using Wald test with local fit (default)
 #'table(pac$Pheno$stage)
@@ -88,10 +80,10 @@
 #'## With pheno_target we can also change the direction fo the comparision change focus
 #'# Stage1 vs Stage3:
 #'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage1", "Stage3")),  threads=6)   
-
-
-#'# Ovaries vs Sperm:
-#'output_deseq <- PAC_deseq(pac, model= ~type, pheno_target=list("type", c("Ovaries", "Sperm")), threads=6)
+#'# Stage3 vs Stage5:
+#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage3", "Stage5")),  threads=6)  
+#'# Stage5 vs Stage3 (reverse order):
+#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage5", "Stage3")),  threads=6)  
 #'
 #'## In the output you find PAC merged results, target plots and output_deseq   
 #'names(output_deseq)
@@ -99,26 +91,36 @@
 #'
 #' @export
 
-PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local", threads=1, pheno_target=NULL, anno_target=NULL){
+PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local", threads=1, pheno_target=NULL){
   
-  ### Subset samples and sequences
-  #PAC_sub <-  PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  cat("\n")
+##### Prepare data
+  
   PAC_sub <- PAC
   PAC_sub$Counts <- apply(PAC_sub$Counts, 2, as.integer)
   rownames(PAC_sub$Counts) <- rownames(PAC$Anno)
   
-  cat("\n")
-  ### Prepare data
   anno <- PAC_sub$Anno
   pheno <- PAC_sub$Pheno
-  if(!is.null(pheno_target)){
-    if(length(pheno_target)==1){ 
-      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
-    }
-    trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
-    pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(trg, levels=rev(pheno_target[[2]]))
+  
+  # Make factors of model columns
+  cols <- attr(terms.formula(model), "term.labels")
+  cols <- unique(unlist(strsplit(cols, ":")))
+  for (i in 1:length(cols)){
+    pheno[,cols[i]]  <- as.factor(pheno[,cols[i]])
   }
   
+  # Prepare pheno target and order factor
+  if(is.null(pheno_target)){
+      pheno_target <- list(cols[1])
+  }
+  if(length(pheno_target)==1){
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    }
+  trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
+  mis <- !levels(trg) %in% pheno_target[[2]] 
+  pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(trg, levels=c(rev(pheno_target[[2]]),levels(trg)[mis]))
+
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC_sub$Counts , colData = droplevels(pheno), design=model)
   dds <- DESeq2::estimateSizeFactors(dds)
   

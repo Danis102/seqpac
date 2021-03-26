@@ -7,15 +7,15 @@
 make_cutadapt(input, output, parse = NULL, threads = 1)
 }
 \arguments{
-\item{input}{Character path to a directory the output directory where trimmed
-fastq files will be stored and temporary files will be generated.}
+\item{input}{Character path to the output directory where trimmed fastq files
+will be stored and temporary files will be generated.}
 
 \item{parse}{List with two character string expressions. The first will be
 parsed to cutadapt while the other is be parsed to fastq_quality_filter. If
-any is NULL, then no make_cutadapt will pass the command and the trimming
+any is NULL, then the function will not pass the command and the trimming
 or filtering will not be applied. Thus, if parse = list(cutadapt=NULL,
 fastq_quality_filter="-q 20 -p 80"), then only the quality filter will be
-applied, and vice versa.}
+applied.}
 
 \item{threads}{Integer stating the number of parallell jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
@@ -30,7 +30,7 @@ files in the output folder. Internally, a list of logs that can be used to
 generate a progress report is returned.
 }
 \description{
-\code{make_trim} cutadapt/fastq_quality_filter
+\code{make_cuadapt} cutadapt/fastq_quality_filter
 }
 \details{
 Given a path to sequence files in fastq format this function will trim adaptor
@@ -47,7 +47,6 @@ library(seqpac)
  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
  output =  "/home/danis31/Desktop/Temp_docs/temp"
  
- 
  # Parse for make_cutadapt is a list of 2 character string expressions.
  # The first is parsed to cutadapt and the other to fastq_quality_filter 
  # For parallel processes '-j 1' is recommended since seqpac will   
@@ -60,27 +59,19 @@ library(seqpac)
               
             
  logs  <-  make_cutadapt(input, output, threads=6, parse=parse)
-                     
-                     
-                     
-                     
-parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
-              fastq_quality_filter="-q 20 -p 80") 
- 
  
 }
 \seealso{
 \url{https://cutadapt.readthedocs.io/en/stable/} for download and
   documentation on cutadapt. 
   \url{http://hannonlab.cshl.edu/fastx_toolkit/commandline.html} for download and
-  documentation on fastq_quality_filter.#'   
+  documentation on fastq_quality_filter.   
   \url{https://github.com/Danis102} for updates on seqpac.
 
 Other PAC generation: 
-\code{\link{import_sports}()},
+\code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
 \code{\link{make_anno}()},
-\code{\link{make_counts_dep}()},
 \code{\link{make_counts}()},
 \code{\link{make_pheno}()},
 \code{\link{make_trim}()},
