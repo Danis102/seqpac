@@ -44,7 +44,7 @@
 #'   Thus, if \emph{ref_paths=list(tRNA="<path_tRNA_ref>",
 #'   miRNA="<path_piRNA_ref>")} mapping to these fasta references will appear as
 #'   "tRNA" and "miRNA", respectively. Note: All reference fasta files must have
-#'   bowtie indexes using \code{\link[Rbowtie]{bowtie-build}}.
+#'   bowtie indexes using \code{\link[Rbowtie]{bowtie_build}}.
 #'   
 #' @param parse_internal One character string specifying the additional options
 #'   parsed to the bowtie function in the Rbowtie package when type="internal".

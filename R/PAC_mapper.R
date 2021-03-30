@@ -164,8 +164,15 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
   
 ## Setup temp folder  
   outpath <- R.utils::filePath(tempdir(), "seqpac", removeUps=FALSE)
+  # Convert to windows format
+  if(grepl("win|WIN|Win", Sys.info()["sysname"])){
+      outpath <- gsub("\\", "/", outpath, fixed=TRUE)
+      }
   suppressWarnings(dir.create(outpath, recursive = TRUE))  
   ref_path <- R.utils::filePath(outpath, "ref", "reference.fa")
+  if(grepl("win|WIN|Win", Sys.info()["sysname"])){
+      ref_path <- gsub("\\", "/", ref_path, fixed=TRUE)
+      }
   suppressWarnings(dir.create(dirname(ref_path), recursive = TRUE))
   Biostrings::writeXStringSet(full, filepath=ref_path, format="fasta")
   

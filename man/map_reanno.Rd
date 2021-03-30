@@ -35,7 +35,7 @@ The names will appear as they are named in the final annotation table.
 Thus, if \emph{ref_paths=list(tRNA="<path_tRNA_ref>",
 miRNA="<path_piRNA_ref>")} mapping to these fasta references will appear as
 "tRNA" and "miRNA", respectively. Note: All reference fasta files must have
-bowtie indexes using \code{\link[Rbowtie]{bowtie-build}}.}
+bowtie indexes using \code{\link[Rbowtie]{bowtie_build}}.}
 
 \item{mismatches}{Integer indicating the maximum number of mismatches allowed
 in the alignments. The function currently supports no more than 3
