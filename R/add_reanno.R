@@ -60,7 +60,7 @@
 #'   term hits) that can directly be added to an Anno data.frame of a PAC
 #'   object, given that the PAC object was used in the reannotation workflow.
 #'   Annotations can be further simplifide using the
-#'   \code{\link{symplify_reanno}} function.
+#'   \code{\link{simplify_reanno}} function.
 #'   
 #' @examples
 #' 

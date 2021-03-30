@@ -146,7 +146,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum",
   
         doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
         `%dopar%` <- foreach::`%dopar%`
-        bowtie_out_lst[[k]] <- foreach::foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind", .export= c("chnks_rng", "bow_splt"), .packages=c("data.table")) %dopar% {
+        bowtie_out_lst[[k]] <- foreach::foreach(s=1:length(chnks_rng[[1]]), .inorder = FALSE, .combine = "rbind") %dopar% {
               compile_lst <- lapply(bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
                   # Fix neg strand mismatch   
                   new <- gsub("A", "t", x$V8[x$V2 == "-"])
