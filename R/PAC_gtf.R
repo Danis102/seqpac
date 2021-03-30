@@ -181,6 +181,10 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
                          import ="genome", threads=threads), silent = TRUE)
           if(!is.null(err)){
             outpath <- tempfile(pattern = "", fileext = "")
+            # Convert to windows format
+            if(grepl("win|WIN|Win", Sys.info()["sysname"])){
+                outpath <- gsub("\\", "/", outpath, fixed=TRUE)
+                }
             err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="internal", mismatches=mismatches,
                          import ="genome", threads=threads), silent = TRUE)
           if(!is.null(err2)){
