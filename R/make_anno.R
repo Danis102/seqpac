@@ -17,8 +17,13 @@
 #'   the Counts list sequences).
 #'   
 #' @examples
-#'
-#'  anno <- make_anno(counts = counts_list)
+#*
+#' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' 
+#' counts  <- make_counts(input, threads=6, parse="default_neb",
+#'                        type="fastq", trimming="seqpac", plot=TRUE,
+#'                        evidence=c(experiment=2, sample=1))  
+#'  anno <- make_anno(counts = counts)
 #'
 #' @export
 
