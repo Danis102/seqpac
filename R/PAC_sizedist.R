@@ -1,10 +1,11 @@
 #' Generates a size distribution analysis from sequences and counts in a PAC object
 #'
-#' \code{PAC_sizedist} analyses nucleotide bias.
+#' \code{PAC_sizedist} analyses size distribution with bar charts, allowing for grouping of data with annotation information and summaries.
 #'
-#' Given a PAC object the function will attempt to extract the ratios of
-#' specific biotypes at a given position in sequences of the Anno data.frame
-#' in relation to the sequence counts in Counts.
+#' Given a PAC object, the function will attempt to extract the ratios of
+#' specific biotypes at a given size of sequences in the Anno data.frame
+#' in relation to the sequence counts in Counts. Additionally, count data from Summaries made with
+#' \code{\link[seqpac]{PAC_summary}} can also be used.
 #'
 #' @family PAC analysis
 #'
@@ -13,7 +14,7 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a count table with raw counts.
-#' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)).#' 
+#' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)). 
 #' 
 #' @param anno_target List with: 
 #'                          1st object being character vector of target column(s) in Anno, 
@@ -41,29 +42,19 @@
 #' 
 #'
 #' library(seqpac)
-#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+#' PAC_filt <- PAC_norm(pac, norm="cpm")
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "cpm", type = "means", pheno_target=list("stage"))
 #' 
-#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-#'                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-#'                 Mt_tRNA= "tRNA_mt-tRNA",
-#'                tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-#'                miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                piRNA="piRNA")
-#' hierarchy <- hierarchy[c(5,1,2,3,4,6)]          
-#' as.data.frame(names(hierarchy))              
-#'
-#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
 #' 
-#' ord <- c("no_anno", "other", "miRNA", "tRNA", "Mt_tRNA", "rRNA", "Mt_rRNA",  "piRNA")
+#'  ord <- c("no_anno", "other", "miRNA", "tRNA", "rRNA", "snoRNA",  "lncRNA")
 #' 
-#' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("rpmMeans_Method"))
-#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 1)
+#' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("cpmMeans_stage"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 #' 
-#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
-#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
+#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("batch", "Batch1"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 #' 
 #' 
 #' @export
