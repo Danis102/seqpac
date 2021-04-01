@@ -98,7 +98,6 @@ Other PAC analysis:
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_pirna}()},
-\code{\link{PAC_rpm}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},

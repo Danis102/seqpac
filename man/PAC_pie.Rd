@@ -54,52 +54,36 @@ biotype and plot a pie chart.
 }
 \examples{
 
-### Load data ###
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Jan_IOR_200130/R_analysis_full/"
-load(file=paste0(path, "PAC_all.Rdata"))
-
-### Generate rpm values ###
-PAC_all <- PAC_rpm(PAC_all)
-
-### Filter PAC file ###
-PAC_filt <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 50, type = "rpm", stat = TRUE, pheno_target = list("Method", c("IOR1_proto", "IOR1_tgirt")), anno_target = NULL)
-PAC_filt <- PAC_filter(PAC_all, size = c(16, 45), threshold = 10, coverage = 10, type = "rpm", stat = TRUE, pheno_target = NULL, anno_target = NULL)
-
-### Generate hierachy of simplified biotypes ###
-unique(do.call("c", strsplit(as.character(PAC_filt$Anno$mis0), ";|\\\\|")))
-
-hierachy = list( rRNA="rRNA",
-                 Mt_tRNA= "tRNA_mt-tRNA",
-                 tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-                 miRNA="^miRNA|Ensembl_miRNA",
-                 pre_miRNA="Ensembl_pre_miRNA",
-                 snoRNA="snoRNA",
-                 snRNA="snRNA",
-                 lincRNA="lincRNA",
-                 piRNA="piRNA")
-                 
-hierachy = list( rRNA="rRNA",
-                 tRNA="Ensembl_tRNA|tRNA_nuc-tRNA|tRNA_mt-tRNA",
-                 miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-                 piRNA="piRNA")
-                 
-PAC_filt <- simplify_reanno(PAC_filt, hierachy=hierachy, mismatches=0, bio_name="Biotypes", PAC_merge=TRUE)
-
-### Plot stacked bargraphs
-table(PAC_filt$Anno$Biotypes)
-unique(PAC_filt$Anno$Biotypes)
-biotypes_ord <- c("rRNA", "tRNA", "Mt_tRNA", "miRNA", "piRNA", "snoRNA", "snRNA", "lincRNA", "no_anno")
-biotypes_ord <- c("rRNA", "tRNA", "miRNA", "piRNA", "other", "no_anno")
-
-PAC_filt$Pheno$Method_Tag <- gsub("__", "", paste(PAC_filt$Pheno$Method, PAC_filt$Pheno$Tag, sep="_"))
-table(PAC_filt$Pheno$Method_Tag)
-unique(PAC_filt$Pheno$Method_Tag)
-method_ord <- c("R2_R2R","IOR1_proto","IOR1_tgirt","IOR2_Long_proto_Tag","IOR2_Short_proto_Tag", "IOR2_Long_proto_No_Tag", "IOR2_Short_proto_No_Tag")
-
-plot_lst  <- PAC_pie(PAC_filt, anno_target = list("Biotypes", biotypes_ord), pheno_target = list("Method_Tag", method_ord), colvec=NULL, angle=-25)  
+##########################################
+### Pie chart in seqpac 
+##----------------------------------------
 
 
-cowplot::plot_grid(plotlist=plot_lst, labels=names(plot_lst))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+
+# Choose an anno_target and plot samples (summary="samples"; default)
+output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis0"))
+cowplot::plot_grid(plotlist=output_pie, scale = 0.8)
+
+output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis3"))
+cowplot::plot_grid(plotlist=output_pie, ncol=3, scale = 0.5)
+
+
+# Make ordered pie charts of grand mean percent of all samples
+ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), unique(pac$Anno$Biotypes_mis0))
+output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), summary="all")
+output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), summary="all")
+cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, scale = 1.2)
+
+# Rotate
+PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
+PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
+
+# Compare biotype mapping with or without mismaches and group by PAC$Pheno
+ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  # Make sure that both get same biotype order
+output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis0", ord_bio))
+output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis3", ord_bio))
+cowplot::plot_grid(plotlist=c(output_mis0, output_mis3), labels = names(c(output_mis0, output_mis3)), nrow=2)
  
    
 }
@@ -120,7 +104,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pirna}()},
-\code{\link{PAC_rpm}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

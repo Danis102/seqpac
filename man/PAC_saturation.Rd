@@ -39,17 +39,17 @@ sequence depth (100%) is to a plateau phase the more saturated is the
 diversity of sequences for the original dataset. Approaching the plateau,
 usually means that the sequencing depth of the library have sampled the full
 population of sequences available in the sample. Here we use an none-linear
-least square (\code{nls}) model with a self-starter for asymptotic
+least square (\code{\link{nls}}) model with a self-starter for asymptotic
 regresssion (\code{SSasympt}) to describe the rate in which the library
 approaches the plateau.
 }
 \examples{
 
 library(seqpac)
-path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-load(file=paste0(path, "PAC_all.Rdata"))
 
-plot_lst  <- PAC_saturation(PAC, resample=10, steps=10, thresh=c(1,500), threads=8)
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+
+plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,500), threads=8)
 cowplot::plot_grid(plot_lst$A,plot_lst$B)
 
 }
@@ -71,7 +71,6 @@ Other PAC analysis:
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_pirna}()},
-\code{\link{PAC_rpm}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},

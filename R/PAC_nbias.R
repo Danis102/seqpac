@@ -13,8 +13,8 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a count table with raw counts.
-#' @param position Integer giving the nucleotide postion from 3' to 5' position (default=1).
-#' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)).#' 
+#' @param position Integer indicating the nucleotide postion from 3' to 5' position (default=1).
+#' @param range Integer vector indicating the sequence size range (default=c(min, max)). 
 #' 
 #' @param anno_target List with: 
 #'                          1st object being character vector of target column(s) in Anno, 
@@ -37,42 +37,36 @@
 #' @return A list of objects: 
 #'               1st object (Histograms::Samples): Individual histograms showing the nucleotide ratios per sample over the specified range.   
 #'               2nd object (Data::Samples): Data used to generate the plots.
-#'               3rd object (Stacked_bars::Groups): Stacked bars showing the mean ratios of each nucleotide per group over the specified range.
-#'               4th object (Error_bars::Groups): Error bar plots with mean ratio of each nucleotide per group over the specified range. 
-#'
+#'               
 #' @examples
 #' 
+#' 
 #' library(seqpac)
-#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 #' 
-#' PAC_filt <- PAC_rpm(PAC_filt)
-#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
-#'
-#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-#'                  rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-#'                  Mt_tRNA= "tRNA_mt-tRNA",
-#'                  tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-#'                  miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                  piRNA="piRNA")
-#'
-#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge = TRUE)
-#'
-#' ### Plot using raw counts and order samples using pheno_target:
-#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", c("TGIRT", "Proto")))
-#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="raw", pheno_target=list("Method", "Proto"))    
-#' cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
+#' # Using master pac plotting 1st nt bias (default)
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' output_nbias <- PAC_nbias(pac_master)
+#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
-
-
-
-#' ### Plot using rpm counts and order samples using pheno_target:
-#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, norm="rpm") 
+#' # Using filtered
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' output_nbias <- PAC_nbias(pac)
+#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
-#' ### Plot using summarized data in summary_target: 
-#' nbias_result <- PAC_nbias(PAC=PAC_filt, position=1, summary_target=list("rpmMeans_Method")) 
+#' # Only miRNA (Oops, heavy T-bias on 1st nt; are they piRNA?)  
+#' table(pac$Anno$Biotypes_mis0)
+#' output_nbias <- PAC_nbias(pac, anno_target = list("Biotypes_mis0", "miRNA") )
+#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
+#' # Switch to 10:th nt bias 
+#' output_nbias <- PAC_nbias(pac, position=10, anno_target = list("Biotypes_mis0", "miRNA"))
+#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
-#' cowplot::plot_grid(plotlist=nbias_result[[1]], nrow = 3, ncol = 2)
+#' # Summarized over group cpm means
+#' pac_test <- PAC_summary(pac, norm = "cpm", type = "means", 
+#'                         pheno_target=list("stage"), merge_pac=TRUE)
+#' output_nbias <- PAC_nbias(pac_test, summary_target = list("cpmMeans_stage") )
+#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
 #' 
 #' @export

@@ -54,24 +54,38 @@
 #'
 #' @examples
 #' 
+#' ##########################################
+#' ### Biotype size distribution 
+#' ##----------------------------------------
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' head(pac$Anno)
-#' lapply(pac, tibble::as_tibble)
-#'
-#'
-#' #-------------------------------------------------------------------------------------------------#
-#' #  Stacked biotype barplots 
-#' #-------------------------------------------------------------------------------------------------#
+#' # Divide stacked bars by biotype with no mismach allowed  
+#' output_sizedist_1 <- PAC_sizedist(pac, anno_target = list("Biotypes_mis0"))
+#' cowplot::plot_grid(plotlist=c(output_sizedist_1$Histograms), ncol=3, nrow=3)
 #' 
-#' levels(pac$Anno$Biotypes_mis0)
-#' biotypes_ord <- c("rRNA","Mt_rRNA", "tRNA", "Mt_tRNA", "miRNA", "snoRNA", "lncRNA","other", "no_anno") # Change biotype order
-#' group_ord <- as.character(unique(pac$Pheno$type)[c(2,1)]) # Change group order
 #' 
-#' plot_mis0  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis0", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
-#' plot_mis3  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis3", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
+#' # Divide stacked bars by biotype with allowing up to 3 mismaches  
+#' output_sizedist_2 <- PAC_sizedist(pac, anno_target = list("Biotypes_mis3"))
+#' cowplot::plot_grid(plotlist=c(output_sizedist_2$Histograms), ncol=3, nrow=3)
 #' 
+#' # anno_target is order sensitive, thus can take care of color order issues:
+#' ord_bio <- as.character(unique(pac$Anno$Biotypes_mis0))
+#' ord_bio <- ord_bio[c(1,5,2,4,3,6,7)] 
+#' output_sizedist_1 <- PAC_sizedist(pac, anno_target = list("Biotypes_mis0", ord_bio))
+#' output_sizedist_2 <- PAC_sizedist(pac, anno_target = list("Biotypes_mis3", ord_bio))
+#' cowplot::plot_grid(plotlist=c(output_sizedist_1$Histograms[1:3], output_sizedist_2$Histograms[1:3]), ncol=3, nrow=2)
+#' cowplot::plot_grid(plotlist=c(output_sizedist_1$Histograms[4:6], output_sizedist_2$Histograms[4:6]), ncol=3, nrow=2)
+#' cowplot::plot_grid(plotlist=c(output_sizedist_1$Histograms[7:9], output_sizedist_2$Histograms[7:9]), ncol=3, nrow=2)
+#' 
+#' ## Note: #######################################################################
+#' # 1. miRNA is clearly associated with the correct size (21-22) nt.             #
+#' # 2. piRNA was deliberately left out from the fasta references. Note, however, #
+#' # that there is a broad peak with no annotions between 20-30 nt in ovaries,    #
+#' # which also showed a T-bias at the first nt. These are likely piRNA.          #  
+#' # 3. It is clear that the sperm samples were degraded. However, there are      # 
+#' # still full length miRNA's in there.                                          #
+#' ################################################################################
 #' 
 #' @export
 

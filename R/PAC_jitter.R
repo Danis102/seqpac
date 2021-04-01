@@ -3,8 +3,9 @@
 #' \code{PAC_jitter} Plots a jitter plot using the information in the Anno and
 #' Counts tables in a PAC object.
 #'
-#' Given a PAC object with grouped summaries  the function will use column(s) in the Anno object to group
-#' the Counts table by row and then plot a jitter plot based on 
+#' Given a PAC object with grouped summaries the function will use column(s) in
+#' the Anno object to group the Counts table by row and then plot a jitter plot
+#' based on
 #' 
 #' @family PAC analysis
 #'
@@ -17,6 +18,9 @@
 #'   groupings (e.g. biotype) and a column with summarized data (e.g. log2 fold
 #'   changes). Rows should be unique sequences as the rownames of a PAC summary
 #'   object.
+#'
+#' @param type Character. If type="jitter" (default) the jitter-plots will be returned. If type="violine" 
+#'
 #'
 #' @param summary_target List with: 1st object being a character vector of the
 #'   target dataframe in summary and 2nd object being a character vector of the
@@ -38,32 +42,35 @@
 #'
 #' @examples
 #' 
+#' ## Prepare
 #' library(seqpac)
-#' load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' pac <- PAC_norm(pac, norm="cpm")
 #' 
-#' PAC_filt <- PAC_rpm(PAC_filt)
+#' pac <- PAC_summary(PAC=pac, norm = "cpm", type = "log2FC", pheno_target=list("stage"))
+#' pac <- PAC_summary(PAC=pac, norm = "cpm", type = "percentgrand", pheno_target=list("stage"))
 #' 
-#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method"))
-#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "percentgrand", pheno_target=list("Method"))
+#' ## Jitter plots
+#' plots_FC <- PAC_jitter(pac, summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0"))
+#' plots_FCgrand <- PAC_jitter(pac, summary_target=list("percGrand_stage"), anno_target=list("Biotypes_mis0"))
 #' 
-#' 
-#' hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-#'                 rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-#'                 Mt_tRNA= "tRNA_mt-tRNA",
-#'                tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-#'                miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                piRNA="piRNA")
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' cowplot::plot_grid(plotlist=plots_FCgrand, nrow = 3, ncol = 1) 
 #'
-#' PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
-#' 
-#' 
-#' plots_FC <- PAC_jitter(PAC_filt, summary_target=list("Log2FC_Method"), anno_target=list("Biotypes_mis0"))
-#' plots_FCgrand <- PAC_jitter(PAC_filt, summary_target=list("Percdiffgrand_Method"), anno_target=list("Biotypes_mis0"))
-#' 
-#' 
-#' plots_FC[[1]]
-#' cowplot::plot_grid(plotlist=plots_FCgrand[1:9],nrow = 3, ncol = 3)
+#' ## Violin plots instead
+#' plots_FC <- PAC_jitter(pac, type="violin", summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0"))
+#' plots_FCgrand <- PAC_jitter(pac, type="violin", summary_target=list("percGrand_stage"), anno_target=list("Biotypes_mis0"))
 #'
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' cowplot::plot_grid(plotlist=plots_FCgrand, nrow = 3, ncol = 1)  
+#'
+#'
+#' ## Violin with changed biotype order
+#' new_order  <- as.character(unique(pac$Anno$Biotypes_mis0))[c(2,4,3,6,7,5,1)]
+#' plots_FC <- PAC_jitter(pac, type="violin", summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0", new_order))
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' 
+#' 
 #' @export
 #'
 PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colvec=NULL, box=TRUE){
@@ -119,13 +126,13 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                 							    if(type=="jitter"){
                                                                   p <- ggplot2::ggplot(data, ggplot2::aes(x=biotype, y=values, col=biotype, fill=biotype))+
                                                 								        ggplot2::geom_hline(yintercept=0, col="#707177", cex=0.6) +
-                                                								        ggplot2::geom_jitter(position=position_jitter(0.2), cex=1.5)+
-                                                	                      ggplot2::stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                								        ggplot2::geom_jitter(position=ggplot2::position_jitter(0.2), cex=1.5)+
+                                                	                      ggplot2::stat_summary(geom = "crossbar", fun=median, fun.max = median, fun.min = median, width=0.7, cex=0.4, position = "identity", col="Black") +
                                                 												ggplot2::geom_text(stat="count", ggplot2::aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
                                                 												ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
                                                 												ggplot2::theme_classic()+
                                                 												ggplot2::scale_y_continuous(limits =limits) +
-                                                												ggplot2::theme(legend.position="none", axis.title.x = element_text(size=15), 
+                                                												ggplot2::theme(legend.position="none", axis.title.x = ggplot2::element_text(size=15), 
                                                 												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
                                                 												               axis.title.y = ggplot2::element_text(size=15) , 
                                                 												               axis.text.y = ggplot2::element_text(size=13))+
@@ -139,7 +146,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                                   p <- ggplot2::ggplot(data, ggplot2::aes(x=biotype, y=values, col=biotype, fill=biotype))+
                                                 								        ggplot2::geom_hline(yintercept=0, col="#707177", cex=0.6) +
                                                 								        ggplot2::geom_violin(width=0.9, trim=TRUE, scale="width", color="black")+
-                                                	                      ggplot2::stat_summary(geom = "crossbar", fun.y=median, fun.ymax = median, fun.ymin = median, width=0.7, cex=0.4, position = "identity", col="Black") +
+                                                	                      ggplot2::stat_summary(geom = "crossbar", fun=median, fun.max = median, fun.min = median, width=0.7, cex=0.4, position = "identity", col="Black") +
                                                                         ggplot2::geom_text(stat="count", ggplot2::aes(label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), size=3.5, y=ypos_n, col="Black") +
                                                 												ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , y =  paste0(summary_target[[1]]) ) +
                                                 												ggplot2::theme_classic()+
