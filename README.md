@@ -1,19 +1,23 @@
 # seqpac
 Seqpac: A Framework for small RNA analysis in R using Sequence-Based Counts
 
+<br>
 
 ### Installation
-In R:
+In R:<br>
 devtools::install_github("Danis102/seqpac", upgrade="never", )
 
+<br>
 
 ### How to use 
 [A guide to sRNA analysis using sequence-based counts](https://github.com/Danis102/seqpac/docs/seqpac - A guide to sRNA analysis using sequence-based counts.html)
 
+<br>
 
 ### More information
 [Seqpac: A New Framework for small RNA analysis in R using Sequence-Based Counts](https://www.biorxiv.org/content/10.1101/2021.03.19.436151v1)
 
+<br>
 
 ### How to cite
 Seqpac: A New Framework for small RNA analysis in R using Sequence-Based Counts
