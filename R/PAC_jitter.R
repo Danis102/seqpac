@@ -73,7 +73,7 @@
 #' 
 #' @export
 #'
-PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colvec=NULL, box=TRUE){
+PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colors=NULL, box=TRUE){
                                         					
                                                   if(!PAC_check(PAC)){stop("Input was not a PAC object.")}
   
@@ -103,13 +103,13 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                         							                                                                  })
                                                   perc_up <-  perc_up[match(as.character(anno_target[[2]]), as.character(perc_up$Group.1)),]
                                         				## Make graphs
-                                                    if(is.null(colvec)){
+                                                    if(is.null(colors)){
                                                           bio <- as.character(unique(ann[,1]))
                                                           n_extra  <- sum(bio %in% c("no_anno", "other"))
                                                           colfunc <- colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
-                                                          if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
-                                                          if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
-                                                          if(n_extra==0){colvec <- colfunc(length(bio))}
+                                                          if(n_extra==1){colors <- c(colfunc(length(bio)-1), "#6E6E6E")}
+                                                          if(n_extra==2){colors <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
+                                                          if(n_extra==0){colors <- colfunc(length(bio))}
                                                     }
                                         				   plt_lst <- as.list(1:ncol(df))
                                         				   names(plt_lst) <- colnames(df)
@@ -136,7 +136,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                 												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
                                                 												               axis.title.y = ggplot2::element_text(size=15) , 
                                                 												               axis.text.y = ggplot2::element_text(size=13))+
-                                                												ggplot2::scale_color_manual(values=colvec)
+                                                												ggplot2::scale_color_manual(values=colors)
                                                 								        #coord_flip()
                                                                   if(box==TRUE){
                                                                         p <- p+ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
@@ -156,7 +156,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                 												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
                                                 												               axis.title.y = ggplot2::element_text(size=15) ,  
                                                 												               axis.text.y = ggplot2::element_text(size=13))+
-                                                												ggplot2::scale_fill_manual(values=colvec)
+                                                												ggplot2::scale_fill_manual(values=colors)
                                                 								        #coord_flip() 
                                                                   if(box==TRUE){
                                                                         p <- p + ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}

@@ -13,7 +13,7 @@ PAC_mismap(
   threads = 1,
   par_type = "PSOCK",
   xseq = TRUE,
-  col_vect = NULL
+  colors = NULL
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ parallel::makeCluster (default="PSOCK"). Windows only supports "PSOCK".}
 the x-axis. Plotting long references with xseq=FALSE will increase
 script performance. (default=TRUE).}
 
-\item{col_vect}{Character vector of length=5, indicating the rgb colors to be
+\item{colors}{Character vector of length=5, indicating the rgb colors to be
 parsed to ggplot2 for plotting the stacked bars. Leave as NULL will
 generate function default colors (default = NULL).}
 }
@@ -85,7 +85,7 @@ ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
 
 map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 
-plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, col_vect=NULL, threads=8, par_type="PSOCK")
+plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, colors=NULL, threads=8, par_type="PSOCK")
 
 cowplot::plot_grid(plot_lst[[1]][[1]][[1]], plot_lst[[1]][[1]][[2]], 
                    plot_lst[[1]][[2]][[1]], plot_lst[[1]][[2]][[2]],
