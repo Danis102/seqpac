@@ -140,7 +140,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
   cat("\n")
   cat(paste0("** ", comp, " **"))
   cat("\n")
-  cat(DESeq2::summary.DESeqResults(res_DESeq2))
+  cat(DESeq2::summary(res_DESeq2))
   res_DESeq2_df <- as.data.frame(res_DESeq2)
   anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),]
 
@@ -159,7 +159,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
   
   p <- ggplot2::ggplot(data=df_plot, ggplot2::aes(x=pval)) + 
     ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
-    ggplot2::labs(title="p-value destributions", 
+    ggplot2::labs(title="p-value distributions", 
                   subtitle=comp, x="p-value", y = "Number of features") +
     ggplot2::theme_classic()
   
