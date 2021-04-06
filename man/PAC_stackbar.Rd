@@ -49,9 +49,10 @@ defined by anno_target (default=TRUE). Note that you can always use
 \item{total}{Logical, whether the total counts should be added at the bottom
 of each graph (default=TRUE).}
 
-\item{summary}{Character vector defining whether to stack individual 
-samples as one stack, or a group of samples sharing the same value in
-a specified pheno_target. Accepts "samples" or "pheno" as input. 
+\item{summary}{Character vector defining whether to stack individual samples
+as one stack, or using a group mean of samples sharing the same value in
+the specified pheno_target. Accepts, "samples" (individual samples), "pheno"
+(means of pheno_target) or "all" (mean of al samples) as input.
 (Default="samples").}
 }
 \value{
@@ -67,25 +68,29 @@ in Counts or norm.
 }
 \examples{
 
-library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+##########################################
+### Stacked bars in seqpac 
+##----------------------------------------
 
-head(pac$Anno)
-lapply(pac, tibble::as_tibble)
+# Choose an anno_target and plot samples (summary="samples")
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
 
+# 'no_anno' and 'other' will always end on top not matter the order
+ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)))
+p1 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", ord_bio))
+p2 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", rev(ord_bio)))
+cowplot::plot_grid(plotlist=list(p1, p2))
+# (Hint: if you want them to appear not on top, rename them)
 
-#-------------------------------------------------------------------------------------------------#
-#  Stacked biotype barplots 
-#-------------------------------------------------------------------------------------------------#
+# Reorder samples by pheno_targets
+PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", anno_target=list("Biotypes_mis0"))
 
-levels(pac$Anno$Biotypes_mis0)
-biotypes_ord <- c("rRNA","Mt_rRNA", "tRNA", "Mt_tRNA", "miRNA", "snoRNA", "lncRNA","other", "no_anno") # Change biotype order
-group_ord <- as.character(unique(pac$Pheno$type)[c(2,1)]) # Change group order
+# Summarized over pheno_target 
+# (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary="pheno")
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno", pheno_target=list("stage"))
 
-plot_mis0  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis0", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
-plot_mis3  <- PAC_stackbar(pac, anno_target = list("Biotypes_mis3", biotypes_ord), pheno_target = list("type", group_ord), width=1, no_anno=TRUE, total=TRUE)
-
-
+# Summerized over a grand mean of all samples
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="all")
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

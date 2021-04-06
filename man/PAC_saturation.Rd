@@ -16,9 +16,10 @@ step (default=10).}
 \item{steps}{Integer the number of percentage steps between 0-100% of the
 original dataset (default=10).}
 
-\item{thresh}{Integer vector containing mean count thresholds that will
-be targeted. Default is set to c(1,10), where each new occurance (>=1) and
-each new occurance reaching 10 counts (>=10) will be analyzed.}
+\item{thresh}{Integer vector containing mean count thresholds that will be
+targeted. Default is set to c(1,10), where each new occurance reaching 1
+count (>=1) and each new occurance reaching 10 counts (>=10) will be
+analyzed.}
 
 \item{threads}{Number of cores to be used for performing the permutations.}
 }
@@ -45,12 +46,25 @@ approaches the plateau.
 }
 \examples{
 
+
+# OBS! The example below is using already down-sampled data. Still sequence
+# diversity is rather saturated on >=1 occurance. meaning that most sequences
+# in the samples has been caught. Nonetheless, sequences reaching >=2
+# occurences are not on plateau.
+
 library(seqpac)
 
 load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 
-plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,500), threads=8)
-cowplot::plot_grid(plot_lst$A,plot_lst$B)
+plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=8)
+names(plot_lst)
+cowplot::plot_grid(plotlist=plot_lst)
+
+# Any number of thresholds
+plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1), threads=8)
+names(plot_lst)
+cowplot::plot_grid(plotlist=plot_lst)
+
 
 }
 \seealso{

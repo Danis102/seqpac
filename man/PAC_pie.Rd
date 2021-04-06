@@ -39,6 +39,12 @@ generated using a default color palett. Important: In default mode,
 categories named "other" or no_anno" will automtically recieve a grey
 color.}
 
+\item{summary}{Character string defining whether to stack individual samples
+or using a mean of samples. If summary="samples" individual samples will be
+plotted (default). If summary="pheno" means of the sample groups targeted
+by the pheno_target input will be plotted. If summary="all" mean of all
+samples will be plotted.}
+
 \item{angle}{Integer vector (poitive or negative) that sets the rotation of
 the pie.}
 }

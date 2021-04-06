@@ -218,7 +218,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     colnames(cov_df) <- c("Postion", "Group", "Coverage")
     if(xseq==TRUE){
       #x_lab <- c(unlist(stringr::str_split(as.character(sub_map[[i]]$Ref_seq), "", n = Inf, simplify = FALSE)))
-      x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), "")))
+      x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), ""), use.names=FALSE))
       tcks <- ggplot2::element_line()
     }else{
       x_lab <- NULL 
