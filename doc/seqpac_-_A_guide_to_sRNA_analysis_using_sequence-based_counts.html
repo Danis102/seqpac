@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Daniel Nätt" />
+
+<meta name="date" content="2021-04-07" />
+
+<title>seqpac - A guide to sRNA analysis using sequence-based counts</title>
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+      a.sourceLine { display: inline-block; line-height: 1.25; }
+  a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+  a.sourceLine:empty { height: 1.2em; }
+  .sourceCode { overflow: visible; }
+  code.sourceCode { white-space: pre; position: relative; }
+  div.sourceCode { margin: 1em 0; }
+  pre.sourceCode { margin: 0; }
+  @media screen {
+  div.sourceCode { overflow: auto; }
+  }
+  @media print {
+  code.sourceCode { white-space: pre-wrap; }
+  a.sourceLine { text-indent: -1em; padding-left: 1em; }
+  }
+  pre.numberSource a.sourceLine
+    { position: relative; left: -4em; }
+  pre.numberSource a.sourceLine::before
+    { content: attr(data-line-number);
+      position: relative; left: -1em; text-align: right; vertical-align: baseline;
+      border: none; pointer-events: all; display: inline-block;
+      -webkit-touch-callout: none; -webkit-user-select: none;
+      -khtml-user-select: none; -moz-user-select: none;
+      -ms-user-select: none; user-select: none;
+      padding: 0 4px; width: 4em;
+      color: #aaaaaa;
+    }
+  pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+  div.sourceCode
+    {  }
+  @media screen {
+  a.sourceLine::before { text-decoration: underline; }
+  }
+  code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+  code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+  code span.at { color: #7d9029; } /* Attribute */
+  code span.bn { color: #40a070; } /* BaseN */
+  code span.bu { } /* BuiltIn */
+  code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+  code span.ch { color: #4070a0; } /* Char */
+  code span.cn { color: #880000; } /* Constant */
+  code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+  code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+  code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+  code span.dt { color: #902000; } /* DataType */
+  code span.dv { color: #40a070; } /* DecVal */
+  code span.er { color: #ff0000; font-weight: bold; } /* Error */
+  code span.ex { } /* Extension */
+  code span.fl { color: #40a070; } /* Float */
+  code span.fu { color: #06287e; } /* Function */
+  code span.im { } /* Import */
+  code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+  code span.op { color: #666666; } /* Operator */
+  code span.ot { color: #007020; } /* Other */
+  code span.pp { color: #bc7a00; } /* Preprocessor */
+  code span.sc { color: #4070a0; } /* SpecialChar */
+  code span.ss { color: #bb6688; } /* SpecialString */
+  code span.st { color: #4070a0; } /* String */
+  code span.va { color: #19177c; } /* Variable */
+  code span.vs { color: #4070a0; } /* VerbatimString */
+  code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">seqpac - A guide to sRNA analysis using sequence-based counts</h1>
+<h4 class="author">Daniel Nätt</h4>
+<h4 class="date">2021-04-07</h4>
+
+
+
+<p><br> <br> <br></p>
+<p>Seqpac is available on github:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">## Installation</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;Danis102/seqpac&quot;</span>, <span class="dt">upgrade=</span><span class="st">&quot;never&quot;</span>, <span class="dt">build_manual=</span><span class="ot">TRUE</span>, <span class="dt">build_vignettes=</span><span class="ot">TRUE</span>)</a></code></pre></div>
+<p><br> <br></p>
+<hr />
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p><br></p>
+<div id="overview" class="section level2">
+<h2>1.1 Overview</h2>
+<p>Seqpac contains a complete toolbox for the analysis of short sequenced reads. The package was originally developed for small RNA (sRNA) analysis, but can be applied on any type of data generated by large scale nucleotide sequencing, where the user wish to maintain sequence integrity during the whole analysis. This involves, for example, regular RNA-seq with long RNA.</p>
+<p><br> To perserve sequence integrity, seqpac applies sequence-based counting. This can be contrasted against feature-based counting, where reads are counted over known genomic features, such a protein coding genes or sRNA. This will result in a count table where a count is made per feature (e.g. number of read counts mapping to a gene). In seqpac, such annotations are initially disregarded, as a count table is generated solely by counting unique sequences in the raw sequence files. Annotations against known refereces (such as databases containing sequences of full genomes, miRNA, tRNA, protein coding genes, or genomic coordinates of such features) are done after the count table has been generated.</p>
+<p><br> The advantage of using sequence-based counting, compared to feature-based counting, is that mismatches in the classification of reads, can be applied any time during the analysis. In feature-based counting, allowing a mismatch in the mapping will result in a loss of information (loss of sequence integrity).</p>
+<p><br> For example, say that you have 506 read counts for miR-185 (a miRNA) when allowing 3 mismatches against the reference. In feature-based analysis this will result in 1 entry in the count table. Unless you have saved the exact alignments elsewhere, you have lost the information about what sequences that are included in that count. The only thing you know is that the sequence may differ from the reference sequence by any 3 mismaches. In sequence-based counting, reads are counted as unique sequences and each unique sequence is then mapped againts the target reference databases. Information about whether a sequence was aligning against a reference is maintained in a linked annotation table that can contain both perfect alignments and alignments allowing mismatches. Thus, in any stage of the analysis mismatches and classifications into features can be dynamically controlled, meaning that you can easily observe the effect of for example allowing more mismatches or changes in hierarchical classifications (often applied in sRNA analysis when a sequence align with multiple classes of sRNA).</p>
+<p><br></p>
+</div>
+<div id="the-seqpac-workflow" class="section level2">
+<h2>1.2 The seqpac workflow</h2>
+<p>The input file format for seqpac is .fastq, which can be generated from most sequencing platforms. Two types of objects sustain the core of the seqpac workflow:</p>
+<ul>
+<li>The PAC object</li>
+<li>The Targeting objects</li>
+</ul>
+<p><br> The PAC object stores the Phenotypic information (P), Annotations (A) and Counts (C) needed for all downstream analysis, while the targeting object is used for accessing specific subsets of data within the PAC object. To keep things simple, both of these objects are lists. The PAC object is in its simplest form a list of 3 data.frames (Pheno, Anno and Counts), while the Targeting object is a list of 2 character objects.</p>
+<p><br> The workflow is roughly divided into four steps:</p>
+<ul>
+<li>Generate a PAC object from fastq-files</li>
+<li>Preprocess the PAC object</li>
+<li>Annotate the PAC object</li>
+<li>Analyze the PAC object.</li>
+</ul>
+<p><br></p>
+</div>
+<div id="example-dataset" class="section level2">
+<h2>1.3 Example dataset</h2>
+<p>Contained within this package are nine example fastq files. These files were originally generated by extracting sRNA from single fruit fly embryos at three different developmental stages (Stage 1, 3, 5). The original fastq files were aquired by Illumina NextSeq 500 sequencer using a High Output 75 cycles flow cell (product no: 20024906) and NEBNext® Small RNA Library Prep Set for Illumina (E7330). Each fastq were randomly downsampled to a fraction of its original size.</p>
+<p><br> <br></p>
+<hr />
+</div>
+</div>
+<div id="making-a-pac-object" class="section level1">
+<h1>Making a PAC object</h1>
+<p><br></p>
+<div id="generating-a-count-table-make_counts" class="section level2">
+<h2>2.1 Generating a count table (make_counts)</h2>
+<p>There are three ways of generating a count table in seqpac.</p>
+<ul>
+<li>Trim raw fastq files using internal functions in seqpac/R.</li>
+<li>Trim raw fastq files using external functions outside R.</li>
+<li>Import reads from already trimmed fastq files.</li>
+</ul>
+<p><br> The two first involves adaptor trimming, while the last involves already trimmed reads. All input options are contained within the <code>make_counts</code>. function.</p>
+<p><br></p>
+<div id="internal-trimming" class="section level3">
+<h3>2.1.1 Internal trimming</h3>
+<p>Generating a count table from untrimmed fastq files using nothing but R packages (internal) depends on the <code>make_trim</code> function. This function goes through a series of trimming cycles using the <code>trimLRPatterns</code> function in <code>Biostrings</code> package to generate highly comparable adaptor trimming as generated by popular fastq trimming softwares, such as cutadapt. This combined with the capability of parallellization using the <code>foreach</code> package makes <code>make_trim</code> one of very few choices for adaptor trimming in R.</p>
+<p><br> When <code>make_trim</code> is used on its own it results in trimmed fastq files stored at a user defined location. When <code>trimming=&quot;seqpac&quot;</code> is set in the <code>make_counts</code> function, this function parses settings to the <code>make_trim</code> to generate a count table from temporarly stored trimmed fastq files.</p>
+<p><br> Lets have a try using the example dataset:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">## Using default settings for NEB type adaptor </span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co"># NEB=New England Biolabs: NEBNext® Small RNA Library Prep Set for Illumina (E7300/E7330)</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="co"># For illumina type adaptors, 'parse=&quot;default_illumina&quot;' may be used</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">path_to_fastq &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">count_list &lt;-<span class="st"> </span><span class="kw">make_counts</span>(<span class="dt">input=</span>path_to_fastq, <span class="dt">type =</span> <span class="st">&quot;fastq&quot;</span>, <span class="dt">trimming=</span><span class="st">&quot;seqpac&quot;</span>, </a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">                          <span class="dt">parse=</span><span class="st">&quot;default_neb&quot;</span>)</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co"># That was quite slow, lets speed it up a bit by increasing threads:</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">count_list &lt;-<span class="st"> </span><span class="kw">make_counts</span>(<span class="dt">input=</span>path_to_fastq, <span class="dt">type =</span> <span class="st">&quot;fastq&quot;</span>, <span class="dt">trimming=</span><span class="st">&quot;seqpac&quot;</span>, </a>
+<a class="sourceLine" id="cb2-14" data-line-number="14">                          <span class="dt">parse=</span><span class="st">&quot;default_neb&quot;</span>, <span class="dt">threads=</span><span class="dv">9</span>)</a></code></pre></div>
+<p><br></p>
+</div>
+<div id="external-trimming" class="section level3">
+<h3>2.1.2 External trimming</h3>
+<p>As an alternative to seqpac internal trimming, two external softwares, cutadapt and fastq_quality_filter, can be used to trim the adapter sequence and remove low quality reads prior of making a count table.</p>
+<p><br> Importantly, cutadapt and fastq_quality_filter are only available on Linux: <a href="https://cutadapt.readthedocs.io/en/stable/installation.html" class="uri">https://cutadapt.readthedocs.io/en/stable/installation.html</a> <a href="http://hannonlab.cshl.edu/fastx_toolkit/commandline.html" class="uri">http://hannonlab.cshl.edu/fastx_toolkit/commandline.html</a></p>
+<p><br> For linux users with all dependencies installed:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="co"># Generate counts by parsing commands to cutadapt</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co"># and fastq_quality_filter.</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="co"># (Note, the 'default_neb' parse argument is specificly designed for sRNA trimming</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">count_list &lt;-<span class="st"> </span><span class="kw">make_counts</span>(<span class="dt">input=</span>path_to_fastq, <span class="dt">type =</span> <span class="st">&quot;fastq&quot;</span>, <span class="dt">trimming=</span><span class="st">&quot;cutadapt&quot;</span>, <span class="dt">parse=</span><span class="st">&quot;default_neb&quot;</span>)</a></code></pre></div>
+<p>See the manuals for ‘make_counts’, ‘make_trim’, ‘make_cutadapt’ for more details.</p>
+<p><br></p>
+</div>
+<div id="already-trimmed-fastq" class="section level3">
+<h3>2.1.3 Already trimmed fastq</h3>
+<p>Setting <code>trimming=NULL</code> in the <code>make_counts</code> function will pass the adapter trimming and a count table will be generated directly from the fastq files. Thus, this option can be used if you already have trimmed your fastq files.</p>
+<p><br></p>
+</div>
+<div id="outputs-from-make_counts" class="section level3">
+<h3>2.1.4 Outputs from make_counts</h3>
+<p>Besides the counts table, <code>make_counts</code> automatically generates a progress report for the trimming and evidence filter, as well as bar graphs showing the impact of the evidence filter (if plots=TRUE).</p>
+<p><br></p>
+</div>
+<div id="evidence-filtering" class="section level3">
+<h3>2.1.5 Evidence filtering</h3>
+<p>Users may already when making the counts table with <code>make_counts</code> markedly reduce the noise in the data by specifying the number of independent evidence that a specific sequence must reach to be included. This is controlled by the <code>evidence</code> argument. As default, <code>evidence=c(experiment=2, sample=1)</code> will include all sequences that have &gt;=1 counts in at least 2 independent fastq files.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">## Lets plot the graphs from the default output again </span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>count_list<span class="op">$</span>evidence_plot, <span class="dt">nrow=</span><span class="dv">2</span>, <span class="dt">ncol=</span><span class="dv">1</span>)</a></code></pre></div>
+<p>Importantly, since the test dataset is heavily down-sampled compared to the original fastq files the default evidence filter results in a rather dramatic loss of total number of reads. This will not be the case when running good quality fastq files with saturated sequence depths. We routinely observe that 95-99% of all reads are maintained when applying the default evidence filter, while &gt;50% of the unique sequence will be dropped because they can not be replicated across two independent samples. Despite being a down-sampled (unsaturated) dataset, a tendency can be seen in the test data by comparing the ratio between pass and not pass of reads and unique sequences. For an example of how a saturated experiment may look like, see the original seqpac paper, Skog et al. from 2021.</p>
+<p><br> As you may have guessed, the ‘experiment’ argument controls the number of independent fastq evidence needed across the whole experiment. Note, however, that ‘sample’ does not control the number of counts needed in each sample. The evidence filter will always use &gt;=1 counts in X number of fastq files. Instead ‘sample’ controls when a sequence should be included despite not reaching the ‘experiment’ threshold. Thus if <code>evidence=c(experiment=2, sample=10)</code>, sequences that reach 10 counts in a single sample will also be included. Here is an example on how to use the ‘sample’ argument:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co">## Evidence over two indepenent samples, saving single sample sequences reaching 10 counts</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">test &lt;-<span class="st"> </span><span class="kw">make_counts</span>(<span class="dt">input=</span>path_to_fastq, <span class="dt">type=</span><span class="st">&quot;fastq&quot;</span>, <span class="dt">trimming=</span><span class="st">&quot;seqpac&quot;</span>, </a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">                    <span class="dt">parse=</span><span class="st">&quot;default_neb&quot;</span>, <span class="dt">threads=</span><span class="dv">9</span>,  </a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">                    <span class="dt">evidence=</span><span class="kw">c</span>(<span class="dt">experiment=</span><span class="dv">2</span>, <span class="dt">sample=</span><span class="dv">10</span>))</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">extras &lt;-<span class="st"> </span><span class="kw">apply</span>(test<span class="op">$</span>counts, <span class="dv">1</span>, <span class="cf">function</span>(x){<span class="kw">sum</span>(<span class="op">!</span>x<span class="op">==</span><span class="dv">0</span>)})</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">test<span class="op">$</span>counts[extras<span class="op">==</span><span class="dv">1</span>,]  <span class="co"># 28 single sample sequences reach 10 counts</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co">## Evidence over two indepenent samples, saving single sample sequences reaching 3 counts</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">test &lt;-<span class="st"> </span><span class="kw">make_counts</span>(<span class="dt">input=</span>path_to_fastq,  <span class="dt">type=</span><span class="st">&quot;fastq&quot;</span>, <span class="dt">trimming=</span><span class="st">&quot;seqpac&quot;</span>, </a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">                    <span class="dt">parse=</span><span class="st">&quot;default_neb&quot;</span>, <span class="dt">threads=</span><span class="dv">9</span>,   </a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">                    <span class="dt">evidence=</span><span class="kw">c</span>(<span class="dt">experiment=</span><span class="dv">2</span>, <span class="dt">sample=</span><span class="dv">3</span>))</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">extras &lt;-<span class="st"> </span><span class="kw">apply</span>(test<span class="op">$</span>counts, <span class="dv">1</span>, <span class="cf">function</span>(x){<span class="kw">sum</span>(<span class="op">!</span>x<span class="op">==</span><span class="dv">0</span>)})</a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">test<span class="op">$</span>counts[extras<span class="op">==</span><span class="dv">1</span>,] <span class="co"># A few hundred single sample sequences reach 3 counts</span></a></code></pre></div>
+<p><br> Lastly, if evidence=NULL all unique sequences will be saved. Remember, however, that the count table will become at least twice as large, since each unique sequence occupies a row in <code>PAC$Counts</code> and <code>PAC$Anno</code>.</p>
+<p><br></p>
+</div>
+</div>
+<div id="generate-the-phenotype-table-make_pheno" class="section level2">
+<h2>2.2 Generate the phenotype table (make_pheno)</h2>
+<p>Next, we generate a Pheno table (P) and merge it with the progress report that was stored from the <code>make_counts</code> output. The Pheno table contains sample specific information such as sample name and possible interventions, with each sample as a row.</p>
+<p>Importantly, the <code>make_pheno</code> function can import a Pheno table both externally by providing a path to a .cvs file, as well as internally by just passing a data.frame. In common for both options, is that a unique column named “Sample_ID” needs to be present, and must contain the same sample names (column names) present in the counts table generated by <code>make_counts</code>.</p>
+<p>In addtion, <code>make_pheno</code> may add the progress report generated by <code>make_counts</code>. Lets have a look at how this works:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="co">## Generate a Pheno table using the file names of test fastq </span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">path_to_fastq &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>)</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">pheno &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, </a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">                       <span class="kw">strsplit</span>(<span class="kw">list.files</span>(path_to_fastq, <span class="dt">pattern=</span><span class="st">&quot;*.fastq.gz&quot;</span>),</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">                       <span class="st">&quot;_|</span><span class="ch">\\</span><span class="st">.&quot;</span>))[,<span class="kw">c</span>(<span class="dv">4</span>, <span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)]) </a>
+<a class="sourceLine" id="cb6-7" data-line-number="7"><span class="kw">colnames</span>(pheno) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;sample&quot;</span>, <span class="st">&quot;stage&quot;</span>, <span class="st">&quot;batch&quot;</span>, <span class="st">&quot;index&quot;</span>)</a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">pheno<span class="op">$</span>Sample_ID &lt;-<span class="st"> </span><span class="kw">colnames</span>(count_list<span class="op">$</span>counts)</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">pheno &lt;-<span class="st"> </span><span class="kw">make_pheno</span>(<span class="dt">pheno=</span>pheno, </a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">                    <span class="dt">progress_report=</span>count_list<span class="op">$</span>progress_report, </a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">                    <span class="dt">counts=</span>count_list<span class="op">$</span>counts)</a></code></pre></div>
+</div>
+<div id="make_pac" class="section level2">
+<h2>2.3 make_PAC</h2>
+<p><br> Finally, we put everything together as a master PAC object. Conveniently, setting the <code>anno=NULL</code> will generate a very simple annotation table and add it to the PAC object.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co">## Generate PAC object</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">pac_master &lt;-<span class="st"> </span><span class="kw">make_PAC</span>(<span class="dt">pheno=</span>pheno, <span class="dt">anno=</span><span class="ot">NULL</span>, <span class="dt">counts=</span>count_list<span class="op">$</span>counts)</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="kw">names</span>(pac_master)</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="kw">lapply</span>(pac_master, head)</a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="co">## If TRUE the PAC object is ok </span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="kw">PAC_check</span>(pac_master)</a></code></pre></div>
+<p><br> <br></p>
+<hr />
+</div>
+</div>
+<div id="preprocess-the-pac-object" class="section level1">
+<h1>Preprocess the PAC object</h1>
+<div id="targeting-objects" class="section level2">
+<h2>3.1 Targeting objects</h2>
+<p>Seqpac uses a simple targeting system for dividing and focusing the analysis of a PAC object to certain sample groups (Pheno) or specific sequences (Anno). If not specified otherwise in the function manual, a targeting object is always a two item list, where the first object is naming a column in a specific table in the PAC and the second object tells the function which categories in that column that should be targeted.</p>
+<ul>
+<li>pheno_target: extracts sample groups from a column in PAC$Pheno</li>
+<li>anno_target: extracts sequences from a column in PAC$Anno</li>
+</ul>
+<p>While pheno_target and anno_target are the most common targeting objects, there are other targeting object. Common for all is that they target a specific subtable in the PAC.</p>
+<p><br> Now, take a look at the first columns in Pheno table and the first lines of the Anno table found in master PAC object that was generated in 2.1:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">## Load the PAC master and inspect the columns in Pheno and Anno</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">pac_master<span class="op">$</span>Pheno[,<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>]</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="kw">head</span>(pac_master<span class="op">$</span>Anno)</a></code></pre></div>
+<p><br> A pheno_target object that will exclusively target stage 1 and 5 samples would look like this: <code>pheno_target=list(&quot;stage&quot;, c(&quot;Stage1&quot;, &quot;Stage5&quot;))</code></p>
+<p><br> While an anno_target that will target sequences of 22 nt in length would look like this: <code>anno_target=list(&quot;Size&quot;, &quot;22&quot;)</code></p>
+<p><br> Notice that both targeting objects are lists holding two secondary objects: one character string targeting a specific column, and one character vector targeting specific categorise within the target column. The only difference being that each targeting object target different tables in the PAC object.</p>
+<p><br> Important, if the second object is set to NULL or is left out this will automatically target all samples in the specified column. If the anno_target is a character vector (not a list) some function will attempt to extract matches in the row names of either Pheno or Anno (see example with <code>PAC_filtsep</code> below).</p>
+<p><br> For more examples, please refere to the original seqpac publication: Skog et al. 2021.</p>
+<p><br></p>
+</div>
+<div id="filtering" class="section level2">
+<h2>3.2 Filtering</h2>
+<p>A master PAC object will contain sequences in your original fastq files that passed the trimming and the initial filters. Now, in most analysis this still involves millions of unique sequences, making the master PAC difficult to work with. Thus, it is often wise to further reduce noise prior to normalization and annotation.</p>
+<p><br> Seqpac contains two functions for this purpose:</p>
+<ul>
+<li><code>PAC_filter</code></li>
+<li><code>PAC_filtsep</code></li>
+</ul>
+<p><br> While <code>PAC_filter</code> gives a variety of choices to subset the PAC file according to for example sequence size or minimum counts in a certain proportion of the samples,<code>PAC_filtsep</code> extracts the sequence names that pass a filter within sample groups.</p>
+<p><br> Here are some examples:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="co">## Extracts all sequences between 10-80 nt in length with at least 5 counts in</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="co">## 20% of all samples.</span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">pac_lowfilt &lt;-<span class="st"> </span><span class="kw">PAC_filter</span>(pac_master, <span class="dt">size=</span><span class="kw">c</span>(<span class="dv">10</span>,<span class="dv">80</span>), <span class="dt">threshold=</span><span class="dv">5</span>, </a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">                          <span class="dt">coverage=</span><span class="dv">20</span>, <span class="dt">norm =</span> <span class="st">&quot;counts&quot;</span>,  </a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">                          <span class="dt">pheno_target=</span><span class="ot">NULL</span>, <span class="dt">anno_target=</span><span class="ot">NULL</span>)</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co">## Extracts all sequences with 22 nt size and the samples in Batch1 and Batch2.</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10">pac_subset &lt;-<span class="st"> </span><span class="kw">PAC_filter</span>(pac_master, <span class="dt">subset_only =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb9-11" data-line-number="11">                         <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;batch&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Batch1&quot;</span>, <span class="st">&quot;Batch2&quot;</span>)), </a>
+<a class="sourceLine" id="cb9-12" data-line-number="12">                         <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Size&quot;</span>, <span class="st">&quot;22&quot;</span>))</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb9-15" data-line-number="15"><span class="co">## Extracts all sequences with &gt;=5 counts in 100% of samples a within stage</span></a>
+<a class="sourceLine" id="cb9-16" data-line-number="16">filtsep &lt;-<span class="st"> </span><span class="kw">PAC_filtsep</span>(pac_master, <span class="dt">norm=</span><span class="st">&quot;counts&quot;</span>, <span class="dt">threshold=</span><span class="dv">5</span>, </a>
+<a class="sourceLine" id="cb9-17" data-line-number="17">                       <span class="dt">coverage=</span><span class="dv">100</span>, <span class="dt">pheno_target=</span> <span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>))</a>
+<a class="sourceLine" id="cb9-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb9-19" data-line-number="19">pac_filt &lt;-<span class="st"> </span><span class="kw">PAC_filter</span>(pac_master, <span class="dt">subset_only =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb9-20" data-line-number="20">                       <span class="dt">anno_target=</span> <span class="kw">unique</span>(<span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>, <span class="kw">as.list</span>(filtsep))))</a>
+<a class="sourceLine" id="cb9-21" data-line-number="21">                       </a>
+<a class="sourceLine" id="cb9-22" data-line-number="22">                      </a></code></pre></div>
+<p>Notice that <code>PAC_filtsep</code> only extracts the sequence names and store them in a data.frame. Converted into a character vector with unique names (using <code>unique</code> + <code>do.call</code>) they can be applied as an anno_target that targets sequence names in Anno.</p>
+<p>Hint, the data.frame output of <code>PAC_filtsep</code> has been designed for the purpose of generating Venn diagrams that visualize overlaps across groups:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="co">## Venn diagram of all sequences with &gt;=10 counts in 100% of samples </span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="co">## within each group</span></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4">olap &lt;-<span class="st"> </span>reshape2<span class="op">::</span><span class="kw">melt</span>(filtsep, </a>
+<a class="sourceLine" id="cb10-5" data-line-number="5">                       <span class="dt">measure.vars =</span> <span class="kw">c</span>(<span class="st">&quot;Stage1&quot;</span>, <span class="st">&quot;Stage3&quot;</span>, <span class="st">&quot;Stage5&quot;</span>), <span class="dt">na.rm=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb10-6" data-line-number="6"><span class="kw">plot</span>(venneuler<span class="op">::</span><span class="kw">venneuler</span>(<span class="kw">data.frame</span>(olap[,<span class="dv">2</span>], olap[,<span class="dv">1</span>])))</a></code></pre></div>
+<p><br></p>
+</div>
+<div id="storage-of-processed-data-in-pac" class="section level2">
+<h2>3.3 Storage of processed data in PAC</h2>
+<p>While the master PAC only contains three different data.frame objects (P, A and C), additional ‘folders’ will be stored in the PAC object as the analysis progresses. In fact, you may choose to store any number of objects in your PAC as long as they do not conflict with the names of the standard folders, which are:</p>
+<pre><code>Pheno  (P):    data.frame
+Anno   (A):    data.frame
+Counts (C):    data.frame
+norm:          list of data.frames
+summary:       list of data.frames</code></pre>
+<p><br> The <em>norm</em> folder will be used to store counts that have been normalized in different ways, while the <em>summary</em> folder will contain the data that has been summerized across groups of samples. In both cases, applying a filter using <code>PAC_filter</code> will automatically subset not only P, A, and C, but also all tables stored in <code>PAC$norm</code> and <code>PAC$summary</code>.</p>
+<p><br></p>
+</div>
+<div id="normalization" class="section level2">
+<h2>3.4 Normalization</h2>
+<p>The built in normalization methods in seqpac are handled by the <code>PAC_norm</code> function. In the current version only three methods are available:</p>
+<ul>
+<li>Counts per million reads (cpm)</li>
+<li>Variance-Stabalizing Transformation (vst)</li>
+<li>Regularized log transformation (rlog)</li>
+</ul>
+<p><br> More specifically, cpm normalize the dataset in relation to the total number of reads, while vst and rlog uses both mean dispersion and size factor to produce homoskedastic values with functions avalable in the DESeq2 package.</p>
+<p><br> It is easy to generate your own normalized count table using your method of choice, and import it as a data.frame to the <em>norm</em> folder in the PAC object. Just remember that row and column names must be identical to the original Counts table. Use <code>PAC_check</code> to verify that this is the case.</p>
+<p>Lets generate two normalized count tables with cpm and vst:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="co">###--------------------------------------------------------------------- </span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="co">## Example normalization in seqpac</span></a>
+<a class="sourceLine" id="cb12-4" data-line-number="4">pac_cpm &lt;-<span class="st"> </span><span class="kw">PAC_norm</span>(pac_master, <span class="dt">norm=</span><span class="st">&quot;cpm&quot;</span>)</a>
+<a class="sourceLine" id="cb12-5" data-line-number="5">pac_vst &lt;-<span class="st"> </span><span class="kw">PAC_norm</span>(pac_master, <span class="dt">norm=</span><span class="st">&quot;vst&quot;</span>)</a></code></pre></div>
+<p>From this, it may sometimes be wise to run a further filtering step to remove reads with low cpm values.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="co">## Filtering using cpm instead of raw counts</span></a>
+<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="co">## filter &gt;=10 cpm in 100% of samples in &gt;= 1 full group</span></a>
+<a class="sourceLine" id="cb13-5" data-line-number="5">filtsep &lt;-<span class="st"> </span><span class="kw">PAC_filtsep</span>(pac_cpm, <span class="dt">norm=</span><span class="st">&quot;cpm&quot;</span>, <span class="dt">threshold=</span><span class="dv">10</span>, <span class="dt">coverage=</span><span class="dv">100</span>, <span class="dt">pheno_target=</span> <span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>)) </a>
+<a class="sourceLine" id="cb13-6" data-line-number="6">pac_cpm_filt &lt;-<span class="st"> </span><span class="kw">PAC_filter</span>(pac_cpm, <span class="dt">subset_only =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb13-7" data-line-number="7">                       <span class="dt">anno_target=</span> <span class="kw">unique</span>(<span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>, <span class="kw">as.list</span>(filtsep))))</a></code></pre></div>
+<p><br> <br></p>
+<hr />
+</div>
+</div>
+<div id="generate-annotations" class="section level1">
+<h1>Generate annotations</h1>
+<p>From the start a PAC object only contains a very limited Anno table.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="kw">head</span>(pac_cpm_filt<span class="op">$</span>Anno)</a></code></pre></div>
+<p>To facilitate easy adoption of seqpac to any species, we provide a fast and flexible workflow for mapping PAC sequences against user defined reference databases. We call this reannotation, since we map the sequences in Anno object sequentially over one or multiple references.</p>
+<p>Important, seqpac relies on the popular bowtie aligner (R package Rbowtie) for mapping: <a href="http://bowtie-bio.sourceforge.net/manual.shtml" class="uri">http://bowtie-bio.sourceforge.net/manual.shtml</a>. This means that references must be indexed using the <code>bowtie_build</code> function before they are compatible with the reannotation workflow (see below).</p>
+<p><br></p>
+<div id="fasta-references" class="section level2">
+<h2>4.1 Fasta references</h2>
+<p>Most databases provide their references in the fasta file format. Seqpac can use any correctly formated fasta file as input in the reannotation workflow. However, we destiguish two kinds of fasta references:</p>
+<ul>
+<li>Reference genomes.</li>
+<li>Other specialized references.</li>
+</ul>
+<p>You can download the files manually from the source database. Below are some helpful example links where to retreive useful fasta references. Note that all compressed files must be uncompressed to work with the bowtie aligner.</p>
+<p><br> <strong>Reference genomes:</strong><br> <a href="https://www.ensembl.org/info/data/ftp/index.html">Ensembl Animals</a> <br> <a href="https://plants.ensembl.org/info/data/ftp/index.html">Ensembl Plants</a> <br> <a href="http://hgdownload.cse.ucsc.edu/downloads.html">UCSC</a> <br> <a href="https://emea.support.illumina.com/sequencing/sequencing_software/igenome.html?langsel=/se/">iGenomes</a> <br></p>
+<p><br> Hint: Unmasked top level fasta files are best for most purposes, e.g. Ensembl file name *.dna.toplevel.fa.gz.</p>
+<p><strong>Other specialized references:</strong><br> <a href="http://www.mirbase.org/ftp.shtml">miRNA (mirbase)</a> <br> <a href="https://mirgenedb.org/download">miRNA (mirgenedb)</a> <br> <a href="http://www.regulatoryrna.org/database/piRNA/download.html">piRNA (piRBase)</a> <br> <a href="https://www.ensembl.org/info/data/ftp/index.html">Several ncRNA (Ensembl Animals)</a> <br> <a href="https://plants.ensembl.org/info/data/ftp/index.html">Several ncRNA (Ensembl Plants)</a> <br> <a href="http://gtrnadb.ucsc.edu/">tRNA (GtRNAbd)</a> <br> <a href="http://repeatmasker.org/genomicDatasets/RMGenomicDatasets.html">repeats (repeatMasker)</a> <br></p>
+<p><br> There are also several packages in R that allow you to download reference genomes. Here are two examples using the BSgenome and biomartr packages.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co">## First specify where to store all the fasta file</span></a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">ref_path &lt;-<span class="st"> &quot;/home/danis31/Desktop/Temp_docs/fasta&quot;</span>      <span class="co"># You need to change this</span></a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="co">## BSgenome </span></a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/uscs_genome/dm6_ucsc.fa&quot;</span>)</a>
+<a class="sourceLine" id="cb16-4" data-line-number="4">BSgenome<span class="op">::</span><span class="kw">available.genomes</span>()</a>
+<a class="sourceLine" id="cb16-5" data-line-number="5">BiocInstaller<span class="op">::</span><span class="kw">biocLite</span>(<span class="st">&quot;BSgenome.Dmelanogaster.UCSC.dm6&quot;</span>) <span class="co"># Only once</span></a>
+<a class="sourceLine" id="cb16-6" data-line-number="6">dm6 &lt;-<span class="st"> </span>BSgenome<span class="op">::</span><span class="kw">getBSgenome</span>(<span class="st">&quot;BSgenome.Dmelanogaster.UCSC.dm6&quot;</span>, <span class="dt">masked=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb16-7" data-line-number="7"><span class="cf">if</span>(<span class="op">!</span><span class="kw">file.exists</span>(<span class="kw">dirname</span>(dest_path))){<span class="kw">dir.create</span>(<span class="kw">dirname</span>(dest_path))}</a>
+<a class="sourceLine" id="cb16-8" data-line-number="8">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(<span class="kw">getSeq</span>(dm6), <span class="dt">filepath=</span>dest_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"><span class="co">## biomartr  </span></a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/biomartr_genome/&quot;</span>) <span class="co"># Only dir</span></a>
+<a class="sourceLine" id="cb17-4" data-line-number="4">biomartr<span class="op">::</span><span class="kw">is.genome.available</span>(<span class="dt">db =</span> <span class="st">&quot;ensembl&quot;</span>, <span class="dt">organism =</span> <span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="dt">details =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">file_path &lt;-<span class="st"> </span>biomartr<span class="op">::</span><span class="kw">getGenome</span>(<span class="dt">db=</span><span class="st">&quot;ensembl&quot;</span>, <span class="dt">organism =</span> <span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="dt">path=</span>dest_path, <span class="dt">gunzip=</span><span class="ot">TRUE</span>, <span class="dt">release=</span><span class="dv">101</span>) <span class="co"># Bowtie don't take gzip</span></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">genome &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="dt">filepath=</span><span class="kw">list.files</span>(dest_path, <span class="dt">pattern=</span><span class="st">&quot;.fa$&quot;</span>, <span class="dt">full.names=</span><span class="ot">TRUE</span>), <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<p><br> Similar to full genomes, some specilized references may be available for direct download using specific packages. Here is an example for ensembl ncRNA (animals) using the biomartr package.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="co">## biomartr ncRNA </span></a>
+<a class="sourceLine" id="cb18-3" data-line-number="3">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/ensembl_ncRNA/&quot;</span>) <span class="co"># Only dir</span></a>
+<a class="sourceLine" id="cb18-4" data-line-number="4">ncrna_path &lt;-<span class="st"> </span>biomartr<span class="op">::</span><span class="kw">getRNA</span>(<span class="dt">db=</span><span class="st">&quot;ensembl&quot;</span>, <span class="dt">organism =</span> <span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="dt">path=</span>dest_path, <span class="dt">release=</span><span class="dv">101</span>)</a>
+<a class="sourceLine" id="cb18-5" data-line-number="5">R.utils<span class="op">::</span><span class="kw">gunzip</span>(ncrna_path, <span class="dt">destname=</span><span class="kw">paste0</span>(dest_path, <span class="st">&quot;/ncrna.fa&quot;</span>), <span class="dt">remove=</span><span class="ot">TRUE</span>, <span class="dt">skip=</span><span class="ot">TRUE</span>) <span class="co"># Unzip to prepare for bowtie</span></a>
+<a class="sourceLine" id="cb18-6" data-line-number="6">ncrna &lt;-<span class="st">  </span>biomartr<span class="op">::</span><span class="kw">read_rna</span>(<span class="dt">file =</span> <span class="kw">paste0</span>(dest_path, <span class="st">&quot;/ncrna.fa&quot;</span>))</a></code></pre></div>
+<p><br> Using the <code>download.file</code> function makes all urls (https/http/ftp etc) available for download. Here are examples for drosophila tRNA and miRNA fasta:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"><span class="co">## Download GtRNAdb</span></a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/GtRNAdb/trna.fa&quot;</span>)</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"><span class="cf">if</span>(<span class="op">!</span><span class="kw">file.exists</span>(<span class="kw">dirname</span>(dest_path))){<span class="kw">dir.create</span>(<span class="kw">dirname</span>(dest_path))}</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="kw">download.file</span>(<span class="dt">url=</span><span class="st">&quot;http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.fa&quot;</span>, <span class="dt">destfile=</span>dest_path)</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6">trna &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="dt">filepath=</span>dest_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb20-2" data-line-number="2"><span class="co">## Download mirbase</span></a>
+<a class="sourceLine" id="cb20-3" data-line-number="3"><span class="co"># 1. Download pre-miRNA data</span></a>
+<a class="sourceLine" id="cb20-4" data-line-number="4"><span class="co"># 2. Extract compressed fasta</span></a>
+<a class="sourceLine" id="cb20-5" data-line-number="5"><span class="co"># 3. Read as RNA</span></a>
+<a class="sourceLine" id="cb20-6" data-line-number="6"><span class="co"># 4. Extract species D. melanogaster </span></a>
+<a class="sourceLine" id="cb20-7" data-line-number="7"><span class="co"># 4. Convert to DNA</span></a>
+<a class="sourceLine" id="cb20-8" data-line-number="8"><span class="co"># 5. Overwrite RNA fasta with DNA fasta</span></a>
+<a class="sourceLine" id="cb20-9" data-line-number="9"><span class="co"># (sequenced reads are always in DNA)</span></a>
+<a class="sourceLine" id="cb20-10" data-line-number="10"><span class="co"># (we use pre-miRNA to catch all miRNA)</span></a>
+<a class="sourceLine" id="cb20-11" data-line-number="11">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/mirbase/mirna.fa.gz&quot;</span>)</a>
+<a class="sourceLine" id="cb20-12" data-line-number="12"><span class="cf">if</span>(<span class="op">!</span><span class="kw">file.exists</span>(<span class="kw">dirname</span>(dest_path))){<span class="kw">dir.create</span>(<span class="kw">dirname</span>(dest_path))}</a>
+<a class="sourceLine" id="cb20-13" data-line-number="13"><span class="kw">download.file</span>(<span class="dt">url=</span><span class="st">&quot;ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz&quot;</span>, <span class="dt">destfile=</span>dest_path)</a>
+<a class="sourceLine" id="cb20-14" data-line-number="14">R.utils<span class="op">::</span><span class="kw">gunzip</span>(dest_path, <span class="dt">remove=</span><span class="ot">TRUE</span>, <span class="dt">skip=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb20-15" data-line-number="15">mirna &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readRNAStringSet</span>(<span class="dt">filepath=</span><span class="kw">gsub</span>(<span class="st">&quot;.gz&quot;</span>, <span class="st">&quot;&quot;</span>, dest_path), <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb20-16" data-line-number="16">mirna &lt;-<span class="st"> </span>mirna[<span class="kw">grepl</span>(<span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="kw">names</span>(mirna)),]</a>
+<a class="sourceLine" id="cb20-17" data-line-number="17">mirna &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">DNAStringSet</span>(mirna)</a>
+<a class="sourceLine" id="cb20-18" data-line-number="18">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(mirna, <span class="dt">filepath=</span><span class="kw">gsub</span>(<span class="st">&quot;.gz&quot;</span>, <span class="st">&quot;&quot;</span>, dest_path), <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="co">## Similar but MirGeneDB </span></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="co"># Since mirBase is rarely updated you might want to use MirGeneDB</span></a>
+<a class="sourceLine" id="cb21-4" data-line-number="4">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/mirgenedb/mirna_pre_mirbase.fa.gz&quot;</span>)</a>
+<a class="sourceLine" id="cb21-5" data-line-number="5"><span class="cf">if</span>(<span class="op">!</span><span class="kw">file.exists</span>(<span class="kw">dirname</span>(dest_path))){<span class="kw">dir.create</span>(<span class="kw">dirname</span>(dest_path))}</a>
+<a class="sourceLine" id="cb21-6" data-line-number="6"><span class="kw">download.file</span>(<span class="dt">url=</span><span class="st">&quot;https://www.mirgenedb.org/static/data/dme/dme-pre.fas&quot;</span>, <span class="dt">destfile=</span>dest_path)</a>
+<a class="sourceLine" id="cb21-7" data-line-number="7">mirna2 &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readRNAStringSet</span>(<span class="dt">filepath=</span>dest_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb21-8" data-line-number="8">mirna2 &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">DNAStringSet</span>(mirna2)</a>
+<a class="sourceLine" id="cb21-9" data-line-number="9">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(mirna2, <span class="dt">filepath=</span>dest_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb21-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb21-11" data-line-number="11"><span class="co">## There are some overlaps </span></a>
+<a class="sourceLine" id="cb21-12" data-line-number="12"><span class="kw">table</span>(<span class="kw">paste0</span>(mirna2) <span class="op">%in%</span><span class="st"> </span><span class="kw">paste0</span>(mirna))                          <span class="co"># Not much perfect overlap</span></a>
+<a class="sourceLine" id="cb21-13" data-line-number="13"><span class="kw">table</span>(<span class="kw">grepl</span>(<span class="kw">paste</span>(<span class="kw">paste0</span>(mirna2), <span class="dt">collapse=</span><span class="st">&quot;|&quot;</span>), <span class="kw">paste0</span>(mirna)))  <span class="co"># Non-perfect overlaps better </span></a></code></pre></div>
+<p><br> Custom fasta files can also be used, and you can easily merge, add and remove features to the database references by functions in the Biostrings package, such as <code>readDNAStringSet</code>. You may for example want to separate all haplotypes and scaffold ‘chromosomes’ from your top level reference genome.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb22-2" data-line-number="2"><span class="co">## Extract scaffold in genome files</span></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3">file_path &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/biomartr_genome/&quot;</span>), <span class="dt">pattern=</span><span class="st">&quot;toplevel.fa&quot;</span>, <span class="dt">full.names=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb22-4" data-line-number="4">genome &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="dt">filepath=</span>file_path[<span class="dv">1</span>], <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb22-5" data-line-number="5">chrom &lt;-<span class="st"> </span>genome[<span class="op">!</span><span class="kw">grepl</span>(<span class="st">&quot;scaffold&quot;</span>, <span class="kw">names</span>(genome)),] <span class="co"># Remove scaffolds</span></a>
+<a class="sourceLine" id="cb22-6" data-line-number="6">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(chrom, <span class="dt">filepath=</span><span class="kw">paste0</span>(<span class="kw">dirname</span>(file_path), <span class="st">&quot;/chromsomes.fa&quot;</span>) , <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb22-7" data-line-number="7">scaff &lt;-<span class="st"> </span>genome[<span class="kw">grepl</span>(<span class="st">&quot;scaffold&quot;</span>, <span class="kw">names</span>(genome)),] <span class="co"># Keep scaffolds</span></a>
+<a class="sourceLine" id="cb22-8" data-line-number="8">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(scaff, <span class="dt">filepath=</span><span class="kw">paste0</span>(<span class="kw">dirname</span>(file_path), <span class="st">&quot;/scaffolds.fa&quot;</span>), <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<p><br> As default, bowtie only reports the names up to the first white space. Sometimes the sequence names need to be modified or rearranged for the bowtie aligner to best report the names in the mapping output. This can easily be done using the Biostrings package:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="co">## Fixing the trna names</span></a>
+<a class="sourceLine" id="cb23-3" data-line-number="3">file_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/GtRNAdb/trna.fa&quot;</span>)</a>
+<a class="sourceLine" id="cb23-4" data-line-number="4">trna &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="dt">filepath=</span>file_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb23-5" data-line-number="5"><span class="kw">names</span>(trna) &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;Drosophila_melanogaster_&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="kw">names</span>(trna))              <span class="co"># Remove species </span></a>
+<a class="sourceLine" id="cb23-6" data-line-number="6">mat &lt;-<span class="st"> </span><span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(<span class="kw">names</span>(trna), <span class="st">&quot; &quot;</span>))                           <span class="co"># Make a name matrix </span></a>
+<a class="sourceLine" id="cb23-7" data-line-number="7"><span class="kw">names</span>(trna) &lt;-<span class="st">  </span><span class="kw">paste</span>(mat[,<span class="dv">1</span>], mat[,<span class="kw">ncol</span>(mat)<span class="op">-</span><span class="dv">1</span>], mat[,<span class="kw">ncol</span>(mat)], <span class="dt">sep=</span><span class="st">&quot;_&quot;</span>)   <span class="co"># Save the important as one single string</span></a>
+<a class="sourceLine" id="cb23-8" data-line-number="8">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(trna, <span class="dt">filepath=</span>file_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"><span class="co">## Rearrange the ncRNA fasta names</span></a>
+<a class="sourceLine" id="cb24-3" data-line-number="3">file_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/ensembl_ncRNA/ncrna.fa&quot;</span>)</a>
+<a class="sourceLine" id="cb24-4" data-line-number="4">ncrna &lt;-<span class="st"> </span>Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="dt">filepath=</span>file_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a>
+<a class="sourceLine" id="cb24-5" data-line-number="5">mat &lt;-<span class="st"> </span><span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(<span class="kw">names</span>(ncrna), <span class="st">&quot; &quot;</span>))                        <span class="co"># Make a matrix of the names</span></a>
+<a class="sourceLine" id="cb24-6" data-line-number="6">mat &lt;-<span class="st"> </span>mat[,<span class="dv">1</span><span class="op">:</span><span class="dv">7</span>]                                                            <span class="co"># Pick only the 1st columns </span></a>
+<a class="sourceLine" id="cb24-7" data-line-number="7">                                                                            <span class="co"># (some species contains multiple columns with same input) </span></a>
+<a class="sourceLine" id="cb24-8" data-line-number="8">col_bio &lt;-<span class="st"> </span><span class="kw">grepl</span>(<span class="st">&quot;gene_biotype:&quot;</span>, mat[<span class="dv">1</span>,])                                  <span class="co"># Locate gene biotype column</span></a>
+<a class="sourceLine" id="cb24-9" data-line-number="9">col_coord &lt;-<span class="st"> </span><span class="kw">grepl</span>(<span class="st">&quot;chromosome:|scaffold:&quot;</span>, mat[<span class="dv">1</span>,])                        <span class="co"># Locate coordinate column</span></a>
+<a class="sourceLine" id="cb24-10" data-line-number="10"><span class="kw">identical</span>(<span class="kw">nrow</span>(mat), <span class="kw">sum</span>(<span class="kw">grepl</span>(<span class="st">&quot;gene_biotype:&quot;</span>, mat[,col_bio])))            <span class="co"># Did you catch all?</span></a>
+<a class="sourceLine" id="cb24-11" data-line-number="11"><span class="kw">identical</span>(<span class="kw">nrow</span>(mat), <span class="kw">sum</span>(<span class="kw">grepl</span>(<span class="st">&quot;chromosome:|scaffold:&quot;</span>, mat[,col_coord])))</a>
+<a class="sourceLine" id="cb24-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb24-13" data-line-number="13">new_names &lt;-<span class="st"> </span><span class="kw">paste</span>(mat[,<span class="kw">ncol</span>(mat)], mat[,<span class="dv">1</span>], mat[,col_bio], mat[,col_coord], <span class="dt">sep=</span><span class="st">&quot;_&quot;</span>) <span class="co"># Pick columns of your choice</span></a>
+<a class="sourceLine" id="cb24-14" data-line-number="14"><span class="kw">names</span>(ncrna) &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;gene_symbol:|chromosome:BDGP6.28:|gene_biotype:&quot;</span>, <span class="st">&quot;&quot;</span>,  new_names) <span class="co"># Clean up</span></a>
+<a class="sourceLine" id="cb24-15" data-line-number="15">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(ncrna, <span class="dt">filepath=</span>file_path, <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<p>You may also want to add tRNAs from the mitochrondrial genome to your tRNA reference, which is not always provided in the GtRNAdb fasta. This can be done by moving them from Ensembl ncRNA fasta or scan the mitochondrial genome manually at <a href="http://lowelab.ucsc.edu/tRNAscan-SE/">tRNAscan-SE</a>. The mitochonridal genome is found in the reference genome fasta.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb25-2" data-line-number="2"><span class="co">## Locate, fix names and add mito tRNA</span></a>
+<a class="sourceLine" id="cb25-3" data-line-number="3">trna_logi &lt;-<span class="st"> </span><span class="kw">grepl</span>(<span class="st">&quot;tRNA_mitochondrion_genome&quot;</span>, <span class="kw">names</span>(ncrna))     <span class="co"># Locate mito tRNA</span></a>
+<a class="sourceLine" id="cb25-4" data-line-number="4"><span class="kw">table</span>(trna_logi) <span class="co"># Should be 22</span></a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">mt_trna_ensembl &lt;-<span class="st"> </span>ncrna[trna_logi,]</a>
+<a class="sourceLine" id="cb25-6" data-line-number="6">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;mt:tRNA:&quot;</span>, <span class="st">&quot;MT-tRNA-&quot;</span>, <span class="kw">names</span>(mt_trna_ensembl))</a>
+<a class="sourceLine" id="cb25-7" data-line-number="7">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;:-1$&quot;</span>, <span class="st">&quot;_(-)&quot;</span>, mt_trna) </a>
+<a class="sourceLine" id="cb25-8" data-line-number="8">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;:1$&quot;</span>, <span class="st">&quot;_(+)&quot;</span>, mt_trna)</a>
+<a class="sourceLine" id="cb25-9" data-line-number="9">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;_FBtr&quot;</span>, <span class="st">&quot;-FBtr&quot;</span>, mt_trna)</a>
+<a class="sourceLine" id="cb25-10" data-line-number="10">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;:&quot;</span>, <span class="st">&quot;-&quot;</span>, mt_trna)</a>
+<a class="sourceLine" id="cb25-11" data-line-number="11">mt_trna &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;_tRNA_mitochondrion_genome-&quot;</span>, <span class="st">&quot;_chrMT:&quot;</span>, mt_trna) </a>
+<a class="sourceLine" id="cb25-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb25-13" data-line-number="13"><span class="kw">names</span>(mt_trna_ensembl) &lt;-<span class="st"> </span>mt_trna</a>
+<a class="sourceLine" id="cb25-14" data-line-number="14">trna &lt;-<span class="st"> </span><span class="kw">c</span>(trna, mt_trna_ensembl)</a>
+<a class="sourceLine" id="cb25-15" data-line-number="15">Biostrings<span class="op">::</span><span class="kw">writeXStringSet</span>(trna, <span class="dt">filepath=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/GtRNAdb/trna.fa&quot;</span>), <span class="dt">format=</span><span class="st">&quot;fasta&quot;</span>)</a></code></pre></div>
+<p><br></p>
+</div>
+<div id="indexing-the-fasta-references" class="section level2">
+<h2>4.2 Indexing the fasta references</h2>
+<p>Before we can use the fasta references we need to index them for the bowtie aligner. You can do this by using the <code>bowtie_build</code> function in the Rbowtie package or by running bowtie externally, outside R. For more information see ?Rbowtie::bowtie, Rbowtie::bowtie_build_usage() and <a href="http://bowtie-bio.sourceforge.net/manual.shtml" class="uri">http://bowtie-bio.sourceforge.net/manual.shtml</a>.</p>
+<p><br> Important, the bowtie prefix must have the same basename (<code>prefix=</code>) and the indexes must be saved in the same directory (<code>outdir=</code>) as the original fasta file.</p>
+<p><br> Building indexes may take some time for large fasta, such as a reference genome. You only need to generate the index once for every fasta reference. Lets create bowtie indexes for a few of the fasta references we downloaded:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb26-2" data-line-number="2"><span class="co">## Examples of generating bowtie indexes</span></a>
+<a class="sourceLine" id="cb26-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb26-4" data-line-number="4">ref_path &lt;-<span class="st"> &quot;/home/danis31/Desktop/Temp_docs/fasta&quot;</span></a>
+<a class="sourceLine" id="cb26-5" data-line-number="5">Rbowtie<span class="op">::</span><span class="kw">bowtie_build</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/biomartr_genome/chromsomes.fa&quot;</span>), </a>
+<a class="sourceLine" id="cb26-6" data-line-number="6">                      <span class="dt">outdir=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/biomartr_genome/&quot;</span>), </a>
+<a class="sourceLine" id="cb26-7" data-line-number="7">                      <span class="dt">prefix=</span><span class="st">&quot;chromosomes&quot;</span>, <span class="dt">force=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb26-8" data-line-number="8">Rbowtie<span class="op">::</span><span class="kw">bowtie_build</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/biomartr_genome/scaffolds.fa&quot;</span>), </a>
+<a class="sourceLine" id="cb26-9" data-line-number="9">                      <span class="dt">outdir=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/biomartr_genome/&quot;</span>), </a>
+<a class="sourceLine" id="cb26-10" data-line-number="10">                      <span class="dt">prefix=</span><span class="st">&quot;scaffolds&quot;</span>, <span class="dt">force=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb26-11" data-line-number="11">Rbowtie<span class="op">::</span><span class="kw">bowtie_build</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/GtRNAdb/trna.fa&quot;</span>), </a>
+<a class="sourceLine" id="cb26-12" data-line-number="12">                      <span class="dt">outdir=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/GtRNAdb/&quot;</span>), </a>
+<a class="sourceLine" id="cb26-13" data-line-number="13">                      <span class="dt">prefix=</span><span class="st">&quot;trna&quot;</span>, <span class="dt">force=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb26-14" data-line-number="14">Rbowtie<span class="op">::</span><span class="kw">bowtie_build</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/ensembl_ncRNA/ncrna.fa&quot;</span>), </a>
+<a class="sourceLine" id="cb26-15" data-line-number="15">                      <span class="dt">outdir=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/ensembl_ncRNA/&quot;</span>), </a>
+<a class="sourceLine" id="cb26-16" data-line-number="16">                      <span class="dt">prefix=</span><span class="st">&quot;ncrna&quot;</span>, <span class="dt">force=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb26-17" data-line-number="17">Rbowtie<span class="op">::</span><span class="kw">bowtie_build</span>(<span class="kw">paste0</span>(ref_path, <span class="st">&quot;/mirbase/mirna.fa&quot;</span>), </a>
+<a class="sourceLine" id="cb26-18" data-line-number="18">                      <span class="dt">outdir=</span><span class="kw">paste0</span>(ref_path, <span class="st">&quot;/mirbase/&quot;</span>), </a>
+<a class="sourceLine" id="cb26-19" data-line-number="19">                      <span class="dt">prefix=</span><span class="st">&quot;mirna&quot;</span>, <span class="dt">force=</span><span class="ot">TRUE</span>)</a></code></pre></div>
+<p><br></p>
+</div>
+<div id="gtf-feature-coordinates" class="section level2">
+<h2>4.3 GTF feature coordinates</h2>
+<p>After the sequences has been mapped against a reference genome they can also aquire annotations from genomic feature files, such as the gtf and gff formates. These files contains the coordinates for different genomic features associated with a specific reference genome, such as repetitative regions, exons and CpG islands etc. Some functions in seqpac will require gtf files. Thus, it is important to know how to handle them.</p>
+<p><br> GTF files can often be aquired at the same places as the fasta reference files (see above). The biomartr package also have functions for downloading some gtf files and you can create your own by downloading different tables, for example using rtracklayer. Here are some examples:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb27-2" data-line-number="2"><span class="co">## Get gene gtf using biomartr</span></a>
+<a class="sourceLine" id="cb27-3" data-line-number="3">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/gtf/&quot;</span>) <span class="co"># Only dir</span></a>
+<a class="sourceLine" id="cb27-4" data-line-number="4">gtf_path &lt;-<span class="st"> </span>biomartr<span class="op">::</span><span class="kw">getGTF</span>(<span class="dt">db=</span><span class="st">&quot;ensembl&quot;</span>, <span class="dt">organism =</span> <span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="dt">path=</span>dest_path)</a>
+<a class="sourceLine" id="cb27-5" data-line-number="5">gtf &lt;-<span class="st"> </span>tibble<span class="op">::</span><span class="kw">as_tibble</span>(rtracklayer<span class="op">::</span><span class="kw">readGFF</span>(gtf_path))</a>
+<a class="sourceLine" id="cb27-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb27-7" data-line-number="7"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb27-8" data-line-number="8"><span class="co">## Get repeatMasker gtf using biomartr (doesn't work for all species)</span></a>
+<a class="sourceLine" id="cb27-9" data-line-number="9">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/repeatMasker/&quot;</span>) <span class="co"># Only dir</span></a>
+<a class="sourceLine" id="cb27-10" data-line-number="10">rm_path &lt;-<span class="st"> </span>biomartr<span class="op">::</span><span class="kw">getRepeatMasker</span>(<span class="dt">db=</span><span class="st">&quot;refseq&quot;</span>, <span class="dt">organism =</span> <span class="st">&quot;Drosophila melanogaster&quot;</span>, <span class="dt">path=</span>dest_path)</a>
+<a class="sourceLine" id="cb27-11" data-line-number="11">gtf &lt;-<span class="st"> </span>tibble<span class="op">::</span><span class="kw">as_tibble</span>(rtracklayer<span class="op">::</span><span class="kw">readGFF</span>(gtf_path))</a>
+<a class="sourceLine" id="cb27-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb27-13" data-line-number="13"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb27-14" data-line-number="14"><span class="co">## Get repeatMasker table and manually turn it into gtf using rtracklayer</span></a>
+<a class="sourceLine" id="cb27-15" data-line-number="15"><span class="co"># Table names can be found at:</span></a>
+<a class="sourceLine" id="cb27-16" data-line-number="16"><span class="co"># https://genome.ucsc.edu/cgi-bin/hgTables</span></a>
+<a class="sourceLine" id="cb27-17" data-line-number="17">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(ref_path, <span class="st">&quot;/repeatMasker/repeatMasker.gtf&quot;</span>) <span class="co"># Full file path</span></a>
+<a class="sourceLine" id="cb27-18" data-line-number="18"><span class="cf">if</span>(<span class="op">!</span><span class="kw">file.exists</span>(<span class="kw">dirname</span>(dest_path))){<span class="kw">dir.create</span>(<span class="kw">dirname</span>(dest_path))}</a>
+<a class="sourceLine" id="cb27-19" data-line-number="19">session &lt;-<span class="st"> </span>rtracklayer<span class="op">::</span><span class="kw">browserSession</span>(<span class="st">&quot;UCSC&quot;</span>)</a>
+<a class="sourceLine" id="cb27-20" data-line-number="20">rtracklayer<span class="op">::</span><span class="kw">genome</span>(session) &lt;-<span class="st"> &quot;dm6&quot;</span></a>
+<a class="sourceLine" id="cb27-21" data-line-number="21">rm_tab &lt;-<span class="st"> </span>tibble<span class="op">::</span><span class="kw">as_tibble</span>(rtracklayer<span class="op">::</span><span class="kw">getTable</span>(rtracklayer<span class="op">::</span><span class="kw">ucscTableQuery</span>(session, <span class="dt">track=</span><span class="st">&quot;RepeatMasker&quot;</span>, <span class="dt">table=</span><span class="st">&quot;rmsk&quot;</span>)))</a>
+<a class="sourceLine" id="cb27-22" data-line-number="22">gr &lt;-<span class="st"> </span>GenomicRanges<span class="op">::</span><span class="kw">GRanges</span>(<span class="dt">seqnames=</span>rm_tab<span class="op">$</span>genoName, IRanges<span class="op">::</span><span class="kw">IRanges</span>(rm_tab<span class="op">$</span>genoStart, rm_tab<span class="op">$</span>genoEnd), <span class="dt">strand=</span>rm_tab<span class="op">$</span>strand)</a>
+<a class="sourceLine" id="cb27-23" data-line-number="23">GenomicRanges<span class="op">::</span><span class="kw">mcols</span>(gr)<span class="op">$</span>type &lt;-<span class="st"> &quot;repeat&quot;</span></a>
+<a class="sourceLine" id="cb27-24" data-line-number="24">GenomicRanges<span class="op">::</span><span class="kw">mcols</span>(gr)<span class="op">$</span>source &lt;-<span class="st"> &quot;repeatMasker_dm6&quot;</span></a>
+<a class="sourceLine" id="cb27-25" data-line-number="25">GenomicRanges<span class="op">::</span><span class="kw">mcols</span>(gr)<span class="op">$</span>repName &lt;-<span class="st"> </span>rm_tab<span class="op">$</span>repName</a>
+<a class="sourceLine" id="cb27-26" data-line-number="26">GenomicRanges<span class="op">::</span><span class="kw">mcols</span>(gr)<span class="op">$</span>repClass &lt;-<span class="st"> </span>rm_tab<span class="op">$</span>repClass</a>
+<a class="sourceLine" id="cb27-27" data-line-number="27">GenomicRanges<span class="op">::</span><span class="kw">mcols</span>(gr)<span class="op">$</span>repFamily &lt;-<span class="st"> </span>rm_tab<span class="op">$</span>repFamily  </a>
+<a class="sourceLine" id="cb27-28" data-line-number="28">rtracklayer<span class="op">::</span><span class="kw">export</span>(gr, dest_path, <span class="dt">format=</span><span class="st">&quot;gtf&quot;</span>)</a></code></pre></div>
+<p><br></p>
+</div>
+<div id="the-reannotation-workflow" class="section level2">
+<h2>4.4 The reannotation workflow</h2>
+<p>Here are the details on how seqpac generates annotations presented.</p>
+<p><br> The PAC reannotation family of functions carries out the following tasks: | Task | Function | |:——————————————–|:————————————–| | Map sequences against fasta references | <code>map_reanno</code>;<code>import_reanno</code> | | Store the output on hard drive | <code>map_reanno</code> | | Read parts into R and create a reanno object| <code>make_reanno</code> | | Generate an overview from the reanno object | <code>make_reanno</code> | | Classify and simplify each annotations | <code>add_reanno</code>; <code>simplify_reanno</code> | | Add new classifications to an PAC object | <code>add_reanno</code>; <code>simplify_reanno</code> |</p>
+<p><br></p>
+<div id="the-functions-in-the-reanno-workflow" class="section level3">
+<h3>4.4.1 The functions in the reanno workflow</h3>
+<p><br></p>
+<p><strong>map_reanno</strong><br> To accommodate most users on most platforms, seqpac provides two alternatives for calling bowtie using the <code>map_reanno</code> function: internally from within R (<code>type=&quot;internal&quot;</code>) or externally from outside R (<code>type=&quot;external&quot;</code>). In the internal mode, seqpac uses the <code>bowtie</code> function in the Rbowtie package, while in the external mode bowtie is called by a system command to a locally installed version of bowtie. Both options gives identical results, but since the internal Rbowtie package is rarely updated, we provide the external option.</p>
+<p><br> Since the input commands for external bowtie and internal Rbowtie differs slightly, <code>map_reanno</code> has two parse options: <code>parse_internal</code> and <code>parse_external</code>. These can be used to control the two versions of bowtie as if they were run from the console or command line, respectively.</p>
+<p><br> While bowtie has its own way to handle mismatches in the alignments, seqpac disregards this and instead runs bowtie sequentially, increasing the number of mismatches for each cycle. After each cycle all sequences that recieved a match in any of the provided references will be subtracted. Therefore, in the next cycle only sequences without a match will be ‘reannotated’ but allowing one additional mismatch. The <code>map_reanno</code> function controls this by sequentially increasing the the number of mismatches after substracting the matches.</p>
+<p><br></p>
+<p><strong>import_reanno</strong><br> This function is called by <code>map_reanno</code> to import the bowtie results after each cycle. If you would run <code>import_reanno</code> separately it simply provides you with options on how to import bowtie results into R. For example, when aligning against a reference genome the mapping coordinates is important, while mapping against more specialized references used for creating sRNA classifications (rRNA, tRNA, miRNA etc), ‘hit’ or ‘no hit’ might be enough, and will be a much faster option. The <code>map_reanno</code> function therefore has two default import modes, import=“genome” and import=“biotype”, which automatically configure <code>import_reanno</code> for genome or class annotation.</p>
+<p><br></p>
+<p><strong>make_reanno</strong><br> After each annotation cycle, <code>map_reanno</code> will store an .Rdata file (Full_reanno_mis0/1/2/3.Rdata) containing a list with all alignment hits for all PAC-sequence-to-fasta-reference alignments. Calling <code>map_reanno</code> will search for the these .Rdata files in a given folder and create a reanno object in R. This involves extracting, ordering and preparing annotations in a format that can be merged with the existing Anno table in a PAC object. It will also generate an overview table, that summarizes the annotations if multiple fasta references were used in <code>map_reanno</code>.</p>
+<p><br></p>
+<p><strong>add_reanno</strong><br> Before merging the new annotations with a PAC object, unless we have provided a fasta reference with only one type (e.g. miRNA for mirBase), classification not only <em>between</em> fasta references but also <em>within</em> references might be necessary (e.g. snoRNA, tRNA, miRNA, rRNA in the Ensembl_ncRNA fasta). Classification of the fasta reference names, which was first saved by bowtie and then caught in our reanno object as an annotation, is done with the <code>add_reanno</code> function. Again, there are two primary modes, either “genome” or “biotype”. When type=“genome” a standardized workflow anticipating genomic coordinates are applied. When type=“biotype” a list of search term vectors directed against each fasta reference needs to be provided. Matches between search term (written as regular expressions) and substrings in fasta reference names will result in a classification of the PAC sequence. Finally, <code>add_reanno</code> generates an annotation table that can either be saved seperately or merged with the original PAC object.</p>
+<p><br></p>
+<p><strong>simplify_reanno</strong><br> While <code>add_reanno</code> starts the process of simplifying the reference name annotations into useful classifications, it will generate multiple classifications for each counted sequence if it matches multiple search terms. The <code>simplify_reanno</code> function boils down multi-classifications into one classification for each sequence. By doing so, an heirarchy must be set, where priority of some classifications over others is done (e.g. miRNA over piRNA). While this is a controversial topic, using such hierarchies is still the only way to provide overview statistics in experiments targeting highly multimapping sequences, such as small RNA. Nonetheless, the seqpac workflow with its sequence based counts where hierarchical classification is done in the very end of the annotation process, makes it easy to generate classifications using alternative hierarchies and observe the consequences of your choices in for example a pie chart.</p>
+<p><br> In summary: - <strong>map_reanno</strong> Bowtie reference mapping over mismatch cycles - <strong>import_reanno</strong> Used by <code>map_reanno</code> to import bowtie output after each cycle<br />
+- <strong>make_reanno</strong> Organizes <code>map_reanno</code> output into a reanno object - <strong>add_reanno</strong> Classifies annotations according to reference name - <strong>simplify_reanno</strong> Hierarchical classification</p>
+<p><br></p>
+</div>
+<div id="reannotation-in-action" class="section level3">
+<h3>4.4.2 Reannotation in action</h3>
+<p>Lets observe the functions in action using the drosophila test dataset.</p>
+<p><br> First we map against a reference genome, using <code>map_reanno</code>. Note that import=“genome” must be set to catch the genomic coordinates. Since <code>map_reanno</code> can handle multiple fasta references, we provide both the chromosomes and schaffold fasta that we generated previously. Remember, each fasta must have bowtie indexes (see 4.2).</p>
+<p><br></p>
+<p><br> Similarly, we can map against other specialized references, that can be used for classifying each sequence into biotypes. Note, unlike genome mapping, at this stage we are not interested in where a sequence matches a reference for the speciallized references, only if it matches or not. Thus, we use <code>import=&quot;biotype&quot;</code>.</p>
+<p><br> Now, the output .Rdata files for all mismatch cycles should have been stored in the output folders. Lets import everything into R, generate a reanno list objects and plot some pie charts from the Overview table.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb28-2" data-line-number="2"><span class="co">## Generate a reanno object with make_reanno </span></a>
+<a class="sourceLine" id="cb28-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb28-4" data-line-number="4">reanno_genome &lt;-<span class="st"> </span><span class="kw">make_reanno</span>(outpath_genome, <span class="dt">PAC=</span>pac, <span class="dt">mis_fasta_check =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb28-5" data-line-number="5">reanno_biotype &lt;-<span class="st"> </span><span class="kw">make_reanno</span>(outpath_biotype, <span class="dt">PAC=</span>pac, <span class="dt">mis_fasta_check =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb28-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb28-7" data-line-number="7"><span class="co"># Note, setting mis_fasta_check=TRUE will double check that the number of</span></a>
+<a class="sourceLine" id="cb28-8" data-line-number="8"><span class="co"># sequences that failed to recieve an alignment in the last mismatch cycle</span></a>
+<a class="sourceLine" id="cb28-9" data-line-number="9"><span class="co"># agrees with the number sequences in the reanno object without an annotation.</span></a>
+<a class="sourceLine" id="cb28-10" data-line-number="10"><span class="co"># (these sequences are stored in mis_fasta_x.txt where x is max mismatches+1)</span></a>
+<a class="sourceLine" id="cb28-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb28-12" data-line-number="12"><span class="co"># List structure</span></a>
+<a class="sourceLine" id="cb28-13" data-line-number="13"><span class="kw">str</span>(reanno_genome, <span class="dt">max.level =</span> <span class="dv">3</span>, <span class="dt">give.attr =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb28-14" data-line-number="14"><span class="kw">str</span>(reanno_biotype, <span class="dt">max.level =</span> <span class="dv">3</span>, <span class="dt">give.attr =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb28-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb28-16" data-line-number="16"><span class="co"># Simple pie charts using the Overview table</span></a>
+<a class="sourceLine" id="cb28-17" data-line-number="17"><span class="kw">pie</span>(<span class="kw">table</span>(reanno_genome<span class="op">$</span>Overview<span class="op">$</span>chromosomes))</a>
+<a class="sourceLine" id="cb28-18" data-line-number="18"><span class="kw">pie</span>(<span class="kw">table</span>(reanno_genome<span class="op">$</span>Overview<span class="op">$</span>scaffolds))</a>
+<a class="sourceLine" id="cb28-19" data-line-number="19"><span class="kw">pie</span>(<span class="kw">table</span>(reanno_biotype<span class="op">$</span>Overview<span class="op">$</span>Any))</a></code></pre></div>
+<p><br> Next step is to reorganize and classify using <code>add_reanno</code>. For mapping against a reference genome this is easy. Just set type=“genome” and set the maximum number of alignments to be reported by <code>genome_max</code> (Warning: <code>genome_max=&quot;all&quot;</code> will give you all alignments).</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2"><span class="co">### Genomic coordinates using add_reanno </span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="co"># Output separate tibble</span></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5">anno_genome &lt;-<span class="st"> </span><span class="kw">add_reanno</span>(reanno_genome, <span class="dt">type=</span><span class="st">&quot;genome&quot;</span>, <span class="dt">genome_max=</span><span class="dv">10</span>, <span class="dt">mismatches=</span><span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="co"># Output merged with provided PAC object</span></a>
+<a class="sourceLine" id="cb29-8" data-line-number="8">pac &lt;-<span class="st"> </span><span class="kw">add_reanno</span>(reanno_genome, <span class="dt">type=</span><span class="st">&quot;genome&quot;</span>, <span class="dt">genome_max=</span><span class="dv">10</span>, <span class="dt">mismatches=</span><span class="dv">3</span>, <span class="dt">merge_pac=</span>pac)</a>
+<a class="sourceLine" id="cb29-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="co"># Example of original reference name annotations </span></a>
+<a class="sourceLine" id="cb29-11" data-line-number="11"><span class="kw">head</span>(reanno_genome<span class="op">$</span>Full_anno<span class="op">$</span>mis0<span class="op">$</span>chromosomes)</a>
+<a class="sourceLine" id="cb29-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb29-13" data-line-number="13"><span class="co"># Finished genome annotation </span></a>
+<a class="sourceLine" id="cb29-14" data-line-number="14"><span class="kw">head</span>(anno_genome)</a>
+<a class="sourceLine" id="cb29-15" data-line-number="15"><span class="kw">head</span>(pac<span class="op">$</span>Anno)</a></code></pre></div>
+<p><br> For specialized references, <code>type=&quot;biotype&quot;</code> should be used. This allows for classification based on match or no match between the search terms provided in the <code>bio_search</code> input and the reference names annotated with each counted sequence. Correct classification is all about finding the best search terms that discriminates between the different names in the original fasta reference files (up to the first white space; see 4.1).</p>
+<p><br> With the <code>bio_perfect</code> option you may control how conservative the matching between search term and annotation should be. With <code>bio_perfect=FALSE</code>, every reference hit that fail to match your search terms, will be classified as ‘other’. Using <code>bio_perfect=TRUE</code> will instead guarantee that your search terms will cover all reference hits.</p>
+<p><br> Hint: See <code>?add_reanno</code> for a trick on how to succeed with <code>bio_perfect=TRUE</code>.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"><span class="co">## Classify sequences using add_reanno </span></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="co"># Lets start by exploring the names in the original fasta reference:</span></a>
+<a class="sourceLine" id="cb30-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb30-6" data-line-number="6"><span class="co"># Explore reference search terms</span></a>
+<a class="sourceLine" id="cb30-7" data-line-number="7">ref_path &lt;-<span class="st"> &quot;/home/danis31/Desktop/Temp_docs/fasta&quot;</span></a>
+<a class="sourceLine" id="cb30-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb30-9" data-line-number="9">Ensembl_ncrna &lt;-<span class="st"> </span><span class="kw">names</span>(Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="kw">paste0</span>(ref_path,<span class="st">&quot;/ensembl_ncRNA/ncrna.fa&quot;</span>)))</a>
+<a class="sourceLine" id="cb30-10" data-line-number="10">Ensembl_ncrna &lt;-<span class="st"> </span><span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(Ensembl_ncrna, <span class="st">&quot; &quot;</span>))[,<span class="dv">1</span>]        <span class="co"># Extract up to 1st white space</span></a>
+<a class="sourceLine" id="cb30-11" data-line-number="11">Ensembl_ncrna &lt;-<span class="st"> </span><span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(Ensembl_ncrna, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">:&quot;</span>))[,<span class="dv">1</span>]      <span class="co"># Expressions up to &quot;:&quot;</span></a>
+<a class="sourceLine" id="cb30-12" data-line-number="12"><span class="kw">table</span>(Ensembl_ncrna)           </a>
+<a class="sourceLine" id="cb30-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb30-14" data-line-number="14">trna &lt;-<span class="st"> </span><span class="kw">names</span>(Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="kw">paste0</span>(ref_path,<span class="st">&quot;/GtRNAdb/trna.fa&quot;</span>)))</a>
+<a class="sourceLine" id="cb30-15" data-line-number="15"><span class="kw">table</span>(<span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(trna, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">_&quot;</span>))[,<span class="dv">1</span>])  <span class="co"># Divide</span></a>
+<a class="sourceLine" id="cb30-16" data-line-number="16"><span class="kw">table</span>(<span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(trna, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">-&quot;</span>))[,<span class="dv">1</span>])  <span class="co"># Further division</span></a>
+<a class="sourceLine" id="cb30-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb30-18" data-line-number="18">mirna &lt;-<span class="st"> </span><span class="kw">names</span>(Biostrings<span class="op">::</span><span class="kw">readDNAStringSet</span>(<span class="kw">paste0</span>(ref_path,<span class="st">&quot;/mirbase/mirna.fa&quot;</span>)))</a>
+<a class="sourceLine" id="cb30-19" data-line-number="19">mirna &lt;-<span class="st"> </span><span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(mirna, <span class="st">&quot; &quot;</span>))[,<span class="dv">1</span>] <span class="co"># Extract up to 1st white space</span></a>
+<a class="sourceLine" id="cb30-20" data-line-number="20"><span class="kw">table</span>(<span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, <span class="kw">strsplit</span>(mirna, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">-&quot;</span>))[,<span class="dv">1</span>]) <span class="co"># Divide</span></a>
+<a class="sourceLine" id="cb30-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb30-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb30-23" data-line-number="23"><span class="co"># Lets try two search term lists directed against each reference and written as</span></a>
+<a class="sourceLine" id="cb30-24" data-line-number="24"><span class="co"># 'regular expressions'</span></a>
+<a class="sourceLine" id="cb30-25" data-line-number="25">bio_search_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">list</span>(</a>
+<a class="sourceLine" id="cb30-26" data-line-number="26">                 <span class="dt">Ensembl=</span><span class="kw">c</span>(<span class="st">&quot;lncRNA&quot;</span>, <span class="st">&quot;pre_miRNA&quot;</span>, <span class="st">&quot;rRNA&quot;</span>, <span class="st">&quot;snoRNA&quot;</span>, <span class="st">&quot;snRNA&quot;</span>, <span class="st">&quot;tRNA&quot;</span>),</a>
+<a class="sourceLine" id="cb30-27" data-line-number="27">                 <span class="dt">miRNA=</span><span class="st">&quot;dme-&quot;</span>,</a>
+<a class="sourceLine" id="cb30-28" data-line-number="28">                 <span class="dt">tRNA =</span><span class="kw">c</span>(<span class="st">&quot;^tRNA&quot;</span>, <span class="st">&quot;MT&quot;</span>)      <span class="co"># ^= Regular expression for start of string  </span></a>
+<a class="sourceLine" id="cb30-29" data-line-number="29">                )</a>
+<a class="sourceLine" id="cb30-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb30-31" data-line-number="31">bio_search_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">list</span>(</a>
+<a class="sourceLine" id="cb30-32" data-line-number="32">                 <span class="dt">Ensembl=</span><span class="kw">c</span>(<span class="st">&quot;lncRNA&quot;</span>, <span class="st">&quot;miRNA&quot;</span>, <span class="st">&quot;pre_miRNA&quot;</span>, <span class="st">&quot;rRNA&quot;</span>, <span class="st">&quot;snoRNA&quot;</span>, </a>
+<a class="sourceLine" id="cb30-33" data-line-number="33">                           <span class="st">&quot;snRNA&quot;</span>, <span class="st">&quot;tRNA&quot;</span>, <span class="st">&quot;Uhg&quot;</span>, <span class="st">&quot;7SLRNA&quot;</span>, <span class="st">&quot;asRNA&quot;</span>, <span class="st">&quot;hpRNA&quot;</span>, </a>
+<a class="sourceLine" id="cb30-34" data-line-number="34">                           <span class="st">&quot;RNaseMRP&quot;</span>,<span class="st">&quot;RNaseP&quot;</span>, <span class="st">&quot;sbRNA&quot;</span>, <span class="st">&quot;scaRNA&quot;</span>, <span class="st">&quot;sisRNA&quot;</span>, </a>
+<a class="sourceLine" id="cb30-35" data-line-number="35">                           <span class="st">&quot;snmRNA&quot;</span>, <span class="st">&quot;snoRNA&quot;</span>, <span class="st">&quot;snRNA&quot;</span>,<span class="st">&quot;Su</span><span class="ch">\\</span><span class="st">(Ste</span><span class="ch">\\</span><span class="st">)&quot;</span>), <span class="co"># ()= Brackets must be escaped  </span></a>
+<a class="sourceLine" id="cb30-36" data-line-number="36">                 <span class="dt">miRNA=</span><span class="st">&quot;dme-&quot;</span>,</a>
+<a class="sourceLine" id="cb30-37" data-line-number="37">                 <span class="dt">tRNA =</span><span class="kw">c</span>(<span class="st">&quot;^tRNA&quot;</span>, <span class="st">&quot;MT&quot;</span>) </a>
+<a class="sourceLine" id="cb30-38" data-line-number="38">                )</a>
+<a class="sourceLine" id="cb30-39" data-line-number="39"></a>
+<a class="sourceLine" id="cb30-40" data-line-number="40"><span class="co"># Throws an error because perfect matching is required:</span></a>
+<a class="sourceLine" id="cb30-41" data-line-number="41">anno_temp &lt;-<span class="st"> </span><span class="kw">add_reanno</span>(reanno_biotype, <span class="dt">bio_search=</span>bio_search_<span class="dv">1</span>, <span class="dt">type=</span><span class="st">&quot;biotype&quot;</span>, <span class="dt">bio_perfect=</span><span class="ot">TRUE</span>, <span class="dt">mismatches =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb30-42" data-line-number="42"></a>
+<a class="sourceLine" id="cb30-43" data-line-number="43"><span class="co"># References with no search term hits are classified as &quot;Other&quot;:</span></a>
+<a class="sourceLine" id="cb30-44" data-line-number="44">anno_temp &lt;-<span class="st"> </span><span class="kw">add_reanno</span>(reanno_biotype, <span class="dt">bio_search=</span>bio_search_<span class="dv">1</span>, <span class="dt">type=</span><span class="st">&quot;biotype&quot;</span>, <span class="dt">bio_perfect=</span><span class="ot">FALSE</span>, <span class="dt">mismatches =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb30-45" data-line-number="45"></a>
+<a class="sourceLine" id="cb30-46" data-line-number="46"><span class="co"># Better search terms gives perfect matching and merge with PAC</span></a>
+<a class="sourceLine" id="cb30-47" data-line-number="47">pac &lt;-<span class="st"> </span><span class="kw">add_reanno</span>(reanno_biotype, <span class="dt">bio_search=</span>bio_search_<span class="dv">2</span>, <span class="dt">type=</span><span class="st">&quot;biotype&quot;</span>, <span class="dt">bio_perfect=</span><span class="ot">TRUE</span>, <span class="dt">mismatches =</span> <span class="dv">3</span>, <span class="dt">merge_pac=</span>pac)</a>
+<a class="sourceLine" id="cb30-48" data-line-number="48"><span class="kw">table</span>(pac<span class="op">$</span>Anno<span class="op">$</span>mis0_bio)</a></code></pre></div>
+<p><br> To make overview statistics and graphs we need to boil down the classifications to a factor column with only a few unique biotypes per factor. This is what <code>simplify_reanno</code> does. Just like <code>add_reanno</code> in the <code>type=&quot;biotype&quot;</code> mode, <code>simplify_reanno</code> needs a list of search terms, <code>hierarchy</code>. This time, however, the list is order sensitive and targets the output table from <code>add_reanno</code> that contains the columns with new classifications (e.g. “mis0_bio”, “mis1_bio”, “mis2_bio” etc). If a match occurs between the first search term and a classification, the counted sequence will be annotated to this classification, no matter if other search terms matches further down the list. This is done sequentially, allowing one additional mismatch until a maximum (specified in <code>mismatches</code>) has been reached. Thus, if a match occurs in tRNA with 0 mismatch, and rRNA with 1 mismatch, it will be reported as tRNA even though rRNA where higher in the <code>hierarchy</code>. A better match will always be prioritized over the hierarchy.</p>
+<p><br></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb31-2" data-line-number="2"><span class="co">## Hierarchical classification with simplify_reanno</span></a>
+<a class="sourceLine" id="cb31-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb31-4" data-line-number="4"><span class="kw">table</span>(pac<span class="op">$</span>Anno<span class="op">$</span>mis0_bio)</a>
+<a class="sourceLine" id="cb31-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb31-6" data-line-number="6"><span class="co"># Set the hierarchy (remember: order senstive; rRNA &gt;&gt;&gt;&gt;&gt; lncRNA)</span></a>
+<a class="sourceLine" id="cb31-7" data-line-number="7">hierarchy &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">rRNA=</span><span class="st">&quot;Ensembl_rRNA&quot;</span>,</a>
+<a class="sourceLine" id="cb31-8" data-line-number="8">                   <span class="dt">Mt_tRNA=</span><span class="st">&quot;tRNA:MT&quot;</span>,</a>
+<a class="sourceLine" id="cb31-9" data-line-number="9">                   <span class="dt">tRNA=</span><span class="st">&quot;Ensembl_tRNA|tRNA__tRNA&quot;</span>,</a>
+<a class="sourceLine" id="cb31-10" data-line-number="10">                   <span class="dt">miRNA =</span><span class="st">&quot;^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA&quot;</span>,</a>
+<a class="sourceLine" id="cb31-11" data-line-number="11">                   <span class="dt">snoRNA=</span><span class="st">&quot;Ensembl_snoRNA&quot;</span>,</a>
+<a class="sourceLine" id="cb31-12" data-line-number="12">                   <span class="dt">lncRNA=</span><span class="st">&quot;Ensembl_lncRNA&quot;</span>   </a>
+<a class="sourceLine" id="cb31-13" data-line-number="13">                  )</a>
+<a class="sourceLine" id="cb31-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb31-15" data-line-number="15"><span class="co"># No mistmach allowed</span></a>
+<a class="sourceLine" id="cb31-16" data-line-number="16">pac &lt;-<span class="st"> </span><span class="kw">simplify_reanno</span>(<span class="dt">input=</span>pac, <span class="dt">hierarchy=</span>hierarchy, <span class="dt">mismatches=</span><span class="dv">0</span>, <span class="dt">bio_name=</span><span class="st">&quot;Biotypes_mis0&quot;</span>, <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb31-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb31-18" data-line-number="18"><span class="co"># Up to 3 mismatches allowed</span></a>
+<a class="sourceLine" id="cb31-19" data-line-number="19">pac &lt;-<span class="st"> </span><span class="kw">simplify_reanno</span>(<span class="dt">input=</span>pac, <span class="dt">hierarchy=</span>hierarchy, <span class="dt">mismatches=</span><span class="dv">3</span>, <span class="dt">bio_name=</span><span class="st">&quot;Biotypes_mis3&quot;</span>, <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb31-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb31-21" data-line-number="21"><span class="co"># Example of original reference name annotations </span></a>
+<a class="sourceLine" id="cb31-22" data-line-number="22"><span class="kw">head</span>(reanno_biotype<span class="op">$</span>Full_anno<span class="op">$</span>mis0<span class="op">$</span>Ensembl)</a>
+<a class="sourceLine" id="cb31-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb31-24" data-line-number="24"><span class="co"># Simplified hierarchical classification</span></a>
+<a class="sourceLine" id="cb31-25" data-line-number="25"><span class="kw">head</span>(pac<span class="op">$</span>Anno)</a>
+<a class="sourceLine" id="cb31-26" data-line-number="26"><span class="kw">table</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis0)</a>
+<a class="sourceLine" id="cb31-27" data-line-number="27"><span class="kw">table</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis3)</a></code></pre></div>
+<p><br> <br></p>
+<hr />
+</div>
+</div>
+</div>
+<div id="analysis-and-visualization" class="section level1">
+<h1>Analysis and visualization</h1>
+<p>There are several functions in seqpac that handle statistical analysis and visualization. We will only present a few of them here, so please refer to seqpac’s reference manual for a complete list. Just like many of the preprocessing functions, these functions are named PAC_xxx to clearly show that they are applied on a PAC object.</p>
+<p>Hint: If you are unsure if your manually constructed/manipulated PAC object are compatible, you can always run <code>PAC_check</code>.</p>
+<div id="summarize-data-over-groups" class="section level2">
+<h2>5.1 Summarize data over groups</h2>
+<p>To make simple summaries over column categories/groups in the <code>PAC$Pheno</code> table such as means, standard deviation (SD), standard error (SE), and log2 fold changes (log2FC) etc, seqpac has a conventient function called <code>PAC_summary</code>. This function uses a target_pheno object to target a column in <code>PAC$Pheno</code> to generate a summary over the raw Counts or normalized counts. Processed data will be stored in the <code>PAC$summary</code> folder.</p>
+<p><em>Important</em>, summarized data in the <code>PAC$summary</code> folder will always have the same rownames (unique sequences) as <code>PAC$Counts</code> and <code>PAC$Anno</code>, while the column names will be derived from <code>PAC$Pheno</code> object. Summarize using an anno_target object is not allowed, because that would disrubt sequence names (loss of sequence integrity). Summaries over sequences (such as generating means over sRNA classes) is instead handled by each plotting/statistical function, and are often stored in the output from these functions. Nonetheless, user may always generate their own derived tables, using functions like <code>aggregate</code> and <code>reshape::melt</code>.</p>
+<p>Lets have some examples of how PAC_summary works:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb32-2" data-line-number="2"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt_anno.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb32-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb32-4" data-line-number="4"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb32-5" data-line-number="5"><span class="co">## PAC_summary in seqpac </span></a>
+<a class="sourceLine" id="cb32-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb32-7" data-line-number="7"><span class="co"># Make means of counts over stages and return a data.frame</span></a>
+<a class="sourceLine" id="cb32-8" data-line-number="8">tab &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac, <span class="dt">norm =</span> <span class="st">&quot;counts&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, </a>
+<a class="sourceLine" id="cb32-9" data-line-number="9">                   <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb32-10" data-line-number="10"><span class="kw">head</span>(tab[[<span class="dv">1</span>]]) </a>
+<a class="sourceLine" id="cb32-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb32-12" data-line-number="12"><span class="co"># When merge_pac=TRUE the summarized table is added to the PAC$summary folder  </span></a>
+<a class="sourceLine" id="cb32-13" data-line-number="13">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac, <span class="dt">norm =</span> <span class="st">&quot;counts&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, </a>
+<a class="sourceLine" id="cb32-14" data-line-number="14">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb32-16" data-line-number="16"><span class="kw">summary</span>(pac)       <span class="co"># Structure of PAC before PAC_summary</span></a>
+<a class="sourceLine" id="cb32-17" data-line-number="17"><span class="kw">summary</span>(pac_test)  <span class="co"># Structure of PAC after PAC_summary</span></a>
+<a class="sourceLine" id="cb32-18" data-line-number="18"><span class="kw">names</span>(pac_test<span class="op">$</span>summary)</a>
+<a class="sourceLine" id="cb32-19" data-line-number="19"><span class="kw">head</span>(pac_test<span class="op">$</span>summary<span class="op">$</span>countsMeans_stage)</a>
+<a class="sourceLine" id="cb32-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb32-21" data-line-number="21"><span class="co"># You may want to use normalized counts   </span></a>
+<a class="sourceLine" id="cb32-22" data-line-number="22">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac_test, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, </a>
+<a class="sourceLine" id="cb32-23" data-line-number="23">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb32-25" data-line-number="25"><span class="co"># Maybe only include a subset of the samples</span></a>
+<a class="sourceLine" id="cb32-26" data-line-number="26">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac_test, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, </a>
+<a class="sourceLine" id="cb32-27" data-line-number="27">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;batch&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Batch1&quot;</span>, <span class="st">&quot;Batch2&quot;</span>)), </a>
+<a class="sourceLine" id="cb32-28" data-line-number="28">                        <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb32-30" data-line-number="30"><span class="co"># Generate standard errors</span></a>
+<a class="sourceLine" id="cb32-31" data-line-number="31">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac_test, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;se&quot;</span>, </a>
+<a class="sourceLine" id="cb32-32" data-line-number="32">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-33" data-line-number="33"></a>
+<a class="sourceLine" id="cb32-34" data-line-number="34"><span class="co"># log2FC</span></a>
+<a class="sourceLine" id="cb32-35" data-line-number="35">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac_test, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;log2FC&quot;</span>,  </a>
+<a class="sourceLine" id="cb32-36" data-line-number="36">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-37" data-line-number="37"></a>
+<a class="sourceLine" id="cb32-38" data-line-number="38"><span class="co"># log2FC generated from a grand mean over all samples</span></a>
+<a class="sourceLine" id="cb32-39" data-line-number="39">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac_test, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;log2FCgrand&quot;</span>,  </a>
+<a class="sourceLine" id="cb32-40" data-line-number="40">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb32-41" data-line-number="41"></a>
+<a class="sourceLine" id="cb32-42" data-line-number="42"><span class="co"># All summarize tables have identical rownames that can be merged</span></a>
+<a class="sourceLine" id="cb32-43" data-line-number="43"><span class="kw">names</span>(pac_test<span class="op">$</span>summary)</a>
+<a class="sourceLine" id="cb32-44" data-line-number="44"><span class="kw">lapply</span>(pac_test<span class="op">$</span>summary, <span class="cf">function</span>(x){</a>
+<a class="sourceLine" id="cb32-45" data-line-number="45">  <span class="kw">identical</span>(<span class="kw">rownames</span>(x), <span class="kw">rownames</span>(pac_test<span class="op">$</span>summary[[<span class="dv">1</span>]]))</a>
+<a class="sourceLine" id="cb32-46" data-line-number="46">  })</a>
+<a class="sourceLine" id="cb32-47" data-line-number="47"><span class="kw">head</span>(<span class="kw">do.call</span>(<span class="st">&quot;cbind&quot;</span>, pac_test<span class="op">$</span>summary))</a></code></pre></div>
+</div>
+<div id="differential-expression-using-pac-object" class="section level2">
+<h2>5.2 Differential Expression using PAC object</h2>
+<p>Seqpac has a convenient function, <code>PAC_deseq</code>, that lets you make simple omic scale expressional analysis on PAC objects using the popular <code>DESeq2</code> package. This involves fitting generalized linear models with negative binomial distribtions and subsequent correction for multiple testing using the Pheno and Counts PAC tables. For more information (such as how to correctly build models), please see the DESeq2 vingette: <a href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html" class="uri">https://bioconductor.org/packages/release/bioc/html/DESeq2.html</a>.</p>
+<p>In addition to preparing a PAC object for DESeq2, <code>PAC_deseq</code> will organize and visualize the output. Lets have an example using the test dataset:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb33-2" data-line-number="2"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt_anno.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb33-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb33-4" data-line-number="4"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb33-5" data-line-number="5"><span class="co">## Differential expression in seqpac </span></a>
+<a class="sourceLine" id="cb33-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb33-7" data-line-number="7"><span class="co"># Simple model testing stages against using Wald test with local fit (default)</span></a>
+<a class="sourceLine" id="cb33-8" data-line-number="8"><span class="kw">table</span>(pac<span class="op">$</span>Pheno<span class="op">$</span>stage)</a>
+<a class="sourceLine" id="cb33-9" data-line-number="9">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage, <span class="dt">threads=</span><span class="dv">6</span>)</a>
+<a class="sourceLine" id="cb33-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb33-11" data-line-number="11"><span class="co"># More complicated, but still graphs will be generated from 'stage' since it is first in model  </span></a>
+<a class="sourceLine" id="cb33-12" data-line-number="12">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage <span class="op">+</span><span class="st"> </span>batch)</a>
+<a class="sourceLine" id="cb33-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb33-14" data-line-number="14"><span class="co"># Using pheno_target we can change focus</span></a>
+<a class="sourceLine" id="cb33-15" data-line-number="15">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage <span class="op">+</span><span class="st"> </span>batch, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;batch&quot;</span>)) <span class="co"># No batch effect </span></a>
+<a class="sourceLine" id="cb33-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb33-17" data-line-number="17"><span class="co"># With pheno_target we can also change the direction fo the comparision change focus</span></a>
+<a class="sourceLine" id="cb33-18" data-line-number="18">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Stage3&quot;</span>, <span class="st">&quot;Stage1&quot;</span>))) <span class="co"># Zygotic transcription has not started</span></a>
+<a class="sourceLine" id="cb33-19" data-line-number="19">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Stage5&quot;</span>, <span class="st">&quot;Stage3&quot;</span>))) <span class="co"># Start of zygotic transcritption</span></a>
+<a class="sourceLine" id="cb33-20" data-line-number="20">output_deseq &lt;-<span class="st"> </span><span class="kw">PAC_deseq</span>(pac, <span class="dt">model=</span> <span class="op">~</span>stage, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Stage5&quot;</span>, <span class="st">&quot;Stage1&quot;</span>))) </a>
+<a class="sourceLine" id="cb33-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb33-22" data-line-number="22"><span class="co">## In the output you find PAC merged results, target plots and output_deseq   </span></a>
+<a class="sourceLine" id="cb33-23" data-line-number="23"><span class="kw">names</span>(output_deseq)</a>
+<a class="sourceLine" id="cb33-24" data-line-number="24">tibble<span class="op">::</span><span class="kw">as_tibble</span>(output_deseq<span class="op">$</span>result)</a></code></pre></div>
+</div>
+<div id="principal-component-analysis-pac_pca" class="section level2">
+<h2>5.3 Principal component analysis (PAC_pca)</h2>
+<p>The <code>PAC_pca</code> function uses the FactoMineR package to make a principle component analysis, from which scatter plots are plotted using the ggplot2 package. Here are some examples on how to use PAC_pca:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb34-2" data-line-number="2"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt_anno.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb34-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb34-4" data-line-number="4"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb34-5" data-line-number="5"><span class="co">## PCA analysis in seqpac </span></a>
+<a class="sourceLine" id="cb34-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb34-7" data-line-number="7"><span class="co"># As simple as possible </span></a>
+<a class="sourceLine" id="cb34-8" data-line-number="8">output_pca &lt;-<span class="st"> </span><span class="kw">PAC_pca</span>(pac)</a>
+<a class="sourceLine" id="cb34-9" data-line-number="9"><span class="kw">names</span>(output_pca)  <span class="co"># Two folders: graphs and pca results</span></a>
+<a class="sourceLine" id="cb34-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb34-11" data-line-number="11"><span class="co"># Using pheno_target</span></a>
+<a class="sourceLine" id="cb34-12" data-line-number="12">output_pca &lt;-<span class="st"> </span><span class="kw">PAC_pca</span>(pac, <span class="dt">pheno_target =</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>))</a>
+<a class="sourceLine" id="cb34-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb34-14" data-line-number="14"><span class="co"># Using pheno_target with sample labels</span></a>
+<a class="sourceLine" id="cb34-15" data-line-number="15">output_pca &lt;-<span class="st"> </span><span class="kw">PAC_pca</span>(pac, <span class="dt">pheno_target =</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">label=</span>pac<span class="op">$</span>Pheno<span class="op">$</span>sample)</a>
+<a class="sourceLine" id="cb34-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb34-17" data-line-number="17"><span class="co"># Plotting sequences instead</span></a>
+<a class="sourceLine" id="cb34-18" data-line-number="18">output_pca &lt;-<span class="st"> </span><span class="kw">PAC_pca</span>(pac, <span class="dt">type =</span> <span class="st">&quot;anno&quot;</span>, <span class="dt">anno_target =</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>))</a></code></pre></div>
+<div id="size-distribution-and-nucleotide-bias" class="section level3">
+<h3>5.4 Size distribution and nucleotide bias</h3>
+<p>There are two function that can plot size distributions using the <code>ggplot2</code> package:</p>
+<p>-<em>PAC_nbias:</em> First nuclotide bias -<em>PAC_sizedist:</em> (Biotype) size distribution</p>
+<p><strong>PAC_nbias</strong><br> First nuclotide bias can be visualzed without any advanced annotations added to the <code>PAC$Anno</code> table:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb35-2" data-line-number="2"><span class="co">## Nucleotide bias in seqpac </span></a>
+<a class="sourceLine" id="cb35-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb35-4" data-line-number="4"><span class="co"># Using master pac plotting 1st nt bias (default)</span></a>
+<a class="sourceLine" id="cb35-5" data-line-number="5"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb35-6" data-line-number="6">output_nbias &lt;-<span class="st"> </span><span class="kw">PAC_nbias</span>(pac_master)</a>
+<a class="sourceLine" id="cb35-7" data-line-number="7">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_nbias<span class="op">$</span>Histograms)</a>
+<a class="sourceLine" id="cb35-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb35-9" data-line-number="9"><span class="co"># Same but using filtered data</span></a>
+<a class="sourceLine" id="cb35-10" data-line-number="10"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt_anno.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb35-11" data-line-number="11">output_nbias &lt;-<span class="st"> </span><span class="kw">PAC_nbias</span>(pac)</a>
+<a class="sourceLine" id="cb35-12" data-line-number="12">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_nbias<span class="op">$</span>Histograms)</a>
+<a class="sourceLine" id="cb35-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb35-14" data-line-number="14"><span class="co"># Only miRNA (Oops, heavy T-bias on 1st nt; are they piRNA?)  </span></a>
+<a class="sourceLine" id="cb35-15" data-line-number="15"><span class="kw">table</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis0)</a>
+<a class="sourceLine" id="cb35-16" data-line-number="16">output_nbias &lt;-<span class="st"> </span><span class="kw">PAC_nbias</span>(pac, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, <span class="st">&quot;miRNA&quot;</span>) )</a>
+<a class="sourceLine" id="cb35-17" data-line-number="17">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_nbias<span class="op">$</span>Histograms)</a>
+<a class="sourceLine" id="cb35-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb35-19" data-line-number="19"><span class="co"># Switch to 10:th nt bias</span></a>
+<a class="sourceLine" id="cb35-20" data-line-number="20">output_nbias &lt;-<span class="st"> </span><span class="kw">PAC_nbias</span>(pac, <span class="dt">position=</span><span class="dv">10</span>, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, <span class="st">&quot;miRNA&quot;</span>))</a>
+<a class="sourceLine" id="cb35-21" data-line-number="21">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_nbias<span class="op">$</span>Histograms)</a>
+<a class="sourceLine" id="cb35-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb35-23" data-line-number="23"><span class="co"># Summarized over group cpm means</span></a>
+<a class="sourceLine" id="cb35-24" data-line-number="24">pac_test &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, </a>
+<a class="sourceLine" id="cb35-25" data-line-number="25">                        <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb35-26" data-line-number="26">output_nbias &lt;-<span class="st"> </span><span class="kw">PAC_nbias</span>(pac_test, <span class="dt">summary_target =</span> <span class="kw">list</span>(<span class="st">&quot;cpmMeans_stage&quot;</span>) )</a>
+<a class="sourceLine" id="cb35-27" data-line-number="27">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_nbias<span class="op">$</span>Histograms)</a></code></pre></div>
+<p><br> <strong>PAC_sizedist</strong><br> The size distribution also works in a similar fashion, but instead diveds the stacked columns using an anno_target:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb36-2" data-line-number="2"><span class="co">## Biotype size distribution</span></a>
+<a class="sourceLine" id="cb36-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb36-4" data-line-number="4"><span class="co"># Divide stacked bars by biotype with no mismach allowed  </span></a>
+<a class="sourceLine" id="cb36-5" data-line-number="5">output_sizedist_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">PAC_sizedist</span>(pac, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>))</a>
+<a class="sourceLine" id="cb36-6" data-line-number="6">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_sizedist_<span class="dv">1</span><span class="op">$</span>Histograms), <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">nrow=</span><span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb36-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb36-8" data-line-number="8"><span class="co"># Divide stacked bars by biotype with allowing up to 3 mismaches  </span></a>
+<a class="sourceLine" id="cb36-9" data-line-number="9">output_sizedist_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">PAC_sizedist</span>(pac, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis3&quot;</span>))</a>
+<a class="sourceLine" id="cb36-10" data-line-number="10">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_sizedist_<span class="dv">2</span><span class="op">$</span>Histograms), <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">nrow=</span><span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb36-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb36-12" data-line-number="12"><span class="co"># anno_target is order sensitive, thus can take care of color order issues:</span></a>
+<a class="sourceLine" id="cb36-13" data-line-number="13">ord_bio &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">unique</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis0))</a>
+<a class="sourceLine" id="cb36-14" data-line-number="14">ord_bio &lt;-<span class="st"> </span>ord_bio[<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">5</span>,<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">3</span>,<span class="dv">6</span>,<span class="dv">7</span>)] </a>
+<a class="sourceLine" id="cb36-15" data-line-number="15">output_sizedist_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">PAC_sizedist</span>(pac, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, ord_bio))</a>
+<a class="sourceLine" id="cb36-16" data-line-number="16">output_sizedist_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">PAC_sizedist</span>(pac, <span class="dt">anno_target =</span> <span class="kw">list</span>(<span class="st">&quot;Biotypes_mis3&quot;</span>, ord_bio))</a>
+<a class="sourceLine" id="cb36-17" data-line-number="17">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_sizedist_<span class="dv">1</span><span class="op">$</span>Histograms[<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>], output_sizedist_<span class="dv">2</span><span class="op">$</span>Histograms[<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>]), <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb36-18" data-line-number="18">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_sizedist_<span class="dv">1</span><span class="op">$</span>Histograms[<span class="dv">4</span><span class="op">:</span><span class="dv">6</span>], output_sizedist_<span class="dv">2</span><span class="op">$</span>Histograms[<span class="dv">4</span><span class="op">:</span><span class="dv">6</span>]), <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb36-19" data-line-number="19">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_sizedist_<span class="dv">1</span><span class="op">$</span>Histograms[<span class="dv">7</span><span class="op">:</span><span class="dv">9</span>], output_sizedist_<span class="dv">2</span><span class="op">$</span>Histograms[<span class="dv">7</span><span class="op">:</span><span class="dv">9</span>]), <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb36-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb36-21" data-line-number="21"><span class="co">## Note: #######################################################################</span></a>
+<a class="sourceLine" id="cb36-22" data-line-number="22"><span class="co"># 1. miRNA is clearly associated with the correct size (21-23) nt, which are   #</span></a>
+<a class="sourceLine" id="cb36-23" data-line-number="23"><span class="co"># dramatically increased in Stage 5 when zygotic transcription has started.    #</span></a>
+<a class="sourceLine" id="cb36-24" data-line-number="24"><span class="co"># 2. piRNA was deliberately left out from the fasta references. Note, however, #</span></a>
+<a class="sourceLine" id="cb36-25" data-line-number="25"><span class="co"># that there is a broad peak with no annotions between 20-30 nt in Stage 1,    #</span></a>
+<a class="sourceLine" id="cb36-26" data-line-number="26"><span class="co"># which also showed a T-bias at the first nt. These are likely piRNA.          #  </span></a>
+<a class="sourceLine" id="cb36-27" data-line-number="27"><span class="co">################################################################################</span></a></code></pre></div>
+</div>
+</div>
+<div id="simple-stacked-bars-and-pie-charts" class="section level2">
+<h2>5.5 Simple stacked bars and pie charts</h2>
+<p>The <code>PAC_stackbar</code> and <code>PAC_pie</code> have the same arguments as input but with slightly different outputs. None of them have target_summary input argument. Instead summaries over groups in <code>PAC$Pheno</code> are controlled på the ‘summary’ argument.</p>
+<pre><code>summary= &quot;all&quot;    | % are generate over a mean of all samples
+summary= &quot;sample&quot; | % are generate for each sample
+summary= &quot;pheno&quot;  | Group % are derived from the pheno_target object</code></pre>
+<p><br></p>
+<p><strong>PAC_stackbar</strong><br></p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb38-2" data-line-number="2"><span class="co">## Stacked bars in seqpac </span></a>
+<a class="sourceLine" id="cb38-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb38-4" data-line-number="4"><span class="co"># Choose an anno_target and plot samples (summary=&quot;samples&quot;)</span></a>
+<a class="sourceLine" id="cb38-5" data-line-number="5"><span class="kw">PAC_stackbar</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>))</a>
+<a class="sourceLine" id="cb38-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb38-7" data-line-number="7"><span class="co"># 'no_anno' and 'other' will always end on top not matter the order</span></a>
+<a class="sourceLine" id="cb38-8" data-line-number="8">ord_bio &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">sort</span>(<span class="kw">unique</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis3)))</a>
+<a class="sourceLine" id="cb38-9" data-line-number="9">p1 &lt;-<span class="st"> </span><span class="kw">PAC_stackbar</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, ord_bio))</a>
+<a class="sourceLine" id="cb38-10" data-line-number="10">p2 &lt;-<span class="st"> </span><span class="kw">PAC_stackbar</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, <span class="kw">rev</span>(ord_bio)))</a>
+<a class="sourceLine" id="cb38-11" data-line-number="11">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">list</span>(p1, p2))</a>
+<a class="sourceLine" id="cb38-12" data-line-number="12"><span class="co"># (Hint: if you want them to appear not on top, rename them)</span></a>
+<a class="sourceLine" id="cb38-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb38-14" data-line-number="14"><span class="co"># Reorder samples by pheno_targets</span></a>
+<a class="sourceLine" id="cb38-15" data-line-number="15"><span class="kw">PAC_stackbar</span>(pac, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;batch&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;samples&quot;</span>, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>))</a>
+<a class="sourceLine" id="cb38-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb38-17" data-line-number="17"><span class="co"># Summarized over pheno_target </span></a>
+<a class="sourceLine" id="cb38-18" data-line-number="18"><span class="co"># (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary=&quot;pheno&quot;)</span></a>
+<a class="sourceLine" id="cb38-19" data-line-number="19"><span class="kw">PAC_stackbar</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;pheno&quot;</span>, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>))</a></code></pre></div>
+<p><br></p>
+<p><strong>PAC_pie</strong><br></p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb39-2" data-line-number="2"><span class="co">## Pie chart in seqpac </span></a>
+<a class="sourceLine" id="cb39-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb39-4" data-line-number="4"><span class="co"># Choose an anno_target and plot samples (summary=&quot;samples&quot;; default)</span></a>
+<a class="sourceLine" id="cb39-5" data-line-number="5">output_pie &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>))</a>
+<a class="sourceLine" id="cb39-6" data-line-number="6">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_pie)</a>
+<a class="sourceLine" id="cb39-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb39-8" data-line-number="8">output_pie &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis3&quot;</span>))</a>
+<a class="sourceLine" id="cb39-9" data-line-number="9">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>output_pie, <span class="dt">ncol=</span><span class="dv">3</span>, <span class="dt">scale =</span> <span class="fl">0.8</span>)</a>
+<a class="sourceLine" id="cb39-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb39-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb39-12" data-line-number="12"><span class="co"># Make ordered pie charts of grand mean percent of all samples</span></a>
+<a class="sourceLine" id="cb39-13" data-line-number="13">ord_bio &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">sort</span>(<span class="kw">unique</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis3)), <span class="kw">unique</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis0))</a>
+<a class="sourceLine" id="cb39-14" data-line-number="14">output_pie_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, ord_bio), <span class="dt">summary=</span><span class="st">&quot;all&quot;</span>)</a>
+<a class="sourceLine" id="cb39-15" data-line-number="15">output_pie_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis3&quot;</span>, ord_bio), <span class="dt">summary=</span><span class="st">&quot;all&quot;</span>)</a>
+<a class="sourceLine" id="cb39-16" data-line-number="16">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_pie_<span class="dv">1</span>, output_pie_<span class="dv">2</span>), <span class="dt">nrow=</span><span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb39-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb39-18" data-line-number="18"><span class="co"># Rotate</span></a>
+<a class="sourceLine" id="cb39-19" data-line-number="19"><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;all&quot;</span>, <span class="dt">angle=</span><span class="dv">180</span>)</a>
+<a class="sourceLine" id="cb39-20" data-line-number="20"><span class="kw">PAC_pie</span>(pac, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;all&quot;</span>, <span class="dt">angle=</span><span class="dv">40</span>)</a>
+<a class="sourceLine" id="cb39-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb39-22" data-line-number="22"><span class="co"># Compare biotype mapping with or without mismaches and group by PAC$Pheno</span></a>
+<a class="sourceLine" id="cb39-23" data-line-number="23"><span class="co"># (Notice: all stages gains a lot of 'hidden' lncRNA by allowing mismatches)</span></a>
+<a class="sourceLine" id="cb39-24" data-line-number="24">ord_bio &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">sort</span>(<span class="kw">unique</span>(pac<span class="op">$</span>Anno<span class="op">$</span>Biotypes_mis0)))  <span class="co"># Make sure that both get same biotype order</span></a>
+<a class="sourceLine" id="cb39-25" data-line-number="25">output_mis0 &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;pheno&quot;</span>, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis0&quot;</span>, ord_bio))</a>
+<a class="sourceLine" id="cb39-26" data-line-number="26">output_mis3 &lt;-<span class="st"> </span><span class="kw">PAC_pie</span>(pac, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">summary=</span><span class="st">&quot;pheno&quot;</span>, <span class="dt">anno_target=</span><span class="kw">list</span>(<span class="st">&quot;Biotypes_mis3&quot;</span>, ord_bio))</a>
+<a class="sourceLine" id="cb39-27" data-line-number="27">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span><span class="kw">c</span>(output_mis0, output_mis3), <span class="dt">labels =</span> <span class="kw">names</span>(<span class="kw">c</span>(output_mis0, output_mis3)), <span class="dt">nrow=</span><span class="dv">2</span>)</a></code></pre></div>
+<p><br> <br></p>
+<hr />
+</div>
+</div>
+<div id="specilized-analysis-in-seqpac" class="section level1">
+<h1>Specilized analysis in seqpac</h1>
+<p>Seqpac functions may be used for more advanced analysis than simple classification. For example, we can dwell deeper into the details between the alignments of reads and references, by for example classify reads depending on where it align. The best example of such advanced alignment analysis is tRNA loop and range classification. We may also want to make further annotations of specific classes of reads, such as classifying piRNA depending on overlap with transposible elements and genes.</p>
+<p>In the current version of this guide we have only included a section on how to do advanced alignment analysis for the purpose of tRNA classification, but please see the <code>PAC_gtf</code> function to for customized workflows for repeats and ensembl gene analysis.</p>
+<p><br></p>
+<div id="advanced-alignment-analysis-trna-class-analysis" class="section level2">
+<h2>6.1 Advanced alignment analysis (tRNA class analysis)</h2>
+<p>So far, classification of sRNA has only involved whether reads align or not align to for example a tRNA reference sequence. Type classification of tRNA, such as 5’, 3’, i’ and half, tRF (as best discribed in the MINTmap tool ://pubmed.ncbi.nlm.nih.gov/28220888/), resembles mapping against a reference genome. Obtaining the exact coordinates of where a read align to the reference allows us to plot coverage plots showing the coverage of sRNA across the reference.</p>
+<p><br> Conveniently, seqpac contains a backdoor to the reanno workflow, which allows the user to quickly obtain mapping coordinates of sequences in a PAC object that aligns to a refeference fasta file. This is done by the <code>PAC_mapper</code> function. This wrapper uses temporary output files from bowtie to generate a map object, which simply lists the reads that mapped to each sequence in the reference.</p>
+<p><br> After a map object has been generated, the <code>PAC_covplot</code> function can make coverage plots of reads mapping to each reference. Lets have a look on how it works in seqpac for advanced tRNA analysis using the test dataset:</p>
+<p><br></p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" data-line-number="1"><span class="kw">library</span>(seqpac)</a>
+<a class="sourceLine" id="cb40-2" data-line-number="2"><span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;drosophila_sRNA_pac_filt_anno.Rdata&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;seqpac&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb40-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb40-4" data-line-number="4"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb40-5" data-line-number="5"><span class="co">## tRNA analysis in seqpac </span></a>
+<a class="sourceLine" id="cb40-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb40-7" data-line-number="7"><span class="co"># First create an annotation blanc PAC with group means</span></a>
+<a class="sourceLine" id="cb40-8" data-line-number="8">pac<span class="op">$</span>Anno &lt;-<span class="st"> </span>pac<span class="op">$</span>Anno[,<span class="dv">1</span>, drop=<span class="ot">FALSE</span>]</a>
+<a class="sourceLine" id="cb40-9" data-line-number="9">pac_trna &lt;-<span class="st"> </span><span class="kw">PAC_summary</span>(pac, <span class="dt">norm =</span> <span class="st">&quot;cpm&quot;</span>, <span class="dt">type =</span> <span class="st">&quot;means&quot;</span>, <span class="dt">pheno_target=</span><span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>), <span class="dt">merge_pac =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb40-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb40-11" data-line-number="11"><span class="co"># Then reannotate only tRNA using the PAC_mapper function</span></a>
+<a class="sourceLine" id="cb40-12" data-line-number="12">ref &lt;-<span class="st"> &quot;/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa&quot;</span>  <span class="co"># Your path to tRNA fasta </span></a>
+<a class="sourceLine" id="cb40-13" data-line-number="13">map_object &lt;-<span class="st"> </span><span class="kw">PAC_mapper</span>(pac_trna, <span class="dt">ref=</span>ref, <span class="dt">N_up =</span> <span class="st">&quot;NNN&quot;</span>, <span class="dt">N_down =</span> <span class="st">&quot;NNN&quot;</span>, <span class="dt">mapper=</span><span class="st">&quot;reanno&quot;</span>, <span class="dt">mismatches=</span><span class="dv">0</span>, <span class="dt">threads=</span><span class="dv">8</span>, <span class="dt">report_string=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb40-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb40-15" data-line-number="15"><span class="co">### Hint:</span></a>
+<a class="sourceLine" id="cb40-16" data-line-number="16"><span class="co"># By adding N_up ad N_down you can make sure that modified fragments (like 3'</span></a>
+<a class="sourceLine" id="cb40-17" data-line-number="17"><span class="co"># -CAA in mature tRNA are included).</span></a>
+<a class="sourceLine" id="cb40-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb40-19" data-line-number="19"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb40-20" data-line-number="20"><span class="co">## Coverage plot of tRNA using PAC_covplot</span></a>
+<a class="sourceLine" id="cb40-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb40-22" data-line-number="22"><span class="co"># Single tRNA targeting a summary dataframe </span></a>
+<a class="sourceLine" id="cb40-23" data-line-number="23"><span class="kw">PAC_covplot</span>(pac_trna, <span class="dt">map=</span>map_object, <span class="dt">summary_target=</span> <span class="kw">list</span>(<span class="st">&quot;cpmMeans_stage&quot;</span>), <span class="dt">map_target=</span><span class="st">&quot;tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)&quot;</span>)</a>
+<a class="sourceLine" id="cb40-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb40-25" data-line-number="25"><span class="co"># Find tRNAs with many fragments</span></a>
+<a class="sourceLine" id="cb40-26" data-line-number="26">n_tRFs &lt;-<span class="st"> </span><span class="kw">unlist</span>(<span class="kw">lapply</span>(map_object, <span class="cf">function</span>(x){<span class="kw">nrow</span>(x[[<span class="dv">2</span>]])}))</a>
+<a class="sourceLine" id="cb40-27" data-line-number="27"><span class="kw">table</span>(n_tRFs)</a>
+<a class="sourceLine" id="cb40-28" data-line-number="28"><span class="kw">names</span>(map_object)[n_tRFs<span class="op">&gt;</span><span class="dv">2</span>]</a>
+<a class="sourceLine" id="cb40-29" data-line-number="29">selct &lt;-<span class="st"> </span>(<span class="kw">names</span>(map_object)[n_tRFs<span class="op">&gt;</span><span class="dv">1</span>])[<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">16</span>, <span class="dv">25</span>, <span class="dv">43</span>)]</a>
+<a class="sourceLine" id="cb40-30" data-line-number="30">cov_plt &lt;-<span class="st"> </span><span class="kw">PAC_covplot</span>(pac_trna, <span class="dt">map=</span>map_object, <span class="dt">summary_target=</span> <span class="kw">list</span>(<span class="st">&quot;cpmMeans_stage&quot;</span>), <span class="dt">map_target=</span>selct)</a>
+<a class="sourceLine" id="cb40-31" data-line-number="31">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(<span class="dt">plotlist=</span>cov_plt, <span class="dt">nrow=</span><span class="dv">2</span>, <span class="dt">ncol=</span><span class="dv">2</span>)</a></code></pre></div>
+<p><br> Now, tRNAs can be further classified into isodecoder and isoacceptors. This information is usually provided within the reference names in a tRNA fasta reference file. Thus, it can be extracted from these names.</p>
+<p><br> Classification of cleavage products, like 5’and 3’ halves etc, are more complicated. Such classification involves knowledge of where in the full tRNA sequence loops (A-loop, anticodon loop and T-loop) are likely to occur. There are external software that predict loop from models of secondary structures. One of the most popular tools for predicting tRNA secondary structures are tRNAscan-SE (<a href="http://lowelab.ucsc.edu/tRNAscan-SE/" class="uri">http://lowelab.ucsc.edu/tRNAscan-SE/</a>). The output from this software is an ss file, which stores loop information in the following format:</p>
+<pre><code>Full length tRNA: tRNA-Pro-CGG-2-1_chrX:18565764-18565835_(+)
+GGCTCGTTGGTCTAGAGGTATGATTCTCGCTTCGGGTGCGAGAGGTCCCGGGTTCAATTCCCGGACGAGCCC
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;..&gt;&gt;&gt;.........&lt;&lt;&lt;.&gt;&gt;&gt;&gt;&gt;.......&lt;&lt;&lt;&lt;&lt;.....&gt;&gt;&gt;&gt;&gt;.......&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;.
+              Loop 1           Loop 2                Loop 3                  </code></pre>
+<p><br> You may notice that each loop is contain between “&gt;&gt;&gt;…&lt;&lt;&lt;” and that each character (“.&gt;&lt;”) corresponds to one nucleotide in the original full length tRNA. Ss-files for most common genomes are readily available for download at <a href="http://gtrnadb.ucsc.edu/" class="uri">http://gtrnadb.ucsc.edu/</a>.</p>
+<p><br> In seqpac, the <code>map_rangetype</code> function is used to futher annotate the resulting map object obtained using the <code>PAC_mapper</code> function. First, if tRNA reference names were provided in the correct tRNAscan-SE format (eg. “tRNA-Pro-CGG-2-1_chrX:18565764-18565835_(+): format: name -&gt; genome coordinates -&gt; strand), it will automatically extract the isodecoder (e.g.”Pro“) and isoacceptor (e.g.”CGG&quot;) and make them seperate factors. It may also classify eached mapped PAC sequence in relation to the start and end terminals of the full length tRNA. Lastly, given an ss file, it can annotate PAC sequences in relation to tRNA loops. The <code>tRNA_class</code> function can then combine the information in the mapping object and to classify each read sequence in the PAC object. Lets have a look on how this is done:</p>
+<p><br></p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb42-2" data-line-number="2"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb42-3" data-line-number="3"><span class="co">## Analyze range types with map_rangetype and PAC_trna functions</span></a>
+<a class="sourceLine" id="cb42-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb42-5" data-line-number="5"><span class="co"># Download ss object from GtRNAdb </span></a>
+<a class="sourceLine" id="cb42-6" data-line-number="6">dest_path &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span class="st">&quot;/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz&quot;</span>)</a>
+<a class="sourceLine" id="cb42-7" data-line-number="7"><span class="kw">download.file</span>(<span class="dt">url=</span><span class="st">&quot;http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz&quot;</span>, <span class="dt">destfile=</span>dest_path)</a>
+<a class="sourceLine" id="cb42-8" data-line-number="8"><span class="kw">untar</span>(dest_path, <span class="dt">exdir=</span> <span class="kw">dirname</span>(dest_path), <span class="dt">files =</span> <span class="st">&quot;dm6-tRNAs-confidence-set.ss&quot;</span>)</a>
+<a class="sourceLine" id="cb42-9" data-line-number="9">ss_file &lt;-<span class="st"> &quot;/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss&quot;</span></a>
+<a class="sourceLine" id="cb42-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb42-11" data-line-number="11"><span class="co"># Classify fragments according to loop cleavage (small loops are omitted)       </span></a>
+<a class="sourceLine" id="cb42-12" data-line-number="12">map_object_ss &lt;-<span class="st"> </span><span class="kw">map_rangetype</span>(map_object, <span class="dt">type=</span><span class="st">&quot;ss&quot;</span>, <span class="dt">ss=</span>ss_file, <span class="dt">min_loop_width=</span><span class="dv">4</span>)            </a>
+<a class="sourceLine" id="cb42-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb42-14" data-line-number="14"><span class="co"># Remove reference tRNAs with no hits</span></a>
+<a class="sourceLine" id="cb42-15" data-line-number="15">map_object_ss &lt;-<span class="st">  </span>map_object_ss[<span class="op">!</span><span class="kw">unlist</span>(<span class="kw">lapply</span>(map_object_ss, <span class="cf">function</span>(x){x[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">==</span><span class="st"> &quot;no_hits&quot;</span>}))]</a>
+<a class="sourceLine" id="cb42-16" data-line-number="16">map_object_ss[[<span class="dv">2</span>]]</a>
+<a class="sourceLine" id="cb42-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb42-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb42-19" data-line-number="19"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb42-20" data-line-number="20"><span class="co">## Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves</span></a>
+<a class="sourceLine" id="cb42-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb42-22" data-line-number="22"><span class="co"># Does all tRNAs have 3 loops?</span></a>
+<a class="sourceLine" id="cb42-23" data-line-number="23"><span class="kw">table</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(map_object_ss, <span class="cf">function</span>(x){<span class="kw">unique</span>(x<span class="op">$</span>Alignments<span class="op">$</span>n_ssloop)})))</a>
+<a class="sourceLine" id="cb42-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb42-25" data-line-number="25"><span class="co"># Set tolerance for classification as a terminal tRF</span></a>
+<a class="sourceLine" id="cb42-26" data-line-number="26">tolerance &lt;-<span class="st"> </span><span class="dv">5</span>  <span class="co"># 2 nucleotides from start or end of full-length tRNA)</span></a>
+<a class="sourceLine" id="cb42-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb42-28" data-line-number="28"><span class="co">### Important:</span></a>
+<a class="sourceLine" id="cb42-29" data-line-number="29"><span class="co"># We set N_up and N_down to &quot;NNN&quot; in the PAC_mapper step. To make sure</span></a>
+<a class="sourceLine" id="cb42-30" data-line-number="30"><span class="co"># that we have a tolerance that include the original tRNA sequence</span></a>
+<a class="sourceLine" id="cb42-31" data-line-number="31"><span class="co"># we set terminal= 2+3 (5).  </span></a>
+<a class="sourceLine" id="cb42-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb42-33" data-line-number="33"><span class="co">## tRNA classifying function </span></a>
+<a class="sourceLine" id="cb42-34" data-line-number="34"><span class="co"># Apply the tRNA_class function and make a tRNA type column</span></a>
+<a class="sourceLine" id="cb42-35" data-line-number="35">pac_trna &lt;-<span class="st"> </span><span class="kw">tRNA_class</span>(pac_trna, <span class="dt">map=</span>map_object_ss, <span class="dt">terminal=</span>tolerance)</a>
+<a class="sourceLine" id="cb42-36" data-line-number="36">pac_trna<span class="op">$</span>Anno<span class="op">$</span>type &lt;-<span class="st"> </span><span class="kw">paste0</span>(pac_trna<span class="op">$</span>Anno<span class="op">$</span>decoder, pac_trna<span class="op">$</span>Anno<span class="op">$</span>acceptor)</a>
+<a class="sourceLine" id="cb42-37" data-line-number="37"><span class="kw">head</span>(pac_trna<span class="op">$</span>Anno)</a></code></pre></div>
+<p><br> When classification by isoacceptor/decoder and cleavage type has been done, the <code>PAC_trna</code> function can be applied to generate pheno group differences in relation to tRNA fragmentation:</p>
+<p><br></p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb43-2" data-line-number="2"><span class="co">###---------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb43-3" data-line-number="3"><span class="co">## Plotting tRNA types</span></a>
+<a class="sourceLine" id="cb43-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb43-5" data-line-number="5"><span class="co"># Now use PAC_trna to generate some graphs based on grand means</span></a>
+<a class="sourceLine" id="cb43-6" data-line-number="6">trna_result &lt;-<span class="st"> </span><span class="kw">PAC_trna</span>(pac_trna, <span class="dt">norm=</span><span class="st">&quot;cpm&quot;</span>, <span class="dt">filter =</span> <span class="ot">NULL</span>,</a>
+<a class="sourceLine" id="cb43-7" data-line-number="7">  <span class="dt">join =</span> <span class="ot">TRUE</span>, <span class="dt">top =</span> <span class="dv">15</span>, <span class="dt">log2fc =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb43-8" data-line-number="8">  <span class="dt">pheno_target =</span> <span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Stage1&quot;</span>, <span class="st">&quot;Stage3&quot;</span>)), </a>
+<a class="sourceLine" id="cb43-9" data-line-number="9">  <span class="dt">anno_target_1 =</span> <span class="kw">list</span>(<span class="st">&quot;type&quot;</span>),</a>
+<a class="sourceLine" id="cb43-10" data-line-number="10">  <span class="dt">anno_target_2 =</span> <span class="kw">list</span>(<span class="st">&quot;class&quot;</span>))</a>
+<a class="sourceLine" id="cb43-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb43-12" data-line-number="12"><span class="kw">names</span>(trna_result)</a>
+<a class="sourceLine" id="cb43-13" data-line-number="13"><span class="kw">names</span>(trna_result<span class="op">$</span>plots)</a>
+<a class="sourceLine" id="cb43-14" data-line-number="14"><span class="kw">names</span>(trna_result<span class="op">$</span>plots<span class="op">$</span>Expression_Anno_<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb43-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb43-16" data-line-number="16">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(trna_result<span class="op">$</span>plots<span class="op">$</span>Expression_Anno_<span class="dv">1</span><span class="op">$</span>Grand_means,</a>
+<a class="sourceLine" id="cb43-17" data-line-number="17">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Log2FC_Anno_<span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb43-18" data-line-number="18">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Percent_bars<span class="op">$</span>Grand_means,</a>
+<a class="sourceLine" id="cb43-19" data-line-number="19">                   <span class="dt">nrow=</span><span class="dv">1</span>, <span class="dt">ncol=</span><span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb43-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb43-21" data-line-number="21"><span class="co"># By setting join = FALSE you will get group means</span></a>
+<a class="sourceLine" id="cb43-22" data-line-number="22">trna_result &lt;-<span class="st"> </span><span class="kw">PAC_trna</span>(pac_trna, <span class="dt">norm=</span><span class="st">&quot;cpm&quot;</span>, <span class="dt">filter =</span> <span class="ot">NULL</span>,</a>
+<a class="sourceLine" id="cb43-23" data-line-number="23">  <span class="dt">join =</span> <span class="ot">FALSE</span>, <span class="dt">top =</span> <span class="dv">15</span>, <span class="dt">log2fc =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb43-24" data-line-number="24">  <span class="dt">pheno_target =</span> <span class="kw">list</span>(<span class="st">&quot;stage&quot;</span>, <span class="kw">c</span>(<span class="st">&quot;Stage1&quot;</span>, <span class="st">&quot;Stage3&quot;</span>)), </a>
+<a class="sourceLine" id="cb43-25" data-line-number="25">  <span class="dt">anno_target_1 =</span> <span class="kw">list</span>(<span class="st">&quot;type&quot;</span>),</a>
+<a class="sourceLine" id="cb43-26" data-line-number="26">  <span class="dt">anno_target_2 =</span> <span class="kw">list</span>(<span class="st">&quot;class&quot;</span>))</a>
+<a class="sourceLine" id="cb43-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb43-28" data-line-number="28"><span class="kw">names</span>(trna_result<span class="op">$</span>plots<span class="op">$</span>Expression_Anno_<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb43-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb43-30" data-line-number="30">cowplot<span class="op">::</span><span class="kw">plot_grid</span>(trna_result<span class="op">$</span>plots<span class="op">$</span>Expression_Anno_<span class="dv">1</span><span class="op">$</span>Stage1,</a>
+<a class="sourceLine" id="cb43-31" data-line-number="31">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Expression_Anno_<span class="dv">1</span><span class="op">$</span>Stage3,</a>
+<a class="sourceLine" id="cb43-32" data-line-number="32">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Log2FC_Anno_<span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb43-33" data-line-number="33">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Percent_bars<span class="op">$</span>Stage1,</a>
+<a class="sourceLine" id="cb43-34" data-line-number="34">                   trna_result<span class="op">$</span>plots<span class="op">$</span>Percent_bars<span class="op">$</span>Stage3,</a>
+<a class="sourceLine" id="cb43-35" data-line-number="35">                   <span class="dt">nrow=</span><span class="dv">1</span>, <span class="dt">ncol=</span><span class="dv">5</span>)</a></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
