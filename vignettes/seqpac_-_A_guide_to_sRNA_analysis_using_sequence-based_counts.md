@@ -1,13 +1,14 @@
 ---
-# seqpac - A guide to sRNA analysis using sequence-based counts
-
-<br>
-
-### Daniel Nätt
-2021-04-08
-
-<br>
-
+title: "seqpac - A guide to sRNA analysis using sequence-based counts"
+author: "Daniel Nätt"
+date: "2021-04-08"
+output: 
+  html_document:
+    keep_md: true
+vignette: >
+  %\VignetteIndexEntry{seqpac - A guide to sRNA analysis using sequence-based counts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 
