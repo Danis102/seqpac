@@ -10,7 +10,7 @@
 #' diversity of sequences for the original dataset. Approaching the plateau,
 #' usually means that the sequencing depth of the library have sampled the full
 #' population of sequences available in the sample. Here we use an none-linear
-#' least square (\code{nls}) model with a self-starter for asymptotic
+#' least square (\code{\link{nls}}) model with a self-starter for asymptotic
 #' regresssion (\code{SSasympt}) to describe the rate in which the library
 #' approaches the plateau.
 #' 
@@ -24,22 +24,36 @@
 #'   step (default=10).
 #' @param steps Integer the number of percentage steps between 0-100% of the
 #'   original dataset (default=10).
-#' @param thresh Integer vector containing mean count thresholds that will
-#'   be targeted. Default is set to c(1,10), where each new occurance (>=1) and
-#'   each new occurance reaching 10 counts (>=10) will be analyzed.
+#' @param thresh Integer vector containing mean count thresholds that will be
+#'   targeted. Default is set to c(1,10), where each new occurance reaching 1
+#'   count (>=1) and each new occurance reaching 10 counts (>=10) will be
+#'   analyzed.
 #' @param threads Number of cores to be used for performing the permutations.
 #'
 #' @return A list with ggplot2 graph objects: The 1:st graph shows
 #'   saturation/diversity result at the 1:st threshold. The 2:nd graph shows
 #'   saturation/diversity result at the 2:nd threshold, etc.
 #' @examples
-#'
-#' library(seqpac)
-#' path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/"
-#' load(file=paste0(path, "PAC_all.Rdata"))
 #' 
-#' plot_lst  <- PAC_saturation(PAC, resample=10, steps=10, thresh=c(1,500), threads=8)
-#' cowplot::plot_grid(plot_lst$A,plot_lst$B)
+#'
+#' # OBS! The example below is using already down-sampled data. Still sequence
+#' # diversity is rather saturated on >=1 occurance. meaning that most sequences
+#' # in the samples has been caught. Nonetheless, sequences reaching >=2
+#' # occurences are not on plateau.
+#' 
+#' library(seqpac)
+#' 
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' 
+#' plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=8)
+#' names(plot_lst)
+#' cowplot::plot_grid(plotlist=plot_lst)
+#'
+#' # Any number of thresholds
+#' plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1), threads=8)
+#' names(plot_lst)
+#' cowplot::plot_grid(plotlist=plot_lst)
+#'
 #'
 #' @export
 #'
@@ -78,7 +92,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
                                                                             df$perc <- x_vect[i]
                                                                             return(df)
                               }
-                               doParallel::stopImplicitCluster()
+                              doParallel::stopImplicitCluster()
                               dat <- as.data.frame(do.call("rbind", resampl_sub_lst))
                               ## Add intercept and fix classes  
                               intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),]
@@ -112,13 +126,13 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
                                                           good_fit <- round(cor(dat_sub$value, y_predict), digits=4)
                                                           plateau_rate <- round(exp(summary(fm1)$coefficients["lrc","Estimate"]), digits=4)
                                                           p <- p + ggplot2::stat_smooth(method = "nls", formula = y ~ SSasymp(x, Asym, R0, lrc), se = FALSE, fullrange = TRUE)
-                                                          return(p + annotate(geom = "text", x = 105, 
+                                                          return(p + ggplot2::annotate(geom = "text", x = 105, 
                                                                               y = max(dat_sub$value)*0.5, 
                                                                               label = paste0("Plateau rate=", plateau_rate, "\nGood.of.fit=", good_fit), 
                                                                               hjust = "left"))
                                                 }else{          
                                                           p <- p + ggplot2::stat_smooth(method = "gam", formula = y ~ s(x), size = 1, fullrange=TRUE)
-                                                          return(p + annotate(geom = "text", x = 105, 
+                                                          return(p + ggplot2::annotate(geom = "text", x = 105, 
                                                                               y = max(dat_sub$value)*0.5, 
                                                                               label = paste0("Asymptotic nls failed\nstat_smooth='gam', y ~ s(x)\nmodel was used instead"),
                                                                               hjust = "left"))
@@ -134,7 +148,8 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
                                                           # slp <- round((y_predct[2]-y_predct[1])/((size*(x_val[2]*0.01))-size), digits=2)
                                                           # return(p + annotate(geom = "text", x = 120, y = y_predct[1]*0.8, label = paste0("Size normalized\npredicted slope=", slp), hjust = "left"))
                                                 }) 
-
+                             
+                             names(plots) <- paste("thresh", 1:length(thresh), sep="_")
                              return(plots)
                              options(scipen=0)
                             }

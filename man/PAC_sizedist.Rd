@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_sizedist.R
 \name{PAC_sizedist}
 \alias{PAC_sizedist}
-\title{Generates a size distribution analysis from sequences and counts in a PAC object}
+\title{Generates size distribution plots from sequences and counts in a PAC object}
 \usage{
 PAC_sizedist(
   PAC,
@@ -43,40 +43,37 @@ A list of objects:
               4th object (Error_bars::Groups): Error bar plots with mean ratio of each nucleotide per group over the specified range.
 }
 \description{
-\code{PAC_sizedist} analyses nucleotide bias.
+\code{PAC_sizedist} plotting nucleotide bias.
 }
 \details{
-Given a PAC object the function will attempt to extract the ratios of
-specific biotypes at a given position in sequences of the Anno data.frame
-in relation to the sequence counts in Counts.
+Given a PAC object the function will attempt to order sequences by their size
+(number of nucleotides) and extract the ratios of specific classifications
+(e.g. sRNA classes) at each size point.
 }
 \examples{
 
-
+##########################################
+### Stacked bars in seqpac 
+##----------------------------------------
 library(seqpac)
-load("/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-PAC_filt <- PAC_rpm(PAC_filt)
-PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
 
-hierarchy <- list( Mt_rRNA= "12S|16S|Mt_rRNA",
-                rRNA="5S|5.8S|18S|28S|S45|Ensembl_rRNA|rRNA_Other",
-                Mt_tRNA= "tRNA_mt-tRNA",
-               tRNA="Ensembl_tRNA|tRNA_nuc-tRNA",
-               miRNA="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-               piRNA="piRNA")
-hierarchy <- hierarchy[c(5,1,2,3,4,6)]          
-as.data.frame(names(hierarchy))              
+# Choose an anno_target and plot samples (summary="samples")
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
 
-PAC_filt <- simplify_reanno(PAC_filt, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", PAC_merge=TRUE)
+# 'no_anno' and 'other' will always end on top not matter the order
+ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)))
+p1 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", ord_bio))
+p2 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", rev(ord_bio)))
+cowplot::plot_grid(plotlist=list(p1, p2))
 
-ord <- c("no_anno", "other", "miRNA", "tRNA", "Mt_tRNA", "rRNA", "Mt_rRNA",  "piRNA")
+# Reorder samples by pheno_targets
+PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", anno_target=list("Biotypes_mis0"))
 
-sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("rpmMeans_Method"))
-cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 1)
-
-sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("Method", "TGIRT"))
-cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 2, ncol = 2)
+# Summarized over pheno_target 
+# (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary="pheno")
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno", pheno_target=list("stage"))
 
 
 }
@@ -98,7 +95,6 @@ Other PAC analysis:
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_pirna}()},
-\code{\link{PAC_rpm}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},

@@ -3,31 +3,40 @@
 #' \code{PAC_summary} summarizes data stored in a PAC object.
 #'
 #' Given a PAC object this function summarize data in PAC$Counts or in the norm
-#' 'folder' according to a grouping variable in PAC$Pheno.
+#' 'folder' according to a grouping columns in PAC$Pheno.
 #' 
 #' @family PAC analysis
 #' 
 #' @seealso \url{https://github.com/Danis102} for updates on the current
 #' package.
 #'
-#' @param PAC PAC object containing a Pheno dataframe with samples as row names,
-#'   a Counts table with raw counts, and a normalized list-folder containing
-#'   tables with normalized Counts (e.g. cpm).
-#'
+#' @param PAC PAC object containing a Pheno data.frame with samples as row
+#'   names and a Counts table with raw counts. Optionally, the PAC object may
+#'   contain normalized counts tables, saved in the norm list ('folder'). Such
+#'   normalized table can be generated using the \code{\link{PAC_norm}}
+#'   function.
+#'   
 #' @param norm Character indicating what type of data to be used. If 'counts' the raw
 #'   counts in Counts will be used (default). Given any other value, the
-#'   function will search for the value as a name on a dataframe stored in the
-#'   normalized list-folder (created for example by PAC_norm).
+#'   function will search for the value as a name on a data.frame stored in the
+#'   normalized list-folder.
 #'
 #' @param type Character indicating what type of summary to be applied to the
-#'   data.
+#'   data. The function currently supports:
+#'   type="means"         # Group means
+#'   type="sd"            # Group standard deviation
+#'   type="se"            # Group standard error of the mean
+#'   type="log2FC"        # Group log2 fold changes against other groups
+#'   type="log2FCgrand"   # Group log2 fold changes against a grand mean 
+#'   type="percentgrand"  # Group log2 fold changes against a grand mean 
+
 #'
 #' @param pheno_target List with: 1st object being a character vector
 #'   of target column in Pheno 2nd object being a character vector of the target
 #'   group(s) in the target Pheno column (1st object).
 #'   
-#' @param rev Logical whether pairwise comparisions should be reversed
-#'   (default=FALSE).
+#' @param rev Logical whether pairwise comparisions (e.g. log2FC) should be
+#'   reversed (default=FALSE).
 #'   
 #' @param merge_pac Logical whether simplified annotation vector should
 #'   automatically be added to the Anno object of the input PAC list object
@@ -38,26 +47,30 @@
 #'   pheno_target, type and norm input.
 #'
 #' @examples
-#' load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
 #' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
 #' PAC_check(PAC_filt) # TRUE
-#'
-#'
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method", NULL))
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Method", NULL))
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand", pheno_target=list("Method"))
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FCgrand")
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "percentgrand")
 #' 
-#' PAC_test <- PAC_summary(PAC_filt, norm = "rpm", type = "log2FC", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
-#' PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "means", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
-#' PAC_test <- PAC_summary(PAC_test, norm = "rpm", type = "se", pheno_target=list("Index", c("sperm_cells_HC", "sperm_cells_CT")))
+#' # Easy to generate simple group summaries 
+#' pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"))       
+#' pac <- PAC_summary(pac, norm = "cpm", type = "se", pheno_target=list("stage"))
+#' pac <- PAC_summary(pac, norm = "cpm", type = "log2FC", pheno_target=list("stage"))
 #' 
-#' PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+#' names(pac$summary)               # Names of individual summaries
+#' head(pac$summary$cpmMeans_stage) # View individual individual summaries
+#' tibble::as_tibble(pac$summary)  # View merge summaries
+#' df <- as.data.frame(tibble::as_tibble(pac$summary))  # Merge multiple summaries
+#' head(df)
 #' 
 #' 
-#' 
+#' # If a pheno_target is left out, a mean of all samples will be returned:
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' pac <- PAC_summary(pac, norm = "cpm", type = "mean")  
+#' pac <- PAC_summary(pac, norm = "cpm", type = "percentgrand")
+#' names(pac$summary)
+#' tibble::as_tibble(pac$summary)   
 #' 
 #' @export
 #' 
@@ -169,7 +182,7 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   
   
 ### means, sd and se ###  
-  if(type%in% c("means", "Means")){
+  if(type %in% c("means", "Means", "mean", "Mean")){
     group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
     fin <- do.call("cbind", group_means)
     colnames(fin) <- names(group_means)

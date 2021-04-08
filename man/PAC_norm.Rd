@@ -10,24 +10,24 @@ PAC_norm(PAC, norm = "cpm", PAC_merge = TRUE)
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
 row names and a Count table with raw counts.}
 
-\item{norm}{Character describing what type of normalization method to be
-applied to the PAC$Counts. If norm="cpm" will return reads/counts per
-million (or sometimes refered to as counts per million reads). Each
-sequence is then divided against the total number of counts in a given
-sample. If norm="vst" PAC$Counts will instead be imported into the
-\code{varianceStabilizingTransformation} function in the DESeq2-package
-with the options blind=TRUE and fitType="mean". If norm="rlog" PAC$Counts
-will instead be imported into the \code{rlogTransformation} function also
-available in DESeq2-package (options blind=TRUE and fitType="mean") for a
-log2 transformed version of vst that are more robust to varying library
-sizes.}
+\item{norm}{Character indicating what type of normalization method that
+should be applied to the PAC$Counts. If norm="cpm", counts per million
+reads) is returned. Each sequence is then divided against the total number
+of counts in a given sample. If norm="vst", PAC$Counts will be imported
+into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
+in the DESeq2-package with the options blind=TRUE and fitType="mean". If
+norm="rlog", PAC$Counts will instead be imported into the
+\code{\link[DESeq2]{rlogTransformation}} function also available in
+DESeq2-package (options blind=TRUE and fitType="mean") for a log2
+transformed version of vst, and is more robust to varying library sizes.}
 
 \item{PAC_merge}{logical whether the normalized table should be returned and
 stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
 returned as a data frame.}
 }
 \value{
-A normalized count table
+A normalized count table, or if pac_merge=TRUE, a PAC object with
+  normalized counts table added to the norm folder (PAC$norm).
 }
 \description{
 \code{PAC_norm} generates normalized values from a PAC object
@@ -56,7 +56,6 @@ Other PAC analysis:
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
 \code{\link{PAC_pirna}()},
-\code{\link{PAC_rpm}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

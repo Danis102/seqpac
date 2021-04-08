@@ -35,7 +35,7 @@
 #'   the x-axis. Plotting long references with xseq=FALSE will increase
 #'   script performance. (default=TRUE).
 #'
-#' @param color Character vector indicating the rgb colors to be parsed to
+#' @param colors Character vector indicating the rgb colors to be parsed to
 #'   ggplot2 for plotting the covarage lines  (default = c("black", "red",
 #'   "grey", "blue"))
 #'   
@@ -56,13 +56,13 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' ## Make summaries
+#' ## Make summaries and extract rRNA
 #' pac <- PAC_norm(pac, norm="cpm")
 #' pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage", unique(pac$Pheno$stage)))
 #' pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 #'
-#' ## Mapping
-#' map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="C:/Users/sigsk47/Documents/PhD/R/Genomes/Drosophila_melanogaster/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa")
+#' ## Mapping and plotting
+#' map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
 #'
 #' covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
 #' cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
@@ -70,7 +70,7 @@
 #' 
 #' @export
 
-PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, color=NULL, check_overide=FALSE){
+PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, style="line", xseq=TRUE, colors=NULL, check_overide=FALSE){
   if(is.null(summary_target[[1]])){
     stop("Error: You need to specify a target object in PAC$summary with summary_target.")
   }
@@ -186,11 +186,11 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
   
   ## Plot graphs
   # Setup colors
-  if(is.null(color)){
+  if(is.null(colors)){
     n_colrs  <- length(summary_target[[2]])
     colfunc <- grDevices::colorRampPalette(c("#094A6B", "#EBEBA6", "#9D0014"))
-    color <- colfunc(n_colrs)
-    names(color) <- summary_target[[2]]
+    colors <- colfunc(n_colrs)
+    names(colors) <- summary_target[[2]]
   }
   
   
@@ -202,7 +202,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     colnames(cov_df) <- c("Postion", "Group", "Coverage")
     if(xseq==TRUE){
       #x_lab <- c(unlist(stringr::str_split(as.character(sub_map[[i]]$Ref_seq), "", n = Inf, simplify = FALSE)))
-      x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), "")))
+      x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), ""), use.names=FALSE))
       tcks <- ggplot2::element_line()
     }else{
       x_lab <- NULL 
@@ -214,7 +214,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
         plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
           ggplot2::geom_line(size=0.3) +
           ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-          ggplot2::scale_fill_manual(name='', values=color)+
+          ggplot2::scale_fill_manual(name='', values=colors)+
           ggplot2::geom_abline(intercept =0, slope=0)+
           ggplot2::ylab(paste0("mean_", norm)) +
           ggplot2::xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
@@ -227,7 +227,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
         plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
           ggplot2::geom_line(size=0.3) +
           ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
-          ggplot2::scale_fill_manual(name='', values=color)+
+          ggplot2::scale_fill_manual(name='', values=colors)+
           ggplot2::coord_cartesian(ylim=c(0,100))+
           ggplot2::scale_y_continuous(breaks = seq(0, 100, 30))+
           ggplot2::geom_abline(intercept =0, slope=0)+
@@ -245,7 +245,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
       if(max(cov_df$Coverage) >= 100){
         plot_lst[[i]] <- 	ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
           ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-          ggplot2::scale_color_manual(values=color)+
+          ggplot2::scale_color_manual(values=colors)+
           ggplot2::labs(title=names(sub_map)[i])+
           ggplot2::ylab(paste0("mean_", norm)) +
           ggplot2::expand_limits(y=max(cov_df$Coverage)+20) +
@@ -258,7 +258,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
       if(max(cov_df$Coverage) < 100){
         plot_lst[[i]] <-  ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
           ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
-          ggplot2::scale_color_manual(values=color)+
+          ggplot2::scale_color_manual(values=colors)+
           ggplot2::coord_cartesian(ylim=c(0,100))+
           ggplot2::scale_y_continuous(breaks = seq(0, 100, 30))+
           ggplot2::labs(title=names(sub_map)[i])+

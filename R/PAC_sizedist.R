@@ -1,11 +1,11 @@
-#' Generates a size distribution analysis from sequences and counts in a PAC object
+#' Generates size distribution plots from sequences and counts in a PAC object
 #'
-#' \code{PAC_sizedist} analyses size distribution with bar charts, allowing for grouping of data with annotation information and summaries.
+#' \code{PAC_sizedist} plotting size distribution with bar charts, allowing 
+#' for visualization of sequence classes and summaries.
 #'
-#' Given a PAC object, the function will attempt to extract the ratios of
-#' specific biotypes at a given size of sequences in the Anno data.frame
-#' in relation to the sequence counts in Counts. Additionally, count data from Summaries made with
-#' \code{\link[seqpac]{PAC_summary}} can also be used.
+#' Given a PAC object the function will attempt to order sequences by their size
+#' (number of nucleotides) and visualize the contribution of specific classes of sequences
+#' (e.g. sRNA classes) at each size point.
 #'
 #' @family PAC analysis
 #'
@@ -14,6 +14,7 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a count table with raw counts.
+#'
 #' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)). 
 #' 
 #' @param anno_target List with: 
@@ -40,7 +41,9 @@
 #'
 #' @examples
 #' 
-#'
+#' ##########################################
+#' ### Stacked bars in seqpac 
+#' ##----------------------------------------
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
@@ -48,7 +51,7 @@
 #' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "cpm", type = "means", pheno_target=list("stage"))
 #' 
 #' 
-#'  ord <- c("no_anno", "other", "miRNA", "tRNA", "rRNA", "snoRNA",  "lncRNA")
+#' ord <- c("no_anno", "other", "miRNA", "tRNA", "rRNA", "snoRNA",  "lncRNA")
 #' 
 #' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("cpmMeans_stage"))
 #' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
@@ -60,67 +63,6 @@
 #' @export
 
 PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
-  
-  ## Organize input
-  # anno <- PAC$Anno
-  # if(!is.null(norm)){
-  #   if(norm=="counts|Counts"){
-  #     data <- PAC$Counts
-  #     labl <- "rawCounts"
-  #   }else{
-  #     if(is.null(summary_target)){ 
-  #       data <- PAC$norm[[norm]]
-  #       labl <- norm
-  #     }else{
-  #       stop("\nYou have specified both 'norm' and 'summary_target'.\nPlease specify one and set the other to 'NULL'.") 
-  #     }
-  #   }
-  # }else{
-  #   data <- PAC$summary[[summary_target[[1]]]]
-  #   labl <- summary_target[[1]]
-  # }
-  # 
-  # if(length(summary_target)==1){
-  #   summary_target[[2]]  <- names(PAC$summary[[summary_target[[1]]]])
-  # }
-  # if(!is.null(summary_target)){
-  #   data <- data[, colnames(data) %in% summary_target[[2]], drop=FALSE]
-  # }   
-  # 
-  # ## Add range filter
-  # if(is.null(range)){
-  #   range <- c(min(anno$Size), max(anno$Size))
-  # }
-  # filt <- anno$Size >= range[1] & anno$Size <= range[2] 
-  # anno <- anno[filt,]
-  # data <- data[filt,]
-  # 
-  # ## Reomve unwanted biotypes
-  # if(length(anno_target)==1){ 
-  #   anno_target[[2]] <- as.character(unique(anno[,anno_target[[1]]]))
-  # }
-  # filt2 <- anno[,anno_target[[1]]] %in% anno_target[[2]]
-  # anno <- anno[filt2,]
-  # data <- data[filt2,]
-  # 
-  # ## Remove unwanted samples
-  # if(!is.null(pheno_target)){ 
-  #   if(length(pheno_target)==1){ 
-  #     pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))}
-  #     filt3 <- PAC$Pheno[,pheno_target[[1]]] %in%  pheno_target[[2]]
-  #     data <- data[,filt3,drop=FALSE]
-  #     ph <- PAC$Pheno[filt3,,drop=FALSE]
-  #     match_pfilt <-  order(match(ph[,pheno_target[[1]]], pheno_target[[2]]))
-  #     data <- data[,match_pfilt,drop=FALSE]
-  #     ph <- ph[match_pfilt,,drop=FALSE]
-  # }else{ 
-  #   if(!is.null(summary_target)){
-  #     ph <- data.frame(colnames(data))
-  #     rownames(ph) <- ph[,1] 
-  #   }else{ 
-  #     ph <-PAC$Pheno 
-  #     }
-  #   }
   
   # Prepare filtered PAC
   if(!is.null(pheno_target)){ 

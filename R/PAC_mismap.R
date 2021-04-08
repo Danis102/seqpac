@@ -38,7 +38,7 @@
 #'   the x-axis. Plotting long references with xseq=FALSE will increase
 #'   script performance. (default=TRUE).
 #'
-#' @param col_vect Character vector of length=5, indicating the rgb colors to be
+#' @param colors Character vector of length=5, indicating the rgb colors to be
 #'   parsed to ggplot2 for plotting the stacked bars. Leave as NULL will
 #'   generate function default colors (default = NULL).
 #'   
@@ -70,7 +70,7 @@
 #'
 #' map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
 #' 
-#' plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, col_vect=NULL, threads=8, par_type="PSOCK")
+#' plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, colors=NULL, threads=8, par_type="PSOCK")
 #'
 #' cowplot::plot_grid(plot_lst[[1]][[1]][[1]], plot_lst[[1]][[1]][[2]], 
 #'                    plot_lst[[1]][[2]][[1]], plot_lst[[1]][[2]][[2]],
@@ -98,7 +98,7 @@
 
 
 
-PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target=NULL,  threads=1, par_type="PSOCK", xseq=TRUE, col_vect=NULL){
+PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target=NULL,  threads=1, par_type="PSOCK", xseq=TRUE, colors=NULL){
                             require("ggplot2")
                             require("foreach")
                             if(is.null(summary_target[[1]])){stop("Error: You need to specify a target list in PAC$summary using summary_target.")}
@@ -167,9 +167,9 @@ PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target
                                         })
 
                               #### Plot data ####
-                              if(is.null(col_vect)){
-                                                    col_vect <- c(A="#094A6B", T="#e6a700", C="#9D0014", G="#52793d", ref="#B9B9B9")
-                                                    #scales::show_col(col_vect)
+                              if(is.null(colors)){
+                                                    colors <- c(A="#094A6B", T="#e6a700", C="#9D0014", G="#52793d", ref="#B9B9B9")
+                                                    #scales::show_col(colors)
                                                     }
                               
                               if(type=="percent"){plt_data <- perc_lst; ylb <- "Mean percent"}
@@ -195,7 +195,7 @@ PAC_mismap <- function(PAC, map, type="percent", summary_target=NULL, map_target
                                                           p <-  ggplot(data_long, aes(x=position, y=value, fill=variable)) +
                                                         								geom_bar(stat="identity", width=0.9, size=1.0) +
                                                                         #geom_hline(yintercept=0, col="#707177", cex=0.6) +
-                                                        								scale_fill_manual(values=rev(col_vect))+
+                                                        								scale_fill_manual(values=rev(colors))+
                                                           							ylab(ylb) +
                                                                         ggtitle(nam2) +
                                                                         xlab(nam1) +

@@ -2,8 +2,8 @@
 #'
 #'\code{PAC_pca} PAC principle component analysis.
 #'
-#'Given a PAC object the function will perform a principle component analysis
-#'calling the PCA function in the FactoMineR package and plotting scatter plot 
+#'Given a PAC object the function will perform a principle component analysis by
+#'calling the PCA function in the FactoMineR package, and then plot scatter plots 
 #'with the fviz_pca functions of the factoextra package.
 #'
 #'@family PAC analysis
@@ -56,41 +56,43 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' # Add normalized data as reads per million (rpm): 
-#' pac_master <- PAC_norm(pac_master, type="rpm")
+#' # Add normalized data as counts per million reads (cpm): 
+#' pac_master <- PAC_norm(pac_master, norm="cpm")
 #' 
 #' # Simple sample counts pca and scatterplots with no groupings: 
 #' pca_cnt <- PAC_pca(pac_master, norm="counts")
 #' 
-#' # Sample rpm pca and scatterplots with color groupings from PAC$Pheno$type column:    
-#' pca_rpm <- PAC_pca(pac_master, norm="rpm", type="pheno", pheno_target=list("type"))
+#' # Sample cpm pca and scatterplots with color groupings from PAC$Pheno$type column:    
+#' pca_cpm <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"))
 #' 
 #' # Same but with or without text labels: 
-#' pca_rpm_lab <- PAC_pca(pac_master, norm="rpm", type="pheno", pheno_target=list("type"), labels="samples")
-#' pca_rpm_lab2 <- PAC_pca(pac_master, norm="rpm", type="pheno", pheno_target=list("type"), labels=pac_master$Pheno$replicate)
+#' pca_cpm_lab <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"), labels="samples")
+#' pca_cpm_lab2 <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"), labels=pac_master$Pheno$batch)
 #' 
-#' # Rpm pca with PAC$Anno sequence features instead of Pheno samples and restricted to length 20-22:
-#' pca_rpm_anno <- PAC_pca(pac_master, norm="rpm", type="anno", anno_target=list("Length", 20:22))
+#' # Cpm pca with PAC$Anno sequence features instead of Pheno samples and restricted to read size 20-22:
+#' pca_cpm_anno <- PAC_pca(pac_master, norm="cpm", type="anno", anno_target=list("Size", 20:22))
 #' 
-#' # Rpm pca as biplot:
-#' pca_rpm_bi <- PAC_pca(pac_master, norm="rpm", type="both", pheno_target=list("type"))
-#' pca_rpm_bi <- PAC_pca(pac_master, norm="rpm", type="both", pheno_target=list("type"))
-#' 
+#' # Cpm pca as biplot:
+#' pca_cpm_bi <- PAC_pca(pac_master, norm="cpm", type="both", pheno_target=list("stage"))
 #' 
 #' # Plot individual graphs
-#' pca_rpm_bi$graphs[[1]]
-#' pca_rpm_lab$graphs[[1]]
-#' pca_rpm_anno$graphs[[3]]
+#' pca_cpm_bi$graphs[[1]]
+#' pca_cpm_lab$graphs[[1]]
+#' pca_cpm_anno$graphs[[3]]
 #' 
 #' # Extract pca output
-#' pca_rpm_anno$pca
+#' pca_cpm_anno$pca
 #' 
 #' @export
 
 PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, pheno_target=NULL, anno_target=NULL, labels=NULL, ...){
   
-  if(length(pheno_target)==2){PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target))}
-  if(length(anno_target)==2){PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target))}
+  if(length(pheno_target)==2){
+    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target))
+    }
+  if(length(anno_target)==2){
+    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target))
+    }
   stopifnot(PAC_check(PAC))
   
   if(norm=="counts"){data <- PAC$Counts } else {data <- PAC$norm[[norm]]}   

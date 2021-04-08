@@ -13,24 +13,24 @@
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a Count table with raw counts.
 #'
-#' @param norm Character describing what type of normalization method to be
-#'   applied to the PAC$Counts. If norm="cpm" will return reads/counts per
-#'   million (or sometimes refered to as counts per million reads). Each
-#'   sequence is then divided against the total number of counts in a given
-#'   sample. If norm="vst" PAC$Counts will instead be imported into the
-#'   \code{varianceStabilizingTransformation} function in the DESeq2-package
-#'   with the options blind=TRUE and fitType="mean". If norm="rlog" PAC$Counts
-#'   will instead be imported into the \code{rlogTransformation} function also
-#'   available in DESeq2-package (options blind=TRUE and fitType="mean") for a
-#'   log2 transformed version of vst that are more robust to varying library
-#'   sizes.
+#' @param norm Character indicating what type of normalization method that
+#'   should be applied to the PAC$Counts. If norm="cpm", counts per million
+#'   reads) is returned. Each sequence is then divided against the total number
+#'   of counts in a given sample. If norm="vst", PAC$Counts will be imported
+#'   into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
+#'   in the DESeq2-package with the options blind=TRUE and fitType="mean". If
+#'   norm="rlog", PAC$Counts will instead be imported into the
+#'   \code{\link[DESeq2]{rlogTransformation}} function also available in
+#'   DESeq2-package (options blind=TRUE and fitType="mean") for a log2
+#'   transformed version of vst, and is more robust to varying library sizes.
 #'   
 #' @param PAC_merge logical whether the normalized table should be returned and
 #'   stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
 #'   returned as a data frame.
 #'   
-#' @return A normalized count table 
-#'
+#' @return A normalized count table, or if pac_merge=TRUE, a PAC object with
+#'   normalized counts table added to the norm folder (PAC$norm).
+#'   
 #' @examples
 #'   df  <- PAC_norm(PAC, norm="cpm") 
 #' @export

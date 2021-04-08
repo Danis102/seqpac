@@ -3,8 +3,9 @@
 #' \code{PAC_jitter} Plots a jitter plot using the information in the Anno and
 #' Counts tables in a PAC object.
 #'
-#' Given a PAC object with grouped summaries  the function will use column(s) in the Anno object to group
-#' the Counts table by row and then plot a jitter plot based on 
+#' Given a PAC object with grouped summaries the function will use column(s) in
+#' the Anno object to group the Counts table by row and then plot a jitter plot
+#' based on
 #' 
 #' @family PAC analysis
 #'
@@ -17,6 +18,9 @@
 #'   groupings (e.g. biotype) and a column with summarized data (e.g. log2 fold
 #'   changes). Rows should be unique sequences as the rownames of a PAC summary
 #'   object.
+#'
+#' @param type Character. If type="jitter" (default) the jitter-plots will be returned. If type="violine" 
+#'
 #'
 #' @param summary_target List with: 1st object being a character vector of the
 #'   target dataframe in summary and 2nd object being a character vector of the
@@ -38,20 +42,38 @@
 #'
 #' @examples
 #' 
-#'### Load data ###
+#' ## Prepare
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' pac <- PAC_norm(pac, norm="cpm")
-#'
+#' 
 #' pac <- PAC_summary(PAC=pac, norm = "cpm", type = "log2FC", pheno_target=list("stage"))
 #' pac <- PAC_summary(PAC=pac, norm = "cpm", type = "percentgrand", pheno_target=list("stage"))
-#'
+#' 
+#' ## Jitter plots
 #' plots_FC <- PAC_jitter(pac, summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0"))
-#' plots_FCgrand <- PAC_jitter(pac, summary_target=list("Percdiffgrand_stage"), anno_target=list("Biotypes_mis0"))
+#' plots_FCgrand <- PAC_jitter(pac, summary_target=list("percGrand_stage"), anno_target=list("Biotypes_mis0"))
+#' 
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' cowplot::plot_grid(plotlist=plots_FCgrand, nrow = 3, ncol = 1) 
 #'
+#' ## Violin plots instead
+#' plots_FC <- PAC_jitter(pac, type="violin", summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0"))
+#' plots_FCgrand <- PAC_jitter(pac, type="violin", summary_target=list("percGrand_stage"), anno_target=list("Biotypes_mis0"))
+#'
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' cowplot::plot_grid(plotlist=plots_FCgrand, nrow = 3, ncol = 1)  
+#'
+#'
+#' ## Violin with changed biotype order
+#' new_order  <- as.character(unique(pac$Anno$Biotypes_mis0))[c(2,4,3,6,7,5,1)]
+#' plots_FC <- PAC_jitter(pac, type="violin", summary_target=list("Log2FC_stage"), anno_target=list("Biotypes_mis0", new_order))
+#' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
+#' 
+#' 
 #' @export
 #'
-PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colvec=NULL, box=TRUE){
+PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter", limits=NULL, ypos_n=NULL, colors=NULL, box=TRUE){
                                         					
                                                   if(!PAC_check(PAC)){stop("Input was not a PAC object.")}
   
@@ -81,13 +103,13 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                         							                                                                  })
                                                   perc_up <-  perc_up[match(as.character(anno_target[[2]]), as.character(perc_up$Group.1)),]
                                         				## Make graphs
-                                                    if(is.null(colvec)){
+                                                    if(is.null(colors)){
                                                           bio <- as.character(unique(ann[,1]))
                                                           n_extra  <- sum(bio %in% c("no_anno", "other"))
                                                           colfunc <- colorRampPalette(c("#094A6B", "#FFFFCC", "#9D0014"))
-                                                          if(n_extra==1){colvec <- c(colfunc(length(bio)-1), "#6E6E6E")}
-                                                          if(n_extra==2){colvec <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
-                                                          if(n_extra==0){colvec <- colfunc(length(bio))}
+                                                          if(n_extra==1){colors <- c(colfunc(length(bio)-1), "#6E6E6E")}
+                                                          if(n_extra==2){colors <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
+                                                          if(n_extra==0){colors <- colfunc(length(bio))}
                                                     }
                                         				   plt_lst <- as.list(1:ncol(df))
                                         				   names(plt_lst) <- colnames(df)
@@ -114,7 +136,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                 												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
                                                 												               axis.title.y = ggplot2::element_text(size=15) , 
                                                 												               axis.text.y = ggplot2::element_text(size=13))+
-                                                												ggplot2::scale_color_manual(values=colvec)
+                                                												ggplot2::scale_color_manual(values=colors)
                                                 								        #coord_flip()
                                                                   if(box==TRUE){
                                                                         p <- p+ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
@@ -134,7 +156,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, type="jitter"
                                                 												               axis.text.x = ggplot2::element_text(angle = 45, hjust = 0.95, size=13), 
                                                 												               axis.title.y = ggplot2::element_text(size=15) ,  
                                                 												               axis.text.y = ggplot2::element_text(size=13))+
-                                                												ggplot2::scale_fill_manual(values=colvec)
+                                                												ggplot2::scale_fill_manual(values=colors)
                                                 								        #coord_flip() 
                                                                   if(box==TRUE){
                                                                         p <- p + ggplot2::geom_boxplot(width=0.3, fill="white", col="black", alpha=0.7,  outlier.shape = NA)}
