@@ -6,9 +6,16 @@ A Framework for small RNA analysis in R using Sequence-Based Counts
 ---
 ### Installation
 In R:<br>
-devtools::install_github("Danis102/seqpac", upgrade="never", build_manual=TRUE, build_vignettes=TRUE)
+\code{devtools::install_github("Danis102/seqpac", upgrade="never", build_manual=TRUE, build_vignettes=TRUE)}
+
+A source package is also provided for download in the source folder. After download run:
+\code{install.packages(<your_path_to_dowloaded_source_package>, repos=NULL, source=TRUE)}
+
+
 
 <br>
+
+
 
 ---
 ### How to use 
