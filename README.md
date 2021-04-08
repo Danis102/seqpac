@@ -12,7 +12,7 @@ devtools::install_github("Danis102/seqpac", upgrade="never", build_manual=TRUE, 
 
 ---
 ### How to use 
-[A guide to sRNA analysis using sequence-based counts](https://github.com/Danis102/seqpac/docs/seqpac_A_guide_to_sRNA_analysis_using_sequence_based counts.html)
+[A guide to sRNA analysis using sequence-based counts](https://github.com/Danis102/seqpac/docs/seqpac_A_guide_to_sRNA_analysis_using_sequence_based_counts.html)
 
 <br>
 
