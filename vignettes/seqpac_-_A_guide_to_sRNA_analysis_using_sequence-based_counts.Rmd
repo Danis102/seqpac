@@ -24,7 +24,8 @@ Seqpac is available on github:
 
 ```{r, include = TRUE, eval=FALSE}
 ## Installation
-devtools::install_github("Danis102/seqpac", upgrade="never", )
+devtools::install_github("Danis102/seqpac", upgrade="never", 
+                         build_manual=TRUE, build_vignettes=TRUE)
 ```
 
 <br>
