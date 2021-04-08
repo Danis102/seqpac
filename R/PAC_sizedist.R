@@ -1,9 +1,10 @@
 #' Generates size distribution plots from sequences and counts in a PAC object
 #'
-#' \code{PAC_sizedist} plotting nucleotide bias.
+#' \code{PAC_sizedist} plotting size distribution with bar charts, allowing 
+#' for visualization of sequence classes and summaries.
 #'
 #' Given a PAC object the function will attempt to order sequences by their size
-#' (number of nucleotides) and extract the ratios of specific classifications
+#' (number of nucleotides) and visualize the contribution of specific classes of sequences
 #' (e.g. sRNA classes) at each size point.
 #'
 #' @family PAC analysis
@@ -13,8 +14,8 @@
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
 #'   row names and a count table with raw counts.
-#'   
-#' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)).#' 
+#'
+#' @param range Integer vector giving the range  in sequence lengths (default=c(min, max)). 
 #' 
 #' @param anno_target List with: 
 #'                          1st object being character vector of target column(s) in Anno, 
@@ -46,22 +47,17 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
+#' PAC_filt <- PAC_norm(pac, norm="cpm")
+#' PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "cpm", type = "means", pheno_target=list("stage"))
 #' 
-#' # Choose an anno_target and plot samples (summary="samples")
-#' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
 #' 
-#' # 'no_anno' and 'other' will always end on top not matter the order
-#' ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)))
-#' p1 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", ord_bio))
-#' p2 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", rev(ord_bio)))
-#' cowplot::plot_grid(plotlist=list(p1, p2))
+#' ord <- c("no_anno", "other", "miRNA", "tRNA", "rRNA", "snoRNA",  "lncRNA")
 #' 
-#' # Reorder samples by pheno_targets
-#' PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", anno_target=list("Biotypes_mis0"))
+#' sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("cpmMeans_stage"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 #' 
-#' # Summarized over pheno_target 
-#' # (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary="pheno")
-#' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno", pheno_target=list("stage"))
+#' sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("batch", "Batch1"))
+#' cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 #' 
 #' 
 #' @export
