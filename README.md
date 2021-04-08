@@ -6,13 +6,20 @@ A Framework for small RNA analysis in R using Sequence-Based Counts
 ---
 ### Installation
 In R:<br>
-devtools::install_github("Danis102/seqpac", upgrade="never", build_manual=TRUE, build_vignettes=TRUE)
+`devtools::install_github("Danis102/seqpac", upgrade="never", build_manual=TRUE, build_vignettes=TRUE)`
+
+A source package is also provided for download in the source folder. After download run:
+`install.packages(<your_path_to_dowloaded_source_package>, repos=NULL, source=TRUE)`
+
+
 
 <br>
 
+
+
 ---
 ### How to use 
-[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.knit.md)
+[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.md)
 
 <br>
 
