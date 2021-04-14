@@ -9,7 +9,8 @@ PAC_filtsep(
   norm = "counts",
   threshold = 10,
   coverage = 100,
-  pheno_target = NULL
+  pheno_target = NULL,
+  output = "sequence"
 )
 }
 \arguments{
@@ -30,13 +31,19 @@ group that needs to reach the threshold for a sequence to be included
 2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
 (default=NULL)}
 
+\item{output}{Specifies the output format. If output="sequence" (default),
+then a data.frame is returned  where each column contains the sequences
+names that passed the filter for a specific group specified in
+pheno_target. If output="binary", then the resulting data.frame will be
+converted into a binary (hit=1, no hit=0) data.frame. See
+\code{\link{filtsep_bin}}.}
+
 \item{treshold}{Integer giving the threshold in counts PAC$Counts or
 normalized counts (table in PAC$norm) that needs to be reached for a
 sequence to be included (default=10).}
 }
 \value{
-A data frame where each column contains the sequences that passed the
-  filter for a specific group specified in pheno_target.
+A data.frame (see output for details).
 }
 \description{
 \code{PAC_filtsep} Group seperated filtered name list
@@ -50,7 +57,6 @@ given filter within a given group.
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 
-## 
 ## Keep sequences with 5 counts (threshold) in 100\% (coverage) of samples in a group:
  # Use PAC_filtsep to find sequences 
  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
@@ -62,6 +68,13 @@ load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mus
  # Filter by unique sequences passing filtsep  
  filtsep <- unique(do.call("c", as.list(filtsep)))
  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
+ 
+## Upset plot using the UpSetR package
+ # Use PAC_filtsep with binary output
+ filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"), output="binary")
+ 
+ # Plot with UpSetR 
+ UpSetR::upset(filtsep, sets = colnames(filtsep), mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
  
 }
 \seealso{
@@ -86,6 +99,7 @@ Other PAC analysis:
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},
 \code{\link{PAC_trna}()},
+\code{\link{filtsep_bin}()},
 \code{\link{map_rangetype}()},
 \code{\link{tRNA_class}()}
 }

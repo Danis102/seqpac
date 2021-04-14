@@ -114,6 +114,7 @@ Other PAC analysis:
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_summary}()},
 \code{\link{PAC_trna}()},
+\code{\link{filtsep_bin}()},
 \code{\link{map_rangetype}()},
 \code{\link{tRNA_class}()}
 }

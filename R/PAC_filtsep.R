@@ -31,8 +31,14 @@
 #'          2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
 #'          (default=NULL)
 #'          
-#' @return A data frame where each column contains the sequences that passed the
-#'   filter for a specific group specified in pheno_target.
+#' @param output Specifies the output format. If output="sequence" (default),
+#'   then a data.frame is returned  where each column contains the sequences
+#'   names that passed the filter for a specific group specified in
+#'   pheno_target. If output="binary", then the resulting data.frame will be
+#'   converted into a binary (hit=1, no hit=0) data.frame. See
+#'   \code{\link{filtsep_bin}}.
+#'   
+#' @return A data.frame (see output for details).
 #'
 #'   
 #' @examples
@@ -40,7 +46,6 @@
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' ## 
 #' ## Keep sequences with 5 counts (threshold) in 100% (coverage) of samples in a group:
 #'  # Use PAC_filtsep to find sequences 
 #'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
@@ -53,9 +58,17 @@
 #'  filtsep <- unique(do.call("c", as.list(filtsep)))
 #'  pac_filt <- PAC_filter(pac_master, subset_only = TRUE, anno_target= filtsep)
 #'  
+#' ## Upset plot using the UpSetR package
+#'  # Use PAC_filtsep with binary output
+#'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"), output="binary")
+#'  
+#'  # Plot with UpSetR 
+#'  UpSetR::upset(filtsep, sets = colnames(filtsep), mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
+#'  
 #' @export
 
-PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, pheno_target=NULL){
+PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, 
+                        pheno_target=NULL, output="sequence"){
   
                               ### Extract data ###
                                     if(norm=="counts"){
@@ -87,6 +100,14 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, pheno_ta
                                                                                    return(rownames(y)[logi])
                                                                                    })
                                     nmax <- max(unlist(lapply(sub_data_lst, length)))
-                                    df <- do.call("cbind", lapply(sub_data_lst, function(x){fix <- as.character(c(x, rep(NA, times=nmax-length(x)))); return(fix)}))
-                                    return(as.data.frame(df, stringsAsFactors=FALSE))
+                                    df <- do.call("cbind", lapply(sub_data_lst, function(x){
+                                      fix <- as.character(c(x, rep(NA, times=nmax-length(x))))
+                                      return(fix)}
+                                      ))
+                                    df <- as.data.frame(df, stringsAsFactors=FALSE)
+                                    if(output=="binary"){
+                                        return(filtsep_bin(df))
+                                    }else{
+                                        return(df)
+                                     }
 }
