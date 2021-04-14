@@ -147,15 +147,24 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
 ## Setup
   doParallel::registerDoParallel(threads) 
   `%dopar%` <- foreach::`%dopar%`
-  
-## Setup reference
-  if(file.exists(ref)){
-    cat("\nReading reference from file ...")
-    full <- Biostrings::readDNAStringSet(ref)
-  }else{
-    cat("\nUsing input dataframe as reference ...")
+
+  ## Setup reference  
+  if(class(ref)=="DNAStringSet"){
+    cat("\nImporting reference from DNAStringSet ...")
     full <- ref
-    }  
+  }else{
+    if(file.exists(ref)){
+      cat("\nReading reference from fasta file ...")
+      full <- Biostrings::readDNAStringSet(ref)
+    }else{
+      if(class(ref)=="character"){
+        cat("\nTry to import reference from character vector ...")
+        full <- DNAStringSet(ref)
+      }else{
+        stop("\nUnrecognizable reference format.\nPlease check your reference input.")
+     }
+   }
+  }
   nams_full <- names(full) # Names are lost in the next step
   if(nchar(paste0(N_up, N_down)) >0){
     full <- Biostrings::DNAStringSet(paste(N_up, full, N_down, sep=""))

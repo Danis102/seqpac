@@ -23,11 +23,11 @@ row names and a Counts table with raw counts or reads per million (cpm).}
 \item{size}{Integer vector giving the size interval, as c(min,max), that
 should be saved (default=c(min,max)).}
 
-\item{threshold}{Integer giving the threshold in cpm or counts that needs to
-be reached for a sequence to be included (default=10).}
+\item{threshold}{Integer giving the threshold in counts or normalized counts
+that needs to be reached for a sequence to be included (default=0).}
 
 \item{coverage}{Integer giving the percent of independent samples that need
-to reach the threshold for a sequence to be included (default=100).}
+to reach the threshold for a sequence to be included (default=0).}
 
 \item{norm}{Character specifying if filtering should be done using "counts",
 "cpm" or another normalized data table in PAC$norm (default="counts").}

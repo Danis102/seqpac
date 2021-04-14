@@ -16,11 +16,11 @@
 #' @param size Integer vector giving the size interval, as c(min,max), that
 #'   should be saved (default=c(min,max)).
 #'   
-#' @param threshold Integer giving the threshold in cpm or counts that needs to
-#'   be reached for a sequence to be included (default=10).
+#' @param threshold Integer giving the threshold in counts or normalized counts
+#'   that needs to be reached for a sequence to be included (default=0).
 #'   
 #' @param coverage Integer giving the percent of independent samples that need
-#'   to reach the threshold for a sequence to be included (default=100).
+#'   to reach the threshold for a sequence to be included (default=0).
 #'   
 #' @param norm Character specifying if filtering should be done using "counts",
 #'   "cpm" or another normalized data table in PAC$norm (default="counts").
@@ -39,7 +39,7 @@
 #'          
 #' @param anno_target (optional) List with: 
 #'          1st object being a character vector of target column in Anno, 2nd
-  #'          object being a character vector of the target type/biotypes(s) in
+#'          object being a character vector of the target type/biotypes(s) in
 #'          the target Anno column (1st object).
 #'          (default=NULL) 
 #'
