@@ -268,8 +268,8 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
   }
       
 ############################################
-## Old PAC_mapper:
-  if(mapper=="old"){
+## Vmatch PAC_mapper:
+  if(mapper=="vmatch"){
     # Setup
     Anno_frag  <- Biostrings::DNAStringSet(rownames(PAC$Anno))
     query_strings <- as.list(as.character(rownames(PAC$Anno)))
@@ -306,7 +306,7 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
   }
     
 ############################################
-## Both old and reanno
+## Both vmatch and reanno
   if(report_string==TRUE){
       fin_lst <- lapply(fin_lst, function(x){
         if(x$Alignments[1,1] =="no_hits"){
