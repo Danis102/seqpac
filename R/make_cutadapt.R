@@ -42,27 +42,27 @@
 #' 
 #' @examples
 #'  
-#' library(seqpac)
-#'   
-#' ############################################################      
-#' ### Seqpac trimming using the make_cutadapt function
-#' ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
-#' 
-#'  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#'  output =  "/home/danis31/Desktop/Temp_docs/temp"
-#'  
-#'  # Parse for make_cutadapt is a list of 2 character string expressions.
-#'  # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#'  # For parallel processes '-j 1' is recommended since seqpac will   
-#'  # parallelize across samples and not within.
-#'  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
-#'  
-#'  parse = list(
-#'            cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
-#'            fastq_quality_filter="-q 20 -p 80")
-#'               
-#'             
-#'  logs  <-  make_cutadapt(input, output, threads=6, parse=parse)
+#' # library(seqpac)
+#' #   
+#' # ############################################################      
+#' # ### Seqpac trimming using the make_cutadapt function
+#' # ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+#' # 
+#' #  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' #  output =  "/home/danis31/Desktop/Temp_docs/temp"
+#' #  
+#' #  # Parse for make_cutadapt is a list of 2 character string expressions.
+#' #  # The first is parsed to cutadapt and the other to fastq_quality_filter 
+#' #  # For parallel processes '-j 1' is recommended since seqpac will   
+#' #  # parallelize across samples and not within.
+#' #  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
+#' #  
+#' #  parse = list(
+#' #            cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
+#' #            fastq_quality_filter="-q 20 -p 80")
+#' #               
+#' #             
+#' #  logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
 #'  
 #' @export
 
@@ -71,7 +71,12 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
               ## Setup
               cat("\nRunning make_cutadapt (R may stop responding) ...")
               cat("\n--- cutadapt and fastq_quality_filter must be correctly installed.")
-              fls <- list.files(input, pattern ="fastq.gz\\>|fastq\\>", full.names=TRUE, recursive=TRUE)
+              if(sum(!dir.exists(input))== length(input)){
+                  fls <- input
+              }else{
+                  fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
+                                    full.names=TRUE, recursive=TRUE)
+              }
 
               # Make dir
               if(!dir.exists(output)){
@@ -90,9 +95,12 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
                   stop(paste0("\n  Output trimmed fastq file names are identical to existing files in output:\n  ", out_dir, "\n  Please move or delete the file in the output folder:\n  ", output))
               }
               
+              # Make sure parse is one line
+              parse <- lapply(parse, function(x){gsub("[\r\n]", "", x)})
+
               ## cutadapt and fastq_quality_filter
-              suppressPackageStartupMessages(require(foreach))
-              doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
+              doParallel::registerDoParallel(threads)  # Do not use parallel::makeClusters!!!
+              `%dopar%` <- foreach::`%dopar%`
               prog_report <- foreach::foreach(i=1:length(fls), .export= c("fls", "parse", "out_file", "nam"), .packages=c("ShortRead"), .final = function(x){names(x) <- nam; return(x)}) %dopar% {
                       log_lst <- list(NULL, NULL)
                       names(log_lst) <- c("cutadapt", "fastq_quality_filter")
@@ -132,7 +140,6 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
                       return(df)
                 }
               doParallel::stopImplicitCluster()
-              detach(package:foreach)
               prog_report <- do.call("rbind", prog_report)
               return(prog_report)
               gc(reset=TRUE)

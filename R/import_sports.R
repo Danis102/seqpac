@@ -28,13 +28,11 @@
 #'
 #'
 #' @examples
-#'   sports_lst <- import_sports(<your_path_to_sports_output_directory>, threads=<number_of_jobs>)
-#'   sports_lst <- import_sports(path=path, threads=12)
+#' #  sports_lst <- import_sports(<your_path_to_sports_output_directory>, threads=<number_of_jobs>)
+#' #  sports_lst <- import_sports(path=path, threads=12)
 #'
 #' @export
 import_sports <- function(path, threads=1){
-                        require(parallel)
-                        require(pbmcapply)
                         ### Get paths and sample names for output.txt files
                         count_files <- list.files(path, pattern ="*_output.txt", full.names=TRUE, recursive=TRUE)
                         count_files_nams <- list.files(path, pattern ="*_output.txt", full.names=FALSE, recursive=TRUE)
@@ -46,7 +44,7 @@ import_sports <- function(path, threads=1){
                         cat("This may still take some time (approx. 1 sample/thread/minute) \n")
                         cat("Started reading ", paste0(Sys.time()), "\n")
                         #files <- pbmclapply(count_files, mc.cores = threads,  function(x){y <- read.table(x, header=TRUE); return(y)}) # Adds progress par to mclapply. Didn't work. Forum indicates that it may work with newer versions of R
-                        files <- mclapply(count_files, mc.cores = threads,  function(x){y <- read.table(x, header=TRUE); return(y)})
+                        files <- pbmcapply::mclapply(count_files, mc.cores = threads,  function(x){y <- read.table(x, header=TRUE); return(y)})
                         names(files) <- count_files_nams
                         cat("Finished reading ", paste0(Sys.time()), "\n")
                         return(files)

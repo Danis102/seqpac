@@ -56,12 +56,7 @@ library(seqpac)
 
 load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 
-plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=8)
-names(plot_lst)
-cowplot::plot_grid(plotlist=plot_lst)
-
-# Any number of thresholds
-plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1), threads=8)
+plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=1)
 names(plot_lst)
 cowplot::plot_grid(plotlist=plot_lst)
 

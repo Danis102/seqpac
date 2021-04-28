@@ -62,10 +62,9 @@
 #' pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 #'
 #' ## Mapping and plotting
-#' map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
-#'
-#' covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
-#' cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
+#' #map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
+#' #covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
+#' #cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
 #'
 #' 
 #' @export
@@ -170,13 +169,13 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     cov_lst[[i]] <- lapply(as.list(1:length(summary_target[[2]])), function(x){
       df <- df[rep_lst[[i]][[x]],]
       if(nrow(df)==0){
-        fin <- data.frame(Postion=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), Coverage=0)
+        fin <- data.frame(Position=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), Coverage=0)
       }
       if(nrow(df)>0){  
         gr <- GenomicRanges::GRanges(df)
         GenomeInfoDb::seqlengths(gr) <- as.numeric(IRanges::width(sub_map[[i]]$Ref_seq))
         cov <- as.numeric(GenomicRanges::coverage(gr)[[1]])
-        fin <- data.frame(Postion=ordered(as.factor(1:length(cov))), Coverage=cov)
+        fin <- data.frame(Position=ordered(as.factor(1:length(cov))), Coverage=cov)
       }
       return(fin)
     })
@@ -197,9 +196,10 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
   # Plot
   plot_lst <- list(NA)
   for(i in 1:length(cov_lst)){
-    cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
+    cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), 
+                    do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
     cov_df <- reshape2::melt(cov_df, id.vars="Position")
-    colnames(cov_df) <- c("Postion", "Group", "Coverage")
+    colnames(cov_df) <- c("Position", "Group", "Coverage")
     if(xseq==TRUE){
       #x_lab <- c(unlist(stringr::str_split(as.character(sub_map[[i]]$Ref_seq), "", n = Inf, simplify = FALSE)))
       x_lab <- c(unlist(strsplit(as.character(sub_map[[i]]$Ref_seq), ""), use.names=FALSE))
@@ -211,28 +211,28 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     ########### Solid style ##########
     if(style=="solid"){
       if(max(cov_df$Coverage) >= 100){
-        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
+        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Position, y=Coverage, group=Group, fill=Group)) +
           ggplot2::geom_line(size=0.3) +
-          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
+          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Position, ymax=Coverage), ymin=0, alpha=0.5) +
           ggplot2::scale_fill_manual(name='', values=colors)+
           ggplot2::geom_abline(intercept =0, slope=0)+
           ggplot2::ylab(paste0("mean_", norm)) +
-          ggplot2::xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
+          ggplot2::xlab(paste("Position on ", names(cov_lst)[i], sep=""))+
           ggplot2::scale_x_discrete(labels=x_lab)+
           ggplot2::theme_classic()+
           ggplot2::theme(axis.ticks.x=tcks, 
                          axis.text.x = ggplot2::element_text(size=8), 
                          plot.title = ggplot2::element_text(size=10))}
       if(max(cov_df$Coverage) < 100){
-        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, fill=Group)) +
+        plot_lst[[i]] <- ggplot2::ggplot(cov_df, ggplot2::aes(x=Position, y=Coverage, group=Group, fill=Group)) +
           ggplot2::geom_line(size=0.3) +
-          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Postion, ymax=Coverage), ymin=0, alpha=0.5) +
+          ggplot2::geom_ribbon(data=cov_df, ggplot2::aes(x=Position, ymax=Coverage), ymin=0, alpha=0.5) +
           ggplot2::scale_fill_manual(name='', values=colors)+
           ggplot2::coord_cartesian(ylim=c(0,100))+
           ggplot2::scale_y_continuous(breaks = seq(0, 100, 30))+
           ggplot2::geom_abline(intercept =0, slope=0)+
           ggplot2::ylab(paste0("mean_", norm)) +
-          ggplot2::xlab(paste("postion on ", names(cov_lst)[i], sep=""))+
+          ggplot2::xlab(paste("Position on ", names(cov_lst)[i], sep=""))+
           ggplot2::scale_x_discrete(labels=x_lab)+
           ggplot2::theme_classic()+
           ggplot2::theme(axis.ticks.x=tcks, 
@@ -243,7 +243,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
     ########### Line style ##########
     if(style=="line"){
       if(max(cov_df$Coverage) >= 100){
-        plot_lst[[i]] <- 	ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
+        plot_lst[[i]] <- 	ggplot2::ggplot(cov_df, ggplot2::aes(x=Position, y=Coverage, group=Group, color=Group, fill=Group)) +
           ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
           ggplot2::scale_color_manual(values=colors)+
           ggplot2::labs(title=names(sub_map)[i])+
@@ -256,7 +256,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, st
                          plot.title = ggplot2::element_text(size=10))}
       
       if(max(cov_df$Coverage) < 100){
-        plot_lst[[i]] <-  ggplot2::ggplot(cov_df, ggplot2::aes(x=Postion, y=Coverage, group=Group, color=Group, fill=Group)) +
+        plot_lst[[i]] <-  ggplot2::ggplot(cov_df, ggplot2::aes(x=Position, y=Coverage, group=Group, color=Group, fill=Group)) +
           ggplot2::geom_path(lineend="butt", linejoin="round", linemitre=1, size=1.0)+
           ggplot2::scale_color_manual(values=colors)+
           ggplot2::coord_cartesian(ylim=c(0,100))+

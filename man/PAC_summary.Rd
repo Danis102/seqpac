@@ -62,7 +62,7 @@ Given a PAC object this function summarize data in PAC$Counts or in the norm
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-PAC_check(PAC_filt) # TRUE
+PAC_check(pac) # TRUE
 
 # Easy to generate simple group summaries 
 pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"))       

@@ -31,24 +31,25 @@
 #' 
 #' PAC_check(pac)  # TRUE
 #' 
-#' new_Anno <- pac$Anno[-1,]             # Remove first row in Anno
-#' PAC_check(pac, seq_check=new_Anno)    # Throws error explaining the problem with sequence compatibility
+#' new_Anno <- pac$Anno[-1,]               # Remove first row in Anno
 #' 
-#' pac$Anno <- new_Anno                  # Add to pac
-#' PAC_check(pac)                        # Throws error that Counts and Anno is not identical
+#' #PAC_check(pac, seq_check=new_Anno)     # (Error) problem with sequence compatibility
 #' 
-#' # Reload data
+#' pac$Anno <- new_Anno                    # Add to pac
+#' #PAC_check(pac)                         # (Error) that Counts and Anno is not identical
+#' 
+#' ## Reload data
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' PAC_check(pac)  # TRUE
 #' 
-#' new_norm <- pac$norm$cpm[,-1]         # Remove a sample column in normalized table 
-#' PAC_check(pac, seq_check=new_norm)    # All sequences are good
-#' PAC_check(pac, sample_check=new_norm) # But samples are not
+#' new_norm <- pac$norm$cpm[,-1]           # Remove a sample column in normalized table 
+#' PAC_check(pac, seq_check=new_norm)      # All sequences are good
+#' #PAC_check(pac, sample_check=new_norm)  # (Error) but samples are not
 #' 
-#' pac$norm$cpm <- new_norm              # Add to pac
-#' PAC_check(pac)                        # Now norm table is incompatible 
+#' pac$norm$cpm <- new_norm                # Add to pac
+#' #PAC_check(pac)                         # (Error) Now norm table is incompatible 
 #' 
-#' # Reload data
+#' ## Reload data
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 #' PAC_check(pac)  # TRUE
 #'
@@ -58,8 +59,8 @@
 #' PAC_check(pac, seq_check=seq_names)
 #' PAC_check(pac, sample_check=sample_names) 
 #' 
-#' PAC_check(pac, seq_check=rev(seq_names))
-#' PAC_check(pac, sample_check=rev(sample_names)) 
+#' #PAC_check(pac, seq_check=rev(seq_names))
+#' #PAC_check(pac, sample_check=rev(sample_names)) 
 #' 
 #' 
 #' @export

@@ -71,9 +71,9 @@ object using \code{\link{add_reanno}}.
 }
 
 \examples{
-bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
-reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+#bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
+#reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 
 }
 \seealso{

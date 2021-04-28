@@ -68,47 +68,47 @@ references.
 \examples{
 
 
-### Load data ###
-library(seqpac)
-
-load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
-
-#PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
-PAC_filt <- PAC_rpm(PAC_filt)
-PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
-PAC_check(PAC_filt)
-
-
-ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
-full <- Biostrings::readDNAStringSet(ref_path)
-ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
-
-map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
-
-plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, colors=NULL, threads=8, par_type="PSOCK")
-
-cowplot::plot_grid(plot_lst[[1]][[1]][[1]], plot_lst[[1]][[1]][[2]], 
-                   plot_lst[[1]][[2]][[1]], plot_lst[[1]][[2]][[2]],
-                   labels="auto", nrow = 4, ncol = 1)
-                   
-plot_lst$Data
-
-       
-### Add coverage plots ###                  
-
-cov_plots <- PAC_covplot(PAC=PAC_filt, map=map_refs, summary_target=list("means_[Method]"), xseq=TRUE, style="line", colour=c("red", "black"))                                   
- 
-cowplot::plot_grid(plot_lst[[1]][[1]][[1]], 
-                   plot_lst[[1]][[1]][[2]], 
-                   cov_plots[[1]],
-                   labels="auto", nrow = 3, ncol = 1)
-
-cowplot::plot_grid(plot_lst[[1]][[2]][[1]], 
-                   plot_lst[[1]][[2]][[2]], 
-                   cov_plots[[2]],
-                   labels="auto", nrow = 3, ncol = 1)
-
-     
+# ### Load data ###
+# library(seqpac)
+# 
+# load(file="/home/danis31/OneDrive/Programmering/Programmering/Pipelines/Drosophila/Pipeline_3.1/seqpac/dm_test_PAC.Rdata")
+# 
+# #PAC_filt <- PAC_filter(PAC_all, threshold=5, coverage=4, type="counts", stat=FALSE, pheno_target=NULL, anno_target=NULL)
+# PAC_filt <- PAC_rpm(PAC_filt)
+# PAC_filt <- PAC_summary(PAC_filt, norm = "rpm", type = "means", pheno_target=list("Method"))
+# PAC_check(PAC_filt)
+# 
+# 
+# ref_path <- "/data/Data_analysis/Genomes/Drosophila/dm6/tRNA/tRNA.fa"
+# full <- Biostrings::readDNAStringSet(ref_path)
+# ref <- full[grepl("Glu-CTC-3-1|Lys-CTT-1-1 ", names(full))]
+#
+# map_refs <- PAC_mapper(PAC_filt, ref=ref, threads=8, mismatches=3)
+# 
+# plot_lst <- PAC_mismap(PAC=PAC_filt, map=map_refs, type="percent", summary_target=list("means_[Method]"), map_target=NULL,  xseq=TRUE, colors=NULL, threads=8, par_type="PSOCK")
+#
+# cowplot::plot_grid(plot_lst[[1]][[1]][[1]], plot_lst[[1]][[1]][[2]], 
+#                    plot_lst[[1]][[2]][[1]], plot_lst[[1]][[2]][[2]],
+#                    labels="auto", nrow = 4, ncol = 1)
+#                    
+# plot_lst$Data
+#
+#        
+# ### Add coverage plots ###                  
+# 
+# cov_plots <- PAC_covplot(PAC=PAC_filt, map=map_refs, summary_target=list("means_[Method]"), xseq=TRUE, style="line", colour=c("red", "black"))                                   
+#  
+# cowplot::plot_grid(plot_lst[[1]][[1]][[1]], 
+#                    plot_lst[[1]][[1]][[2]], 
+#                    cov_plots[[1]],
+#                    labels="auto", nrow = 3, ncol = 1)
+#
+# cowplot::plot_grid(plot_lst[[1]][[2]][[1]], 
+#                    plot_lst[[1]][[2]][[2]], 
+#                    cov_plots[[2]],
+#                    labels="auto", nrow = 3, ncol = 1)
+#
+#      
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

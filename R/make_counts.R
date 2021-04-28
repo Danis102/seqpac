@@ -90,60 +90,60 @@
 #' 
 #' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #' 
-#' counts  <- make_counts(input, threads=6, parse="default_neb",
+#' counts  <- make_counts(input, threads=1, parse="default_neb",
 #'                        type="fastq", trimming="seqpac", plot=TRUE,
 #'                        evidence=c(experiment=2, sample=1))     
 #'     
 #'      
-#' ############################################################      
-#' ### Seqpac trimming using the make_trim function
-#' ### using user settings parsed to make_trim
-#'  
-#' # Make a parse list (see ?make_trim):  
-#' parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
-#'              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
-#'              polyG=c(type="hard_trim", min=10, mismatch=0.1),
-#'              seq_range=c(min=14, max=70),
-#'              quality=c(threshold=20, percent=0.8))
-#'                
-#' counts  <-  make_counts(input, threads=6,
-#'                         type="fastq", trimming="seqpac",
-#'                         parse=parse, 
-#'                         evidence=c(experiment=2, sample=1))           
-#'   
-#'   
-#' ############################################################      
-#' ### Seqpac trimming using the make_cutadapt function
-#' ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
-#' 
-#'  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-#'  
-#'  # Parse for make_cutadapt is a list of 2 character string expressions.
-#'  # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#'  # For parallel processes '-j 1' is recommended since seqpac will   
-#'  # parallelize across samples and not within.
-#'  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
-#'  
-#'  parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 14 -M 70",
-#'               fastq_quality_filter="-q 20 -p 80")
-#'  
-#'  counts  <-  make_counts(input, threads=6,
-#'                         type="fastq", trimming="cutadapt",
-#'                         parse=parse, 
-#'                         evidence=c(experiment=2, sample=1))   
-#'  
-#'  
-#'  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
-#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
-#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
-#'  
-#'  
-#'  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
-#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
-#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
-#'  
+#' # ############################################################      
+#' # ### Seqpac trimming using the make_trim function
+#' # ### using user settings parsed to make_trim
+#' #  
+#' # # Make a parse list (see ?make_trim):  
+#' # parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
+#' #              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
+#' #              polyG=c(type="hard_trim", min=10, mismatch=0.1),
+#' #              seq_range=c(min=14, max=70),
+#' #              quality=c(threshold=20, percent=0.8))
+#' #                
+#' # counts  <-  make_counts(input, threads=1,
+#' #                         type="fastq", trimming="seqpac",
+#' #                         parse=parse, 
+#' #                         evidence=c(experiment=2, sample=1))           
+#' #   
+#' #   
+#' # ############################################################      
+#' # ### Seqpac trimming using the make_cutadapt function
+#' # ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+#' # 
+#' #  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' #  
+#' #  # Parse for make_cutadapt is a list of 2 character string expressions.
+#' #  # The first is parsed to cutadapt and the other to fastq_quality_filter 
+#' #  # For parallel processes '-j 1' is recommended since seqpac will   
+#' #  # parallelize across samples and not within.
+#' #  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
+#' #  
+#' #  parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 14 -M 70",
+#' #               fastq_quality_filter="-q 20 -p 80")
+#' #  
+#' #  counts  <-  make_counts(input, threads=1,
+#' #                         type="fastq", trimming="cutadapt",
+#' #                         parse=parse, 
+#' #                         evidence=c(experiment=2, sample=1))   
+#' #  
+#' #  
+#' #  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
+#' #  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
+#' #  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#' #  test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
+#' #  
+#' #  
+#' #  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
+#' #  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
+#' #  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#' #  test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
+#' #  
 #'  
 #'  
 #' @export
@@ -179,7 +179,12 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     gc(reset=TRUE)
 
     ## Read file system
-    count_files <- list.files(input, pattern ="fastq.gz\\>|fastq\\>", full.names=TRUE, recursive=TRUE)
+    if(sum(!dir.exists(input))== length(input)){
+      count_files <- input
+    }else{
+      count_files <- list.files(input, pattern ="fastq.gz\\>|fastq\\>", 
+                                full.names=TRUE, recursive=TRUE)
+    }
     count_files <- count_files[!grepl("Undetermined_", count_files)]
     count_files_nams <- basename(count_files)
     cat("\nInput type was set to fastq.")
@@ -429,18 +434,18 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
       }
     }
   }
-  ordCount_df <- as.data.frame(do.call("cbind", lapply(reads_lst, function(x){x$counts})))
+  ordCount_df <- as.data.frame(do.call("cbind", lapply(reads_lst, function(x){x$counts})), stringsAsFactors = FALSE)
   colnames(ordCount_df) <- names(reads_lst)
   rownames(ordCount_df) <- seqs_keep
 
   if(trimming=="trimmed"){
-    prog_report <- "no_trimming_was_done"
+    prog_report <- data.frame(trimming=as.character(rep("no_trimming_was_done", times=length(reads_lst))), stringsAsFactors=FALSE)
     }
  
   
 ###################################################
 ###### Add evidence stats to progress report ######
-  stat_dt <- cbind(data.frame(uni_seqs=n_uniseq), do.call("rbind", lapply(reads_lst, function(x){x$stat})))
+  stat_dt <- cbind(data.frame(uni_seqs=n_uniseq, stringsAsFactors =FALSE), do.call("rbind", lapply(reads_lst, function(x){x$stat})))
   stat_dt$reads_not_pass_evidence <- stat_dt$tot_reads - stat_dt$reads_pass_evidence
   stat_dt$uniseqs_not_pass_evidence <- stat_dt$uni_seqs - stat_dt$uniseqs_pass_evidence
   rownames(stat_dt) <- colnames(ordCount_df)
@@ -483,7 +488,9 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1, plot=TRUE
     plt_lst <- list(reads=p1, uniseqs=p2)
     if(plot==TRUE){
       print(cowplot::plot_grid(plotlist=plt_lst, ncol=1, nrow=2))
-    }else{plt_lst <- "Evidence plot was not omitted by user"}
+    }else{
+      plt_lst <- "Evidence plot was omitted by user"
+      }
     
     prog_report <- cbind(prog_report, stat_dt[!names(stat_dt) %in% c("uni_seqs", "tot_reads")])
     return(list(counts=ordCount_df, progress_report=prog_report, evidence_plots=plt_lst))

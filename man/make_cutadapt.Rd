@@ -38,27 +38,27 @@ and remove sequences with low quality.
 }
 \examples{
  
-library(seqpac)
-  
-############################################################      
-### Seqpac trimming using the make_cutadapt function
-### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
-
- input = system.file("extdata", package = "seqpac", mustWork = TRUE)
- output =  "/home/danis31/Desktop/Temp_docs/temp"
- 
- # Parse for make_cutadapt is a list of 2 character string expressions.
- # The first is parsed to cutadapt and the other to fastq_quality_filter 
- # For parallel processes '-j 1' is recommended since seqpac will   
- # parallelize across samples and not within.
- # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
- 
- parse = list(
-           cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
-           fastq_quality_filter="-q 20 -p 80")
-              
-            
- logs  <-  make_cutadapt(input, output, threads=6, parse=parse)
+# library(seqpac)
+#   
+# ############################################################      
+# ### Seqpac trimming using the make_cutadapt function
+# ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+# 
+#  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#  output =  "/home/danis31/Desktop/Temp_docs/temp"
+#  
+#  # Parse for make_cutadapt is a list of 2 character string expressions.
+#  # The first is parsed to cutadapt and the other to fastq_quality_filter 
+#  # For parallel processes '-j 1' is recommended since seqpac will   
+#  # parallelize across samples and not within.
+#  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
+#  
+#  parse = list(
+#            cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
+#            fastq_quality_filter="-q 20 -p 80")
+#               
+#             
+#  logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
  
 }
 \seealso{
@@ -71,7 +71,6 @@ library(seqpac)
 Other PAC generation: 
 \code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
-\code{\link{make_anno}()},
 \code{\link{make_counts}()},
 \code{\link{make_pheno}()},
 \code{\link{make_trim}()},

@@ -118,37 +118,23 @@
 #' @examples
 #' library(seqpac)
 #' 
-#' input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-#' output <- "/home/danis31/Desktop/Temp_docs/temp"
-#' 
-#' prog_report  <-  make_trim(input=input, output=output, threads=6, check_mem=TRUE,
-#'                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
-#'                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
-#'                      seq_range=c(min=14, max=70),
-#'                      quality=c(threshold=20, percent=0.8))
-#'
-#' prog_report  <-  make_trim(input=input, output=output, threads=5, 
-#'                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
-#'                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
-#'                      seq_range=c(min=14, max=70),
-#'                      quality=c(threshold=20, percent=0.8))                                            
+#' # input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' # output <- "/home/danis31/Desktop/Temp_docs/temp"
+#' # 
+#' # prog_report  <-  make_trim(input=input, output=output, threads=1, check_mem=TRUE,
+#' #                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+#' #                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
+#' #                      seq_range=c(min=14, max=70),
+#' #                      quality=c(threshold=20, percent=0.8))
+#' #
+#' #prog_report  <-  make_trim(input=input, output=output, threads=1, 
+#' #                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
+#' #                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
+#' #                      seq_range=c(min=14, max=70),
+#' #                      quality=c(threshold=20, percent=0.8))                                            
 #'                      
 #' 
 #' 
-#' adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1)
-#' adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA"
-#' adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA"
-#' polyG=c(type="hard_trim", min=20, mismatch=0.1)
-#' seq_range=c(min=12, max=60)
-#' quality=c(threshold=20, percent=0.8) 
-#' threads=7
-#' check_mem=FALSE
-#' indels=TRUE
-#' concat=12
-#' i <- 1
-#' 
-#' 
-#'
 #' 
 #' @export
 
@@ -161,7 +147,12 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, thr
                         
 ############################   
 #### General setup #########
-  fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
+    if(sum(!dir.exists(input))== length(input)){
+      fls <- input
+    }else{
+      fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
+                        full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
+    }
   
   # Memory check
   if(check_mem==TRUE){
@@ -500,7 +491,7 @@ names(nams_prog) <- unlist(nams_prog)
 prog_report <-  lapply(nams_prog, function(x){
     lst_type <- list(NULL)
     for(i in 1:length(prog_report)){
-     lst_type[[i]] <- cbind(data.frame(file=names(prog_report)[i]), t(data.frame(prog_report[[i]][x])))
+     lst_type[[i]] <- cbind(data.frame(file=names(prog_report)[i], stringsAsFactors = FALSE), t(data.frame(prog_report[[i]][x], stringsAsFactors = FALSE)))
     }
     do.call("rbind", lst_type)
 })
@@ -517,19 +508,19 @@ for(i in 1:length(prog_report)){
     trim <- as.numeric(as.character(rprt$trimmed))
     perc <- paste0("(", round(trim/report_fin$input_reads, digits=4)*100, "%)")
     set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-    report_fin <-  cbind(report_fin, data.frame(polyG_set=set, polyG= paste(trim, perc)))
+    report_fin <-  cbind(report_fin, data.frame(polyG_set=set, polyG= paste(trim, perc), stringsAsFactors = FALSE))
   }
   if(rprt_nam=="trim_3"){
     trim <- as.numeric(as.character(rprt$trimmed))
     perc <- paste0("(", round(trim/report_fin$input_reads, digits=4)*100, "%)")
     set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-    report_fin <-  cbind(report_fin, data.frame(trim3_set=set, trim3= paste(trim, perc)))
+    report_fin <-  cbind(report_fin, data.frame(trim3_set=set, trim3= paste(trim, perc), stringsAsFactors = FALSE))
   }
   if(rprt_nam=="trim_5"){
     trim <- as.numeric(as.character(rprt$trimmed))
     perc <- paste0("(", round(trim/report_fin$input_reads, digits=4)*100, "%)")
     set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-    report_fin <-  cbind(report_fin, data.frame(trim5_set=set, trim5= paste(trim, perc)))
+    report_fin <-  cbind(report_fin, data.frame(trim5_set=set, trim5= paste(trim, perc), stringsAsFactors = FALSE))
   }
   if(rprt_nam=="size"){
     shrt <- as.numeric(as.character(rprt$too_short))
@@ -537,18 +528,18 @@ for(i in 1:length(prog_report)){
     tot_size <- shrt+lng
     perc <- paste0("(", round(tot_size/report_fin$input_reads, digits=4)*100, "%)")
     set <- paste0("min", rprt$min, "|max", rprt$max)
-    report_fin <-  cbind(report_fin, data.frame(size_set=set, 'size_short_long'= paste0(shrt, "/", lng, " ", perc)))
+    report_fin <-  cbind(report_fin, data.frame(size_set=set, 'size_short_long'= paste0(shrt, "/", lng, " ", perc), stringsAsFactors = FALSE))
   }
   if(rprt_nam=="quality"){
     rmvd <- as.numeric(as.character(rprt$removed))
     perc <- paste0("(", round(rmvd/report_fin$input_reads, digits=4)*100, "%)")
     set <- paste0("thresh", rprt$threshold, "|perc", rprt$percent)
-    report_fin <-  cbind(report_fin, data.frame(quality_set=set, 'quality_removed'= paste0(rmvd, " ", perc)))
+    report_fin <-  cbind(report_fin, data.frame(quality_set=set, 'quality_removed'= paste0(rmvd, " ", perc), stringsAsFactors = FALSE))
   }
   if(rprt_nam=="out_reads"){
     out <- as.numeric(as.character(rprt[,2]))
     perc <- paste0("(", round(out/report_fin$input_reads, digits=4)*100, "%)")
-    report_fin <-  cbind(report_fin, data.frame(output_reads= paste(out, perc)))
+    report_fin <-  cbind(report_fin, data.frame(output_reads= paste(out, perc), stringsAsFactors = FALSE))
   }
 }
 

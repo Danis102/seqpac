@@ -3,9 +3,9 @@
 #'\code{simplify_reanno} adds hierarchical classification to PAC.
 #'
 #'This function deals with and can be used to explores the effect of
-#'multimapping. Given a biotype reannotation matrix (colnames: mis0_bio,
+#'multimapping. Given a biotype reannotation matrix (colnames = mis0_bio,
 #'mis1_bio, mis2_bio etc) created by \code{\link{add_reanno}} and usually added
-#'to the Anno dataframe of a PAC object, the function will generated a one-hit
+#'to the Anno data.frame of a PAC object, the function will generated a one-hit
 #'biotype vector according to a user-defined biotype hierarchy.
 #'
 #'@family PAC reannotation
@@ -21,7 +21,7 @@
 #'
 #'@param hierarchy List with character vectors. The vectors search terms
 #'  constructed as regular expressions that will be parsed to grepl() and
-#'  searched for in the mismatch/biotype reannotation matrix (colnames:
+#'  searched for in the mismatch biotype reannotation matrix (colnames:
 #'  mis0_bio, mis1_bio, mis2_bio, mis3_bio). Important \emph{hierarchy} is order
 #'  sensitive. For example if \emph{hierarchy} is defined as list(rRNA="rRNA",
 #'  miRNA="miRNA", piRNA="piRNA") a sequence annotated with 0 mismatches for all
@@ -47,51 +47,51 @@
 #'  
 #'@examples
 #'
-#' See, vignette(package="seqpac")
-#' 
-#' ###################################################
-#' ### Hierarchical classification with simplify_reanno
-#' ##----------------------------------------
-#' table(pac$Anno$mis0_bio)
-#' 
-#' hierarchy <- list(rRNA="Ensembl_rRNA",
-#'                    Mt_tRNA="tRNA:MT",
-#'                    tRNA="Ensembl_tRNA|tRNA__tRNA",
-#'                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                    snoRNA="Ensembl_snoRNA",
-#'                    lncRNA="Ensembl_lncRNA"   
-#'                   )
-#' 
-#' ## No mistmach allowed
-#' pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
-#' 
-#' ## Up to 3 mismatches allowed
-#' pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", merge_pac=TRUE)
-#' 
-#' # Example of original reference name annotations 
-#' head(reanno_biotype$Full_anno$mis0$Ensembl)
-#' 
-#' # Simplified hierarchical classification
-#' head(pac$Anno)
-#' table(pac$Anno$Biotypes_mis0)
-#' table(pac$Anno$Biotypes_mis3)
-#'
-#'#-------------------------------------------------------------------------------------------------#
-#'# Simplify and make hierarchy of reannotation 
-#'#-------------------------------------------------------------------------------------------------#
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
-#' 
-#' # Build hierarchy with regular expressions:
-#' hierarchy <- list(rRNA="Ensembl_rRNA",
-#'                   Mt_tRNA="tRNA_mt:tRNA",
-#'                   tRNA="Ensembl_tRNA|tRNA_\\^tRNA",
-#'                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
-#'                  )
-#'
-#'pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
-#'
-#'PAC_check(pac_master)
+#' # See, vignette(package="seqpac")
+#' # 
+#' # ###################################################
+#' # ### Hierarchical classification with simplify_reanno
+#' # ##----------------------------------------
+#' # table(pac$Anno$mis0_bio)
+#' # 
+#' # hierarchy <- list(rRNA="Ensembl_rRNA",
+#' #                    Mt_tRNA="tRNA:MT",
+#' #                    tRNA="Ensembl_tRNA|tRNA__tRNA",
+#' #                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
+#' #                    snoRNA="Ensembl_snoRNA",
+#' #                    lncRNA="Ensembl_lncRNA"   
+#' #                   )
+#' # 
+#' # ## No mistmach allowed
+#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+#' # 
+#' # ## Up to 3 mismatches allowed
+#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", merge_pac=TRUE)
+#' # 
+#' # # Example of original reference name annotations 
+#' # head(reanno_biotype$Full_anno$mis0$Ensembl)
+#' # 
+#' # # Simplified hierarchical classification
+#' # head(pac$Anno)
+#' # table(pac$Anno$Biotypes_mis0)
+#' # table(pac$Anno$Biotypes_mis3)
+#' #
+#' ##-------------------------------------------------------------------------------------------------#
+#' ## Simplify and make hierarchy of reannotation 
+#' ##-------------------------------------------------------------------------------------------------#
+#' # library(seqpac)
+#' # load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' # 
+#' # # Build hierarchy with regular expressions:
+#' # hierarchy <- list(rRNA="Ensembl_rRNA",
+#' #                   Mt_tRNA="tRNA_mt:tRNA",
+#' #                   tRNA="Ensembl_tRNA|tRNA_\\^tRNA",
+#' #                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
+#' #                  )
+#' #
+#' #pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+#' #
+#' #PAC_check(pac_master)
 #'
 #' 
 #' @export

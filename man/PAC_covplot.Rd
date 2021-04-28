@@ -76,10 +76,9 @@ pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage",
 pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 
 ## Mapping and plotting
-map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
-
-covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
-cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
+#map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
+#covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
+#cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
 
 
 }

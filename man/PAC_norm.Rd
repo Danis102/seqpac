@@ -4,7 +4,7 @@
 \alias{PAC_norm}
 \title{Generates normalized values from a PAC object}
 \usage{
-PAC_norm(PAC, norm = "cpm", PAC_merge = TRUE)
+PAC_norm(PAC, norm = "cpm", merge_pac = TRUE)
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
@@ -21,7 +21,7 @@ norm="rlog", PAC$Counts will instead be imported into the
 DESeq2-package (options blind=TRUE and fitType="mean") for a log2
 transformed version of vst, and is more robust to varying library sizes.}
 
-\item{PAC_merge}{logical whether the normalized table should be returned and
+\item{merge_pac}{logical whether the normalized table should be returned and
 stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
 returned as a data frame.}
 }
@@ -37,7 +37,12 @@ Using the counts in a PAC object to generate normalized values in a dataframe
 with the same rownames as in the original PAC object
 }
 \examples{
-  df  <- PAC_norm(PAC, norm="cpm") 
+library(seqpac)
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+pac_norm  <- PAC_norm(pac, norm="cpm") 
+df_norm <- PAC_norm(pac, norm = "vst", merge_pac = FALSE)
+
+
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

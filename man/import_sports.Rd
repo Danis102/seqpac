@@ -30,17 +30,13 @@ data.frames. This is done while perserving the basenames of the original
 fastq file (input file for Sports). Files will be imported
 }
 \examples{
-  sports_lst <- import_sports(<your_path_to_sports_output_directory>, threads=<number_of_jobs>)
-  sports_lst <- import_sports(path=path, threads=12)
+#  sports_lst <- import_sports(<your_path_to_sports_output_directory>, threads=<number_of_jobs>)
+#  sports_lst <- import_sports(path=path, threads=12)
 
 }
 \seealso{
 \url{https://github.com/junchaoshi/sports1.0} for download and
   documentation about running Sports. \url{https://github.com/Danis102} for
   updates on the current package.
-
-Other PAC sports: 
-\code{\link{make_anno_sports}()},
-\code{\link{make_counts_dep}()}
 }
 \concept{PAC sports}

@@ -52,7 +52,7 @@
 #' ### First make counts 
 #' 
 #' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#' counts  <- make_counts(input, threads=6, parse="default_neb", type="fastq",
+#' counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
 #'                        trimming="seqpac", plot=TRUE, evidence=c(experiment=2, sample=1))
 #'
 #'
@@ -114,20 +114,20 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       
     }else{
       lines <- readLines(pheno, n=20)
-      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", lines))
+      header <- which(grepl("Sample_ID|sample_ID|Sample_id|sample_id", lines))
       if(!length(header) == 1){
         stop("Cannot find comma seperated header with first column \nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
         }
       head_1 <- stringr::str_count (lines[header], ",")
       row_1 <- stringr::str_count (lines[header+1], ",")
-      if(head_1-row_1==0){
+      if(row_1-head_1>=0){
             pheno <- read.delim(pheno,  header=TRUE, sep=",")
       }else{
             pheno <- read.delim(pheno,  header=TRUE, sep="\t")
       }
     }
     pheno$Sample_ID <- as.character(gsub("-", "_", as.character(pheno$Sample_ID)))
-    }
+  }
   
   
   ## Order as counts using grepl

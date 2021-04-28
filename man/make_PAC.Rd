@@ -41,7 +41,7 @@ library(seqpac)
 
 
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-counts  <- make_counts(input, threads=6, parse="default_neb", type="fastq",
+counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
                        trimming="seqpac", plot=TRUE, evidence=c(experiment=2, sample=1))
 
 
@@ -68,7 +68,6 @@ pac <- make_PAC(pheno=pheno, counts=counts, anno=NULL)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
-\code{\link{make_anno}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

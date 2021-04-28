@@ -138,35 +138,21 @@ and then apply sequence size and phred score quality filters.
 \examples{
 library(seqpac)
 
-input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-output <- "/home/danis31/Desktop/Temp_docs/temp"
-
-prog_report  <-  make_trim(input=input, output=output, threads=6, check_mem=TRUE,
-                     adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
-                     polyG=c(type="hard_trim", min=20, mismatch=0.1),
-                     seq_range=c(min=14, max=70),
-                     quality=c(threshold=20, percent=0.8))
-
-prog_report  <-  make_trim(input=input, output=output, threads=5, 
-                     adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
-                     polyG=c(type="hard_trim", min=20, mismatch=0.1),
-                     seq_range=c(min=14, max=70),
-                     quality=c(threshold=20, percent=0.8))                                            
+# input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+# output <- "/home/danis31/Desktop/Temp_docs/temp"
+# 
+# prog_report  <-  make_trim(input=input, output=output, threads=1, check_mem=TRUE,
+#                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+#                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
+#                      seq_range=c(min=14, max=70),
+#                      quality=c(threshold=20, percent=0.8))
+#
+#prog_report  <-  make_trim(input=input, output=output, threads=1, 
+#                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
+#                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
+#                      seq_range=c(min=14, max=70),
+#                      quality=c(threshold=20, percent=0.8))                                            
                      
-
-
-adapt_3_set=c(type="hard_trim", min=10, mismatch=0.1)
-adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA"
-adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA"
-polyG=c(type="hard_trim", min=20, mismatch=0.1)
-seq_range=c(min=12, max=60)
-quality=c(threshold=20, percent=0.8) 
-threads=7
-check_mem=FALSE
-indels=TRUE
-concat=12
-i <- 1
-
 
 
 
@@ -177,7 +163,6 @@ i <- 1
 Other PAC generation: 
 \code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
-\code{\link{make_anno}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

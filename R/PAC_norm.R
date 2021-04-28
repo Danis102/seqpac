@@ -24,7 +24,7 @@
 #'   DESeq2-package (options blind=TRUE and fitType="mean") for a log2
 #'   transformed version of vst, and is more robust to varying library sizes.
 #'   
-#' @param PAC_merge logical whether the normalized table should be returned and
+#' @param merge_pac logical whether the normalized table should be returned and
 #'   stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
 #'   returned as a data frame.
 #'   
@@ -32,10 +32,15 @@
 #'   normalized counts table added to the norm folder (PAC$norm).
 #'   
 #' @examples
-#'   df  <- PAC_norm(PAC, norm="cpm") 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' pac_norm  <- PAC_norm(pac, norm="cpm") 
+#' df_norm <- PAC_norm(pac, norm = "vst", merge_pac = FALSE)
+#' 
+#' 
 #' @export
 #' 
-PAC_norm <- function(PAC, norm="cpm", PAC_merge=TRUE){
+PAC_norm <- function(PAC, norm="cpm", merge_pac=TRUE){
                   if(norm %in% c("cpm", "rpm")){
                           lib_sizes <- colSums(PAC$Counts)
                           counts_cpm <- data.frame(matrix(NA, nrow=nrow(PAC$Counts), ncol=ncol(PAC$Counts)))
@@ -55,7 +60,9 @@ PAC_norm <- function(PAC, norm="cpm", PAC_merge=TRUE){
                   }
                   if(norm=="rlog") { 
                           fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="parametric")
+                          row.names(fin) <- row.names(PAC$Counts)
                           PAC$norm$rlog <- fin 
+                          
                   }
-          if(PAC_merge==TRUE){return(PAC)} else {return(fin)} 
+          if(merge_pac==TRUE){return(PAC)} else {return(fin)} 
            }

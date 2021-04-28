@@ -60,14 +60,13 @@
 #'   \emph{reduce=<reference_names>} will circumvent this problem.
 #'
 #' @examples
-#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
-#' reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+#' #bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#' #bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
+#' #reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 #' 
 #' @export
 
 import_reanno <- function(bowtie_path, threads=1, coord=FALSE, report="minimum", reduce=NULL){
-  suppressMessages(suppressPackageStartupMessages(require(data.table)))
   base <- ".out$"
   files <- list.files(bowtie_path, pattern = base, full.names=TRUE)
   options(scipen=999)

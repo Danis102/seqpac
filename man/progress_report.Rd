@@ -39,8 +39,8 @@ object by using \code{make_pheno}.
 }
 
 \examples{
-report <- progress_report(<your_path_to_sports_output_directory>)
-report <- progress_report(path=path)
+#report <- progress_report(<your_path_to_sports_output_directory>)
+#report <- progress_report(path=path)
 
 }
 \seealso{
@@ -51,7 +51,6 @@ report <- progress_report(path=path)
 Other PAC generation: 
 \code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
-\code{\link{make_anno}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

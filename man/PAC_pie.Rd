@@ -67,29 +67,29 @@ biotype and plot a pie chart.
 
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
-# Choose an anno_target and plot samples (summary="samples"; default)
-output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis0"))
-cowplot::plot_grid(plotlist=output_pie, scale = 0.8)
-
-output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis3"))
-cowplot::plot_grid(plotlist=output_pie, ncol=3, scale = 0.5)
-
-
-# Make ordered pie charts of grand mean percent of all samples
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), unique(pac$Anno$Biotypes_mis0))
-output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), summary="all")
-output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), summary="all")
-cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, scale = 1.2)
-
-# Rotate
-PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
-PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
-
-# Compare biotype mapping with or without mismaches and group by PAC$Pheno
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  # Make sure that both get same biotype order
-output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis0", ord_bio))
-output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis3", ord_bio))
-cowplot::plot_grid(plotlist=c(output_mis0, output_mis3), labels = names(c(output_mis0, output_mis3)), nrow=2)
+# # Choose an anno_target and plot samples (summary="samples"; default)
+# output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis0"))
+# cowplot::plot_grid(plotlist=output_pie, scale = 0.8)
+# 
+# output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis3"))
+# cowplot::plot_grid(plotlist=output_pie, ncol=3, scale = 0.5)
+# 
+# 
+# # Make ordered pie charts of grand mean percent of all samples
+# ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), unique(pac$Anno$Biotypes_mis0))
+# output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), summary="all")
+# output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), summary="all")
+# cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, scale = 1.2)
+# 
+# # Rotate
+# PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
+# PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
+# 
+# # Compare biotype mapping with or without mismaches and group by PAC$Pheno
+# ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  # Make sure that both get same biotype order
+# output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis0", ord_bio))
+# output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis3", ord_bio))
+# cowplot::plot_grid(plotlist=c(output_mis0, output_mis3), labels = names(c(output_mis0, output_mis3)), nrow=2)
  
    
 }

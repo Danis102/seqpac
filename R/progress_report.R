@@ -33,8 +33,8 @@
 #' @return data.frame
 #'
 #' @examples
-#' report <- progress_report(<your_path_to_sports_output_directory>)
-#' report <- progress_report(path=path)
+#' #report <- progress_report(<your_path_to_sports_output_directory>)
+#' #report <- progress_report(path=path)
 #'
 #' @export
 

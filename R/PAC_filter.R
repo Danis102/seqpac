@@ -48,19 +48,28 @@
 #'               (optional) A covarage plot 
 #' @examples
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
 #' 
-#' test1 <- PAC_filter(pac, size=c(16,45), threshold=20, coverage=50, norm="counts", stat=TRUE, pheno_target=NULL, anno_target=NULL)  # Already applied
-#' 
-#' pac_filt <- PAC_norm(pac, norm="cpm")
-#' pac_filt <- PAC_summary(pac_filt, PAC_merge=TRUE, norm = "cpm", norm = "means",  pheno_target=list("type"))
-#' 
-#' test2 <- PAC_filter(pac_filt, size=c(16,45), threshold=20, coverage=50, norm="cpm", stat=TRUE, pheno_target=NULL, anno_target=NULL)   # Use of cpm filter
+#'###--------------------------------------------------------------------- 
+#'## Extracts all sequences between 10-80 nt in length with at least 5 counts in
+#'## 20% of all samples.
+#'pac_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5, 
+#'                          coverage=20, norm = "counts",  
+#'                          pheno_target=NULL, anno_target=NULL)
 #'
-#' test3 <- PAC_filter(pac_filt, pheno_target=list("Unn_Sample_ID", c("B", "A")), subset_only=TRUE)   # Removes individual samples based on information in Pheno and reorder - Since summary has already been generated, throws a warnings message.
-#' 
-#' test4 <- PAC_filter(pac_filt, size=c(16,30))   # Further filter on fragment lengths 
-#' 
+#'###--------------------------------------------------------------------- 
+#'## Extracts all sequences with 22 nt size and the samples in Batch1 and Batch2.
+#'pac_subset <- PAC_filter(pac_master, subset_only = TRUE,
+#'                         pheno_target=list("batch", c("Batch1", "Batch2")), 
+#'                         anno_target=list("Size", "22"))
+#'
+#'###--------------------------------------------------------------------- 
+#'## Extracts all sequences with >=5 counts in 100% of samples a within stage
+#'filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+#'                       coverage=100, pheno_target= list("stage"))
+#'
+#'pac_filt <- PAC_filter(pac_master, subset_only = TRUE,
+#'                      anno_target= unique(do.call("c", as.list(filtsep))))
 #' 
 #' 
 #' 

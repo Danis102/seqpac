@@ -55,6 +55,10 @@
 #'
 #' @examples
 #' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+
+#' 
 #' ##########################################
 #' ### Stacked bars in seqpac 
 #' ##----------------------------------------
@@ -198,7 +202,7 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
     ggplot2::ylab("Percent of total reads")+
     ggthemes::theme_tufte()+
     ggplot2::theme(
-      text = ggplot2::element_text(family="Arial"),
+      #text = ggplot2::element_text(family="Arial"),
       plot.caption =  ggplot2::element_text(size=12, face= "bold"),
       axis.title.y = ggplot2::element_text(size=16, face= "bold"), 
       axis.title.x = ggplot2::element_blank(), 

@@ -102,60 +102,60 @@ statistics.
 
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 
-counts  <- make_counts(input, threads=6, parse="default_neb",
+counts  <- make_counts(input, threads=1, parse="default_neb",
                        type="fastq", trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))     
     
      
-############################################################      
-### Seqpac trimming using the make_trim function
-### using user settings parsed to make_trim
- 
-# Make a parse list (see ?make_trim):  
-parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
-             adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
-             polyG=c(type="hard_trim", min=10, mismatch=0.1),
-             seq_range=c(min=14, max=70),
-             quality=c(threshold=20, percent=0.8))
-               
-counts  <-  make_counts(input, threads=6,
-                        type="fastq", trimming="seqpac",
-                        parse=parse, 
-                        evidence=c(experiment=2, sample=1))           
-  
-  
-############################################################      
-### Seqpac trimming using the make_cutadapt function
-### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
-
- input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
- 
- # Parse for make_cutadapt is a list of 2 character string expressions.
- # The first is parsed to cutadapt and the other to fastq_quality_filter 
- # For parallel processes '-j 1' is recommended since seqpac will   
- # parallelize across samples and not within.
- # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
- 
- parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 14 -M 70",
-              fastq_quality_filter="-q 20 -p 80")
- 
- counts  <-  make_counts(input, threads=6,
-                        type="fastq", trimming="cutadapt",
-                        parse=parse, 
-                        evidence=c(experiment=2, sample=1))   
- 
- 
- ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
- test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
- extras <- apply(test$counts, 1, function(x){sum(!x==0)})
- test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
- 
- 
- ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
- test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
- extras <- apply(test$counts, 1, function(x){sum(!x==0)})
- test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
- 
+# ############################################################      
+# ### Seqpac trimming using the make_trim function
+# ### using user settings parsed to make_trim
+#  
+# # Make a parse list (see ?make_trim):  
+# parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
+#              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
+#              polyG=c(type="hard_trim", min=10, mismatch=0.1),
+#              seq_range=c(min=14, max=70),
+#              quality=c(threshold=20, percent=0.8))
+#                
+# counts  <-  make_counts(input, threads=1,
+#                         type="fastq", trimming="seqpac",
+#                         parse=parse, 
+#                         evidence=c(experiment=2, sample=1))           
+#   
+#   
+# ############################################################      
+# ### Seqpac trimming using the make_cutadapt function
+# ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+# 
+#  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+#  
+#  # Parse for make_cutadapt is a list of 2 character string expressions.
+#  # The first is parsed to cutadapt and the other to fastq_quality_filter 
+#  # For parallel processes '-j 1' is recommended since seqpac will   
+#  # parallelize across samples and not within.
+#  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
+#  
+#  parse = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 14 -M 70",
+#               fastq_quality_filter="-q 20 -p 80")
+#  
+#  counts  <-  make_counts(input, threads=1,
+#                         type="fastq", trimming="cutadapt",
+#                         parse=parse, 
+#                         evidence=c(experiment=2, sample=1))   
+#  
+#  
+#  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
+#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
+#  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#  test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
+#  
+#  
+#  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
+#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
+#  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#  test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
+#  
  
  
 }
@@ -166,7 +166,6 @@ counts  <-  make_counts(input, threads=6,
 Other PAC generation: 
 \code{\link{PAC_check}()},
 \code{\link{make_PAC}()},
-\code{\link{make_anno}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
 \code{\link{make_trim}()},

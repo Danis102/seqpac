@@ -59,9 +59,9 @@
 #'    
 #' @examples
 #' 
-#'## Note, these examples will generate some warnings since data is based on
-#'heavily down-sampled fastq files, where many sequences recieves low counts in
-#'specific groups.
+#'# Note, these examples will generate some warnings since data is based on
+#'# heavily down-sampled fastq files, where many sequences recieves low counts in
+#'# specific groups.
 #'
 #'## Load test data
 #'library(seqpac)
@@ -69,25 +69,25 @@
 #'
 #'## Simple model testing embryonic stages using Wald test with local fit (default)
 #'table(pac$Pheno$stage)
-#'output_deseq <- PAC_deseq(pac, model= ~stage, threads=6)
+#'#output_deseq <- PAC_deseq(pac, model= ~stage, threads=6)
 #'
 #'## Batch corrected, but still graphs will be generated from 'stage' since it is first in the model  
-#'output_deseq <- PAC_deseq(pac, model= ~stage + batch)
+#'#output_deseq <- PAC_deseq(pac, model= ~stage + batch)
 #'
 #'## Using pheno_target we can change focus
-#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target=list("batch"))
+#'#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target=list("batch"))
 #'
 #'## With pheno_target we can also change the direction fo the comparision change focus
 #'# Stage1 vs Stage3:
-#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage1", "Stage3")),  threads=6)   
+#'#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage1", "Stage3")),  threads=6)   
 #'# Stage3 vs Stage5:
-#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage3", "Stage5")),  threads=6)  
+#'#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage3", "Stage5")),  threads=6)  
 #'# Stage5 vs Stage3 (reverse order):
-#'output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage5", "Stage3")),  threads=6)  
+#'#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage5", "Stage3")),  threads=6)  
 #'
 #'## In the output you find PAC merged results, target plots and output_deseq   
-#'names(output_deseq)
-#'tibble::as_tibble(output_deseq$result)
+#'#names(output_deseq)
+#'#tibble::as_tibble(output_deseq$result)
 #'
 #' @export
 
@@ -140,7 +140,15 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
   cat("\n")
   cat(paste0("** ", comp, " **"))
   cat("\n")
-  cat(DESeq2::summary(res_DESeq2))
+  
+  # Print summary working with different DESeq versions
+  test <- try(cat(DESeq2::summary(res_DESeq2)), silent = TRUE)
+  if(class(test) == "try-error"){ 
+    cat(DESeq2::summary.DESeqResults(res_DESeq2))
+  }else{
+    print(test)
+  }
+  
   res_DESeq2_df <- as.data.frame(res_DESeq2)
   anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),]
 

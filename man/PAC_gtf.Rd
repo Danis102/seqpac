@@ -86,88 +86,88 @@ Bowtie.
 \examples{
 
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
 
 ##############################################################
 ## Simplified repeatmasker annotation with genomic mapping
   
-genome <- "/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa"
-gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
+#genome <- "/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa"
+#gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
 
-# Only returns tibble:
-repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", gtf_repeat=gtf_repeat, threads=10)
+## Only returns tibble:
+#repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", gtf_repeat=gtf_repeat, threads=10)
 
-# Merge with PAC$Anno dataframe: 
-pac_merge <- PAC_gtf(pac, genome=genome, return="merge", gtf_repeat=gtf_repeat, threads=10)        
+## Merge with PAC$Anno dataframe: 
+#pac_merge <- PAC_gtf(pac, genome=genome, return="merge", gtf_repeat=gtf_repeat, threads=10)        
 
-
-##############################################################
-## Full output previously mapped columns up to 3 mismatches
-
-# Generates an error because genome mapping was done
-# with add_reanno(genome_max=10):
-genome_col <- colnames(pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
-
-repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10) 
-
-# Works because PAC_gtf automatically maps the genome with add_reanno(genome_max="all")
-genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\\\d_genome", colnames(pac_merge$Anno))]
-repeat_full <- PAC_gtf(pac_merge, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10)
-
-# return="full" returns all annotation for all each coordinate
-repeat_full[800:820]
-head(repeat_full["TGCGGAAGGATCATTA_mis0"])
-     
 
 ##############################################################
-## With additional gtfs including custom other
-gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
-gtf_protein <- "/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
-
-# Note, target_other points to columns in each gtf listed in gtf_other 
-# and the list objects must therefore have the same names:
-gtf_other=list(rep=gtf_repeat, prot=gtf_protein)
-target_other=list(rep="repFamily", prot=c("type", "gene_id")) 
-
-genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\\\d_genome", colnames(pac_merge$Anno))]
-many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=3,
-                       gtf_repeat=gtf_repeat, gtf_protein=gtf_protein,  
-                       gtf_other=gtf_other, target_other=target_other, threads=10)
-
-# With perfect alignments (0 mismatches)
-many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=0,
-                       gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, threads=10)
-
-##############################################################
-## Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers)
-
-# Go to https://github.com/dpryan79/ChromosomeMappings
-# Locate your genome of choice
-# Download from raw.githubusercontent:
-dm6_conv <- readr::read_tsv("https://raw.githubusercontent.com/dpryan79/ChromosomeMappings/master/BDGP6_UCSC2ensembl.txt", col_names=FALSE)
-names(dm6_conv) <- c("ucsc", "ensembl")
-
-# Fix mito genome name (should not contain "dmel_")
-dm6_conv[grepl("mito", dm6_conv$ensembl),]
-dm6_conv$ensembl <- gsub("dmel_mitochondrion_genome", "mitochondrion_genome", dm6_conv$ensembl) 
-
-# Load local UCSC formated file and make a new converted vector 
-gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker.gtf"
-repeat_gtf <- rtracklayer::readGFF(gtf_repeat)
-convec <- dm6_conv$ensembl[match(as.character(repeat_gtf$seqid),   as.character(dm6_conv$ucsc))]
-
-# Test that the convercsion went well
-test <- cbind(convec, as.character(repeat_gtf$seqid))
-test2 <- unique(paste( test[,1], test[,2], sep="|"))
-table(table(do.call("rbind", strsplit(test2, "\\\\|"))[,1]) == 1) # All TRUE
-
-# Exchange the chromosomal names, convert to genomic ranges and save your fil as gtf 
-repeat_gtf$seqid <- convec
-gr <- GenomicRanges::GRanges(seqnames=repeat_gtf$seqid, IRanges::IRanges(repeat_gtf$start, repeat_gtf$end), strand=repeat_gtf$strand)
-GenomicRanges::mcols(gr) <- data.frame(type="repeat", source="repeatMasker_dm6_ucsc",
-                                       repName = repeat_gtf$repName, repClass = repeat_gtf$repClass,
-                                       repFamily = repeat_gtf$repFamily)
-rtracklayer::export(gr, file.path(dirname(gtf_repeat), "repeatMasker_ensembl.gtf"), format="gtf")
+### Full output previously mapped columns up to 3 mismatches
+#
+### Generates an error because genome mapping was done
+### with add_reanno(genome_max=10):
+#genome_col <- colnames(pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
+#
+#repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10) 
+#
+## Works because PAC_gtf automatically maps the genome with add_reanno(genome_max="all")
+#genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", colnames(pac_merge$Anno))]
+#repeat_full <- PAC_gtf(pac_merge, genome=genome_col, return="full", gtf_repeat=gtf_repeat, threads=10)
+#
+## return="full" returns all annotation for all each coordinate
+#repeat_full[800:820]
+#head(repeat_full["TGCGGAAGGATCATTA_mis0"])
+#      
+#
+###############################################################
+### With additional gtfs including custom other
+#gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
+#gtf_protein <- "/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
+#
+## Note, target_other points to columns in each gtf listed in gtf_other 
+## and the list objects must therefore have the same names:
+#gtf_other=list(rep=gtf_repeat, prot=gtf_protein)
+#target_other=list(rep="repFamily", prot=c("type", "gene_id")) 
+#
+#genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", colnames(pac_merge$Anno))]
+#many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=3,
+#                        gtf_repeat=gtf_repeat, gtf_protein=gtf_protein,  
+#                        gtf_other=gtf_other, target_other=target_other, threads=10)
+#
+## With perfect alignments (0 mismatches)
+#many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", mismatches=0,
+#                        gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, threads=10)
+#
+###############################################################
+### Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers)
+#
+## Go to https://github.com/dpryan79/ChromosomeMappings
+## Locate your genome of choice
+## Download from raw.githubusercontent:
+#dm6_conv <- readr::read_tsv("https://raw.githubusercontent.com/dpryan79/ChromosomeMappings/master/BDGP6_UCSC2ensembl.txt", col_names=FALSE)
+#names(dm6_conv) <- c("ucsc", "ensembl")
+#
+## Fix mito genome name (should not contain "dmel_")
+#dm6_conv[grepl("mito", dm6_conv$ensembl),]
+#dm6_conv$ensembl <- gsub("dmel_mitochondrion_genome", "mitochondrion_genome", dm6_conv$ensembl) 
+#
+## Load local UCSC formated file and make a new converted vector 
+#gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker.gtf"
+#repeat_gtf <- rtracklayer::readGFF(gtf_repeat)
+#convec <- dm6_conv$ensembl[match(as.character(repeat_gtf$seqid),   as.character(dm6_conv$ucsc))]
+#
+## Test that the convercsion went well
+#test <- cbind(convec, as.character(repeat_gtf$seqid))
+#test2 <- unique(paste( test[,1], test[,2], sep="|"))
+#table(table(do.call("rbind", strsplit(test2, "\\|"))[,1]) == 1) # All TRUE
+#
+## Exchange the chromosomal names, convert to genomic ranges and save your fil as gtf 
+#repeat_gtf$seqid <- convec
+#gr <- GenomicRanges::GRanges(seqnames=repeat_gtf$seqid, IRanges::IRanges(repeat_gtf$start, repeat_gtf$end), strand=repeat_gtf$strand)
+#GenomicRanges::mcols(gr) <- data.frame(type="repeat", source="repeatMasker_dm6_ucsc",
+#                                        repName = repeat_gtf$repName, repClass = repeat_gtf$repClass,
+#                                        repFamily = repeat_gtf$repFamily)
+#rtracklayer::export(gr, file.path(dirname(gtf_repeat), "repeatMasker_ensembl.gtf"), format="gtf")
 
 
 }

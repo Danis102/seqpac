@@ -30,10 +30,10 @@ data frames. \code{\link{add_reanno}} will add the new annotations to a PAC-list
 object.
 }
 \examples{
-reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, threads=8)
-reanno <- import_reanno(bowtie_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno", threads=8)
-
-bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
+#reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, threads=8)
+#reanno <- import_reanno(bowtie_path="/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/reanno", threads=8)
+#
+#bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
 }
 \seealso{
 \url{http://bowtie-bio.sourceforge.net/index.shtml} for information about

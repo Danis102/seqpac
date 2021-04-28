@@ -95,103 +95,103 @@ function automates the mapping and annotation of piRNA.
 }
 \examples{
 
-library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
-
-
-#######################################################################
-### Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers) ### 
-
-# Go to https://github.com/dpryan79/ChromosomeMappings
-# Locate your genome of choice
-# Download from raw.githubusercontent:
-dm6_conv <- readr::read_tsv("https://raw.githubusercontent.com/dpryan79/ChromosomeMappings/master/BDGP6_UCSC2ensembl.txt", col_names=FALSE)
-names(dm6_conv) <- c("ucsc", "ensembl")
-
-# Load local UCSC formated file and make a new converted vector 
-gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker.gtf"
-repeat_gtf <- rtracklayer::readGFF(gtf_repeat)
-convec <- dm6_conv$ensembl[match(as.character(repeat_gtf$seqid),   as.character(dm6_conv$ucsc))]
-
-# Test that the convercsion went well
-test <- cbind(convec, as.character(repeat_gtf$seqid))
-test2 <- unique(paste( test[,1], test[,2], sep="|"))
-table(table(do.call("rbind", strsplit(test2, "\\\\|"))[,1]) == 1) # All TRUE
-
-# Exchange the chromosomal names, convert to genomic ranges and save your fil as gtf 
-repeat_gtf$seqid <- convec
-gr <- GenomicRanges::GRanges(seqnames=repeat_gtf$seqid, IRanges::IRanges(repeat_gtf$start, repeat_gtf$end), strand=repeat_gtf$strand)
-GenomicRanges::mcols(gr) <- data.frame(type="repeat", source="repeatMasker_dm6_ucsc",
-                                       repName = repeat_gtf$repName, repClass = repeat_gtf$repClass,
-                                       repFamily = repeat_gtf$repFamily)
-rtracklayer::export(gr, file.path(dirname(gtf_repeat), "repeatMasker_ensembl.gtf"), format="gtf")
-
-
-################################################## 
-### Prepare pirna_meta from pirbase data file  ###
-# - Download pirbase data from pirbase. Make sure you get a table where
-#   Pubmed ID for each unique experiment is specified in a seperate column. 
-# - You may also use your own file, with a custom 2nd column. 
-# - Resulting data.table should have 2 columns named: "name", "n_evidence". 
-# - The name column must either match fasta reference names or sequence names in PAC.
-# - The 2nd column will be embedded in PAC_pirna output.   
-# - Noter: Reading and preparing pirbase data may take several min. 
-
-# Humans:
-pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Humans/pirBase/hg38/piR_hsa.txt.gz"), delim="\t", col_names = TRUE)
-# Flies:
-pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.txt.gz"), delim="\t", col_names = TRUE)
-pirna_meta <- tibble::tibble(name=pirbase_dat$name, pubmed_id=pirbase_dat$pubmed)
-rm(pirbase_dat)
- 
-##############################################################################
-### Get repeatMasker table and manually turn it into gtf using rtracklayer ###
-# Table names can be found at:
-# https://genome.ucsc.edu/cgi-bin/hgTables
-
-dest_path <- file.path(ref_path, "/repeatMasker/repeatMasker.gtf") # Full file path
-if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
-session <- rtracklayer::browserSession("UCSC")
-rtracklayer::genome(session) <- "dm6"
-rm_tab <- tibble::as_tibble(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
-gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges::IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
-GenomicRanges::mcols(gr)$type <- "repeat"
-GenomicRanges::mcols(gr)$source <- "repeatMasker_dm6"
-GenomicRanges::mcols(gr)$repName <- rm_tab$repName
-GenomicRanges::mcols(gr)$repClass <- rm_tab$repClass
-GenomicRanges::mcols(gr)$repFamily <- rm_tab$repFamily  
-rtracklayer::export(gr, dest_path, format="gtf")
-
-
-#####################
-### Run PAC_pirna ###
+# library(seqpac)
+# load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
 # 
-library(seqpac)
-load("/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_merge_10counts100.Rdata")
-load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
-
-pirna <- "/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa"
-genome <- "/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa"
-pirna <- "pirna"
-genome <- "mis0_chromosomes_genome"
-
-pirna_meta=NULL
-
-gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
-gtf_protein <- "/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
-
-PAC=pac
-threads=10
-mismatches=3
-norm="rpm"
-pheno_target= list("type")
-cluster=list(max_gap=1000, min_n=2) 
-pirna_meta=pirna_meta
-chrom_size=NULL
-
-
-pirna_analysis <- PAC_pirna(PAC, pirna=pirna, pirna_meta=pirna_meta, genome=genome, chrom_size=NULL, mismatches=3, stranded=FALSE,
-                      gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, norm=norm, pheno_target=pheno_target, threads=1)
+# 
+# #######################################################################
+# ### Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers) ### 
+# 
+# # Go to https://github.com/dpryan79/ChromosomeMappings
+# # Locate your genome of choice
+# # Download from raw.githubusercontent:
+# dm6_conv <- readr::read_tsv("https://raw.githubusercontent.com/dpryan79/ChromosomeMappings/master/BDGP6_UCSC2ensembl.txt", col_names=FALSE)
+# names(dm6_conv) <- c("ucsc", "ensembl")
+# 
+# # Load local UCSC formated file and make a new converted vector 
+# gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker.gtf"
+# repeat_gtf <- rtracklayer::readGFF(gtf_repeat)
+# convec <- dm6_conv$ensembl[match(as.character(repeat_gtf$seqid),   as.character(dm6_conv$ucsc))]
+# 
+# # Test that the convercsion went well
+# test <- cbind(convec, as.character(repeat_gtf$seqid))
+# test2 <- unique(paste( test[,1], test[,2], sep="|"))
+# table(table(do.call("rbind", strsplit(test2, "\\|"))[,1]) == 1) # All TRUE
+#
+# # Exchange the chromosomal names, convert to genomic ranges and save your fil as gtf 
+# repeat_gtf$seqid <- convec
+# gr <- GenomicRanges::GRanges(seqnames=repeat_gtf$seqid, IRanges::IRanges(repeat_gtf$start, repeat_gtf$end), strand=repeat_gtf$strand)
+# GenomicRanges::mcols(gr) <- data.frame(type="repeat", source="repeatMasker_dm6_ucsc",
+#                                        repName = repeat_gtf$repName, repClass = repeat_gtf$repClass,
+#                                        repFamily = repeat_gtf$repFamily)
+# rtracklayer::export(gr, file.path(dirname(gtf_repeat), "repeatMasker_ensembl.gtf"), format="gtf")
+# 
+# 
+# ################################################## 
+# ### Prepare pirna_meta from pirbase data file  ###
+# # - Download pirbase data from pirbase. Make sure you get a table where
+# #   Pubmed ID for each unique experiment is specified in a seperate column. 
+# # - You may also use your own file, with a custom 2nd column. 
+# # - Resulting data.table should have 2 columns named: "name", "n_evidence". 
+# # - The name column must either match fasta reference names or sequence names in PAC.
+# # - The 2nd column will be embedded in PAC_pirna output.   
+# # - Noter: Reading and preparing pirbase data may take several min. 
+# 
+# # Humans:
+# pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Humans/pirBase/hg38/piR_hsa.txt.gz"), delim="\t", col_names = TRUE)
+# # Flies:
+# pirbase_dat <- readr::read_delim(gzfile("/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.txt.gz"), delim="\t", col_names = TRUE)
+# pirna_meta <- tibble::tibble(name=pirbase_dat$name, pubmed_id=pirbase_dat$pubmed)
+# rm(pirbase_dat)
+#  
+# ##############################################################################
+# ### Get repeatMasker table and manually turn it into gtf using rtracklayer ###
+# # Table names can be found at:
+# # https://genome.ucsc.edu/cgi-bin/hgTables
+# 
+# dest_path <- file.path(ref_path, "/repeatMasker/repeatMasker.gtf") # Full file path
+# if(!file.exists(dirname(dest_path))){dir.create(dirname(dest_path))}
+# session <- rtracklayer::browserSession("UCSC")
+# rtracklayer::genome(session) <- "dm6"
+# rm_tab <- tibble::as_tibble(rtracklayer::getTable(rtracklayer::ucscTableQuery(session, track="RepeatMasker", table="rmsk")))
+# gr <- GenomicRanges::GRanges(seqnames=rm_tab$genoName, IRanges::IRanges(rm_tab$genoStart, rm_tab$genoEnd), strand=rm_tab$strand)
+# GenomicRanges::mcols(gr)$type <- "repeat"
+# GenomicRanges::mcols(gr)$source <- "repeatMasker_dm6"
+# GenomicRanges::mcols(gr)$repName <- rm_tab$repName
+# GenomicRanges::mcols(gr)$repClass <- rm_tab$repClass
+# GenomicRanges::mcols(gr)$repFamily <- rm_tab$repFamily  
+# rtracklayer::export(gr, dest_path, format="gtf")
+# 
+# 
+# #####################
+# ### Run PAC_pirna ###
+# # 
+# library(seqpac)
+# load("/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_merge_10counts100.Rdata")
+# load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", package = "seqpac", mustWork = TRUE))
+# 
+# pirna <- "/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa"
+# genome <- "/home/danis31/Desktop/Temp_docs/fasta/biomartr_genome/chromosomes.fa"
+# pirna <- "pirna"
+# genome <- "mis0_chromosomes_genome"
+#
+# pirna_meta=NULL
+#
+# gtf_repeat <- "/home/danis31/Desktop/Temp_docs/fasta/repeatMasker/repeatMasker_ensembl.gtf"
+# gtf_protein <- "/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/gtf/Drosophila_melanogaster.gtf"
+# 
+# PAC=pac
+# threads=10
+# mismatches=3
+# norm="rpm"
+# pheno_target= list("type")
+# cluster=list(max_gap=1000, min_n=2) 
+# pirna_meta=pirna_meta
+# chrom_size=NULL
+# 
+# 
+# pirna_analysis <- PAC_pirna(PAC, pirna=pirna, pirna_meta=pirna_meta, genome=genome, chrom_size=NULL, mismatches=3, stranded=FALSE,
+#                       gtf_repeat=gtf_repeat, gtf_protein=gtf_protein, norm=norm, pheno_target=pheno_target, threads=1)
  
      
 }
