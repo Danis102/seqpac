@@ -167,7 +167,8 @@ tRNA_class <- function(PAC, map, terminal = 5){
                                class=paste0(sort(unique(x$class)), collapse=";"),
                                decoder=paste0(sort(unique(x$decoder)), collapse=";"),
                                acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
-                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
+                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"),
+                               type=paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-"))
       })
       finished <- do.call("rbind", finished)
       # Extract tRNAs from PAC and merge results
