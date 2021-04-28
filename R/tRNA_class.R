@@ -134,7 +134,11 @@
 #'      
 #' @export
 
-tRNA_class <- function(PAC, map, terminal){
+tRNA_class <- function(PAC, map, terminal = 5){
+      if(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==TRUE)
+            {cat("The map object contains references without hits. Please remove these (see ?map_rangetype for example)")
+             stopifnot(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==FALSE)
+            }
       type_vector <- lapply(map, function(x){
         map
         # Setup
