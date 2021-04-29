@@ -104,16 +104,24 @@ map sequences in PAC and mapping extract information.
 # ## Analyze range types with map_rangetype and PAC_trna functions
 # 
 # # Download ss object from GtRNAdb 
-# dest_path <- file.path("/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
-# download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", destfile=dest_path)
-# untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-# ss_file <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
+# dest_path <- file.path(
+#              "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
+#
+# download.file(
+#    url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", 
+#    destfile=dest_path)
+# untar(dest_path, exdir= dirname(dest_path), 
+#    files = "dm6-tRNAs-confidence-set.ss")
+# ss_file <- 
+# "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
 # 
 # # Classify fragments according to loop cleavage (small loops are omitted)       
-# map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, min_loop_width=4)   # Generates warning         
+# map_object_ss <- map_rangetype(map_object, type="ss", 
+#                                ss=ss_file, min_loop_width=4)# Gives warning         
 # 
 # # Remove reference tRNAs with no hits
-# map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){x[[2]][1,1] == "no_hits"}))]
+# map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, 
+                                  function(x){x[[2]][1,1] == "no_hits"}))]
 # map_object_ss[[2]]
 # 
 # 
@@ -170,7 +178,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

@@ -53,17 +53,24 @@
 #' 
 #' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #' counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
-#'                        trimming="seqpac", plot=TRUE, evidence=c(experiment=2, sample=1))
+#'                        trimming="seqpac", plot=TRUE, 
+#'                        evidence=c(experiment=2, sample=1))
 #'
 #'
 #' ### Then generate a phenotype table with make_pheno (herre using file names)
 #'
-#' #  Note:  'Sample_ID' column need to be the same IDs as colnames in the counts table.
+#' #  Note:  'Sample_ID' column need to be the 
+#' #          same IDs as colnames in the counts table.
 #'
-#' pheno <- as.data.frame(do.call("rbind", strsplit(list.files(input,pattern="*.fastq.gz"), "_|\\."))[,c(1,2,3,4)]) 
+#' pheno <- as.data.frame(
+#'            do.call("rbind", 
+#'            strsplit(list.files(input,pattern="*.fastq.gz"), 
+#'            "_|\\."))[,c(1,2,3,4)]) 
 #' colnames(pheno) <- c("stage", "batch", "index", "sample") 
 #' pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
-#' pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, counts=counts$counts)
+#' pheno <- make_pheno(pheno=pheno, 
+#'                     progress_report=counts$progress_report, 
+#'                     counts=counts$counts)
 #'
 #'  
 #' ### Lastly combine into PAC
@@ -81,24 +88,35 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       lines <- readLines(pheno, n=20)
       header <- which(grepl("\\<Sample_ID", lines))
       if(!length(header) == 1){
-        stop("Error! Cannot find comma seperated header with first column named 'Sample_ID'")
+        stop("\nCannot find comma seperated header",
+             "\nwith first column named 'Sample_ID'")
       }
       pheno <- read.delim(pheno, skip= header-1,  header=TRUE, sep=",")
       cat("Illumina type SampleSheet.csv file was found.\n")
       ## Universal search for colnames:
-      col_srch <- c("^Sample_ID$", "^Sample_Name$", "^SampleProject$|^Sample_Project$", "^Index$|^index$")
-      col_nr <- unlist(lapply(col_srch, function(x){which(grepl(x, colnames(pheno)))})) 
+      col_srch <- c("^Sample_ID$", "^Sample_Name$", 
+                    "^SampleProject$|^Sample_Project$", "^Index$|^index$")
+      col_nr <- unlist(lapply(col_srch, function(x){
+        which(grepl(x, colnames(pheno)))
+        })) 
       pheno <- pheno[, col_nr]
       ## Try to add Illumina stat
-      # path_stat <- list.files(dirnames(pheno, pattern=".txt", full.names = TRUE)
+      # path_stat <- list.files(dirnames(pheno, pattern=".txt", 
+      #                                  full.names = TRUE)
       # if(length(path_stat) == 1){
-      #               stat <- read.delim(paste0(pheno, "/Samples_stat.txt"), header=TRUE, sep="\t")
-      #               stopifnot(any(as.character(pheno$Sample_ID) %in% as.character(stat$SampleId)))
-      #               pheno <- cbind(pheno, stat[match(as.character(pheno$Sample_ID), as.character(stat$SampleId)), !colnames(stat) %in% c("SampleId", "Name", "Index")])
+      #   stat <- read.delim(paste0(pheno, "/Samples_stat.txt"), 
+      #                                  header=TRUE, sep="\t")
+      #   stopifnot(
+      #     any(as.character(pheno$Sample_ID) %in% as.character(stat$SampleId)))
+      #               pheno <- cbind(pheno, 
+      #                              stat[match(as.character(pheno$Sample_ID), 
+      #                              as.character(stat$SampleId)), 
+      #                   !colnames(stat) %in% c("SampleId", "Name", "Index")])
       # }
     }else{
       type <- "manual"
-      warning("Did not find SampleSheet.csv. Will try to read pheno-file using type='manual' instead.")
+      warning("Did not find SampleSheet.csv.", 
+              " Will try to \nread pheno-file using type='manual' instead.")
     } 
     
   }
@@ -106,9 +124,12 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
   ### Read using manual pheno.txt file
   if(type=="manual"){
     if(is.data.frame(pheno)){
-      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", colnames(pheno)))
+      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", 
+                            colnames(pheno)))
       if(!length(header) == 1){
-        stop("Cannot find column named 'Sample_ID' \nor you have >1 columns named 'Sample_ID'")
+        stop(
+          "\nCannot find column named 'Sample_ID'",
+          "\nor you have >1 columns named 'Sample_ID'")
       }
       colnames(pheno)[header] <- "Sample_ID"
       
@@ -116,17 +137,19 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       lines <- readLines(pheno, n=20)
       header <- which(grepl("Sample_ID|sample_ID|Sample_id|sample_id", lines))
       if(!length(header) == 1){
-        stop("Cannot find comma seperated header with first column \nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
-        }
+        stop("\nCannot find comma seperated header with first column", 
+             "\nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
+      }
       head_1 <- stringr::str_count (lines[header], ",")
       row_1 <- stringr::str_count (lines[header+1], ",")
       if(row_1-head_1>=0){
-            pheno <- read.delim(pheno,  header=TRUE, sep=",")
+        pheno <- read.delim(pheno,  header=TRUE, sep=",")
       }else{
-            pheno <- read.delim(pheno,  header=TRUE, sep="\t")
+        pheno <- read.delim(pheno,  header=TRUE, sep="\t")
       }
     }
-    pheno$Sample_ID <- as.character(gsub("-", "_", as.character(pheno$Sample_ID)))
+    pheno$Sample_ID <- as.character(gsub("-", "_", 
+                                         as.character(pheno$Sample_ID)))
   }
   
   
@@ -163,7 +186,9 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       stop("Sample_IDs were not unique in pheno input.")
     }
     if(!length(ord[!ord==0])==nrow(pheno)){
-      stop("\nNot all Sample_ID in pheno were available in counts column names.\nDouble check your Sample_ID column in pheno input.") 
+      stop(
+      "\nNot all Sample_ID in pheno were available in counts column names.",
+      "\nDouble check your Sample_ID column in pheno input.") 
     }
     
     
@@ -177,32 +202,37 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       for(i in 1:nrow(df)){
         if(!ord[i] == 0){
           df[i,] <- as.character(t(pheno[ord[i],]))
-         }
+        }
       }
     }
     if(typ=="counts"){
       for(i in 1:nrow(df)){
-       df[ord[i],] <- as.character(t(pheno[i,]))
+        df[ord[i],] <- as.character(t(pheno[i,]))
       }
     }
     pheno <- df
-      
+    
     # Report outcome
     stopifnot(identical(rownames(pheno), colnames(counts)))
     logi_miss <- ord %in% 0
     if(any(logi_miss)){
-      warning("Not all samples in counts were represented in pheno input.\n  These will have 'NA' in pheno.")
-      }
-    cat("Of", length(colnames(counts)), "sample names in counts,", sum(logi_miss), "were found in pheno file path.\n")
+      warning(" Not all samples in counts were represented in pheno input.",
+              "\n These will have 'NA' in pheno.")
+    }
+    cat("Of", length(colnames(counts)), 
+        "sample names in counts,", 
+        sum(logi_miss), 
+        "were found in pheno file path.\n")
     cat("\n")
-    print(data.frame(pheno=as.character(pheno$Sample_ID), counts=colnames(counts)))
+    print(data.frame(pheno=as.character(pheno$Sample_ID), 
+                     counts=colnames(counts)))
   }else{
     warning("\nNo count table was specified. Final Pheno will be unordered!\n")
   }
   
   ## Add progress report
   if(!is.null(progress_report)){
-    cat("\nA progress report was specified, will attempt to match rownames...\n")
+    cat("\nProgress report was specified, will attempt to match rownames...\n")
     
     # Fix sample names (illumina automatically exchanges "-" for "_"
     if(!sum(rownames(progress_report) %in% rownames(pheno)) == nrow(pheno)){
@@ -218,12 +248,14 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
     if(any(duplicated(prog_ord))){
       stop("Sample_IDs were not unique in pheno input.")
     }
-    progress_report <- progress_report[match(rownames(pheno), rownames(progress_report)),]
+    progress_report <- progress_report[match(rownames(pheno), 
+                                             rownames(progress_report)),]
     stopifnot(identical(rownames(pheno), rownames(progress_report)))
     pheno <- cbind(pheno, progress_report)
     cat("\n")
   }else{
-    warning("\nNo progress report was specified. Will be missing in the final Pheno.\n")
+    warning("\nNo progress report was specified.",
+            "\nWill be missing in the final Pheno.\n")
   }
   cat("Done!\n")
   return(pheno)

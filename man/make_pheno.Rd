@@ -56,17 +56,24 @@ library(seqpac)
 
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
-                       trimming="seqpac", plot=TRUE, evidence=c(experiment=2, sample=1))
+                       trimming="seqpac", plot=TRUE, 
+                       evidence=c(experiment=2, sample=1))
 
 
 ### Then generate a phenotype table with make_pheno (herre using file names)
 
-#  Note:  'Sample_ID' column need to be the same IDs as colnames in the counts table.
+#  Note:  'Sample_ID' column need to be the 
+#          same IDs as colnames in the counts table.
 
-pheno <- as.data.frame(do.call("rbind", strsplit(list.files(input,pattern="*.fastq.gz"), "_|\\\\."))[,c(1,2,3,4)]) 
+pheno <- as.data.frame(
+           do.call("rbind", 
+           strsplit(list.files(input,pattern="*.fastq.gz"), 
+           "_|\\\\."))[,c(1,2,3,4)]) 
 colnames(pheno) <- c("stage", "batch", "index", "sample") 
 pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
-pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, counts=counts$counts)
+pheno <- make_pheno(pheno=pheno, 
+                    progress_report=counts$progress_report, 
+                    counts=counts$counts)
 
  
 ### Lastly combine into PAC

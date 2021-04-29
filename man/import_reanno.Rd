@@ -33,14 +33,13 @@ row names.}
 }
 \value{
 List of data frames with additional information from reannotation
-  files generated with bowtie. If \emph{report="minimum"}, the function
-  will report each hit only as the number of mismatches for a given reference
-  file. If \emph{report="full"} the full name reported in the fasta
-  file used as reference in the bowtie reannotation will be reported. If a
-  reference name is specified in \emph{reduce}, this reference is excempted
-  from \emph{report="full"} and is instead reported as
-  \emph{report="minimum"}.
-  
+  files generated with bowtie. If \emph{report="minimum"}, the function will
+  report each hit only as the number of mismatches for a given reference
+  file. If \emph{report="full"} the full name reported in the fasta file used
+  as reference in the bowtie reannotation will be reported. If a reference
+  name is specified in \emph{reduce}, this reference is excempted from
+  \emph{report="full"} and is instead reported as \emph{report="minimum"}.
+
   Caution: Large references with lots of redudancy (such as pirBase in some
   species) will cause massive character strings if \emph{report="full"} with
   no restrictions. Specifing such references in
@@ -50,14 +49,14 @@ List of data frames with additional information from reannotation
 This function imports bowtie output and summarizes the content.
 }
 \details{
-Given the path to alignment outputs from bowtie, \code{\link{import_reanno}} will
-attempt to read these files into R and generate a list of unordered
+Given the path to alignment outputs from bowtie, \code{\link{import_reanno}}
+will attempt to read these files into R and generate a list of unordered
 data.frames where each row summarizes all annotations for a given sequence.
-It is called by \code{\link{map_reanno}} to generate summarized data from bowtie
-output saved as .Rdata files. These files can then be re-imported into R
-where information is organized using \code{\link{make_reanno}}
-and finally added to the annotation table (PAC$Anno) of the original PAC-list
-object using \code{\link{add_reanno}}.
+It is called by \code{\link{map_reanno}} to generate summarized data from
+bowtie output saved as .Rdata files. These files can then be re-imported into
+R where information is organized using \code{\link{make_reanno}} and finally
+added to the annotation table (PAC$Anno) of the original PAC-list object
+using \code{\link{add_reanno}}.
 }
 \section{Important}{
  Re-annotation must have been done using Bowtie default

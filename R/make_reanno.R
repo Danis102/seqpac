@@ -138,7 +138,16 @@
 #' @export
 
 make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
-  files <- list.files(reanno_path, pattern="Full_reanno_mis0|Full_reanno_mis1|Full_reanno_mis2|Full_reanno_mis3|Full_reanno_mis4|Full_reanno_mis5", full.names = TRUE)
+  
+  files <- list.files(reanno_path, 
+                      pattern=paste0(
+                               "Full_reanno_mis0|",
+                               "Full_reanno_mis1|",
+                               "Full_reanno_mis2|",
+                               "Full_reanno_mis3|",
+                               "Full_reanno_mis4|",
+                               "Full_reanno_mis5"), 
+                      full.names = TRUE)
   seqs <- (seq(1:length(files)))-1
   reanno_lst <- list(NA)
   for(i in 1:length(files)){
@@ -163,13 +172,18 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
   })
   
   ## Check and fix missing references
-  NA_check <- unlist(lapply(reanno_lst, function(x){identical(names(reanno_lst[[1]]),  names(x))}))
+  NA_check <- unlist(lapply(reanno_lst, function(x){
+    identical(names(reanno_lst[[1]]),  names(x))
+    }))
   if(any(!NA_check)){
-    NA_which <- lapply(reanno_lst, function(x){which(!names(reanno_lst[[1]]) %in% names(x))})
+    NA_which <- lapply(reanno_lst, function(x){
+      which(!names(reanno_lst[[1]]) %in% names(x))
+      })
     warning(paste( "Missing references in Reanno file(s):\n", 
                    paste(basename(files)[!NA_check], collapse="\n "), 
                    "\nMissing ref(s): ",  
-                   paste(names(reanno_lst[[1]])[unlist(NA_which)], collapse=" "), 
+                   paste(names(reanno_lst[[1]])[unlist(NA_which)], 
+                         collapse=" "), 
                    "\nProbable reason: No sequences mapped to reference(s)."))
     
     for(j in 1:length(NA_which)){
@@ -180,31 +194,44 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
         for(g in 1:length(NA_which[[j]])){
           ps <- length(reanno_lst_match[[j]]) + g
           reanno_lst_match[[j]][[ps]] <- empt
-          names(reanno_lst_match[[j]])[ps] <- names(reanno_lst_match[[1]])[NA_which[[j]]]
+          names(reanno_lst_match[[j]])[ps] <- names(
+            reanno_lst_match[[1]])[NA_which[[j]]]
         }
-        reanno_lst_match[[j]] <- reanno_lst_match[[j]][match(names(reanno_lst_match[[1]]), names(reanno_lst_match[[j]]))]
+        reanno_lst_match[[j]] <- reanno_lst_match[[j]][match(
+          names(reanno_lst_match[[1]]), names(reanno_lst_match[[j]]))]
       }
     }
   }
   
   ## Generate overview file
   cat("\nGenerating the overview file ...\n")
-  stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){identical(names(reanno_lst_match[[1]]), names(t))}))))
-  stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){  do.call("c", lapply(t, function(g){identical(reanno_lst_match[[1]][[1]]$seq, g$seq)}))}))))
+  stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){
+    identical(names(reanno_lst_match[[1]]), names(t))
+    }))))
+  stopifnot(any(do.call("c", lapply(reanno_lst_match, function(t){
+    do.call("c", lapply(t, function(g){
+      identical(reanno_lst_match[[1]][[1]]$seq, g$seq)
+      }))
+    }))))
   bio_cat <- length(reanno_lst_match[[1]])
   df_fin <- matrix(NA, ncol=bio_cat, nrow=length(PAC_seq))
   colnames(df_fin) <- names(reanno_lst_match[[1]]) 
   df_fin <- tibble::as_tibble(df_fin)
   
   for (bio in 1:bio_cat){
-    df <- do.call("cbind", lapply(reanno_lst_match, function(x){return(x[[bio]]$mis_n)}))
-    vect <- apply(df, 1, function(x){ return(gsub("NA", "", paste(x, collapse="")))})
+    df <- do.call("cbind", lapply(reanno_lst_match, function(x){
+      return(x[[bio]]$mis_n)
+      }))
+    vect <- apply(df, 1, function(x){ 
+      return(gsub("NA", "", paste(x, collapse="")))
+      })
     df_fin[, bio] <- vect 
   }
-                    
+  
   df_fin[df_fin == ""] <- "_"
   vect_mis <- do.call("paste", as.list(df_fin))
-  df_fin$Any <- ifelse(vect_mis == paste0(rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit") 
+  df_fin$Any <- ifelse(vect_mis == paste0(
+    rep("_", times=bio_cat), collapse=" ") , "No_anno", "Hit") 
   df_fin$Mis0 <- ifelse(grepl("mis0", vect_mis) , "Hit", "No_hit")
   df_fin <- dplyr::bind_cols(tibble::tibble(seq=PAC_seq), df_fin) 
   
@@ -217,24 +244,35 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
     ns_rdata <- max(as.integer(gsub("Full_reanno_mis|.Rdata", "", outfile_fls)))
     file_nam <- paste0("anno_mis", ns_fa, ".fa")
     if(!ns_fa == ns_rdata+1){
-      stop(paste0("\nThe last anno_mis fasta ('leftover') file, named ", file_nam, ", was not found in reanno path.\nIf it was deleted, set mis_fasta_check=FALSE."))
-      }                
-    noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", file_nam))
+      stop(paste0(
+        "\nThe last anno_mis fasta ('leftover') file, named ",
+        file_nam,
+        ", was not found in reanno path.",
+        "\nIf it was deleted, set mis_fasta_check=FALSE."))
+    }                
+    noAnno_fasta <- Biostrings::readDNAStringSet(paste0(reanno_path,"/", 
+                                                        file_nam))
     logi_no_anno <- df_fin$Any=="No_anno"
-    logi_olap <-  df_fin$seq[df_fin$Any=="No_anno"] %in% gsub("NO_Annotation_", "", names(noAnno_fasta))
+    logi_olap <- df_fin$seq[df_fin$Any=="No_anno"] %in% gsub("NO_Annotation_", 
+                                                            "", 
+                                                            names(noAnno_fasta))
     if(length(noAnno_fasta) + sum(logi_no_anno)==0){
       cat("Congratulation, all sequences recieved an annotation.\n")
       perc<-100
     }else{
       perc <-  round(sum(logi_olap)  / sum(logi_no_anno)*100, digits=2)
-      cat("Of the ",  sum(logi_no_anno), "missing sequences in the reannotation\n")
+      cat("Of the ",  sum(logi_no_anno), 
+          "missing sequences in the reannotation\n")
       cat(paste0("files ", perc, "% were found in ", file_nam, ".\n"))
     }
     if(!perc==100){
-      warning(paste0(" Not all missing annotations were found in ", file_nam, ".\n This indicates that something has went wrong in the reannotation workflow.\n"))
+      warning(paste0(" Not all missing annotations were found in ", 
+                     file_nam, 
+                     ".\n This indicates that something has went wrong in the",
+                     "\n reannotation workflow.\n"))
     }else{
       cat("Passed fasta check!\n")
-        }
+    }
   }
   return(list(Overview=df_fin, Full_anno=reanno_lst_match))
 }

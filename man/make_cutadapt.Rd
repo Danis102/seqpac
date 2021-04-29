@@ -12,8 +12,8 @@ will be stored and temporary files will be generated.}
 
 \item{parse}{List with two character string expressions. The first will be
 parsed to cutadapt while the other is be parsed to fastq_quality_filter. If
-any is NULL, then the function will not pass the command and the trimming
-or filtering will not be applied. Thus, if parse = list(cutadapt=NULL,
+any is NULL, then the function will not pass the command and the trimming or
+filtering will not be applied. Thus, if parse = list(cutadapt=NULL,
 fastq_quality_filter="-q 20 -p 80"), then only the quality filter will be
 applied.}
 
@@ -25,9 +25,9 @@ your fastq files are very small. Use \code{parallel::detectcores()} to see
 available threads on the machine.}
 }
 \value{
-Externally the function will generate trimmed and/or quality filtered fastq
-files in the output folder. Internally, a list of logs that can be used to
-generate a progress report is returned.
+Externally the function will generate trimmed and/or quality filtered
+fastq files in the output folder. Internally, a list of logs that can be used
+to generate a progress report is returned.
 }
 \description{
 \code{make_cuadapt} cutadapt/fastq_quality_filter
@@ -42,7 +42,8 @@ and remove sequences with low quality.
 #   
 # ############################################################      
 # ### Seqpac trimming using the make_cutadapt function
-# ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+# ### (Important: Needs an external installations of cutadapt 
+# ###  and fastq_quality_filter) 
 # 
 #  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #  output =  "/home/danis31/Desktop/Temp_docs/temp"
@@ -51,7 +52,8 @@ and remove sequences with low quality.
 #  # The first is parsed to cutadapt and the other to fastq_quality_filter 
 #  # For parallel processes '-j 1' is recommended since seqpac will   
 #  # parallelize across samples and not within.
-#  # Run system("cutadapt -h") and system("fastq_quality_filter -h") for more options.
+#  # Run system("cutadapt -h") and system("fastq_quality_filter -h") 
+#  # for more options.
 #  
 #  parse = list(
 #            cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
@@ -63,10 +65,10 @@ and remove sequences with low quality.
 }
 \seealso{
 \url{https://cutadapt.readthedocs.io/en/stable/} for download and
-  documentation on cutadapt. 
-  \url{http://hannonlab.cshl.edu/fastx_toolkit/commandline.html} for download and
-  documentation on fastq_quality_filter.   
-  \url{https://github.com/Danis102} for updates on seqpac.
+documentation on cutadapt.
+\url{http://hannonlab.cshl.edu/fastx_toolkit/commandline.html} for download
+and documentation on fastq_quality_filter. \url{https://github.com/Danis102}
+for updates on seqpac.
 
 Other PAC generation: 
 \code{\link{PAC_check}()},

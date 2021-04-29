@@ -1,4 +1,4 @@
-context("PAC preprocessing and summary")
+context("PAC preprocessing and summary\n")
 library(seqpac)
 
 
