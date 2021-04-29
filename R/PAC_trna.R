@@ -408,7 +408,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
                      axis.line.x = ggplot2::element_blank(), 
                      axis.line.y = ggplot2::element_blank())+
       #coord_flip(ylim=c(-lim, lim))
-      ggplot2::coord_flip(ylim=c(-13, 13))
+      ggplot2::coord_flip(ylim = c((min(logfc$value)-1), (max(logfc$value)+1)))
   } 
   ## Error bars for differencs in RPM - independent
   # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
