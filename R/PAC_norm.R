@@ -20,7 +20,7 @@
 #'   into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
 #'   in the DESeq2-package with the options blind=TRUE and fitType="mean". If
 #'   norm="rlog", PAC$Counts will instead be imported into the
-#'   \code{\link[DESeq2]{rlogTransformation}} function also available in
+#'   \code{\link[DESeq2]{rlog}} function also available in
 #'   DESeq2-package (options blind=TRUE and fitType="mean") for a log2
 #'   transformed version of vst, and is more robust to varying library sizes.
 #'   
@@ -33,7 +33,8 @@
 #'   
 #' @examples
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
 #' pac_norm  <- PAC_norm(pac, norm="cpm") 
 #' df_norm <- PAC_norm(pac, norm = "vst", merge_pac = FALSE)
 #' 
@@ -41,28 +42,34 @@
 #' @export
 #' 
 PAC_norm <- function(PAC, norm="cpm", merge_pac=TRUE){
-                  if(norm %in% c("cpm", "rpm")){
-                          lib_sizes <- colSums(PAC$Counts)
-                          counts_cpm <- data.frame(matrix(NA, nrow=nrow(PAC$Counts), ncol=ncol(PAC$Counts)))
-                          colnames(counts_cpm) <- colnames(PAC$Counts)
-                          rownames(counts_cpm) <- rownames(PAC$Counts)
-                          for (i in 1:length(lib_sizes)){
-                                            counts_cpm[,i] <- (PAC$Counts[,i]/(lib_sizes[i]/1000000))
-                          }
-                          fin <- counts_cpm
-                          PAC$norm$cpm <- fin
-                          
-                          }
-                  if(norm=="vst") { 
-
-                          fin <- DESeq2::varianceStabilizingTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="parametric")
-                          PAC$norm$vst <- fin 
-                  }
-                  if(norm=="rlog") { 
-                          fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), blind=TRUE, fitType="parametric")
-                          row.names(fin) <- row.names(PAC$Counts)
-                          PAC$norm$rlog <- fin 
-                          
-                  }
-          if(merge_pac==TRUE){return(PAC)} else {return(fin)} 
-           }
+  if(norm %in% c("cpm", "rpm")){
+    lib_sizes <- colSums(PAC$Counts)
+    counts_cpm <- data.frame(
+      matrix(NA,
+             nrow=nrow(PAC$Counts),
+             ncol=ncol(PAC$Counts)))
+    colnames(counts_cpm) <- colnames(PAC$Counts)
+    rownames(counts_cpm) <- rownames(PAC$Counts)
+    for (i in 1:length(lib_sizes)){
+      counts_cpm[,i] <- (PAC$Counts[,i]/(lib_sizes[i]/1000000))
+    }
+    fin <- counts_cpm
+    PAC$norm$cpm <- fin
+    
+  }
+  if(norm=="vst") { 
+    
+    fin <- DESeq2::varianceStabilizingTransformation(as.matrix(PAC$Counts), 
+                                                     blind=TRUE, 
+                                                     fitType="parametric")
+    PAC$norm$vst <- fin 
+  }
+  if(norm=="rlog") { 
+    fin <- DESeq2::rlogTransformation(as.matrix(PAC$Counts), 
+                                      blind=TRUE, fitType="parametric")
+    row.names(fin) <- row.names(PAC$Counts)
+    PAC$norm$rlog <- fin 
+    
+  }
+  if(merge_pac==TRUE){return(PAC)} else {return(fin)} 
+}

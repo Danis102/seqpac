@@ -35,29 +35,30 @@ The names will appear as they are named in the final annotation table.
 Thus, if \emph{ref_paths=list(tRNA="<path_tRNA_ref>",
 miRNA="<path_piRNA_ref>")} mapping to these fasta references will appear as
 "tRNA" and "miRNA", respectively. Note: All reference fasta files must have
-bowtie indexes using \code{\link[Rbowtie]{bowtie_build}}.}
+bowtie indexes using \code{\link[QuasR]{Rbowtie::bowtie_build}}.}
 
 \item{mismatches}{Integer indicating the maximum number of mismatches allowed
 in the alignments. The function currently supports no more than 3
 mismatches (botwie max).}
 
-\item{threads}{Integer indicating the number of parallel processes to be used.}
+\item{threads}{Integer indicating the number of parallel processes to be
+used.}
 
 \item{parse_external}{One character string specifying the additional options
 parsed to externally installed bowtie when type="external". The string
 follows similar rules as '...' parsing. More information on the formating
-use: \code{system("bowtie --manual", intern=TRUE, ignore.stderr=FALSE)}. If this
-command fails you probably do not have bowtie correctly installed. As
+use: \code{system("bowtie --manual", intern=TRUE, ignore.stderr=FALSE)}. If
+this command fails you probably do not have bowtie correctly installed. As
 default parse_external= "-a -f".}
 
 \item{parse_internal}{One character string specifying the additional options
 parsed to the bowtie function in the Rbowtie package when type="internal".
 The string follows similar rules as '...' parsing. See
-\code{\link[Rbowtie]{bowtie}} for details on the format. As default:
+\code{\link[QuasR]{Rbowtie::bowtie}} for details on the format. As default:
 parse_internal= "a=TRUE, f=TRUE".}
 
-\item{import}{Character or a list. If \code{import="genome"} mapping is done against
-a reference genome and genomic coordinates are acquired. If
+\item{import}{Character or a list. If \code{import="genome"} mapping is done
+against a reference genome and genomic coordinates are acquired. If
 import="biotype", mapping is done against a specialized fasta reference
 (e.g. Ensembl_ncrna, pirBase etc), where genomic coordinates is not
 required because classification will be performed on a match-or-no-match
@@ -67,10 +68,10 @@ can also be provided. This list will be parsed to the
 \code{import=list(coord=TRUE, report="full", reduce=NULL)} is automatically
 parsed, while when import="biotype" the list parsed is
 \code{import=list(coord=FALSE, report="full", reduce=NULL)}. Performance
-increases by setting coord=FALSE. See \code{\link{import_reanno}} for more information
-on how to set \code{report} and \code{reduce} for increased performance
-when extremely large and repetitative references are used, such as pirBase
-and repeatMasker.}
+increases by setting coord=FALSE. See \code{\link{import_reanno}} for more
+information on how to set \code{report} and \code{reduce} for increased
+performance when extremely large and repetitative references are used, such
+as pirBase and repeatMasker.}
 
 \item{keep_temp}{Logical whether or not bowtie output files temporarly stored
 in the output path should be deleted. Note, this option is only used for
@@ -83,8 +84,8 @@ mismatch 1 cycle will overwrite the botwie files.}
 Will primarily generate .Rdata files in the destination folder
   (\code{output_path}) containing summarized information about the reference
   alignments. One file is generated for every mismatch specified in
-  \emph{mismatches}. The \code{\link{make_reanno}} function can then be used to
-  extract and generate annotation tables for a PAC list object. Large
+  \emph{mismatches}. The \code{\link{make_reanno}} function can then be used
+  to extract and generate annotation tables for a PAC list object. Large
   temporary bowtie input and output files will also be generated in the
   destination folder, but are removed unless \code{temp_remove=FALSE}.
 }
@@ -93,14 +94,14 @@ Aligns sequences in a PAC list object against specified references generating
 summarized report files in the destination folder.
 }
 \details{
-Given a PAC object this function will extract the read sequences and align them
-against single or multiple fasta reference file(s). Summarized output will be
-saved as .Rdata files in the destination folder. In its default setting the
-function will only report hit or no hit in up to 3 mismatches, but this can
-easily be changed between 0-3 mismatches, to include alignment coordinates
-and reference name extractions. Information from the .Rdata files
-(Full_reanno_mis0/1/2/3.Rdata) can be extracted and added to a PAC
-object using \code{make_reanno} and \code{add_reanno} functions. For increase
+Given a PAC object this function will extract the read sequences and align
+them against single or multiple fasta reference file(s). Summarized output
+will be saved as .Rdata files in the destination folder. In its default
+setting the function will only report hit or no hit in up to 3 mismatches,
+but this can easily be changed between 0-3 mismatches, to include alignment
+coordinates and reference name extractions. Information from the .Rdata files
+(Full_reanno_mis0/1/2/3.Rdata) can be extracted and added to a PAC object
+using \code{make_reanno} and \code{add_reanno} functions. For increase
 compatibility across platforms, the function provides both R internal bowtie
 parsing (thorugh the Rbowtie package), as well as external parsing to a
 locally installed version of bowtie.

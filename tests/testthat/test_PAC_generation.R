@@ -1,6 +1,6 @@
 
 
-context("PAC generation")
+context("PAC generation\n")
 library(seqpac)
 
 test_that("Testing make_counts, make_trim, make_cutadapt...", {
@@ -26,13 +26,15 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
                seq_range=c(min=14, max=70),
                quality=c(threshold=20, percent=0.8))
   
-  invisible(capture.output(
-    counts_cut  <-  make_counts(input, threads=3,
+  if(grepl("unix", .Platform$OS.type)) {
+    invisible(capture.output(
+      counts_cut  <-  make_counts(input, threads=3,
                             type="fastq", trimming="cutadapt",
                             parse=parse_cut,
                             evidence=c(experiment=2, sample=1),
                             save_temp = FALSE)
-  ))
+      ))
+  }
   
   invisible(capture.output(
     counts_seq  <-  make_counts(input, threads=3,
@@ -52,32 +54,38 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   ))
 
 ## Test counting and trimming
-
+  ## First cutadapt on Linux
+  if(grepl("unix", .Platform$OS.type)) {
+      cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
+      cut_n  <- c(nrow(counts_cut$counts)>1, 
+                  ncol(counts_cut$counts) == length(input),
+                  nrow(counts_cut$progress_report) == length(input))
+      expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
+      expect_true(sum(cut_n) ==3)
+      expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
+      pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
+      expect_true(PAC_check(pac_cut))
+  }
   
-  
-  cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
+  ## The the rest
   seq_clss  <- unlist(lapply(lapply(counts_seq, function(x){x[[1]]}), class), use.names=FALSE)
-  trim_clss  <- unlist(lapply(lapply(counts_trim, function(x){x[[1]]}), class), use.names=FALSE)
-  
-  cut_n  <- c(nrow(counts_cut$counts)>1, 
-              ncol(counts_cut$counts) == length(input),
-              nrow(counts_cut$progress_report) == length(input))
   seq_n  <- c(nrow(counts_seq$counts)>1, 
               ncol(counts_seq$counts) == length(input),
               nrow(counts_seq$progress_report) == length(input))
+  trim_clss  <- unlist(lapply(lapply(counts_trim, function(x){x[[1]]}), class), use.names=FALSE)
   trim_n  <- c(nrow(counts_trim$counts)>1, 
               ncol(counts_trim$counts) == length(input),
               nrow(counts_trim$progress_report) == length(input))
     
-  expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
+
   expect_identical(names(counts_seq), c("counts","progress_report", "evidence_plots"))
   expect_identical(names(counts_trim), c("counts","progress_report", "evidence_plots"))
   
-  expect_true(sum(cut_n) ==3)
+
   expect_true(sum(seq_n) ==3)
   expect_true(sum(trim_n) ==3)
   
-  expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
+
   expect_equal(sum(seq_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
   expect_equal(sum(trim_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
 
@@ -100,11 +108,9 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   ))
   
   pac_seq <- make_PAC(pheno=pheno_1, counts=counts_seq$counts, anno=NULL)
-  pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
   pac_trim <- make_PAC(pheno=pheno_2, counts=counts_trim$counts, anno=NULL)
   
   expect_true(PAC_check(pac_seq))
-  expect_true(PAC_check(pac_cut))
   expect_true(PAC_check(pac_trim))
 })
   

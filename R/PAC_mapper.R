@@ -90,16 +90,24 @@
 #' # ## Analyze range types with map_rangetype and PAC_trna functions
 #' # 
 #' # # Download ss object from GtRNAdb 
-#' # dest_path <- file.path("/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
-#' # download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", destfile=dest_path)
-#' # untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-#' # ss_file <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
+#' # dest_path <- file.path(
+#' #              "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
+#' #
+#' # download.file(
+#' #    url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", 
+#' #    destfile=dest_path)
+#' # untar(dest_path, exdir= dirname(dest_path), 
+#' #    files = "dm6-tRNAs-confidence-set.ss")
+#' # ss_file <- 
+#' # "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
 #' # 
 #' # # Classify fragments according to loop cleavage (small loops are omitted)       
-#' # map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, min_loop_width=4)   # Generates warning         
+#' # map_object_ss <- map_rangetype(map_object, type="ss", 
+#' #                                ss=ss_file, min_loop_width=4)# Gives warning         
 #' # 
 #' # # Remove reference tRNAs with no hits
-#' # map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){x[[2]][1,1] == "no_hits"}))]
+#' # map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, 
+#'                                   function(x){x[[2]][1,1] == "no_hits"}))]
 #' # map_object_ss[[2]]
 #' # 
 #' # 
@@ -141,12 +149,11 @@
 #' #                    nrow=1, ncol=5)
 #' @export
 
-PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up="", N_down="", report_string=FALSE){
+PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, 
+                       threads=1, N_up="", N_down="", report_string=FALSE){
 
 ############################################  
 ## Setup
-  doParallel::registerDoParallel(threads) 
-  `%dopar%` <- foreach::`%dopar%`
 
   ## Setup reference  
   if(class(ref)=="DNAStringSet"){
@@ -161,7 +168,8 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
         cat("\nTry to import reference from character vector ...")
         full <- Biostrings::DNAStringSet(ref)
       }else{
-        stop("\nUnrecognizable reference format.\nPlease check your reference input.")
+        stop("\nUnrecognizable reference format.",
+             "\nPlease check your reference input.")
      }
    }
   }
@@ -186,10 +194,13 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
   Biostrings::writeXStringSet(full, filepath=ref_path, format="fasta")
   
   # Make bowtie index if not available
-  if(nchar(paste0(N_up, N_down)) >0|!file.exists(ref)|!length(list.files(dirname(ref), pattern=".ebwt"))>=2){
+  if(nchar(paste0(N_up, N_down)) >0|
+     !file.exists(ref)|
+     !length(list.files(dirname(ref), pattern=".ebwt"))>=2){
     cat("\nNo bowtie indexes were found existing or extended reference.")
     cat("\nReindexing references ...")
-    Rbowtie::bowtie_build(ref_path, outdir=dirname(ref_path), prefix = "reference", force = TRUE)  
+    Rbowtie::bowtie_build(ref_path, outdir=dirname(ref_path), 
+                          prefix = "reference", force = TRUE)  
   }else{
     ref_path <- ref 
   }
@@ -198,7 +209,9 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
 ## PAC mapper using the reanno workflow
   if(mapper=="reanno"){
     # Make reanno object  
-    map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, type="internal", threads=threads, mismatches=mismatches,  import="genome", keep_temp=FALSE)
+    map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, 
+               type="internal", threads=threads, mismatches=mismatches,  
+               import="genome", keep_temp=FALSE)
     map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
     stopifnot(length(map$Full_anno$mis0) == 1)
     # Reorganize reanno object to a PAC_mapper object
@@ -247,11 +260,14 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
       nam_multi <- names(dup_tab)[dup_tab > 1]
       ## Sequences mapping multiple times are removed
       if(length(nam_multi) > 0){
-        warning("Sequences were removed since they mapped >1 to the same reference sequence:",  immediate. = TRUE)
+        warning("\nSequences were removed since they mapped >1",
+                ",\nto the same reference sequence:",  immediate. = TRUE)
         print(x[x$seqs %in% nam_multi,])
         x <- x[!x$seqs %in% nam_multi,]
       }
-      df <- data.frame(n_hits=1, Align_start=x$align_start, Align_end=x$align_start+nchar(x$seqs)-1, Align_width=nchar(x$seqs))  
+      df <- data.frame(n_hits=1, Align_start=x$align_start, 
+                       Align_end=x$align_start+nchar(x$seqs)-1, 
+                       Align_width=nchar(x$seqs))  
       rownames(x) <- x$seqs
       rownames(df) <- x$seqs
       return(df)
@@ -262,14 +278,16 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
     splt_nam <- unlist(lapply(splt_nam, function(x){x[1]}))
     nam_match <- match(splt_nam, names(align))
     align_lst <- align[nam_match]
-    stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  splt_nam[!is.na(names(align_lst))]))
+    stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  
+                        splt_nam[!is.na(names(align_lst))]))
     
     ## Add full length reference
     names(align_lst)[is.na(names(align_lst))] <- splt_nam[is.na(names(align_lst))]
     fin_lst <- list(NULL)
     for(i in 1:length(align_lst)){
       if(is.null(align_lst[[i]])){
-        align_lst[[i]] <- data.frame(n_hits="no_hits", Align_start="no_hits", Align_end="no_hits", Align_width="no_hits")
+        align_lst[[i]] <- data.frame(n_hits="no_hits", Align_start="no_hits", 
+                                     Align_end="no_hits", Align_width="no_hits")
       }
       fin_lst[[i]] <- list(Ref_seq=full[i], Alignments=align_lst[[i]])
       names(fin_lst)[i] <- names(align_lst)[i] 
@@ -284,16 +302,28 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
     query_strings <- as.list(as.character(rownames(PAC$Anno)))
     
     ## Aligning using parallel processing
-    cat("Now aligning", length(Anno_frag), "fragments over", length(full), "reference sequences using", threads, "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
+    cat("Now aligning", length(Anno_frag), "fragments over", length(full), 
+        "reference sequences using", threads, 
+        "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
     len <- length(full)
     
     ## Parallelize sequences
     fin_lst <- list(NA)
     for(i in 1:length(full)){ 
-      cat(paste0("\nAligning against:\n ", names(full)[i], "\n Start ", Sys.time()))
+      cat(paste0("\nAligning against:\n ", names(full)[i], "\n Start ", 
+                 Sys.time()))
       seq_ref <- full[i]
-      aligned_lst <- foreach::foreach(t=1:length(query_strings), .packages=c("Biostrings", "stringr"), .final = function(x){names(x) <- paste0(Anno_frag); return(x)}) %dopar% {
-        y <- as.data.frame(Biostrings::vmatchPattern(query_strings[[t]],  seq_ref, max.mismatch=mismatches, fixed=FALSE))
+      
+      aligned_lst <- foreach::foreach(
+        t=1:length(query_strings), 
+        .packages=c("Biostrings", "stringr"), 
+        .final = function(x){
+          names(x)<- paste0(Anno_frag); return(x)}) %dopar% {
+            
+        y <- as.data.frame(
+          Biostrings::vmatchPattern(query_strings[[t]],  
+                                    seq_ref, max.mismatch=mismatches, 
+                                    fixed=FALSE))
         
         if(!nrow(y)< 1){
           y <- y[,c(1,3:5)]
@@ -303,10 +333,14 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
         }else{
           return(NULL)}
       }
-      aligned   <- do.call("rbind", aligned_lst[unlist(lapply(aligned_lst, function(x){!is.null(x)}))])                  
+      aligned   <- do.call("rbind", 
+                           aligned_lst[unlist(lapply(aligned_lst, function(x){
+                             !is.null(x)}))])                  
       target_lst  <- list(Ref_seq=seq_ref, Alignments=aligned)
       if(is.null(target_lst[[2]])){
-        target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", Align_end="no_hits", Align_width="no_hits")
+        target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", 
+                                      Align_end="no_hits", 
+                                      Align_width="no_hits")
         }
       fin_lst[[i]] <- target_lst
       names(fin_lst)[i] <- names(full)[i]
@@ -316,26 +350,41 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, threads=1, N_up=
     
 ############################################
 ## Both old and reanno
+  doParallel::registerDoParallel(threads) 
+  `%dopar%` <- foreach::`%dopar%`
   if(report_string==TRUE){
       fin_lst <- lapply(fin_lst, function(x){
         if(x$Alignments[1,1] =="no_hits"){
-          x$Alignments <- cbind(x$Alignments, data.frame(Align_string="no_hits"))
-          x$Alignments <- data.frame(lapply(x$Alignments, as.character), stringsAsFactors=FALSE)
+          x$Alignments <- cbind(x$Alignments, 
+                                data.frame(Align_string="no_hits"))
+          x$Alignments <- data.frame(lapply(x$Alignments, as.character), 
+                                     stringsAsFactors=FALSE)
           
           #x$Alignments <- apply(x$Alignments, 2, as.character) 
           return(x)
         }else{
-          x$Ref_seq -> ref
-          x$Alignments -> algn
+          ref <- x$Ref_seq
+          algn <- x$Alignments 
           n_ref <- nchar(as.character(ref))
-          algn_lst <- split(algn, factor(row.names(algn), levels=row.names(algn)))
-          positions_lst <- foreach::foreach(j=1:length(algn_lst), .final=function(y){names(y) <- names(algn_lst);return(y)})  %dopar% {
+          algn_lst <- split(algn, factor(row.names(algn), 
+                                         levels=row.names(algn)))
+          positions_lst <- foreach::foreach(j=1:length(algn_lst), 
+                                            .final=function(y){
+                                              names(y) <- names(algn_lst)
+                                              return(y)})  %dopar% {
             ref=ref
             n_ref=n_ref
-            algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), rownames(algn_lst[[j]]), strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), sep="")
+            algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), 
+                              rownames(algn_lst[[j]]), 
+                              strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), 
+                              sep="")
             return(algn_str)
           }
-          df <- cbind(algn, data.frame(Align_string=as.character(paste(do.call("c", positions_lst))), stringsAsFactors=FALSE))
+          df <- cbind(algn, 
+                      data.frame(
+                        Align_string=as.character(
+                          paste(do.call("c", positions_lst))), 
+                        stringsAsFactors=FALSE))
           return(list(Ref_seq=ref, Alignments=df))
         }
       })

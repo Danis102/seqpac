@@ -2,17 +2,17 @@
 #'
 #' \code{check_reanno} check if names are available in reanno import.
 #'
-#' Given the path to bowtie mapping output, \code{\link{import_reanno}} will attempt to
-#' read these files into R and generate a list of unordered data frames where
-#' each row summarizes all annotations for a given sequence. \code{check_reanno}
-#' will check if sequences are listed in any of the imported reannotation
-#' data frames. \code{\link{add_reanno}} will add the new annotations to a PAC-list
-#' object.
+#' Given the path to bowtie mapping output, \code{\link{import_reanno}} will
+#' attempt to read these files into R and generate a list of unordered data
+#' frames where each row summarizes all annotations for a given sequence.
+#' \code{check_reanno} will check if sequences are listed in any of the imported
+#' reannotation data frames. \code{\link{add_reanno}} will add the new
+#' annotations to a PAC-list object.
 #'
 #' @family PAC reannotation
 #'
-#' @seealso \url{http://bowtie-bio.sourceforge.net/index.shtml} for information about
-#'   Bowtie.
+#' @seealso \url{http://bowtie-bio.sourceforge.net/index.shtml} for information
+#'   about Bowtie.
 #' @seealso \url{https://github.com/Danis102} for updates on the current
 #'   package.
 #'
@@ -31,10 +31,14 @@
 #' #bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
 #' @export
 check_reanno <- function(anno, reanno,  threads=1){
-                          if(class(anno)=="PAC"){         anno_seqs <- rownames(anno$Anno)}
-                          if(class(anno)=="list"){        anno_seqs <- rownames(anno$Anno)}
-                          if(class(anno)=="data.frame"){  anno_seqs <- rownames(anno)}
-                          if(class(anno)=="DNAStringSet"){anno_seqs <- paste(anno)}
+                          if(class(anno)=="PAC"){         
+                            anno_seqs <- rownames(anno$Anno)}
+                          if(class(anno)=="list"){        
+                            anno_seqs <- rownames(anno$Anno)}
+                          if(class(anno)=="data.frame"){  
+                            anno_seqs <- rownames(anno)}
+                          if(class(anno)=="DNAStringSet"){
+                            anno_seqs <- paste(anno)}
                           reanno_df <- rbindlist(reanno, fill=FALSE)
                           reanno_seqs <- unique(reanno_df$.id)
                           logi <- anno_seqs %in% reanno_seqs

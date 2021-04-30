@@ -91,7 +91,8 @@
 #'
 #' @export
 
-PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local", threads=1, pheno_target=NULL){
+PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", 
+                      fitType="local", threads=1, pheno_target=NULL){
   
   cat("\n")
 ##### Prepare data
@@ -119,9 +120,12 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
     }
   trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
   mis <- !levels(trg) %in% pheno_target[[2]] 
-  pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(trg, levels=c(rev(pheno_target[[2]]),levels(trg)[mis]))
+  pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(
+    trg, levels=c(rev(pheno_target[[2]]),levels(trg)[mis]))
 
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC_sub$Counts , colData = droplevels(pheno), design=model)
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = PAC_sub$Counts, 
+                                        colData = droplevels(pheno), 
+                                        design=model)
   dds <- DESeq2::estimateSizeFactors(dds)
   
   ### DEseq analysis and extract result table
@@ -135,7 +139,8 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
      target_nam <- res_nam[2]
   }  
   res_DESeq2 <- DESeq2::results(dds_fit, name=target_nam)
-  comp <- strsplit(res_DESeq2@elementMetadata@listData$description[2], ": ")[[1]][2]
+  comp <- strsplit(
+    res_DESeq2@elementMetadata@listData$description[2], ": ")[[1]][2]
   cat("\n")
   cat("\n")
   cat(paste0("** ", comp, " **"))
@@ -153,20 +158,35 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
   anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),]
 
   if(!identical(rownames(dds), rownames(res_DESeq2))){
-      stop("Not identical ids in result and dds.\nHave you been messing with the code?\n")
+      stop("\nNot identical ids in result and dds.",
+           "\nHave you been messing with the code?\n")
       }
   if(!identical(rownames(dds), rownames(anno_filt))){
-      stop("Not identical ids in anno and dds.\n")
+      stop("\nNot identical ids in anno and dds.\n")
       }
-  res_counts <- cbind(data.frame(feature_ID=rownames(dds)), res_DESeq2_df, DESeq2::counts(dds, normalized=deseq_norm), anno_filt)
-  colnames(res_counts)[colnames(res_counts)=="log2FoldChange"] <-  paste("log2FC", res_nam[2], sep="_")
+  res_counts <- cbind(
+    data.frame(feature_ID=rownames(dds)), 
+    res_DESeq2_df, 
+    DESeq2::counts(dds, normalized=deseq_norm), 
+    anno_filt)
+  colnames(res_counts)[colnames(res_counts)=="log2FoldChange"] <-  paste(
+    "log2FC", res_nam[2], sep="_")
   
   ###  Make plots
-  logi_thresh <- ifelse(rowSums(cbind(res_DESeq2_df$padj <= 0.1, res_DESeq2_df$log2FoldChange <=-1 | res_DESeq2_df$log2FoldChange >=1))==2, "pass", "not_pass")
-    df_plot <- data.frame(pval=res_DESeq2_df$pvalue, neglog_padj=-log10(res_DESeq2_df$padj), log2FC=res_DESeq2_df$log2FoldChange, DE=logi_thresh)
+  logi_thresh <- ifelse(rowSums(
+    cbind(
+      res_DESeq2_df$padj <= 0.1,
+      res_DESeq2_df$log2FoldChange <=-1 | res_DESeq2_df$log2FoldChange >=1))==2,
+    "pass", "not_pass")
+    df_plot <- data.frame(
+      pval=res_DESeq2_df$pvalue, 
+      neglog_padj=-log10(res_DESeq2_df$padj), 
+      log2FC=res_DESeq2_df$log2FoldChange, 
+      DE=logi_thresh)
   
   p <- ggplot2::ggplot(data=df_plot, ggplot2::aes(x=pval)) + 
-    ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), col="black", fill="green", alpha=1) +
+    ggplot2::geom_histogram(breaks=seq(0.0, 1.0, by=0.025), 
+                            col="black", fill="green", alpha=1) +
     ggplot2::labs(title="p-value distributions", 
                   subtitle=comp, x="p-value", y = "Number of features") +
     ggplot2::theme_classic()
@@ -183,7 +203,9 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", fitType="local"
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 0),
                    legend.position = "none")
             
-  res_lst <- list(result=res_counts, plots=list(histogram=p, volcano=vcano), output_deseq= res_DESeq2)
+  res_lst <- list(result=res_counts, 
+                  plots=list(histogram=p, volcano=vcano), 
+                  output_deseq= res_DESeq2)
   print(cowplot::plot_grid(plotlist=res_lst$plots))
   return(res_lst)
 }

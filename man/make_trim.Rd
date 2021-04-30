@@ -79,14 +79,14 @@ Never ever use all threads!}
 'mismatch' that controls 3' trimming. As default,
 adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1). 
 
-Options for each input are: \describe{
- \item{\strong{type}=}{
-     '\emph{hard_trim}': Trims all upto the very last nucleotide.\cr
-     '\emph{hard_rm}': Same as 'hard_trim' but removes untrimmed sequences.\cr
-     '\emph{hard_save}': Same as 'hard_trim' but saves all untrimmed sequences in new fastq file.\cr
-     '\emph{soft_trim}': No trimming on the last 3' nucleotides equal to 1/2 of 'min'.\cr
-     '\emph{soft_rm}': Same as 'soft_trim' but removes untrimmed sequences.\cr
-     '\emph{soft_save}': Same as 'soft_trim' but saves all untrimmed sequences in new fastq file.
+Options for each input are: \describe{ \item{\strong{type}=}{
+'\emph{hard_trim}': Trims all upto the very last nucleotide.\cr
+'\emph{hard_rm}': Same as 'hard_trim' but removes untrimmed sequences.\cr
+'\emph{hard_save}': Same as 'hard_trim' but saves all untrimmed sequences
+in new fastq file.\cr '\emph{soft_trim}': No trimming on the last 3'
+nucleotides equal to 1/2 of 'min'.\cr '\emph{soft_rm}': Same as 'soft_trim'
+but removes untrimmed sequences.\cr '\emph{soft_save}': Same as 'soft_trim'
+but saves all untrimmed sequences in new fastq file.
      }
  \item{\strong{min}=}{Integer that controls the short adaptor/poly-G/concatamer trimming and
      soft trimming. When min=10, a short version of the adaptor is

@@ -7,9 +7,9 @@
 filtsep_bin(filtsep_out)
 }
 \arguments{
-\item{filtsep_out}{PAC_filtsep output data.frame, where each column contains the
-names of sequences that passed the filter for a specific group specified by a
-pheno_target object.}
+\item{filtsep_out}{PAC_filtsep output data.frame, where each column contains
+the names of sequences that passed the filter for a specific group
+specified by a pheno_target object.}
 }
 \value{
 data.frame where each uniques sequence (row names) in filtsep_out are
@@ -31,14 +31,19 @@ using UpSet plots.
 \examples{
 
 #' library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
-## Keep sequences with 5 counts (threshold) in 100\% (coverage) of samples in a group:
+## Keep sequences with 5 counts (threshold) in 100\% (coverage) of 
+## samples in a group:
  # Use PAC_filtsep to find sequences 
- filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
+ filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+                        coverage=100, pheno_target= list("stage"))
  
  # Venn-diagram of the overlap
- olap <- reshape2::melt(filtsep, measure.vars = c("Stage1", "Stage3", "Stage5"), na.rm=TRUE)
+ olap <- reshape2::melt(filtsep, 
+                        measure.vars = c("Stage1", "Stage3", "Stage5"), 
+                        na.rm=TRUE)
  plot(venneuler::venneuler(data.frame(olap[,2], olap[,1]))) 
  
  # Filter by unique sequences passing filtsep  
@@ -48,10 +53,13 @@ load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mus
 ## Upset plot using the UpSetR package
  # (when output="binary" PAC_filtsep uses filtsep_bin for binary conversion
  # Use PAC_filtsep with binary output
- filtsep_bin <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"), output="binary")
+ filtsep_bin <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+                            coverage=100, pheno_target= list("stage"), 
+                            output="binary")
  
  # Plot with UpSetR 
- UpSetR::upset(filtsep_bin, sets = colnames(filtsep_bin), mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
+ UpSetR::upset(filtsep_bin, sets = colnames(filtsep_bin), 
+               mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
 
 }
 \seealso{
@@ -71,7 +79,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

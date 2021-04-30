@@ -126,7 +126,8 @@ counts  <- make_counts(input, threads=1, parse="default_neb",
 #   
 # ############################################################      
 # ### Seqpac trimming using the make_cutadapt function
-# ### (Important: Needs an external installations of cutadapt and fastq_quality_filter) 
+# ### (Important: Needs an external installations of cutadapt 
+# ###  and fastq_quality_filter) 
 # 
 #  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
 #  
@@ -145,14 +146,20 @@ counts  <- make_counts(input, threads=1, parse="default_neb",
 #                         evidence=c(experiment=2, sample=1))   
 #  
 #  
-#  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 10 counts
-#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=10))
+#  ## 2 evidence over two indepenent samples, saving single sample 
+#  ## sequences reaching 10 counts
+#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", 
+#                      parse="default_neb",  
+#                      evidence=c(experiment=2, sample=10))
 #  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
 #  test$counts[extras==1,]  # 28 single sample sequences reached 10 counts
 #  
 #  
-#  ## 2 evidence over two indepenent samples, saving single sample sequences reaching 3 counts 
-#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", parse="default_neb",  evidence=c(experiment=2, sample=3))
+#  ## 2 evidence over two indepenent samples, saving single sample 
+#  ## sequences reaching 3 counts 
+#  test <- make_counts(input=input,  type="fastq", trimming="seqpac", 
+#                      parse="default_neb",  
+#                      evidence=c(experiment=2, sample=3))
 #  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
 #  test$counts[extras==1,] # 1319 single sample sequences reached 3 counts
 #  

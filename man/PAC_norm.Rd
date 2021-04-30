@@ -17,7 +17,7 @@ of counts in a given sample. If norm="vst", PAC$Counts will be imported
 into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
 in the DESeq2-package with the options blind=TRUE and fitType="mean". If
 norm="rlog", PAC$Counts will instead be imported into the
-\code{\link[DESeq2]{rlogTransformation}} function also available in
+\code{\link[DESeq2]{rlog}} function also available in
 DESeq2-package (options blind=TRUE and fitType="mean") for a log2
 transformed version of vst, and is more robust to varying library sizes.}
 
@@ -38,7 +38,8 @@ with the same rownames as in the original PAC object
 }
 \examples{
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 pac_norm  <- PAC_norm(pac, norm="cpm") 
 df_norm <- PAC_norm(pac, norm = "vst", merge_pac = FALSE)
 
@@ -60,7 +61,6 @@ Other PAC analysis:
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

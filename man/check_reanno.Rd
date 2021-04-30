@@ -22,12 +22,12 @@ logical vector stating if an anno sequences is present (TRUE)  or
 \code{check_reanno} check if names are available in reanno import.
 }
 \details{
-Given the path to bowtie mapping output, \code{\link{import_reanno}} will attempt to
-read these files into R and generate a list of unordered data frames where
-each row summarizes all annotations for a given sequence. \code{check_reanno}
-will check if sequences are listed in any of the imported reannotation
-data frames. \code{\link{add_reanno}} will add the new annotations to a PAC-list
-object.
+Given the path to bowtie mapping output, \code{\link{import_reanno}} will
+attempt to read these files into R and generate a list of unordered data
+frames where each row summarizes all annotations for a given sequence.
+\code{check_reanno} will check if sequences are listed in any of the imported
+reannotation data frames. \code{\link{add_reanno}} will add the new
+annotations to a PAC-list object.
 }
 \examples{
 #reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, threads=8)
@@ -36,8 +36,8 @@ object.
 #bowtie_path <- "/data/Data_analysis/Projects/Drosophila/Specific_projects/Test_temp/Processed_Sports_09-10-19/R_files"
 }
 \seealso{
-\url{http://bowtie-bio.sourceforge.net/index.shtml} for information about
-  Bowtie.
+\url{http://bowtie-bio.sourceforge.net/index.shtml} for information
+  about Bowtie.
 
 \url{https://github.com/Danis102} for updates on the current
   package.
