@@ -48,10 +48,10 @@ Imports:
   UpSetR,
   cowplot,
   reshape2,
-  tibble,
-  venneuler
+  tibble
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    venneuler
 VignetteBuilder: knitr
