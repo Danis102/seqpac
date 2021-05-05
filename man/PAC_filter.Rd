@@ -41,7 +41,8 @@ generated or not (default=FALSE).}
 
 \item{pheno_target}{(optional) List with: 
 1st object being a character vector of target column in Pheno, 
-2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
+2nd object being a character vector of the target group(s) in 
+the target Pheno column (1st object).
 (default=NULL)}
 
 \item{anno_target}{(optional) List with: 
@@ -64,7 +65,8 @@ interval and percent coverage across independent samples.
 }
 \examples{
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
 ###--------------------------------------------------------------------- 
 ## Extracts all sequences between 10-80 nt in length with at least 5 counts in
@@ -74,7 +76,7 @@ pac_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5,
                          pheno_target=NULL, anno_target=NULL)
 
 ###--------------------------------------------------------------------- 
-## Extracts all sequences with 22 nt size and the samples in Batch1 and Batch2.
+## Extracts sequences with 22 nt size and the samples in Batch1 and Batch2.
 pac_subset <- PAC_filter(pac_master, subset_only = TRUE,
                         pheno_target=list("batch", c("Batch1", "Batch2")), 
                         anno_target=list("Size", "22"))

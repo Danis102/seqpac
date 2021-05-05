@@ -60,9 +60,9 @@ biotype vector according to a user-defined biotype hierarchy.
 
 # See, vignette(package="seqpac")
 # 
-# ###################################################
-# ### Hierarchical classification with simplify_reanno
-# ##----------------------------------------
+##--------------------------------------------------------------------------#
+## Hierarchical classification with simplify_reanno
+##--------------------------------------------------------------------------#
 # table(pac$Anno$mis0_bio)
 # 
 # hierarchy <- list(rRNA="Ensembl_rRNA",
@@ -74,10 +74,12 @@ biotype vector according to a user-defined biotype hierarchy.
 #                   )
 # 
 # ## No mistmach allowed
-# pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+# pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, 
+#                       bio_name="Biotypes_mis0", merge_pac=TRUE)
 # 
 # ## Up to 3 mismatches allowed
-# pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", merge_pac=TRUE)
+# pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, 
+#                        bio_name="Biotypes_mis3", merge_pac=TRUE)
 # 
 # # Example of original reference name annotations 
 # head(reanno_biotype$Full_anno$mis0$Ensembl)
@@ -87,11 +89,12 @@ biotype vector according to a user-defined biotype hierarchy.
 # table(pac$Anno$Biotypes_mis0)
 # table(pac$Anno$Biotypes_mis3)
 #
-##-------------------------------------------------------------------------------------------------#
+##--------------------------------------------------------------------------#
 ## Simplify and make hierarchy of reannotation 
-##-------------------------------------------------------------------------------------------------#
+##--------------------------------------------------------------------------#
 # library(seqpac)
-# load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+# load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+#                   package = "seqpac", mustWork = TRUE))
 # 
 # # Build hierarchy with regular expressions:
 # hierarchy <- list(rRNA="Ensembl_rRNA",
@@ -100,9 +103,11 @@ biotype vector according to a user-defined biotype hierarchy.
 #                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
 #                  )
 #
-#pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+# pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, 
+#                               mismatches=0, bio_name="Biotypes_mis0", 
+#                               merge_pac=TRUE)
 #
-#PAC_check(pac_master)
+# PAC_check(pac_master)
 
 
 }

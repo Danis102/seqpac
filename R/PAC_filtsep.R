@@ -28,7 +28,8 @@
 #'   
 #' @param pheno_target (optional) List with: 
 #'          1st object being a character vector of target column in Pheno, 
-#'          2nd object being a character vector of the target group(s) in the target Pheno column (1st object).
+#'          2nd object being a character vector of the target group(s) 
+#'          in the target Pheno column (1st object).
 #'          (default=NULL)
 #'          
 #' @param output Specifies the output format. If output="sequence" (default),
@@ -44,14 +45,19 @@
 #' @examples
 #' 
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
 #' 
-#' ## Keep sequences with 5 counts (threshold) in 100% (coverage) of samples in a group:
+#' ## Keep sequences with 5 counts (threshold) in 100% (coverage) 
+#' ## of samples in a group:
 #'  # Use PAC_filtsep to find sequences 
-#'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"))
+#'  filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+#'                         coverage=100, pheno_target= list("stage"))
 #'  
 #'  # Venn-diagram of the overlap
-#'  olap <- reshape2::melt(filtsep, measure.vars = c("Stage1", "Stage3", "Stage5"), na.rm=TRUE)
+#'  olap <- reshape2::melt(filtsep, 
+#'                         measure.vars = c("Stage1", "Stage3", "Stage5"), 
+#'                         na.rm=TRUE)
 #'  plot(venneuler::venneuler(data.frame(olap[,2], olap[,1]))) 
 #'  
 #'  # Filter by unique sequences passing filtsep  
@@ -61,10 +67,13 @@
 #' ## Upset plot using the UpSetR package
 #'  # (when output="binary" PAC_filtsep uses filtsep_bin for binary conversion
 #'  # Use PAC_filtsep with binary output
-#'  filtsep_bin <- PAC_filtsep(pac_master, norm="counts", threshold=5, coverage=100, pheno_target= list("stage"), output="binary")
+#'  filtsep_bin <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+#'                             coverage=100, pheno_target= list("stage"), 
+#'                             output="binary")
 #'  
 #'  # Plot with UpSetR 
-#'  UpSetR::upset(filtsep_bin, sets = colnames(filtsep_bin), mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
+#'  UpSetR::upset(filtsep_bin, sets = colnames(filtsep_bin), 
+#'                mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
 #'  
 #' @export
 
@@ -75,19 +84,30 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100,
   if(norm=="counts"){
     data <- PAC$Counts
   }else{  
-    if(is.null(PAC$norm[[norm]])){stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_norm,\n  or would you rather run the function on raw counts using norm='raw'?)"))}  
+    if(is.null(PAC$norm[[norm]])){
+      stop("\nThere is no object called '", 
+            norm, "' in the norm list.",
+            "\n  (Hint: Did you forget to normalize the data using for",
+            "\n   example PAC_norm, or would you rather run the function",
+            "\n   on raw counts using norm='raw'?)")
+   }  
     data <- PAC$norm[[norm]]
   }
   
   ### Subset dataset ###
   pheno <- PAC$Pheno
   pheno$All <- "All"
-  if(is.null(pheno_target)){warning("No grouping factor was specified with pheno_target.\nCalculations are based on all samples.")
+  if(is.null(pheno_target)){
+    warning(
+    "No grouping factor was specified with pheno_target.",
+    "\nCalculations are based on all samples.")
     pheno_target <- list("All","All")
   }else{
-    if(length(pheno_target)==1){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
+    if(length(pheno_target)==1){
+      pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
     }else{
-      if(is.null(pheno_target[[2]])){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
+      if(is.null(pheno_target[[2]])){
+        pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
       }}}
   indx <- pheno[, pheno_target[[1]]] %in% pheno_target[[2]]
   pheno <- pheno[indx,]
@@ -96,7 +116,8 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100,
   ### Extract filtered anno sequence names ###     
   start_lst <- as.list(pheno_target[[2]])
   names(start_lst) <- pheno_target[[2]]
-  sub_data_lst <- lapply(start_lst, function(x){ y <- data[, pheno[, pheno_target[[1]]] == x]
+  sub_data_lst <- lapply(start_lst, function(x){ 
+    y <- data[, pheno[, pheno_target[[1]]] == x]
   logi <- data.frame(rowSums(y >= threshold)) >= round(ncol(y)*(coverage*0.01))
   return(rownames(y)[logi])
   })

@@ -54,20 +54,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   ))
 
 ## Test counting and trimming
-  ## First cutadapt on Linux
-  if(grepl("unix", .Platform$OS.type)) {
-      cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
-      cut_n  <- c(nrow(counts_cut$counts)>1, 
-                  ncol(counts_cut$counts) == length(input),
-                  nrow(counts_cut$progress_report) == length(input))
-      expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
-      expect_true(sum(cut_n) ==3)
-      expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
-      pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
-      expect_true(PAC_check(pac_cut))
-  }
-  
-  ## The the rest
+  ## Test both windows and linux
   seq_clss  <- unlist(lapply(lapply(counts_seq, function(x){x[[1]]}), class), use.names=FALSE)
   seq_n  <- c(nrow(counts_seq$counts)>1, 
               ncol(counts_seq$counts) == length(input),
@@ -76,7 +63,6 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   trim_n  <- c(nrow(counts_trim$counts)>1, 
               ncol(counts_trim$counts) == length(input),
               nrow(counts_trim$progress_report) == length(input))
-    
 
   expect_identical(names(counts_seq), c("counts","progress_report", "evidence_plots"))
   expect_identical(names(counts_trim), c("counts","progress_report", "evidence_plots"))
@@ -112,5 +98,20 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   
   expect_true(PAC_check(pac_seq))
   expect_true(PAC_check(pac_trim))
+  
+   ## Test cutadapt on Linux
+  if(grepl("unix", .Platform$OS.type)) {
+      cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
+      cut_n  <- c(nrow(counts_cut$counts)>1, 
+                  ncol(counts_cut$counts) == length(input),
+                  nrow(counts_cut$progress_report) == length(input))
+      expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
+      expect_true(sum(cut_n) ==3)
+      expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
+      pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
+      expect_true(PAC_check(pac_cut))
+  }
+  
+  
 })
   

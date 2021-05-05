@@ -154,7 +154,7 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0,
 
 ############################################  
 ## Setup
-
+  j <- NULL 
   ## Setup reference  
   if(class(ref)=="DNAStringSet"){
     cat("\nImporting reference from DNAStringSet ...")
@@ -193,10 +193,19 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0,
   suppressWarnings(dir.create(dirname(ref_path), recursive = TRUE))
   Biostrings::writeXStringSet(full, filepath=ref_path, format="fasta")
   
-  # Make bowtie index if not available
+  ## Make bowtie index if not available
+  # If file input check bowtie index; save results in check_file
+  check_file <- FALSE
+  if(is.character(ref)){
+    if(file.exists(ref)){
+       if(!length(list.files(dirname(ref), pattern=".ebwt"))>=2){
+         check_file <- TRUE
+       }
+    }
+  }
   if(nchar(paste0(N_up, N_down)) >0|
-     !file.exists(ref)|
-     !length(list.files(dirname(ref), pattern=".ebwt"))>=2){
+     grepl("DNAString", class(full))|
+     check_file == TRUE){
     cat("\nNo bowtie indexes were found existing or extended reference.")
     cat("\nReindexing references ...")
     Rbowtie::bowtie_build(ref_path, outdir=dirname(ref_path), 

@@ -20,9 +20,9 @@ add_reanno(
 
 \item{mismatches}{Integer indicating the number of mismatches that should be
 reported. Can never have a higher number than was originally specified with
-the \\code{\link{map_reanno}} function. While default=0, reporting the maximum
-number is recommended. Note, that the mismatch information is only added to
-the report. Further classification can be generated with the
+the \\code{\link{map_reanno}} function. While default=0, reporting the
+maximum number is recommended. Note, that the mismatch information is only
+added to the report. Further classification can be generated with the
 \code{\link{simplify_reanno}} function.}
 
 \item{type}{Character indicating what type of classification. If
@@ -33,37 +33,36 @@ coordinates are not expected. Reference hits will instead be classified
 according to the biotype search terms in \code{bio_search}.}
 
 \item{bio_search}{List of character vectors indicating search terms targeting
-feature names in the original reference fasta files. These search terms
-will be parsed to \code{\link{grepl}} as regular expressions. List names
-must match names of the references in the reanno object. Classifications
-will be reported with reference name + search term (e.g. "Ensembl_trna").}
+feature names in the original reference fasta files. These search terms will
+be parsed to \code{\link{grepl}} as regular expressions. List names must
+match names of the references in the reanno object. Classifications will be
+reported with reference name + search term (e.g. "Ensembl_trna").}
 
-\item{bio_perfect}{Logical whether the function should allow that not all
-hits against the references must have a unique bio_search term. If
-perfect=FALSE (default) all references hits that was not caught by a search
-term will be annotated as reference + other (e.g. "Ensembl_other"). In case
-perfect=TRUE, if the search terms do not catch all reference hits the
-function will through an error. Can be used to ensure that all hits receive
-a classification.}
+\item{bio_perfect}{Logical whether the function should allow that not all hits
+against the references must have a unique bio_search term. If perfect=FALSE
+(default) all references hits that was not caught by a search term will be
+annotated as reference + other (e.g. "Ensembl_other"). In case perfect=TRUE,
+if the search terms do not catch all reference hits the function will
+through an error. Can be used to ensure that all hits receive a
+classification.}
 
 \item{genome_max}{Integer or character indicating the number of maximum
 coordinates to be reported when type="genome". If the number of hits
 exceedes \code{genome_max} it will be indicated in the classification and
 only the first hits up to \code{max_hits} will be reported. Useful to
-handling seaquences that multimap. If genome_max="all", all coordinates
-will be reported which may dramatically affect performance. (default=10)}
+handling seaquences that multimap. If genome_max="all", all coordinates will
+be reported which may dramatically affect performance. (default=10)}
 
 \item{merge_pac}{PAC object. If a PAC object is provided in merge_pac, then
 the function will automatically merge the Anno table of the PAC object with
-the newly generated annotations. As default, merge_pac=NULL that will
-return a tibble data.frame instead.}
+the newly generated annotations. As default, merge_pac=NULL that will return
+a tibble data.frame instead.}
 }
 \value{
 Dataframe with mismatch and coordinate or biotype information (search
-  term hits) that can directly be added to an Anno data.frame of a PAC
-  object, given that the PAC object was used in the reannotation workflow.
-  Annotations can be further simplifide using the
-  \code{\link{simplify_reanno}} function.
+ term hits) that can directly be added to an Anno data.frame of a PAC object,
+ given that the PAC object was used in the reannotation workflow. Annotations
+ can be further simplifide using the \code{\link{simplify_reanno}} function.
 }
 \description{
 \code{add_reanno} adds biotypes from reannotation to PAC.
@@ -85,7 +84,7 @@ the same order of sequences as in the original PAC master file.
 # pac <- pac_cpm_filt
 # 
 # ## Path to bowtie indexed reference genome fasta 
-# ref_paths <- list(genome="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa")
+# ref_paths <- list(genome="<path_to_bowtie_indexed_fasta>")
 # 
 # ## Path to output folder:
 # output_genome <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
@@ -105,11 +104,11 @@ the same order of sequences as in the original PAC master file.
 ##### Example type= external for biotype classification with 0 mismatch #### 
 #
 # ## Path to bowtie indexed fasta references   
-# ref_paths <- list(miRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/miRNA/miRBase_21-dme.fa",
-#                   Ensembl="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/Ensembl/Drosophila_melanogaster.BDGP6.ncrna.fa",
-#                   rRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/rRNA_reanno/drosophila_rRNA_all.fa",
-#                   tRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/tRNA_reanno/tRNA_mature.fa",
-#                   piRNA="/data/Data_analysis/Genomes/Drosophila/dm6/sports/Drosophila_melanogaster/piRNA_piRBase/piR_dme.fa")
+# ref_paths <- list(miRNA="<path_to_bowtie_indexed_fasta>",
+#                   Ensembl="<path_to_bowtie_indexed_fasta>",
+#                   rRNA="<path_to_bowtie_indexed_fasta>",
+#                   tRNA="<path_to_bowtie_indexed_fasta>",
+#                   piRNA="<path_to_bowtie_indexed_fasta>")
 # 
 # ## Path to output folder:
 # output_bio <- "/home/danis31/Desktop/Temp_docs/reanno_biotype"

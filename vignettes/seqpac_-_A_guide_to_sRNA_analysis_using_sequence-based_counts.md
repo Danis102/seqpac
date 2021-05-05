@@ -1,7 +1,7 @@
 ---
 title: "seqpac - A guide to sRNA analysis using sequence-based counts"
 author: "Daniel Nätt"
-date: "2021-04-28"
+date: "2021-04-30"
 output: 
   html_document:
     keep_md: true

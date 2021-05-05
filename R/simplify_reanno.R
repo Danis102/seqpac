@@ -49,9 +49,9 @@
 #'
 #' # See, vignette(package="seqpac")
 #' # 
-#' # ###################################################
-#' # ### Hierarchical classification with simplify_reanno
-#' # ##----------------------------------------
+#' ##--------------------------------------------------------------------------#
+#' ## Hierarchical classification with simplify_reanno
+#' ##--------------------------------------------------------------------------#
 #' # table(pac$Anno$mis0_bio)
 #' # 
 #' # hierarchy <- list(rRNA="Ensembl_rRNA",
@@ -63,10 +63,12 @@
 #' #                   )
 #' # 
 #' # ## No mistmach allowed
-#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, 
+#' #                       bio_name="Biotypes_mis0", merge_pac=TRUE)
 #' # 
 #' # ## Up to 3 mismatches allowed
-#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, bio_name="Biotypes_mis3", merge_pac=TRUE)
+#' # pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=3, 
+#' #                        bio_name="Biotypes_mis3", merge_pac=TRUE)
 #' # 
 #' # # Example of original reference name annotations 
 #' # head(reanno_biotype$Full_anno$mis0$Ensembl)
@@ -76,11 +78,12 @@
 #' # table(pac$Anno$Biotypes_mis0)
 #' # table(pac$Anno$Biotypes_mis3)
 #' #
-#' ##-------------------------------------------------------------------------------------------------#
+#' ##--------------------------------------------------------------------------#
 #' ## Simplify and make hierarchy of reannotation 
-#' ##-------------------------------------------------------------------------------------------------#
+#' ##--------------------------------------------------------------------------#
 #' # library(seqpac)
-#' # load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' # load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+#' #                   package = "seqpac", mustWork = TRUE))
 #' # 
 #' # # Build hierarchy with regular expressions:
 #' # hierarchy <- list(rRNA="Ensembl_rRNA",
@@ -89,14 +92,17 @@
 #' #                   miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA"
 #' #                  )
 #' #
-#' #pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, mismatches=0, bio_name="Biotypes_mis0", merge_pac=TRUE)
+#' # pac_master <- simplify_reanno(pac_master, hierarchy=hierarchy, 
+#' #                               mismatches=0, bio_name="Biotypes_mis0", 
+#' #                               merge_pac=TRUE)
 #' #
-#' #PAC_check(pac_master)
+#' # PAC_check(pac_master)
 #'
 #' 
 #' @export
 
-simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes", merge_pac=FALSE, target_columns=NULL){
+simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes", 
+                            merge_pac=FALSE, target_columns=NULL){
   
   ### Prepare:
   if(sum(names(input)[1:3] == c("Pheno", "Anno", "Counts"))==3){
@@ -107,22 +113,41 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
   if(is.null(target_columns)){
     logi_colnam <- grepl("^mis0_bio", colnames(anno))
     if(sum(logi_colnam)>1){
-      stop("\nThere were multiple columns starting with 'mis0_bio' indiciating multiple rounds of \nbiotype reannotation. Please, rename the columns (do not repeatively use 'mis0_bio')\nor use the 'target_columns' input to specify which of these columns that should be \nsimplified (eg. target_columns= c('mis0_bio2, mis1_bio2, mis2_bio2, mis3_bio2').")
+      stop(
+           "\nThere were multiple columns starting with 'mis0_bio' ",
+           "\nindiciating multiple rounds of biotype reannotation.",
+           "\nPlease, rename the columns (do not repeatively use ",
+           "\n'mis0_bio')or use the 'target_columns' input to specify",
+           "\nwhich of these columns that should be simplified (eg. ",
+           "\ntarget_columns= c('mis0_bio2, mis1_bio2, mis2_bio2, mis3_bio2').")
     }
     if(sum(logi_colnam)<1){ 
-       stop("\nYour input did not contain a 'mis0_bio' column. Please, add \na mismatch/biotype reannotation matrix using add_reanno, which will\n generate the correct column names, before running this function.")
+       stop(
+         "\nYour input did not contain a 'mis0_bio' column. Please, add",
+         "\na mismatch/biotype reannotation matrix using add_reanno, ",
+         "\nwhich will generate the correct column names, before running",
+         "\nthis function.")
     }
-    logi_colnam  <- grepl(paste(paste0("mis", 0:mismatches, "_bio"), collapse="|"), colnames(anno))
-    mis_col <- sum(grepl(paste(paste0("mis", 0:10, "_bio"), collapse="|"), colnames(anno)))
-    cat(paste0("\nNumber of mismatches specified by user: ", mismatches, "\t(max available: ", mis_col-1,")"))
+    logi_colnam  <- grepl(paste(paste0("mis", 0:mismatches, "_bio"), 
+                                collapse="|"), colnames(anno))
+    mis_col <- sum(grepl(paste(paste0("mis", 0:10, "_bio"), collapse="|"), 
+                         colnames(anno)))
+    cat(paste0("\nNumber of mismatches specified by user: ", 
+               mismatches, "\t(max available: ", mis_col-1,")"))
   }
   if(!is.null(target_columns)){
     logi_colnam <- colnames(anno) %in% target_columns
     if(!sum(logi_colnam) == length(target_columns)){
-      stop("\nYour names in target_columns did not match input column names.\nPlease double check spelling or (re)run add_reanno to generate \ncompatible column names.")
+      stop(
+        "\nYour names in target_columns did not match input column names.",
+        "\nPlease double check spelling or (re)run add_reanno to generate",
+        "\ncompatible column names.")
     }
     if(!is.null(mismatches)){
-      warning("You specifed columns in target_columns. By doing so the function \nwill disregard the mismatches option and instead simplify by \nmerging the target_columns.") 
+      warning(
+        "You specifed columns in target_columns. By doing so the function",
+        "\nwill disregard the mismatches option and instead simplify by",
+        "\nmerging the target_columns.") 
       }
     }
   anno_mat <- anno[,logi_colnam, drop=FALSE]
@@ -131,31 +156,46 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
   ### Report the results:   
   anno_vect_uni <- unique(do.call("c", strsplit(anno_vect, ";|\\|")))
   cat(paste0("\nBiotypes will be asigned as follows:\n"))
-  catg <- do.call("rbind", lapply(hierarchy, function(x){paste(anno_vect_uni[grepl(x, anno_vect_uni)], collapse=", ")}))
+  catg <- do.call("rbind", lapply(hierarchy, function(x){
+    paste(anno_vect_uni[grepl(x, anno_vect_uni)], collapse=", ")}))
   colnames(catg) <- "Original_biotypes"
-  other <- anno_vect_uni[!anno_vect_uni %in% c(do.call("c", strsplit(catg[,1], ", ")), "_")]
+  other <- anno_vect_uni[!anno_vect_uni %in% c(
+    do.call("c", strsplit(catg[,1], ", ")), "_")]
   if(length(other) == 0){ other <- "<NA>"}
-  catg <- rbind(catg, data.frame(row.names=c("other", "no_anno") , Original_biotypes=c(paste(other, collapse=", "), "_"))) 
-  catg <- data.frame(Simplified_biotype=rownames(catg), Hierarchy=1:(nrow(catg)), Original_biotypes=catg[,1])
+  catg <- rbind(catg, data.frame(
+    row.names=c("other", "no_anno") , 
+    Original_biotypes=c(paste(other, collapse=", "), "_"))) 
+  catg <- data.frame(
+    Simplified_biotype=rownames(catg), 
+    Hierarchy=1:(nrow(catg)), 
+    Original_biotypes=catg[,1])
   print(catg)
   
   ### Extract simplified biotypes:
-  df_hits <- data.frame(matrix(NA, nrow=length(anno_vect), ncol=nrow(catg)), row.names=names(anno_vect))
+  df_hits <- data.frame(matrix(
+    NA, nrow=length(anno_vect), ncol=nrow(catg)), row.names=names(anno_vect))
   colnames(df_hits) <- catg$Simplified_biotype
   search_terms <- as.character(catg$Original_biotypes)
-  search_terms[nchar(search_terms) == 0] <- "xkFTGWQd£$¤"
+  search_terms[nchar(search_terms) == 0] <- "xkFTGWQd$[}))$jks"
   
-  if(any(duplicated(unlist(strsplit(paste0(search_terms, collapse=", "), ", "))))){
-    stop("\nAborted! Search terms overlap multiple biotype categories.\nPlease double check the asignments.")}  
+  if(any(duplicated(
+    unlist(strsplit(paste0(search_terms, collapse=", "), ", "))))){
+    stop(
+      "\nAborted! Search terms overlap multiple biotype categories.",
+      "\nPlease double check the asignments.")
+    }  
   search_terms <- gsub(", ", "|", search_terms) 
   for(i in 1:length(search_terms)){
-    if(search_terms[i]=="xkFTGWQd£$¤"){
+    if(search_terms[i]=="xkFTGWQd$[}))$jks"){
       df_hits[,i]  <- "no_hit"
     }else{
-      df_hits[,i]  <- ifelse(grepl(search_terms[i], anno_vect), as.character(catg$Simplified_biotype[i]), "no_hit")
+      df_hits[,i]  <- ifelse(grepl(search_terms[i], anno_vect), 
+                             as.character(catg$Simplified_biotype[i]), "no_hit")
     }
   }
-  vect_hits <- apply(df_hits, 1, function(x){paste(x, collapse="|")}) 
+  vect_hits <- apply(df_hits, 1, function(x){
+    paste(x, collapse="|")
+    }) 
   vect_hits <- gsub("no_hit\\||\\|no_hit", "", vect_hits)
   bio_vect_lst <- lapply(as.list(vect_hits), function(x){
     splt  <- do.call("c", strsplit(x, "\\|"))

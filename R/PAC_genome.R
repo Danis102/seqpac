@@ -44,20 +44,25 @@
 #' ## We perfer to make seperate alignments against full chromosomes and scaffold/haplotypes
 #' ## Therefore we start by splitting the ref seq by chromosome and then save them as two seperate fasta files
 #' 
-#' fast_orig <- Biostrings::readDNAStringSet("/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/Drosophila_melanogaster.BDGP6.28.dna.toplevel.fa.gz", format="fasta", use.names=TRUE)
+#' fast_orig <- Biostrings::readDNAStringSet(
+#'              "<your path to genome fasta>", format="fasta", use.names=TRUE)
 #' fast_chr <- fast_orig[grepl("dna:chromosome", names(fast_orig)),] 
 #' fast_other <- fast_orig[!grepl("dna:chromosome", names(fast_orig))]
-#' Biostrings::writeXStringSet(fast_chr, filepath="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa", format="fasta")
-#' Biostrings::writeXStringSet(fast_other, filepath="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/scaffolds/fast_other.fa", format="fasta")
-#' 
+#' Biostrings::writeXStringSet(
+#'     fast_chr, filepath="<your path to new chromosome fasta>", format="fasta")
+#' Biostrings::writeXStringSet(
+#'     fast_other, filepath="<your path to new other fasta>", format="fasta")
+#'     
 #' ## Now we make indexes for Rsubread
 #' ## We set TH_subread to a high number to include as many repeats as possible.
-#' ## Remember however that this may dramatically affect performance for some species (take a long time).
+#' ## Remember however that this may dramatically affect performance for some 
+#' ## species (take a long time).
 #'
 #'  
-#' Rsubread::buildindex(basename="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr", 
-#'            reference="/data/Data_analysis/Genomes/Drosophila/dm6/Ensembl/dm6_ensembl_release_101/fasta/chr/fast_chr.fa", 
-#'            gappedIndex=FALSE, memory= 32000, TH_subread=10000000000)
+#' Rsubread::buildindex(
+#'    basename="<example: dm6_ensembl_release_101/fasta/chr/fast_chr>", 
+#'    reference="<example:dm6_ensembl_release_101/fasta/chr/fast_chr.fa>", 
+#'    gappedIndex=FALSE, memory= 32000, TH_subread=10000000000)
 #'   
 #' 
 #' ########################################

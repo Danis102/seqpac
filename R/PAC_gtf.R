@@ -395,7 +395,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
     loop <- length(coord_lst)
     for(i in 1:loop){
       cat("\rGenerating full annotation list: ", i, "/", loop)
-      flush.console() 
+      utils::flush.console() 
       tab <- coord_lst[[i]]
       for(z in 1:length(anno_lst)){
         tab <- cbind(tab, anno_lst[[z]][[i]])
@@ -411,7 +411,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
     loop <- nrow(coord_genome)
     for(i in 1:loop){
       cat("\rGenerating simplified annotation table: ", i, "/", loop)
-      flush.console() 
+      utils::flush.console() 
       tab <- coord_genome[i,]
       for(z in 1:length(anno_lst)){
          simp_tab <- apply(anno_lst[[z]][[i]], 2, function(x){

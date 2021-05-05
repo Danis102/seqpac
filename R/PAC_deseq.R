@@ -89,6 +89,7 @@
 #'#names(output_deseq)
 #'#tibble::as_tibble(output_deseq$result)
 #'
+#' @importFrom stats terms.formula
 #' @export
 
 PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", 
@@ -96,7 +97,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   
   cat("\n")
 ##### Prepare data
-  
+  pval <- log2FC <- neglog_padj <- DE <- NULL
   PAC_sub <- PAC
   PAC_sub$Counts <- apply(PAC_sub$Counts, 2, as.integer)
   rownames(PAC_sub$Counts) <- rownames(PAC$Anno)

@@ -1,4 +1,4 @@
-#' Plot sequence covarage over a reference
+#' Plot sequence coverage over a reference
 #'
 #' \code{PAC_covplot} Plotting sequences in a PAC object using an PAC mapping
 #' object.
@@ -35,7 +35,7 @@
 #'   performance. (default=TRUE).
 #'
 #' @param colors Character vector indicating the rgb colors to be parsed to
-#'   ggplot2 for plotting the covarage lines  (default = c("black", "red",
+#'   ggplot2 for plotting the coverage lines  (default = c("black", "red",
 #'   "grey", "blue"))
 #'
 #' @param check_overide Logical, whether all sequences names in PAC must be
@@ -53,17 +53,24 @@
 #' 
 #'  ### Load data ###
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
 #' 
 #' ## Make summaries and extract rRNA
 #' pac <- PAC_norm(pac, norm="cpm")
-#' pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage", unique(pac$Pheno$stage)))
+#' pac <- PAC_summary(pac, norm = "cpm", type = "means", 
+#'                    pheno_target=list("stage", unique(pac$Pheno$stage)))
 #' pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 #'
 #' ## Mapping and plotting
-#' #map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, threads=1, ref="<your_path_to_rRNA_reference>")
-#' #covplots<- PAC_covplot(pac_rRNA, map_rRNA, summary_target = list("cpmMeans_stage"), xseq=FALSE, style="line", color=c("red", "black", "blue"))
-#' #cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], covplots[[4]], nrow=2, ncol=2)
+#' #map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, 
+#'                         threads=1, ref="<your_path_to_rRNA_reference>")
+#' #covplots<- PAC_covplot(pac_rRNA, map_rRNA, 
+#'                         summary_target = list("cpmMeans_stage"), 
+#'                         xseq=FALSE, style="line", 
+#'                         color=c("red", "black", "blue"))
+#' #cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], 
+#'                     covplots[[4]], nrow=2, ncol=2)
 #'
 #' 
 #' @export
@@ -193,7 +200,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL,
       if(nrow(df)==0){
         fin <- data.frame(
           Position=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), 
-          Coverage=0)
+          Coverage=as.numeric(0))
       }
       if(nrow(df)>0){  
         gr <- GenomicRanges::GRanges(df)
@@ -222,6 +229,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL,
   # Plot
   plot_lst <- list(NA)
   for(i in 1:length(cov_lst)){
+    Coverage <- Group <- Position <- NULL
     cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), 
                     do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))
     cov_df <- reshape2::melt(cov_df, id.vars="Position")
