@@ -114,10 +114,8 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   
   ### Create pairwise combinations of pheno_target###
   
-  if(length(sub_data_lst)>1){
-    combn_lst <- as.list(data.frame(combn(1:length(sub_data_lst), m=2)))
-    if(rev==TRUE){combn_lst <- lapply(combn_lst, function(x){c(x[2], x[1])})}
-  }
+  if (length(sub_data_lst) > 1) { combn_lst <- as.list(data.frame(combn(1:length(sub_data_lst),m = 2)))}
+  if (rev == TRUE) { combn_lst <- lapply(combn_lst, function(x) { c(x[2], x[1]) })}
   
   ### Apply log2FC to all pairwise combinations ###        
   if(type %in% c("log2FC", "Log2FC", "Log2Fc")){

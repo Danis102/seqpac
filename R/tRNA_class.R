@@ -134,7 +134,11 @@
 #'      
 #' @export
 
-tRNA_class <- function(PAC, map, terminal){
+tRNA_class <- function(PAC, map, terminal = 5){
+      if(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==TRUE)
+            {cat("The map object contains references without hits. Please remove these (see ?map_rangetype for example)")
+             stopifnot(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==FALSE)
+            }
       type_vector <- lapply(map, function(x){
         map
         # Setup
@@ -163,7 +167,8 @@ tRNA_class <- function(PAC, map, terminal){
                                class=paste0(sort(unique(x$class)), collapse=";"),
                                decoder=paste0(sort(unique(x$decoder)), collapse=";"),
                                acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
-                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
+                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"),
+                               type=paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-"))
       })
       finished <- do.call("rbind", finished)
       # Extract tRNAs from PAC and merge results
