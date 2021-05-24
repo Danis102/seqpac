@@ -67,7 +67,7 @@
 #'   reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 #'   file. To avoid crashing the system due to memory shortage, make sure that
 #'   each thread on the machine have at least 10 Gb of memory availabe, unless
-#'   your fastq files are very small. Use \code{parallel::detectcores()} to see
+#'   your fastq files are very small. Use \code{parallel::detectCores()} to see
 #'   available threads on the machine.
 #'   
 #' @param save_temp Logical whether temporary files (including trimmed fastq
