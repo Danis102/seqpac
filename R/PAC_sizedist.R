@@ -31,7 +31,7 @@
 #'                          1st object being character target object in PAC$summary, 
 #'                          2nd object being a character vector of the target columns(s) in the target object (1st object).
 #'                          (default=NULL)
-#' @param ymax Integer of max value on y-axis (default=NULL) 
+#' @param plot_ymax Integer of max value on y-axis (default=NULL) 
 #'                          
 #'
 #' @return A list of objects: 
@@ -63,7 +63,7 @@
 #' 
 #' @export
 
-PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL, ymax = NULL){
+PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL, plot_ymax = NULL){
   
   # Prepare filtered PAC
   if(!is.null(pheno_target)){ 
@@ -156,12 +156,12 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
   }
   
   #### y-axis length ###
-  if(is.null(ymax)){
-    yhigh <- NULL
-    ylow <- NULL
+  if(is.null(plot_ymax)){
+    ymax <- NULL
+    ymin <- NULL
   }else{
-    yhigh <- ymax
-    ylow <- 0
+    ymax <- plot_ymax
+    ymin <- 0
   }
   
   for(i in 1:length(size_lst)){
@@ -173,7 +173,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
       ggplot2::labs(subtitle = samp[i])+
       ggplot2::scale_fill_manual(values=rgb_vec)+
       #coord_cartesian(ylim=c(0,10000))+
-      scale_y_continuous(limits = c(ylow, yhigh))+
+      scale_y_continuous(limits = c(ymin, ymax))+
       #ggthemes::geom_rangeframe(aes(x=range))+   
       ggthemes::theme_tufte()+
       ggplot2::theme_classic()+
