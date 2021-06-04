@@ -31,6 +31,7 @@
 #'                          1st object being character target object in PAC$summary, 
 #'                          2nd object being a character vector of the target columns(s) in the target object (1st object).
 #'                          (default=NULL)
+#' @param ymax Integer of max value on y-axis (default=NULL) 
 #'                          
 #'
 #' @return A list of objects: 
@@ -62,7 +63,7 @@
 #' 
 #' @export
 
-PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL){
+PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_target=NULL, summary_target=NULL, colors=NULL, ymax = NULL){
   
   # Prepare filtered PAC
   if(!is.null(pheno_target)){ 
@@ -153,6 +154,16 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
       samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) 
     }
   }
+  
+  #### y-axis length ###
+  if(is.null(ymax)){
+    yhigh <- NULL
+    ylow <- NULL
+  }else{
+    yhigh <- ymax
+    ylow <- 0
+  }
+  
   for(i in 1:length(size_lst)){
     histo_lst[[i]] <- ggplot2::ggplot(size_lst[[i]], ggplot2::aes(x=size, y=data, fill=biotype))+
       ggplot2::geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
@@ -162,7 +173,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target, pheno_targ
       ggplot2::labs(subtitle = samp[i])+
       ggplot2::scale_fill_manual(values=rgb_vec)+
       #coord_cartesian(ylim=c(0,10000))+
-      #scale_y_continuous(breaks = seq(0, 10000, 2500))+
+      scale_y_continuous(limits = c(ylow, yhigh))+
       #ggthemes::geom_rangeframe(aes(x=range))+   
       ggthemes::theme_tufte()+
       ggplot2::theme_classic()+
