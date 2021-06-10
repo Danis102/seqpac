@@ -150,14 +150,17 @@ library(seqpac)
 # input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
 # output <- "/home/danis31/Desktop/Temp_docs/temp"
 # 
-# prog_report  <-  make_trim(input=input, output=output, threads=1, check_mem=TRUE,
-#                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+# prog_report  <-  make_trim(input=input, output=output, 
+#                      threads=1, check_mem=TRUE, 
+#                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+#                      adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
 #                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
 #                      seq_range=c(min=14, max=70),
 #                      quality=c(threshold=20, percent=0.8))
 #
 #prog_report  <-  make_trim(input=input, output=output, threads=1, 
-#                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
+#                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), 
+#                      adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
 #                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
 #                      seq_range=c(min=14, max=70),
 #                      quality=c(threshold=20, percent=0.8))                                            

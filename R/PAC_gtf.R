@@ -159,44 +159,58 @@
 PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=FALSE,
                    gtf_repeat=NULL, gtf_protein=NULL, gtf_other=NULL, target_other=NULL, 
                    threads=1){
-
-##### Setup general ####################################
+  
+  ##### Setup general ####################################
   seqs <- rownames(PAC$Anno)
-
-##### Setup genome and run reanno if necessary ####################################
+  
+  ##### Setup genome and run reanno if necessary ####################################
   # If user do not know columns
   if(is.null(genome)){
-      anno_genome <- tibble::as_tibble(PAC$Anno, .name_repair="minimal")
+    anno_genome <- tibble::as_tibble(PAC$Anno, .name_repair="minimal")
+  }else{
+    # If user know the columns:
+    if(any(!file.exists(genome))){
+      anno_genome <- tibble::as_tibble(PAC$Anno[, genome, drop=FALSE], 
+                                       .name_repair="minimal")
     }else{
-      # If user know the columns:
-      if(any(!file.exists(genome))){
-          anno_genome <- tibble::as_tibble(PAC$Anno[, genome, drop=FALSE], .name_repair="minimal")
-      }else{
       # If user provide fasta reference:
       if(file.exists(genome)){
-          cat("\nInput genome was an existing file. Will treat it as a \nfasta reference and make a denovo reannotation using bowtie. \nSee ?map_reanno or ?vingette for details.\n")
-          outpath <- tempfile(pattern = "", fileext = ".out")
-          err <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="external", mismatches=mismatches,
-                         import ="genome", threads=threads), silent = TRUE)
-          if(!is.null(err)){
-            outpath <- tempfile(pattern = "", fileext = "")
-            # Convert to windows format
-            if(grepl("win|WIN|Win", Sys.info()["sysname"])){
-                outpath <- gsub("\\", "/", outpath, fixed=TRUE)
-                }
-            err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), output_path=outpath, type="internal", mismatches=mismatches,
-                         import ="genome", threads=threads), silent = TRUE)
-          if(!is.null(err2)){
-            stop(paste0("\nFunction map_reanno failed. Possible reasons: \n\tNo bowtie installation\n\tBad fasta reference\n\tNo bowtie index (see ?Rbowtie::bowtie_build)\n\nLast log says:\n", err2))
-            }
+        cat("\nInput genome was an existing file. Will treat it as a",
+            "\nfasta reference and make a denovo reannotation using bowtie.",
+            "\nSee ?map_reanno or ?vingette for details.\n")
+        outpath <- tempfile(pattern = "", fileext = ".out")
+        err <- try(map_reanno(PAC, ref_paths=list(genome=genome), 
+                              output_path=outpath, type="external", 
+                              mismatches=mismatches,
+                              import ="genome", threads=threads), silent = TRUE)
+        if(!is.null(err)){
+          outpath <- tempfile(pattern = "", fileext = "")
+          # Convert to windows format
+          if(grepl("win|WIN|Win", Sys.info()["sysname"])){
+            outpath <- gsub("\\", "/", outpath, fixed=TRUE)
           }
-          reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE)
-          anno_genome <- add_reanno(reanno, type="genome", mismatches = mismatches, genome_max="all")
-          rm(reanno)
-          unlink(outpath, recursive = TRUE)
+          err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), 
+                                 output_path=outpath, type="internal", 
+                                 mismatches=mismatches,
+                                 import ="genome", threads=threads), silent = TRUE)
+          if(!is.null(err2)){
+            stop(
+              paste0(
+                "\nFunction map_reanno failed. Possible reasons:",
+                "\n\tNo bowtie installation",
+                "\n\tBad fasta reference",
+                "\n\tNo bowtie index (see ?Rbowtie::bowtie_build)",
+                "\n\nLast log says:\n", err2))
+          }
+        }
+        reanno <- make_reanno(outpath, PAC=PAC, mis_fasta_check=TRUE)
+        anno_genome <- add_reanno(reanno, type="genome", 
+                                  mismatches = mismatches, genome_max="all")
+        rm(reanno)
+        unlink(outpath, recursive = TRUE)
       }
-     }
     }
+  }
   # Extract genome columns
   srch <- paste0("^mis", 0:mismatches)
   nam <- colnames(anno_genome)
@@ -205,19 +219,33 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   nam_col <- gsub("mis0_", "", nam[grepl("^mis0_", nam)])
   mis_col <- grepl(paste0("^", nam_col), nam)
   logi_coord <- rowSums(cbind(logi_col1, logi_col2))==2
-  prefix <- suppressWarnings(do.call("rbind", strsplit(nam[logi_coord], "_"))[,1])
+  prefix <- suppressWarnings(do.call("rbind", 
+                                     strsplit(nam[logi_coord], "_"))[,1])
   if(any(duplicated(prefix))){
-      stop("\nFound more than 1 possible genome annotation.\nAutomatic column identification only works when the results \nof one fasta reference genome is reported in PAC$Anno.\nPlease, specify in 'genome=' the exact columns reporting the alignments \nagainst 1 reference genome (column prefix: mis0_, mis1_, mis2_ etc.) \nor proved a path to a bowtie indexed fasta genome file.")
-    }
+    stop(
+      "\nFound more than 1 possible genome annotation.",
+      "\nAutomatic column identification only works when the results",
+      "\nof one fasta reference genome is reported in PAC$Anno.",
+      "\nPlease, specify in 'genome=' the exact columns reporting the",
+      "\nalignments against 1 reference genome (column prefix: mis0_, mis1_,",
+      "\nmis2_ etc.) or proved a path to a bowtie indexed fasta genome file.")
+  }
   coord_genome <- anno_genome[,logi_coord, drop=FALSE]
   mis_genome <- anno_genome[,mis_col, drop=FALSE]
   # Check that all columns are included
-  logi_check  <- apply(coord_genome, 2, function(x){any(grepl("Warning>\\d", x))})
+  logi_check  <- apply(coord_genome, 2, function(x){
+    any(grepl("Warning>\\d", x))
+  })
   if(any(logi_check)){
-        stop("\nCoordinates in genome appear to have truncation warnings ('Warning>'). \nThis indicates that genome was mapped with reporting a limited number of \nalignments per sequence. Please, rerun the 'add_reanno' function using \nmax_genome='all', or provide the path to a fasta genome reference in 'genome'.")
-      }
-
-##### Organize mapped coordinates ####################################
+    stop(
+    "\nCoordinates in genome appear to have truncation warnings ('Warning>').",
+      "\nThis indicates that genome was mapped with reporting a limited number",
+      "\nof alignments per sequence. Please, rerun the 'add_reanno' function",
+      "\nusing max_genome='all', or provide the path to a fasta genome",
+      "\nreference in 'genome'.")
+  }
+  
+  ##### Organize mapped coordinates ####################################
   cat("\n\nReorganizing coordinates ...")
   coord_lst <- list(NULL)
   lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size")]
@@ -231,62 +259,82 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
     }else{  
       targt <- coord_genome[i, grepl(mis, names(coord_genome))]
       splt <- unlist(strsplit(targt[[1]], "\\|"))
-      tb <- tibble::as_tibble(do.call("rbind", strsplit(splt, ";")), .name_repair="minimal")
+      tb <- tibble::as_tibble(do.call("rbind", strsplit(splt, ";")), 
+                              .name_repair="minimal")
       tb[[2]] <- as.numeric(gsub("start=", "", tb[[2]]))
-      tb <- tibble::tibble(seqid=tb[[1]], start=tb[[2]], end=tb[[2]]+lng, strand=tb[[3]])
+      tb <- tibble::tibble(seqid=tb[[1]], start=tb[[2]], 
+                           end=tb[[2]]+lng, strand=tb[[3]])
     }
     coord_lst[[i]] <- tb
     names(coord_lst)[i] <- mis
   }
   
-##### Import gtfs ####################################
+  ##### Import gtfs ####################################
   gtf_lst <- list(repeats=gtf_repeat, protein=gtf_protein, other=gtf_other)
-  logi_list <- unlist(lapply(gtf_lst, function(x){paste(class(x), collapse="_")}))=="list"
+  logi_list <- unlist(lapply(gtf_lst, function(x){
+    paste(class(x), collapse="_")
+    }))=="list"
   if(any(logi_list)){
-     gtf_lst <- c(gtf_lst[!logi_list], do.call("c", gtf_lst[logi_list]))
+    gtf_lst <- c(gtf_lst[!logi_list],
+                 do.call("c", gtf_lst[logi_list]))
   }
-
+  
   gtf_lst <- gtf_lst[!unlist(lapply(gtf_lst, is.null))]
   
   # Import gtf
-    gtf_lst <- lapply(gtf_lst, function(x){
-       if(class(x)[1] == "character"){    
-          if(file.exists(x)){
-            cat("\nImport gtf files ...")
-            gtf <- tibble::as_tibble(rtracklayer::readGFF(x), .name_repair="minimal")
-          }else{
-            gtf <- x
-          }
-         }else{
-           gtf <- x
-         }
-        return(gtf)
-        })
-
-##### Check format in repeats and protein ####################################  
-    for (i in 1:length(gtf_lst)){
-      nam <- names(gtf_lst)[i]
-      if(nam=="repeats"){
-         col_rep <- c("repName", "repClass", "repFamily", "strand")
-         logi_RM<- sum(names(gtf_lst[[nam]]) %in% col_rep)== 4
-         if(!logi_RM){
-           stop("\nInput 'gtf_repeats' does not contain repeatMasker standard columns\n('repName', 'repClass', 'repFamily'). Please, check column names \nusing for example rtracklayer::readGFF('<path_to_gtf>') or move the \ngtf path to 'gtf_other' and set target column(s) with 'target_other'.") 
-         }
+  gtf_lst <- lapply(gtf_lst, function(x){
+    if(class(x)[1] == "character"){    
+      if(file.exists(x)){
+        cat("\nImport gtf files ...")
+        gtf <- tibble::as_tibble(rtracklayer::readGFF(x), 
+                                 .name_repair="minimal")
+      }else{
+        gtf <- x
       }
-      if(nam=="protein"){ 
-         col_prot <- c("type", "gene_name", "gene_biotype", "exon_number", "strand")
-         logi_prot <- sum(names(gtf_lst[[nam]]) %in% col_prot)== 5
-         if(!logi_prot){
-           stop("\nInput 'gtf_protein' does not contain Ensembl standard columns\n('type', 'gene_name', 'exon_number', 'gene_biotype'). Please, check \ncolumn names using for example rtracklayer::readGFF('<path_to_gtf>') \nor move the gtf path to 'gtf_other' and set target column(s) \nmanually with 'target_other'.") 
-         }
-      }
-     logi_all <- sum(names(gtf_lst[[nam]]) %in% c("seqid", "start", "end", "strand"))== 4
-     if(!logi_all){
-           stop("\nInput gtf '", nam, "' does not contain essential columns\n('seqid', 'start', 'end', 'strand'). Please, check column \nnames using for example rtracklayer::readGFF('<path_to_gtf>').") 
-     }
+    }else{
+      gtf <- x
     }
+    return(gtf)
+  })
   
-##### Check all chromosomes names in gtf ####################################
+  ##### Check format in repeats and protein ####################################  
+  for (i in 1:length(gtf_lst)){
+    nam <- names(gtf_lst)[i]
+    if(nam=="repeats"){
+      col_rep <- c("repName", "repClass", "repFamily", "strand")
+      logi_RM<- sum(names(gtf_lst[[nam]]) %in% col_rep)== 4
+      if(!logi_RM){
+        stop(
+          "\nInput 'gtf_repeats' does not contain repeatMasker standard columns",
+          "\n('repName', 'repClass', 'repFamily'). Please, check column names",
+          "\nusing for example rtracklayer::readGFF('<path_to_gtf>') or move", 
+          "\nthe gtf path to 'gtf_other' and set target column(s) with",
+          "\n'target_other'.") 
+      }
+    }
+    if(nam=="protein"){ 
+      col_prot <- c("type", "gene_name", "gene_biotype", "exon_number", "strand")
+      logi_prot <- sum(names(gtf_lst[[nam]]) %in% col_prot)== 5
+      if(!logi_prot){
+        stop("\nInput 'gtf_protein' does not contain Ensembl standard columns",
+             "\n('type', 'gene_name', 'exon_number', 'gene_biotype'). Please, ",
+             "\ncheck column names using for example ",
+             "\nrtracklayer::readGFF('<path_to_gtf>') or move the gtf path",
+             "\nto 'gtf_other' and set target column(s) manually with",
+             "\n'target_other'.") 
+      }
+    }
+    logi_all <- sum(
+      names(gtf_lst[[nam]]) %in% c("seqid", "start", "end", "strand"))== 4
+    if(!logi_all){
+      stop("
+           \nInput gtf '", nam, "' does not contain essential columns",
+           "\n('seqid', 'start', 'end', 'strand'). Please, check column",
+           "\nnames using for example rtracklayer::readGFF('<path_to_gtf>').") 
+    }
+  }
+  
+  ##### Check all chromosomes names in gtf ####################################
   cat("\n\nChromosome names compatibility check ...")
   chrm_nam <- unique(unlist(lapply(coord_lst, function(x){x$seqid})))
   chrm_nam <- chrm_nam[!is.na(chrm_nam)]
@@ -295,24 +343,47 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   for(i in 1:length(gtf_lst)){
     chrom_in_gtf <- sum(chrm_nam %in% unique(gtf_lst[[i]]$seqid))
     if(chrom_in_gtf==0){
-      stop("\nYour chromosome names in 'gtf_", names(gtf_lst)[i], "' input \ndid not match your genome alignments. Did you forget \nto convert between database formats (e.g. UCSC vs Ensembl vs \nNCBI)? Please, check ?PAC_gtf and vingette(sepac) to instructions \non how to harmonize your gtf files.")
-      }
+      stop("\nYour chromosome names in 'gtf_", 
+           names(gtf_lst)[i], 
+           "' input \ndid not match your genome alignments. Did you forget",
+           "\nto convert between database formats (e.g. UCSC vs Ensembl vs",
+           "\nNCBI)? Please, check ?PAC_gtf and vingette(sepac) to", 
+           "\ninstructions non how to harmonize your gtf files.")
+    }
     if(chrom_in_gtf/tot_chrom<0.05 ){
       cat("\n")
-      warning("Low overlap between chromosome names of 'gtf_", names(gtf_lst)[i], "'\ninput and genome alignments was detected. Please, double \ncheck that conversion between database formats (e.g. UCSC vs \nEnsembl vs NCBI) was completed. Check ?PAC_gtf and vingette(sepac) \nfor instructions on how to harmonize your gtf files to \nthe reference genome (Note, may also depend on short gtf file).")
+      warning(
+        "Low overlap between chromosome names of 'gtf_", 
+        names(gtf_lst)[i], 
+        "'\ninput and genome alignments was detected. Please, double",
+        "\ncheck that conversion between database formats (e.g. UCSC vs",
+        "\nEnsembl vs NCBI) was completed. Check ?PAC_gtf and vingette(sepac)",
+        "\nfor instructions on how to harmonize your gtf files to",
+        "\nthe reference genome (Note, may also depend on short gtf file).")
     }
-      if(!chrom_in_gtf/tot_chrom==1 ){
+    if(!chrom_in_gtf/tot_chrom==1 ){
       cat("\n")
-      cat(paste0("  -- Note, not all chrosomsome names were represented in 'gtf_", names(gtf_lst)[i],"'.\n     Could be wise to double check that chrosomsome names are compatible."))
-      }
+      cat(
+        paste0(
+          "  -- Note, not all chrosomsome names were represented in 'gtf_", 
+          names(gtf_lst)[i],
+          "'.\n     Could be wise to double check that chrosomsome names ",
+          "\n     are compatible."))
+    }
   }                       
-
-##### Annotating ####################################
+  
+  ##### Annotating ####################################
   cat("\n\nAnnotating against the gtf file(s)  ...")
   # Convert gtf to gr
-  all_chrom_nam <- unique(c(as.character(unique(unlist(lapply(gtf_lst, function(x){x$seqid})))), chrm_nam))
+  all_chrom_nam <- unique(c(as.character(
+    unique(unlist(lapply(gtf_lst, function(x){
+      x$seqid
+      })))), chrm_nam))
   gtf_gr<- lapply(gtf_lst, function(x){
-    gr <- GenomicRanges::GRanges(seqnames=as.character(x$seqid), IRanges::IRanges(start=as.integer(x$start), end=as.integer(x$end)), strand=as.character(x$strand))
+    gr <- GenomicRanges::GRanges(seqnames=as.character(x$seqid), 
+                                 IRanges::IRanges(start=as.integer(x$start), 
+                                                  end=as.integer(x$end)), 
+                                 strand=as.character(x$strand))
     GenomeInfoDb::seqlevels(gr) <- all_chrom_nam
     return(gr)
   })
@@ -320,24 +391,34 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   # Convert coordinates to gr
   `%dopar%` <- foreach::`%dopar%`
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-  coord_gr   <- foreach::foreach(i=1:length(coord_lst), .packages=c("GenomicRanges"), .final = function(x){names(x) <- names(coord_lst); return(x)}) %dopar% {
+  coord_gr   <- foreach::foreach(i=1:length(coord_lst), 
+                                 .packages=c("GenomicRanges"), 
+                                 .final = function(x){
+                                   names(x) <- names(coord_lst); return(x)
+                                   }) %dopar% {
     x <- coord_lst[[i]]
     if(is.na(x[[1,1]])){
       gr <- NA
     }else{
       if(stranded=="TRUE"){
-          gr <- GenomicRanges::GRanges(seqnames=x$seqid, IRanges::IRanges(start=x$start, end=x$end), strand=x$strand)
-          GenomeInfoDb::seqlevels(gr) <- all_chrom_nam
+        gr <- GenomicRanges::GRanges(seqnames=x$seqid, 
+                                     IRanges::IRanges(start=x$start,
+                                                      end=x$end), 
+                                     strand=x$strand)
+        GenomeInfoDb::seqlevels(gr) <- all_chrom_nam
       }
       if(stranded=="FALSE"){
-          gr <- GenomicRanges::GRanges(seqnames=x$seqid, IRanges::IRanges(start=x$start, end=x$end), strand=NA)
-          GenomeInfoDb::seqlevels(gr) <- all_chrom_nam
+        gr <- GenomicRanges::GRanges(seqnames=x$seqid, 
+                                     IRanges::IRanges(start=x$start, 
+                                                      end=x$end), 
+                                     strand=NA)
+        GenomeInfoDb::seqlevels(gr) <- all_chrom_nam
       }
     }
     return(gr)
   }
-   doParallel::stopImplicitCluster()
-   
+  doParallel::stopImplicitCluster()
+  
   # Extraction loop
   `%dopar%` <- foreach::`%dopar%`
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
@@ -348,47 +429,54 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
     
     # Set up columns to extract
     if(gtf_nam=="repeats"){
-       col_target <- col_rep
+      col_target <- col_rep
     }
     if(gtf_nam=="protein"){
-       col_target <- col_prot
+      col_target <- col_prot
     }
     if(!gtf_nam %in% c("repeats", "protein")){
-       col_target <- target_other[[gsub("other.", "", gtf_nam)]]
+      col_target <- target_other[[gsub("other.", "", gtf_nam)]]
     }
     
     # Run overlap and extract anno 
-    coord_anno <-  foreach::foreach(t=1:length(coord_gr), .packages=c("GenomicRanges"), .final = function(t){names(t) <- names(coord_gr); return(t)}) %dopar% {
-          x <- coord_gr[[t]]      
-        if(paste(x[1])=="NA"){
-              uni_gtf <- tibble::as_tibble(matrix(NA, nrow=1, ncol=length(col_target)), .name_repair="minimal")
-              names(uni_gtf) <- col_target
-            }else{
-              olap <- suppressWarnings(GenomicRanges::findOverlaps(x, gtf_gr[[i]]))
-              gtf <- gtf_lst[[i]][olap@to, col_target]
-              uni_gtf <- data.frame(matrix(NA, nrow=length(x), ncol=length(col_target)))
-              names(uni_gtf) <- col_target
-              if(!nrow(gtf)==0){
-                splt <- split(gtf, as.factor(olap@from))
-                uni_anno <- lapply(splt, function(z){
-                    uni <- apply(z, 2, function(y){
-                           y <- y[!is.na(y)]
-                           paste(sort(unique(y)), collapse="|")
-                          })
-                    return(uni)
-                    })
-                uni_anno <- do.call("rbind", uni_anno)
-                uni_gtf[rownames(uni_anno),] <- uni_anno
-              }
-            }
-            return(uni_gtf)
-          }
-  anno_lst[[i]] <- coord_anno
-  names(anno_lst)[i] <- gtf_nam
+    coord_anno <-  foreach::foreach(t=1:length(coord_gr), 
+                                    .packages=c("GenomicRanges"), 
+                                    .final = function(t){
+                                      names(t) <- names(coord_gr); return(t)
+                                      }) %dopar% {
+      x <- coord_gr[[t]]      
+      if(paste(x[1])=="NA"){
+        uni_gtf <- tibble::as_tibble(matrix(NA, nrow=1, 
+                                            ncol=length(col_target)), 
+                                     .name_repair="minimal")
+        names(uni_gtf) <- col_target
+      }else{
+        olap <- suppressWarnings(GenomicRanges::findOverlaps(x, gtf_gr[[i]]))
+        gtf <- gtf_lst[[i]][olap@to, col_target]
+        uni_gtf <- data.frame(matrix(NA, nrow=length(x), 
+                                     ncol=length(col_target)))
+        names(uni_gtf) <- col_target
+        if(!nrow(gtf)==0){
+          splt <- split(gtf, as.factor(olap@from))
+          uni_anno <- lapply(splt, function(z){
+            uni <- apply(z, 2, function(y){
+              y <- y[!is.na(y)]
+              paste(sort(unique(y)), collapse="|")
+            })
+            return(uni)
+          })
+          uni_anno <- do.call("rbind", uni_anno)
+          uni_gtf[rownames(uni_anno),] <- uni_anno
+        }
+      }
+      return(uni_gtf)
+    }
+    anno_lst[[i]] <- coord_anno
+    names(anno_lst)[i] <- gtf_nam
   }
   doParallel::stopImplicitCluster() 
-
-##### Returning objects ####################################  
+  
+  ##### Returning objects ####################################  
   if(return %in% c("full","all")){
     cat("\n\n")
     full_lst <- list(NULL)
@@ -404,7 +492,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
       names(full_lst)[i] <- paste(seqs[i], names(coord_lst)[i], sep="_")
     }
   }
-    
+  
   if(return %in% c("simplify", "all", "merge")){
     cat("\n\n")
     simp_lst <- list(NULL)
@@ -414,25 +502,28 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
       utils::flush.console() 
       tab <- coord_genome[i,]
       for(z in 1:length(anno_lst)){
-         simp_tab <- apply(anno_lst[[z]][[i]], 2, function(x){
-            simp <- sort(unique(unlist(strsplit(as.character(x), "\\|"), use.names = FALSE)))
-            simp <- paste(simp[!is.na(simp)], collapse="|")
-            if(nchar(simp) == 0){
-              simp <- NA
-            }
-            return(simp)
-          })
+        simp_tab <- apply(anno_lst[[z]][[i]], 2, function(x){
+          simp <- sort(unique(unlist(strsplit(as.character(x), "\\|"), 
+                                     use.names = FALSE)))
+          simp <- paste(simp[!is.na(simp)], collapse="|")
+          if(nchar(simp) == 0){
+            simp <- NA
+          }
+          return(simp)
+        })
         tab <- cbind(tab, t(as.data.frame(simp_tab)))
       } 
       simp_lst[[i]] <- tab
       names(simp_lst)[i] <- seqs[i]
     }
-    simp_df <- tibble::as_tibble(cbind(data.frame(seqs=as.character(seqs)), mis_genome, do.call("rbind", simp_lst)), .name_repair="minimal")
-   }
-
+    simp_df <- tibble::as_tibble(cbind(data.frame(seqs=as.character(seqs)),
+                                       mis_genome, do.call("rbind", simp_lst)), 
+                                 .name_repair="minimal")
+  }
+  
   if(return=="simplify"){
     return(simp_df)
-    }
+  }
   if(return=="full"){
     return(full_lst)
   }
@@ -440,9 +531,9 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
     return(list(simplify=simp_df, full=full_lst))
   }
   if(return=="merge"){
-     stopifnot(identical(rownames(PAC$Anno), as.character(simp_df$seqs)))
-     PAC$Anno <- cbind(PAC$Anno, simp_df[,-1])
-     stopifnot(PAC_check(PAC))
-     return(PAC)
+    stopifnot(identical(rownames(PAC$Anno), as.character(simp_df$seqs)))
+    PAC$Anno <- cbind(PAC$Anno, simp_df[,-1])
+    stopifnot(PAC_check(PAC))
+    return(PAC)
   }
 }

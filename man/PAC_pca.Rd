@@ -69,7 +69,8 @@ with the fviz_pca functions of the factoextra package.
 
 ### Load data ###
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
 # Add normalized data as counts per million reads (cpm): 
 pac_master <- PAC_norm(pac_master, norm="cpm")
@@ -77,18 +78,26 @@ pac_master <- PAC_norm(pac_master, norm="cpm")
 # Simple sample counts pca and scatterplots with no groupings: 
 pca_cnt <- PAC_pca(pac_master, norm="counts")
 
-# Sample cpm pca and scatterplots with color groupings from PAC$Pheno$type column:    
-pca_cpm <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"))
+# Sample cpm pca and scatterplots with color groupings from 
+# PAC$Pheno$type column:    
+pca_cpm <- PAC_pca(pac_master, norm="cpm", type="pheno", 
+                   pheno_target=list("stage"))
 
 # Same but with or without text labels: 
-pca_cpm_lab <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"), labels="samples")
-pca_cpm_lab2 <- PAC_pca(pac_master, norm="cpm", type="pheno", pheno_target=list("stage"), labels=pac_master$Pheno$batch)
+pca_cpm_lab <- PAC_pca(pac_master, norm="cpm", type="pheno", 
+                       pheno_target=list("stage"), labels="samples")
+pca_cpm_lab2 <- PAC_pca(pac_master, norm="cpm", type="pheno", 
+                        pheno_target=list("stage"), 
+                        labels=pac_master$Pheno$batch)
 
-# Cpm pca with PAC$Anno sequence features instead of Pheno samples and restricted to read size 20-22:
-pca_cpm_anno <- PAC_pca(pac_master, norm="cpm", type="anno", anno_target=list("Size", 20:22))
+# Cpm pca with PAC$Anno sequence features instead of Pheno samples and 
+# restricted to read size 20-22:
+pca_cpm_anno <- PAC_pca(pac_master, norm="cpm", type="anno", 
+                        anno_target=list("Size", 20:22))
 
 # Cpm pca as biplot:
-pca_cpm_bi <- PAC_pca(pac_master, norm="cpm", type="both", pheno_target=list("stage"))
+pca_cpm_bi <- PAC_pca(pac_master, norm="cpm", type="both", 
+                      pheno_target=list("stage"))
 
 # Plot individual graphs
 pca_cpm_bi$graphs[[1]]
@@ -114,6 +123,7 @@ Other PAC analysis:
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pie}()},
+\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

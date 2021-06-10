@@ -196,6 +196,7 @@ the same order of sequences as in the original PAC master file.
 
 Other PAC reannotation: 
 \code{\link{check_reanno}()},
+\code{\link{convert_seqnames}()},
 \code{\link{import_reanno}()},
 \code{\link{make_reanno}()},
 \code{\link{map_reanno}()},

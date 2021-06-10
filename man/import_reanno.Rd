@@ -84,6 +84,7 @@ using \code{\link{add_reanno}}.
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
 \code{\link{check_reanno}()},
+\code{\link{convert_seqnames}()},
 \code{\link{make_reanno}()},
 \code{\link{map_reanno}()},
 \code{\link{simplify_reanno}()}
