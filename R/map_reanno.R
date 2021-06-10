@@ -266,7 +266,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
       basename(capture.output(system("bowtie --version", 
                                      intern=TRUE))[[1]]), "version")
     cat("\nR external mapping depends on correct installation of bowtie.")
-    cat("\nIf thre are problems using external bowtie, try type='internal'.")
+    cat("\nIf there are problems using external bowtie, try type='internal'.")
     cat(paste0("\nAn external bowtie installation was found using version", 
                vrs[[1]][2]))
   }

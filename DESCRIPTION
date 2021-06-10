@@ -31,15 +31,16 @@ LazyData: true
 RoxygenNote: 7.1.1
 URL: https://github.com/Danis102/seqpac
 BugReports: https://github.com/Danis102/seqpac/issues
-Imports:
-  stringr,
+Depend:
   ShortRead,
   foreach,
-  parallel,
   tidyverse,
-  ggplot2,
   Biostrings,
   GenomicRanges,
+Imports:
+  stringr,
+  parallel,
+  ggplot2,
   Rbowtie,
   qqman,
   DESeq2,

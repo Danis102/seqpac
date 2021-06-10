@@ -32,30 +32,37 @@ across Pheno, Anno and Counts.
 \examples{
 
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
 PAC_check(pac)  # TRUE
 
-new_Anno <- pac$Anno[-1,]               # Remove first row in Anno
+# Remove first row in Anno
+new_Anno <- pac$Anno[-1,]               
 
-#PAC_check(pac, seq_check=new_Anno)     # (Error) problem with sequence compatibility
 
-pac$Anno <- new_Anno                    # Add to pac
-#PAC_check(pac)                         # (Error) that Counts and Anno is not identical
+#PAC_check(pac, seq_check=new_Anno) # Error   
+
+# Add to pac
+pac$Anno <- new_Anno                    
+#PAC_check(pac) # Error                      
 
 ## Reload data
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 PAC_check(pac)  # TRUE
 
-new_norm <- pac$norm$cpm[,-1]           # Remove a sample column in normalized table 
+# Remove a sample column in normalized table 
+new_norm <- pac$norm$cpm[,-1]           
 PAC_check(pac, seq_check=new_norm)      # All sequences are good
-#PAC_check(pac, sample_check=new_norm)  # (Error) but samples are not
+#PAC_check(pac, sample_check=new_norm)  # Error
 
 pac$norm$cpm <- new_norm                # Add to pac
-#PAC_check(pac)                         # (Error) Now norm table is incompatible 
+#PAC_check(pac)                         # Error 
 
 ## Reload data
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 PAC_check(pac)  # TRUE
 
 seq_names <- rownames(pac$Counts)

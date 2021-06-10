@@ -170,10 +170,13 @@ make_counts <- function(input, type="fastq", trimming=NULL, threads=1,
         "sport output files over ", 
         nrow(anno), "unique RNA sequences.\n")
     cat("Started at ", paste0(Sys.time()), "\n")
-    ordCount_df <- data.frame(matrix(NA, nrow=nrow(anno), ncol=length(sports_lst)))
-    pb <- txtProgressBar(min = 0, max = length(sports_lst), initial = 0, style = 3, width = 100)
+    ordCount_df <- data.frame(matrix(NA, nrow=nrow(anno), 
+                                     ncol=length(sports_lst)))
+    pb <- txtProgressBar(min = 0, max = length(sports_lst), initial = 0, 
+                         style = 3, width = 100)
     for(i in 1:length(sports_lst)){
-      ordCount_df[,i]  <- sports_lst[[i]]$Reads[match(rownames(anno), as.character(sports_lst[[i]]$Sequence))]
+      ordCount_df[,i]  <- sports_lst[[i]]$Reads[match(rownames(anno), 
+                         as.character(sports_lst[[i]]$Sequence))]
       colnames(ordCount_df)[i] <- gsub("_merge", "", names(sports_lst)[i])
       Sys.sleep(0.001)
       setTxtProgressBar(pb,i)

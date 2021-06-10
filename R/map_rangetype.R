@@ -85,23 +85,30 @@
 #' # 
 #' # # First create an annotation blanc PAC with group means
 #' # pac$Anno <- pac$Anno[,1, drop=FALSE]
-#' # pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
+#' # pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
+#' #                         pheno_target=list("stage"), merge_pac = TRUE)
 #' # 
 #' # # Then reannotate only tRNA using the PAC_mapper function
 #' # ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
-#' # map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
+#' # map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
+#' #                         mapper="reanno", mismatches=0, 
+#' #                         threads=8, report_string=TRUE)
 #' # 
 #' # 
 #' # ###########################################################
 #' # ## Coverage plot of tRNA using PAC_covplot
 #' # 
 #' # # Single tRNA targeting a summary dataframe 
-#' # PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+#' # PAC_covplot(pac_trna, 
+#' #             map=map_object, summary_target= list("cpmMeans_stage"), 
+#' #             map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
 #' # 
 #' # # Find tRNAs with many fragments
 #' # n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
 #' # selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-#' # cov_plt <- PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target=selct)
+#' # cov_plt <- PAC_covplot(pac_trna, map=map_object, 
+#' #                        summary_target= list("cpmMeans_stage"), 
+#' #                        map_target=selct)
 #' # cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
 #' # 
 #' # 

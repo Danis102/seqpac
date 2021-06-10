@@ -149,6 +149,7 @@ PAC object.
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
 \code{\link{check_reanno}()},
+\code{\link{convert_seqnames}()},
 \code{\link{import_reanno}()},
 \code{\link{map_reanno}()},
 \code{\link{simplify_reanno}()}
