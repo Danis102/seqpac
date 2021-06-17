@@ -111,9 +111,17 @@ adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1).
       }
     }}
 
+\item{adapt_3}{Character string defining the 3' adaptor sequence. In most
+library preparation protocols, the 3' adaptor is the only adaptor needed
+trimming.}
+
 \item{adapt_5_set}{Currently not supported, but will be in future updates.
 Same as \code{adapt_3_set} but controls the behavior of 5' trimming when a
 sequence is provided in \code{adapt_5}.}
+
+\item{adapt_5}{Character string defining a 5' adaptor sequence. 5' adaptor
+sequences are only trimmed in specialized protocols or in very short
+paired-end sequencing.}
 
 \item{seq_range}{Numeric vector with two inputs named 'min' and 'max', that
 controls the sequence size filter. For example, if
@@ -145,27 +153,32 @@ Given an file path to sequence files in fastq format (extension .fastq.gz or
 then apply sequence size and phred score quality filters.
 }
 \examples{
-library(seqpac)
 
-# input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-# output <- "/home/danis31/Desktop/Temp_docs/temp"
-# 
-# prog_report  <-  make_trim(input=input, output=output, 
-#                      threads=1, check_mem=TRUE, 
-#                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
-#                      adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
-#                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
-#                      seq_range=c(min=14, max=70),
-#                      quality=c(threshold=20, percent=0.8))
-#
-#prog_report  <-  make_trim(input=input, output=output, threads=1, 
-#                      adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), 
-#                      adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
-#                      polyG=c(type="hard_trim", min=20, mismatch=0.1),
-#                      seq_range=c(min=14, max=70),
-#                      quality=c(threshold=20, percent=0.8))                                            
+\dontrun{ 
+
+library(seqpac)
+input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+output <- "/some/path/to/output_folder"
+
+prog_report  <-  make_trim(
+       input=input, output=output, 
+       threads=1, check_mem=TRUE, 
+       adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+       adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+       polyG=c(type="hard_trim", min=20, mismatch=0.1),
+       seq_range=c(min=14, max=70),
+       quality=c(threshold=20, percent=0.8))
+
+prog_report  <-  make_trim(
+       input=input, output=output, threads=1, 
+       adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), 
+       adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
+       polyG=c(type="hard_trim", min=20, mismatch=0.1),
+       seq_range=c(min=14, max=70),
+       quality=c(threshold=20, percent=0.8))                                            
                      
 
+}
 
 
 }

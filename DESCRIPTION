@@ -1,7 +1,7 @@
 Package: seqpac
 Type: Package
 Title: seqpac - Group-based Analysis of Short Reads Using Sequence Counts
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
     person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
@@ -25,34 +25,54 @@ Description: A collection of functions used for complete analysis of short seque
     Thus P and A describes the columns and rows in C, respectively. The targeting system, will either 
     target specific samples in P (pheno_target) or sequences in A (anno_target) and group them according 
     to a target column in P and A, respectively.
-License: GLP3
+License: GLP-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 URL: https://github.com/Danis102/seqpac
 BugReports: https://github.com/Danis102/seqpac/issues
 Depend:
-  ShortRead,
-  foreach,
-  tidyverse,
-  Biostrings,
-  GenomicRanges,
+  Biostrings (>= 2.46.0),
+  foreach (>= 1.5.1),
+  GenomicRanges (>= 1.30.3,
+  Rbowtie (>= 1.18.0),
+  ShortRead (>= 1.36.1),
+  tidyverse (>= 1.3.1)
 Imports:
-  stringr,
-  parallel,
-  ggplot2,
-  Rbowtie,
-  qqman,
-  DESeq2,
-  BiocParallel,
-  R.utils,
-  UpSetR,
-  cowplot,
-  reshape2,
-  tibble
-Suggests: 
-    knitr,
-    rmarkdown,
-    testthat,
-    venneuler
-VignetteBuilder: knitr
+  BiocParallel (>= 1.12.0),
+  Biostrings (>= 2.46.0),
+  cowplot (>= 0.9.4),
+  data.table (>= 1.14.0),
+  digest (>= 0.6.27),
+  doParallel (>= 1.0.16),
+  dplyr (>= 1.0.6),
+  factoextra (>= 1.0.7),
+  FactoMineR (>= 1.41),
+  foreach (>= 1.5.1),
+  GenomicRanges (>= 1.30.3),
+  ggplot2 (>= 3.3.3),
+  IRanges (>= 2.12.0),
+  parallel (>= 3.4.4),
+  qqman (>= 0.1.8),
+  Rbowtie (>= 1.18.0),
+  readr (>= 1.4.0),
+  reshape2 (>= 1.4.4),
+  rtracklayer (>= 1.38.3),  
+  ShortRead (>= 1.36.1),
+  stringr (>= 1.4.0),
+  tidyverse (>= 1.3.1),
+  tibble (>= 3.1.2),
+  tidyr (>= 1.1.3),
+  UpSetR (>= 1.4.0)
+Suggests:
+  benchmarkme (>= 0.6.0),
+  DESeq2 (>= 1.18.1),
+  GenomeInfoDb (>= 1.14.0),  
+  gginnards (>= 0.0.2),
+  knitr,
+  rmarkdown,
+  testthat,
+  venneuler
+VignetteBuilder: 
+  knitr,
+  rmarkdown

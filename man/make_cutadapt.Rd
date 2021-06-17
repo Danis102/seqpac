@@ -7,7 +7,11 @@
 make_cutadapt(input, output, parse = NULL, threads = 1)
 }
 \arguments{
-\item{input}{Character path to the output directory where trimmed fastq files
+\item{input}{Character path to a directory containing input fastq-files. The
+script will recursively search this directory for the .fastq|.fastq.gz
+extension.}
+
+\item{output}{Character path to the output directory where trimmed fastq files
 will be stored and temporary files will be generated.}
 
 \item{parse}{List with two character string expressions. The first will be
@@ -38,29 +42,39 @@ and remove sequences with low quality.
 }
 \examples{
  
-# library(seqpac)
-#   
-# ############################################################      
-# ### Seqpac trimming using the make_cutadapt function
-# ### (Important: Needs an external installations of cutadapt 
-# ###  and fastq_quality_filter) 
-# 
-#  input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#  output =  "/home/danis31/Desktop/Temp_docs/temp"
-#  
-#  # Parse for make_cutadapt is a list of 2 character string expressions.
-#  # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#  # For parallel processes '-j 1' is recommended since seqpac will   
-#  # parallelize across samples and not within.
-#  # Run system("cutadapt -h") and system("fastq_quality_filter -h") 
-#  # for more options.
-#  
-#  parse = list(
-#            cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 7 -M 70",
-#            fastq_quality_filter="-q 20 -p 80")
-#               
-#             
-#  logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
+ 
+\dontrun{  
+library(seqpac)
+  
+############################################################      
+### Seqpac trimming using the make_cutadapt function
+### (Important: Needs an external installations of cutadapt 
+###  and fastq_quality_filter) 
+
+ input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+ output =  "/some/path/to/temp/folder"
+ 
+ output = "/home/danis31/Desktop/Temp"
+ 
+ # Parse for make_cutadapt is a list of 2 character string expressions.
+ # The first is parsed to cutadapt and the other to fastq_quality_filter 
+ # For parallel processes '-j 1' is recommended since seqpac will   
+ # parallelize across samples and not within.
+ # Run system("cutadapt -h") and system("fastq_quality_filter -h") 
+ # for more options.
+ 
+ # String to parse to cutadapt:
+ cut_prs <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT",
+                   " --discard-untrimmed --nextseq-trim=20",
+                   " -O 10 -m 7 -M 70")
+ 
+ # Add string to parse to fastq_quality_filter:
+ parse = list(
+           cutadapt=cut_prs,
+           fastq_quality_filter="-q 20 -p 80")
+              
+ logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
+ }
  
 }
 \seealso{

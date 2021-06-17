@@ -21,8 +21,8 @@
 #' @param norm Character indicating what type of data in PAC to be used as
 #'   input. If norm="raw" the raw counts in Counts will be used. Given any other
 #'   character string, the function will search for the string as a name on a
-#'   dataframe stored in the PAC$norm list-folder (created for example by PAC_rpm),
-#'   (default="rpm")
+#'   dataframe stored in the PAC$norm list-folder (created for example by
+#'   PAC_rpm), (default="rpm")
 #'   
 #' @param pheno_target List with: 1st object being a character vector of the
 #'   target column name in Pheno, and the 2nd object being a character vector
@@ -72,104 +72,126 @@
 #'   Pheno containing the same patient ID reported twice for each patient
 #'   (before and after).
 #'   
+#' @param ymax_1 Integer that sets the maximum y for all mean plots (all plots
+#'   gets the same y-axes). If ymax_1=NULL (default), then ggplot2 will
+#'   automatically set ymax for each plot individually (different y-axes).
+#'   
 #' @return List of ggplot2 plots and the data used for generating the plots. Use
 #'   ls.str() to explore each level.
 #'   
 #' @examples
 #' 
-#' # # More details on the examples can be found in the vignette.
-#' # 
-#' # library(seqpac)
-#' # load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
-#' # 
-#' # ###########################################################
-#' # ### tRNA analysis in seqpac 
-#' # ##----------------------------------------
-#' # 
-#' # # First create an annotation blanc PAC with group means
-#' # pac$Anno <- pac$Anno[,1, drop=FALSE]
-#' # pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
-#' #                         pheno_target=list("stage"), merge_pac = TRUE)
-#' # 
-#' # # Then reannotate only tRNA using the PAC_mapper function
-#' # ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
-#' # map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN",
-#' #                          mapper="reanno", mismatches=0, threads=1, report_string=TRUE)
-#' # 
-#' # 
-#' # ###########################################################
-#' # ## Coverage plot of tRNA using PAC_covplot
-#' # 
-#' # # Single tRNA targeting a summary dataframe 
-#' # PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-#' #             map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
-#' # 
-#' # # Find tRNAs with many fragments
-#' # n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
-#' # selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-#' # cov_plt <- PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-#' #                        map_target=selct)
-#' # cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
-#' # 
-#' # 
-#' # ###########################################################
-#' # ## Analyze range types with map_rangetype and PAC_trna functions
-#' # 
-#' # # Download ss object from GtRNAdb 
-#' # dest_path <- file.path("/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
-#' # download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", destfile=dest_path)
-#' # untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-#' # ss_file <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
-#' # 
-#' # # Classify fragments according to loop cleavage (small loops are omitted)       
-#' # map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, min_loop_width=4)   # Generates warning         
-#' # 
-#' # # Remove reference tRNAs with no hits
-#' # map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){x[[2]][1,1] == "no_hits"}))]
-#' # map_object_ss[[2]]
-#' # 
-#' # 
-#' # ###########################################################
-#' # # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
-#' # 
-#' # # Set tolerance for classification as a terminal tRF
-#' # tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
-#' # 
-#' # # Apply the tRNA_class function and make a tRNA type column
-#' # pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
-#' # pac_trna$Anno$type <- paste0(pac_trna$Anno$decoder, pac_trna$Anno$acceptor)
-#' # head(pac_trna$Anno)
-#' # 
-#' # # Now use PAC_trna to generate some graphs based on grand means
-#' # trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#' #   join = TRUE, top = 15, log2fc = TRUE,
-#' #   pheno_target = list("stage", c("Stage1", "Stage3")), 
-#' #   anno_target_1 = list("type"),
-#' #   anno_target_2 = list("class"))
-#' # 
-#' # cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
-#' #                    trna_result$plots$Log2FC_Anno_1,
-#' #                    trna_result$plots$Percent_bars$Grand_means,
-#' #                    nrow=1, ncol=3)
-#' # 
-#' # # By setting join = FALSE you will get group means
-#' # trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#' #   join = FALSE, top = 15, log2fc = TRUE,
-#' #   pheno_target = list("stage", c("Stage1", "Stage3")), 
-#' #   anno_target_1 = list("type"),
-#' #   anno_target_2 = list("class"))
-#' # 
-#' # cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
-#' #                    trna_result$plots$Expression_Anno_1$Stage3,
-#' #                    trna_result$plots$Log2FC_Anno_1,
-#' #                    trna_result$plots$Percent_bars$Stage1,
-#' #                    trna_result$plots$Percent_bars$Stage3,
-#' #                    nrow=1, ncol=5)
+#' 
+#' \dontrun{
+#' # More details on the examples can be found in the vignette.
+#' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
+#' 
+#' ###########################################################
+#' ### tRNA analysis in seqpac 
+#' ##----------------------------------------
+#' 
+#' # First create an annotation blanc PAC with group means
+#' pac$Anno <- pac$Anno[,1, drop=FALSE]
+#' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
+#'                         pheno_target=list("stage"), merge_pac = TRUE)
+#' 
+#' # Then reannotate only tRNA using the PAC_mapper function
+#' ref <- "/some/path/to/trna.fa"
+#' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
+#'                          mapper="reanno", mismatches=0, threads=8, 
+#'                          report_string=TRUE)
+#' 
+#' 
+#' ###########################################################
+#' ## Coverage plot of tRNA using PAC_covplot
+#' 
+#' # Single tRNA targeting a summary dataframe 
+#' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+#'             map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+#' 
+#' # Find tRNAs with many fragments
+#' n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
+#' selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
+#' cov_plt <- PAC_covplot(pac_trna, map=map_object, 
+#'                        summary_target= list("cpmMeans_stage"), 
+#'                        map_target=selct)
+#' cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
+#' 
+#' 
+#' ###########################################################
+#' ## Analyze range types with map_rangetype and PAC_trna functions
+#' 
+#' # Download ss object from GtRNAdb 
+#' dest_path <- file.path("/some/path/to/destination/file/trna.tar.gz")
+#' web_path <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz"
+#' download.file(url=web_path, destfile=dest_path)
+#' untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
+#' ss_file <- "/some/path/to/dm6-tRNAs-confidence-set.ss"
+#' 
+#' # Classify fragments according to loop cleavage (small loops are omitted)       
+#' map_object_ss <- map_rangetype(map_object, type="ss", 
+#'                                ss=ss_file, min_loop_width=4)          
+#' 
+#' # Remove reference tRNAs with no hits
+#' map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){
+#'                      x[[2]][1,1] == "no_hits"
+#'                      }))]
+#' map_object_ss[[2]]
+#' 
+#' 
+#' 
+#' ###########################################################
+#' # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
+#' 
+#' # Set tolerance for classification as a terminal tRF
+#' tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
+#' 
+#' # Apply the tRNA_class function and make a tRNA type column
+#' pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
+#' head(pac_trna$Anno)
+#' 
+#' # Now use PAC_trna to generate some graphs based on grand means
+#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#'   join = TRUE, top = 15, log2fc = TRUE,
+#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'   anno_target_1 = list("type"),
+#'   anno_target_2 = list("class"))
+#' 
+#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
+#'                    trna_result$plots$Log2FC_Anno_1,
+#'                    trna_result$plots$Percent_bars$Grand_means,
+#'                    nrow=1, ncol=3)
+#' 
+#' # By setting join = FALSE you will get group means
+#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#'   join = FALSE, top = 15, log2fc = TRUE,
+#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'   anno_target_1 = list("type"),
+#'   anno_target_2 = list("class"))
+#' 
+#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
+#'                    trna_result$plots$Expression_Anno_1$Stage3,
+#'                    trna_result$plots$Log2FC_Anno_1,
+#'                    trna_result$plots$Percent_bars$Stage1,
+#'                    trna_result$plots$Percent_bars$Stage3,
+#'                    nrow=1, ncol=5)
+#'       
+#'    
+#' }   
 #' 
 #' 
 #' @export
 
-PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, paired_IDs=NULL) {
+PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, 
+                     log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, 
+                     ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, 
+                     paired_IDs=NULL) {
+  
+  
+  Group.1 <- means <- SE <- value <- ann1 <- perc <- ann2 <- NULL
   
   ## Setup ##
   if(!is.null(anno_target_1)){
@@ -202,15 +224,19 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     }else{
       stop("You have to provide a invalid pheno_target list object.")}
   
-  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, pheno_target=pheno_target) 
+  PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_1, 
+                    pheno_target=pheno_target) 
   PAC <- PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target_2) 
   if(!is.null(filter)){ 
     PAC <- PAC_filter(PAC, norm=norm, threshold=filter, coverage=100)
     }
   
-  PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])
-  PAC$Anno[,anno_target_1[[1]]] <- factor(PAC$Anno[,anno_target_1[[1]]], levels=anno_target_1[[2]])
-  PAC$Anno[,anno_target_2[[1]]] <- factor(PAC$Anno[,anno_target_2[[1]]], levels=anno_target_2[[2]])
+  PAC$Pheno[,pheno_target[[1]]] <- factor(PAC$Pheno[,pheno_target[[1]]], 
+                                          levels=pheno_target[[2]])
+  PAC$Anno[,anno_target_1[[1]]] <- factor(PAC$Anno[,anno_target_1[[1]]], 
+                                          levels=anno_target_1[[2]])
+  PAC$Anno[,anno_target_2[[1]]] <- factor(PAC$Anno[,anno_target_2[[1]]], 
+                                          levels=anno_target_2[[2]])
   
   if(norm=="raw"){
     data <- PAC$Counts 
@@ -219,10 +245,11 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
   }
   
   ## Aggregate data for anno_target_1 ##
-  spl_lst <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  spl_lst <- split(as.data.frame(t(data)), 
+                   PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
   Ann1_agg_lst <- lapply(spl_lst, function(x){
     x  <- t(x)
-    x_agg <- aggregate(x, list(PAC$Anno[[anno_target_1[[1]]]]), sum)
+    x_agg <- stats::aggregate(x, list(PAC$Anno[[anno_target_1[[1]]]]), sum)
     x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
   })
   if(join==TRUE){
@@ -232,10 +259,11 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
   
   
   ## Aggregate data for anno_target_2 ##
-  spl_lst_2 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  spl_lst_2 <- split(as.data.frame(t(data)), 
+                     PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
   Ann2_agg_lst <- lapply(spl_lst_2, function(x){
     x  <- t(x)
-    x_agg <- aggregate(x, list(PAC$Anno[[anno_target_2[[1]]]]), sum)
+    x_agg <- stats::aggregate(x, list(PAC$Anno[[anno_target_2[[1]]]]), sum)
     x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
   })
   if(join==TRUE){
@@ -244,12 +272,16 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     }
   
   ## Aggregate data for anno_target_1  and anno_target_2 ##
-  spl_lst_12 <- split(as.data.frame(t(data)), PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
+  spl_lst_12 <- split(as.data.frame(t(data)), 
+                      PAC$Pheno[,pheno_target[[1]]], drop=FALSE)
   Ann12_agg_lst <- lapply(spl_lst_12, function(x){
     x  <- t(x)
-    x_agg <- aggregate(x, list(paste(PAC$Anno[[anno_target_1[[1]]]], PAC$Anno[[anno_target_2[[1]]]], sep="____")), sum)
+    x_agg <- stats::aggregate(x, list(paste(PAC$Anno[[anno_target_1[[1]]]], 
+                                     PAC$Anno[[anno_target_2[[1]]]], 
+                                     sep="____")), sum)
     x_agg_long <- reshape2::melt(x_agg, id.var= "Group.1")
-    facts <-  as.data.frame(do.call("rbind", strsplit(x_agg_long$Group.1, "____")))
+    facts <-  as.data.frame(do.call("rbind", 
+                                    strsplit(x_agg_long$Group.1, "____")))
     return(cbind(x_agg_long, data.frame(ann1=facts[,1], ann2=facts[,2])))
   })
   if(join==TRUE){
@@ -264,7 +296,8 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     ann12_lst <- lapply(spl_inside, function(y){
       missing <- anno_target_2[[2]][!anno_target_2[[2]] %in% unique(y$ann2)]
       if(length(missing)>0){
-        df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), missing, sep="____"),
+        df <- data.frame(Group.1= paste(as.character(unique(y$ann1)), 
+                                        missing, sep="____"),
                          variable= NA,
                          value= 0,
                          ann1= as.character(unique(y$ann1)),
@@ -275,7 +308,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
         df <- NULL
       }
       df_fin <- rbind(y, df)
-      df_fin_agg <- aggregate(df_fin$value, list(df_fin$Group.1), mean)
+      df_fin_agg <- stats::aggregate(df_fin$value, list(df_fin$Group.1), mean)
       names(df_fin_agg)[names(df_fin_agg)=="x"] <- "values"
       tot <- sum(df_fin_agg$values)
       df_fin_agg$perc <- df_fin_agg$values/tot*100
@@ -286,15 +319,21 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
   })
   
   
-  ## Ordered according to sums of anno_target_1 in first object and return joint top table  
-  ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){sum(x$values)})), decreasing=TRUE)
+  ## Ordered according to sums of anno_target_1 in first object  
+  ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){
+    sum(x$values)})), decreasing=TRUE)
   ordr <- ordr[1:top] # Extract the top 
   lvls <- names(Ann12_perc[[1]])[ordr]
-  if(join==FALSE){stopifnot(identical(lapply(Ann12_perc, names)[[1]],  lapply(Ann12_perc, names)[[2]]))}
+  if(join==FALSE){
+    stopifnot(identical(lapply(Ann12_perc, names)[[1]],  
+                        lapply(Ann12_perc, names)[[2]]))
+    }
   
   Ann12_perc_ord <- lapply(Ann12_perc, function(x){
     ord_df <- do.call("rbind", x[ordr])
-    facts <- as.data.frame(do.call("rbind", strsplit(as.character(ord_df$Group.1), "____")))
+    facts <- as.data.frame(do.call("rbind", 
+                                   strsplit(as.character(ord_df$Group.1), 
+                                            "____")))
     return(cbind(ord_df, data.frame(ann1=facts[,1], ann2=facts[,2])))
   })
   
@@ -306,7 +345,9 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
   rgb_vec_ann2 <- rev(colfunc_ann2(length(anno_target_2[[2]])))
   
   ## Fix zeros for log10 
-  Ann1_agg_lst <- lapply(Ann1_agg_lst, function(x) {x$value[x$value == 0] <- 0.000001; return(x)})
+  Ann1_agg_lst <- lapply(Ann1_agg_lst, function(x) {
+    x$value[x$value == 0] <- 0.000001; return(x)
+    })
 
   plot_lst <- list(NULL)
   #######################################################################
@@ -316,9 +357,10 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
     x$Group.1 <- factor(x$Group.1, levels=rev(lvls))
     x <- x[!is.na(x$Group.1),]
     
-    dat <- aggregate(x$value, list(x$Group.1), mean)
+    dat <- stats::aggregate(x$value, list(x$Group.1), mean)
     names(dat)[names(dat)=="x"] <- "means"
-    dat$SE <- (aggregate(x$value, list(x$Group.1), function(y){sd(y)/(sqrt(length(y)))}))$x
+    dat$SE <- (stats::aggregate(x$value, list(x$Group.1), function(y){
+      stats::sd(y)/(sqrt(length(y)))}))$x
     dat$means[dat$means<1] <- 1
     set_max <- max(dat$means + dat$SE)
     if(set_max < 10000){
@@ -335,7 +377,8 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
                             #ymin = means - (means < 0)*SE)) +
                             ymax = means + SE,
                             ymin = means - SE)) +
-      ggplot2:: geom_errorbar(width=0.5, size=1.0, colour="black", position = "identity") +
+      ggplot2:: geom_errorbar(width=0.5, size=1.0, colour="black", 
+                              position = "identity") +
       ggplot2::geom_col(width = 0.8, cex=0.2, colour="black")+
       ggplot2::labs(title=paste0("Mean ", norm))+
       ggplot2::ylab(paste0("Log10 ", norm, " +/- SE")) +
@@ -343,59 +386,91 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position="none", 
                      axis.title.y= ggplot2::element_blank(), 
-                     panel.grid.major.y =ggplot2:: element_line(linetype="dashed", colour="grey", size=0.5), 
-                     panel.grid.major.x = ggplot2::element_line(colour="grey", size=0.5), 
+                     panel.grid.major.y=ggplot2::element_line(linetype="dashed", 
+                                                               colour="grey", 
+                                                               size=0.5), 
+                     panel.grid.major.x = ggplot2::element_line(colour="grey", 
+                                                                size=0.5), 
                      axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
                      axis.text.y = ggplot2::element_text(angle = 0, hjust = 0), 
                      axis.line.x = ggplot2::element_blank())+
-      ggplot2::scale_y_log10(limits = c(min(breaks),max(breaks)), breaks=breaks)+
+      ggplot2::scale_y_log10(limits = c(min(breaks),max(breaks)), 
+                             breaks=breaks)+
       ggplot2::coord_flip()
     if(!is.null(ymax_1)){
       plot <- plot + ggplot2::scale_y_continuous(limits=c(0,ymax_1))
+      #plot <- plot + ggplot2::coord_cartesian(ylim=c(0, ymax_1))
       }
     return(plot)
   })               
   
-  #Paired#############################################################################################################
+  #Paired#######################################################################
   if(paired==TRUE && log2fc==TRUE){
-    return(cat("Paired samples are not yet implemented in the function, but will be in the near future."))
-    #                   if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))}
-    #                   paried_samp <- as.character(PAC$Pheno[,paired_IDs])
-    #   
-    #                   Ann1_agg_lst[[1]]$variable
-    #                   stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-    #                   logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+    return(cat("\nPaired samples are not yet implemented in the function,",
+               "\nbut will be in the near future."))
+    # if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
+    #    factor(do.call("rbind",  
+    #                   strsplit(rownames(Ann1_agg_lst[[1]]), 
+    #                    "\\."))[,1], levels=pheno_target[[2]]))}
+    # paried_samp <- as.character(PAC$Pheno[,paired_IDs])
     # 
-    #                   plot_df$variable <- factor(plot_df$variable , levels=rev(levels(plot_df$variable)))
-    #                   plot_lst$Log2FC_Anno_1 <- ggplot(plot_df, aes(x=variable, y=value, fill=variable)) +
-    #                                     					geom_hline(yintercept = 0, size=1.5, color="azure4")+
-    #                                               geom_jitter(aes(color= "grey"), position=position_jitter(0.1), cex=1.3) +
-    #                                          				stat_summary(geom = "errorbar",  width=0.5, size=1.0, fun.data = mean_se, position = "identity") +
-    #                                       					stat_summary(geom = "point", colour="black", stroke=1.5, shape=21, size = 3.5, fun.y = mean, position = "identity") +
-    #                                     					labs(title="Log2 Fold change C vs B")+
-    #                                     					ylab("Log2 Fold change +/- SE") +
-    #                                     					scale_fill_manual(values=c(col_isotype))+
-    #                                               scale_color_manual(values="bisque3") +
-    #                                     					scale_x_discrete(labels=gsub("log2FC_", "", levels(plot_df$variable)))+
-    #                                     					theme_classic()+
-    #                                     					theme(legend.position="none", axis.title.y= element_blank(), panel.grid.major.y =  element_line(linetype="dashed", colour="grey", size=0.5), panel.grid.major.x = element_line(colour="grey", size=0.5), axis.text.x = element_text(angle = 0, hjust = 0), axis.text.y = element_blank(), axis.line.x =element_blank(), axis.line.y =element_blank())+
-    #                                     					coord_flip(ylim=c(-1.3, 2.25))
+    # Ann1_agg_lst[[1]]$variable
+    # stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
+    # logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, 
+    #                     value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+    # plot_df$variable <- factor(plot_df$variable , 
+    #                            levels=rev(levels(plot_df$variable)))
+    # plot_lst$Log2FC_Anno_1 <- ggplot(
+    #   plot_df, aes(x=variable, y=value, fill=variable)) +
+    #   geom_hline(yintercept = 0, size=1.5, color="azure4")+
+    #   geom_jitter(aes(color= "grey"), position=position_jitter(0.1), cex=1.3) +
+    #   stat_summary(geom = "errorbar",  width=0.5, size=1.0, 
+    #                fun.data = mean_se, position = "identity") +
+    #   stat_summary(geom = "point", colour="black", stroke=1.5, 
+    #                shape=21, size = 3.5, fun.y = mean, position = "identity") +
+    #   labs(title="Log2 Fold change C vs B")+
+    #   ylab("Log2 Fold change +/- SE") +
+    #   scale_fill_manual(values=c(col_isotype))+
+    #   scale_color_manual(values="bisque3") +
+    #   scale_x_discrete(labels=gsub("log2FC_", "", 
+    #                                levels(plot_df$variable)))+
+    #   theme_classic()+
+    #   theme(legend.position="none", 
+    #         axis.title.y= element_blank(), 
+    #         panel.grid.major.y =  element_line(linetype="dashed", 
+    #                                            colour="grey", size=0.5), 
+    #         panel.grid.major.x = element_line(colour="grey", size=0.5), 
+    #         axis.text.x = element_text(angle = 0, hjust = 0), 
+    #         axis.text.y = element_blank(), axis.line.x =element_blank(), 
+    #         axis.line.y =element_blank())+
+    #   coord_flip(ylim=c(-1.3, 2.25))
   }
-  #Independent#############################################################################################################
+  #Independent##################################################################
   if(paired==FALSE && log2fc==TRUE){
     ## Error bars for log2_FC types - independent
     if(join==TRUE){
-      Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  factor(do.call("rbind",  strsplit(rownames(Ann1_agg_lst[[1]]), "\\."))[,1], levels=pheno_target[[2]]))
+      Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
+                            factor(do.call("rbind",  
+                                           strsplit(rownames(Ann1_agg_lst[[1]]), 
+                                                    "\\."))[,1], 
+                                   levels=pheno_target[[2]]))
     }
     data_lst <- lapply(Ann1_agg_lst, function(x){
-        suppressWarnings(aggregate(x, list(factor(x$Group.1, levels=lvls)), mean))
+        suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, levels=lvls)), 
+                                   mean))
         })
     stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-    logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+    logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, 
+                        value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
     logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
     lim <- max(sqrt(logfc$value^2))
-    plot_lst$Log2FC_Anno_1 <- ggplot2::ggplot(logfc, ggplot2::aes(x=Group.1, y=value, fill=Group.1, ymin=value, ymax=value)) +
-      ggplot2::geom_hline(yintercept = 0, linetype="dashed", size=1, color="azure4")+
+    plot_lst$Log2FC_Anno_1 <- ggplot2::ggplot(logfc, 
+                                              ggplot2::aes(x=Group.1, y=value, 
+                                                           fill=Group.1, 
+                                                           ymin=value, 
+                                                           ymax=value)) +
+      ggplot2::geom_hline(yintercept = 0, linetype="dashed", 
+                          size=1, color="azure4")+
       ggplot2::geom_errorbar(width=0.8, size=0.5, position = "identity") +
       ggplot2::geom_point(shape=21, size=4, position = "identity") +
       ggplot2::labs(title=paste0(pheno_target[[2]], collapse=" vs ")) + 
@@ -405,8 +480,11 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position="none", 
                      axis.title.y = ggplot2::element_blank(), 
-                     panel.grid.major.y = ggplot2::element_line(linetype="dashed", colour="grey", size=0.5), 
-                     panel.grid.major.x = ggplot2::element_line(colour="grey", size=0.5), 
+                     panel.grid.major.y=ggplot2::element_line(linetype="dashed", 
+                                                              colour="grey", 
+                                                              size=0.5), 
+                     panel.grid.major.x = ggplot2::element_line(colour="grey", 
+                                                                size=0.5), 
                      axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
                      axis.text.y = ggplot2::element_blank(),
                      axis.line.x = ggplot2::element_blank(), 
@@ -414,32 +492,36 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
       #coord_flip(ylim=c(-lim, lim))
       ggplot2::coord_flip(ylim = c((min(logfc$value)-1), (max(logfc$value)+1)))
   } 
-  ## Error bars for differencs in RPM - independent
+  # ## Error bars for differencs in RPM - independent
   # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
   # dat <- Ann1_agg_lst
-  # dat$pheno_target <- factor(do.call("rbind",  strsplit(rownames(dat), "\\."))[,1], levels=pheno_target[[2]])
+  # dat$pheno_target <- factor(do.call("rbind",  
+  #                                    strsplit(rownames(dat), "\\."))[,1], 
+  #                            levels=pheno_target[[2]])
   # dat$Group.1 <- factor(dat$Group.1, levels=lvls)
-  # dat <- dat[!is.na(dat$Group.1),] 
+  # dat <- dat[!is.na(dat$Group.1),]
   # ymax <- max(dat$value) - max(sd(dat$value))
   # 
-  # plot_lst$Errorbar_Anno_1 <- ggplot(dat, aes(x=Group.1, y=value, group=interaction(pheno_target, Group.1), fill=Group.1)) +
-  #                             stat_summary(geom = "errorbar",  width=0.8, size=0.5, fun.data = mean_se, position = "dodge") +
-  #                   					stat_summary(geom = "point", stroke=0.5, shape=21, size = 5.0, fun.y = mean, position = position_dodge(width=0.8)) +
-  #   	                        #stat_summary(geom = "text", aes(label=paste0("n=",..y..)), size = 4.0, fun.y = length, vjust = -23,  position = position_dodge(width=1)) +
-  #                   					labs(title=paste0(levels(dat$pheno_target), collapse=" vs ")) + 
-  #                    					ylab("Mean RPM +/- SE") + 
-  #                   					scale_fill_manual(values=rgb_vec_ann1) +
-  #                   					scale_x_discrete(labels=levels(data$Group.1)) +
-  #                             coord_cartesian(ylim = c(0, ymax)) +
-  #                             #scale_y_continuous(limits=c(0, ymax)) +
-  #                             ggthemes::theme_tufte()+
-  #                   					theme(legend.position="none",
-  #                   					      axis.title.y=element_text(size=16, face= "bold"), 
-  #                   					      axis.title.x= element_blank(), 
-  #                   					      axis.text=element_text(size=14),
-  #                   					      axis.text.x = element_text(angle=45, hjust=1))+
-  #                             ggthemes::geom_rangeframe()
-  
+  # plot_lst$Errorbar_Anno_1 <- ggplot(
+  #   dat, aes(x=Group.1, y=value, 
+  #            group=interaction(pheno_target, Group.1), 
+  #            fill=Group.1)) +
+  #   stat_summary(geom = "errorbar",  width=0.8, size=0.5, 
+  #                fun.data = mean_se, position = "dodge") +
+  #   stat_summary(geom = "point", stroke=0.5, shape=21, size = 5.0, 
+  #                fun.y = mean, position = position_dodge(width=0.8)) +
+  #   labs(title=paste0(levels(dat$pheno_target), collapse=" vs ")) +
+  #   ylab("Mean RPM +/- SE") +
+  #   scale_fill_manual(values=rgb_vec_ann1) +
+  #   scale_x_discrete(labels=levels(data$Group.1)) +
+  #   coord_cartesian(ylim = c(0, ymax)) +
+  #    #scale_y_continuous(limits=c(0, ymax)) +
+  #    theme(legend.position="none",
+  #           axis.title.y=element_text(size=16, face= "bold"),
+  #           axis.title.x= element_blank(),
+  #           axis.text=element_text(size=14),
+  #           axis.text.x = element_text(angle=45, hjust=1))+
+
   
   ## Percent filled bar (All)
   plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
@@ -458,5 +540,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, log2fc=FAL
       ggplot2::coord_flip(ylim=c(0, 1))
     return(plot)
   })
-  return(list(plots=plot_lst[-1], data=list(anno_target_1=Ann1_agg_lst, annot_target_2=Ann2_agg_lst, Percent=Ann12_perc)))
+  return(list(plots=plot_lst[-1], data=list(anno_target_1=Ann1_agg_lst, 
+                                            annot_target_2=Ann2_agg_lst, 
+                                            Percent=Ann12_perc)))
 }

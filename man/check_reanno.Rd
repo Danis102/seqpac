@@ -30,10 +30,13 @@ reannotation data frames. \code{\link{add_reanno}} will add the new
 annotations to a PAC-list object.
 }
 \examples{
-#reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
-#                        threads=8)
-#
 
+\dontrun{
+reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
+                        threads=8)
+}
+
+#export
 }
 \seealso{
 \url{http://bowtie-bio.sourceforge.net/index.shtml} for information
@@ -44,8 +47,8 @@ annotations to a PAC-list object.
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
-\code{\link{convert_seqnames}()},
 \code{\link{import_reanno}()},
+\code{\link{make_conv}()},
 \code{\link{make_reanno}()},
 \code{\link{map_reanno}()},
 \code{\link{simplify_reanno}()}

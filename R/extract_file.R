@@ -31,9 +31,13 @@
 #'   
 #' @examples
 #' 
+#' 
+#' \dontrun{
+#' 
 #' ## Download ss object from GtRNAdb ##
 #' dest_path <- file.path("/home/danis31/Desktop/Temp/trna.fa")
-#' download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/hg38-tRNAs.fa", destfile=dest_path)
+#' url <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/hg38-tRNAs.fa"
+#' download.file(url=url, destfile=dest_path)
 #' file_path <- "/home/danis31/Desktop/Temp/trna.fa"
 #' 
 #' ## Extracts fasta names upto first white space ##
@@ -48,9 +52,13 @@
 #' ## Extracts custom rows but with a nicer finish  ##
 #' fst_names <- extract_file(file_path, search="tRNA-Val-TAC", cut="Sc:")
 #' 
-#' @export
+#' }
+#' 
+#' #export
 extract_file <- function(file_path, mode="custom", search=NULL, cut= NULL, 
                           remove_search=FALSE){
+  X1 <- NULL
+  
   if(mode=="fasta"){
     search <- "^>"
     remove_search=TRUE
@@ -61,7 +69,7 @@ extract_file <- function(file_path, mode="custom", search=NULL, cut= NULL,
     remove_search=TRUE
   }
   `%>%` <- dplyr::`%>%`
-  text <- readr::read_delim(file_path, col_names = FALSE,  delim="¤¤")
+  text <- readr::read_delim(file_path, col_names = FALSE,  delim="._+-")
   
   if(is.null(cut)){
     text <- text %>% 

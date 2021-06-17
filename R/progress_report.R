@@ -41,91 +41,138 @@
 ##--------------------------------------------------------------------------------##
 # Only works if running Sports with -k (save all intermediate files).
 progress_report <- function(input, type="seqpac"){
-                        ### seqpac #################################
-                        if(type=="seqpac"){
-                              if(class(input)=="list"){input <- input$logs}
-                              df_lst <- lapply(as.list(names(input)), function(x){
-                                    lgs  <- counts$log[names(input) == x][[1]]
-                                    
-                                    sampl_ln <- strsplit(as.character(lgs[grepl("Command line parameters", lgs[,1]),]), "/")
-                                    sampl_ln <-lapply(sampl_ln, function(y){
-                                                            nam <- gsub("_merge|.fastq|.gz", "", y[length(y)])
-                                                            return(gsub("-", "_", nam))
-                                                            })
-                                    if(length(sampl_ln)>1){warning("Seems there are >1 partly identical sample names in the cutadapt log.\nDid you cycle your reads multiple times through cutadapt (e.g 5'-trimming)?\nIf not, please double check that you use unique sample names,\nor that something else hasn't gone wrong. These were the names:")}
-                                    cat(paste0(paste(unlist(sampl_ln), collapse=" __ "), "\n"))
-                                    
-                                    sampl_ln_uni <- gsub("_merge|.fastq|.gz", "", sampl_ln[[1]][length(sampl_ln[[1]])])
-                                    sampl_ln_uni <- gsub("-", "_", sampl_ln_uni)
-                                    
-                                    tot_reads <- strsplit(as.character(lgs[grepl("Total reads processed:", lgs[,1]),]), " ")
-                                    tot_reads <- lapply(tot_reads, function(y){gsub(",", "", y[length(y)])})
-                                    
-                                    adpt_reads <- strsplit(as.character(lgs[grepl("Reads with adapters:", lgs[,1]),]), " ")
-                                    adpt_reads <- lapply(adpt_reads, function(y){ paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")})
-                                   
-                                    cutadpt_out <- strsplit(as.character(lgs[grepl("Reads written \\(passing filters\\):", lgs[,1]),]), " ")
-                                    cutadpt_out <- lapply(cutadpt_out, function(y){ paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")})
-                                    
-                                    sht_reads <- strsplit(as.character(lgs[grepl("Reads that were too short:", lgs[,1]),]), " ")
-                                    sht_reads <- lapply(sht_reads, function(y){ paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")})
+  
+  counts <- path <- NULL
+  
+  ### seqpac #################################
+  if(type=="seqpac"){
+    if(class(input)=="list"){input <- input$logs}
+      df_lst <- lapply(as.list(names(input)), function(x){
+        lgs  <- counts$log[names(input) == x][[1]]
+        sampl_ln <- strsplit(as.character(lgs[grepl(
+           "Command line parameters", lgs[,1]),]), "/")
+        sampl_ln <-lapply(sampl_ln, function(y){
+                                      nam <- gsub("_merge|.fastq|.gz", 
+                                                  "", y[length(y)])
+                                      return(gsub("-", "_", nam))
+                                      })
+        if(length(sampl_ln)>1){
+          warning("\nSeems there are >1 partly identical sample names in the ",
+                  "\ncutadapt log. Did you cycle your reads multiple times",
+                  "\nthrough cutadapt (e.g 5'-trimming)? If not, please double",
+                  "\ncheck that you use unique sample names, or that something",
+                  "\nelse hasn't gone wrong. These were the names:")}
+        cat(paste0(paste(unlist(sampl_ln), collapse=" __ "), "\n"))
+        
+        sampl_ln_uni <- gsub("_merge|.fastq|.gz", "", 
+                             sampl_ln[[1]][length(sampl_ln[[1]])])
+        sampl_ln_uni <- gsub("-", "_", sampl_ln_uni)
+        
+        tot_reads <- strsplit(as.character(lgs[grepl("Total reads processed:", 
+                                                     lgs[,1]),]), " ")
+        tot_reads <- lapply(tot_reads, function(y){gsub(",", "", y[length(y)])})
+        
+        adpt_reads <- strsplit(as.character(lgs[grepl("Reads with adapters:", 
+                                                      lgs[,1]),]), " ")
+        adpt_reads <- lapply(adpt_reads, function(y){ 
+          paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")
+          })
+       
+        cutadpt_out <- strsplit(as.character(lgs[grepl(
+          "Reads written \\(passing filters\\):", lgs[,1]),]), " ")
+        cutadpt_out <- lapply(cutadpt_out, function(y){ 
+          paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")
+          })
+        
+        sht_reads <- strsplit(as.character(lgs[grepl(
+          "Reads that were too short:", lgs[,1]),]), " ")
+        sht_reads <- lapply(sht_reads, function(y){ 
+          paste(gsub(",", "", y[length(y)-1]), y[length(y)], sep="_")})
 
-                                    qual_in <- strsplit(as.character(lgs[grepl("Input: ", lgs[,1]),]), " ")
-                                    qual_in <- lapply(qual_in, function(y){ y[length(y)-1]})
+        qual_in <- strsplit(as.character(lgs[grepl("Input: ", 
+                                                   lgs[,1]),]), " ")
+        qual_in <- lapply(qual_in, function(y){ y[length(y)-1]})
 
-                                    qual_out <- strsplit(as.character(lgs[grepl("Output: ", lgs[,1]),]), " ")
-                                    qual_out <- lapply(qual_out, function(y){ y[length(y)-1]})
-                             
-                                    qual_dis <- strsplit(as.character(lgs[grepl("discarded ", lgs[,1]),]), " ")
-                                    qual_dis <- lapply(qual_dis, function(y){ paste(y[c(2,3)], collapse="_")})
+        qual_out <- strsplit(as.character(lgs[grepl("Output: ", 
+                                                    lgs[,1]),]), " ")
+        qual_out <- lapply(qual_out, function(y){ y[length(y)-1]})
+ 
+        qual_dis <- strsplit(as.character(lgs[grepl("discarded ", 
+                                                    lgs[,1]),]), " ")
+        qual_dis <- lapply(qual_dis, function(y){ paste(y[c(2,3)], collapse="_")})
 
-                                    if(length(sampl_ln)==2){
-                                            sum_cutadpt <- (as.numeric(tot_reads[[2]])- as.numeric(strsplit(adpt_reads[[2]], "_")[[1]][1])) 
-                                            logi <- sum_cutadpt == as.numeric(qual_in)
-                                            if(which(logi)==2){ord <- c(2,1)}}else{ord <- seq(length(sampl_ln))}
+        if(length(sampl_ln)==2){
+                sum_cutadpt <- (as.numeric(
+                  tot_reads[[2]])- as.numeric(strsplit(adpt_reads[[2]], 
+                                                       "_")[[1]][1])) 
+                logi <- sum_cutadpt == as.numeric(qual_in)
+                if(which(logi)==2){ord <- c(2,1)}
+        }else{
+                  ord <- seq(length(sampl_ln))
+                  }
 
-                                    sub_df <- data.frame(sample=unlist(sampl_ln), 
-                                               cutadapt_in=unlist(tot_reads), 
-                                               cutadapt_adpt=unlist(adpt_reads),
-                                               cutadapt_short=unlist(sht_reads),
-                                               cutadpt_out=unlist(cutadpt_out),
-                                               quality_in=unlist(qual_in[ord]),
-                                               quality_discarded=unlist(qual_dis[ord]),
-                                               quality_out=unlist(qual_out[ord]))
-                                    return(sub_df)
-                                  })
-                             df <- do.call("rbind", df_lst)
-                             rownames(df) <- df$sample
-                          }
+        sub_df <- data.frame(sample=unlist(sampl_ln), 
+                   cutadapt_in=unlist(tot_reads), 
+                   cutadapt_adpt=unlist(adpt_reads),
+                   cutadapt_short=unlist(sht_reads),
+                   cutadpt_out=unlist(cutadpt_out),
+                   quality_in=unlist(qual_in[ord]),
+                   quality_discarded=unlist(qual_dis[ord]),
+                   quality_out=unlist(qual_out[ord]))
+        return(sub_df)
+            })
+       df <- do.call("rbind", df_lst)
+       rownames(df) <- df$sample
+    }
 
-                        ## Sports ###################### 
-                        if(type=="sports"){
-                                meta_files <- list.files(paste0(path, "/processing_report"), pattern ="*.txt", full.names=TRUE)
-                                meta_files_nams <- list.files(paste0(path, "/processing_report"), full.names=FALSE)
-                                meta_files_nams <- gsub("\\<1_|_merged|_merge|.txt", "", meta_files_nams)
-                                meta_files_nams <- gsub("-", "_", meta_files_nams)
-                                ### Generate colnames in output from first file
-                                colnam <- readLines(meta_files[[1]]) # Look in one to find out column numbers
-                                colnam <- gsub("match to |_genome", "", colnam[grepl("match to", colnam)])
-                                colnam <- colnam[!grepl("database", colnam)]
-                                ### Generate empty output file
-                                df <- data.frame(matrix(NA, nrow=length(meta_files), ncol=length(colnam)))
-                                rownames(df) <- meta_files_nams
-                                colnames(df) <-  colnam
-                                for (i in 1:length(meta_files)){
-                                        lines <- readLines(meta_files[[i]], n=300)
-                                        nam <-  meta_files[[i]]
-                                        fact <- cumsum(!nzchar(lines)) # Cumulativly/progressively sums TRUE argumentsfor for empty lines
-                                        split_lst <- split(lines, fact)
-                                        split_lst <- lapply(split_lst, function(x){ y <- x[nzchar(x)]; return(y)}) # Removes empty lines with no characters
-                                        split_lst_red <- split_lst[do.call("c", lapply(split_lst, function(x){!length(x)==1}))] # Removes headline strings with no data
-                                        split_lst_red <- split_lst_red[grepl("match to", split_lst_red)] # Removes last line without metadata
-                                        test <- gsub("match to |_genome", "", do.call("c", lapply(split_lst_red, function(x){x[grepl("match to", x)]})))
-                                        if(!identical(as.character(colnam), as.character(test))){stop("Error: colnames in output dataframe imported Sports meta file does not match up.\n
-                                                                                                      Have you used different mapping databases for different samples?")}
-                                        data <- do.call("c", lapply(split_lst_red, function(x){x[grepl("# reads with at least one reported alignment: ", x)]}))
-                                        df[i,] <- gsub("# reads with at least one reported alignment: ", "", data)
-                                }
-                        }
-                        return(df)
-                      }
+  ## Sports ###################### 
+  if(type=="sports"){
+          meta_files <- list.files(paste0(path, "/processing_report"), 
+                                   pattern ="*.txt", full.names=TRUE)
+          meta_files_nams <- list.files(paste0(path, "/processing_report"), 
+                                        full.names=FALSE)
+          meta_files_nams <- gsub("\\<1_|_merged|_merge|.txt", 
+                                  "", meta_files_nams)
+          meta_files_nams <- gsub("-", "_", meta_files_nams)
+          ### Generate colnames in output from first file
+          colnam <- readLines(meta_files[[1]]) # Look in one to find out column numbers
+          colnam <- gsub("match to |_genome", "", 
+                         colnam[grepl("match to", colnam)])
+          colnam <- colnam[!grepl("database", colnam)]
+          ### Generate empty output file
+          df <- data.frame(matrix(NA, nrow=length(meta_files), 
+                                  ncol=length(colnam)))
+          rownames(df) <- meta_files_nams
+          colnames(df) <-  colnam
+          for (i in 1:length(meta_files)){
+            lines <- readLines(meta_files[[i]], n=300)
+            nam <-  meta_files[[i]]
+            fact <- cumsum(!nzchar(lines)) 
+            split_lst <- split(lines, fact)
+            split_lst <- lapply(split_lst, function(x){ 
+              y <- x[nzchar(x)]; return(y)
+              }) # Removes empty lines with no characters
+            split_lst_red <- split_lst[do.call("c", lapply(split_lst, 
+                                                           function(x){
+                                                             !length(x)==1
+                                                             }))] 
+            split_lst_red <- split_lst_red[grepl("match to", split_lst_red)] 
+            test <- gsub("match to |_genome", 
+                         "", do.call("c", 
+                                     lapply(split_lst_red, function(x){
+                                       x[grepl("match to", x)]
+                                       })))
+            if(!identical(as.character(colnam), as.character(test))){
+            stop("\nColnames in output dataframe and imported Sports meta file",
+                 "\ndoes not match up. Have you used different mapping",
+                 "\ndatabases for different samples?")
+              }
+            data <- do.call("c", lapply(split_lst_red, function(x){
+              x[grepl("# reads with at least one reported alignment: ", x)]
+              }))
+            df[i,] <- gsub("# reads with at least one reported alignment: ",
+                           "", data)
+          }
+  }
+  return(df)
+}

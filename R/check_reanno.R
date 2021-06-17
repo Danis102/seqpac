@@ -25,11 +25,13 @@
 #'   absent (FALSE) in reanno.
 #'
 #' @examples
-#' #reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
-#' #                        threads=8)
-#' #
 #' 
-#' @export
+#' \dontrun{
+#' reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
+#'                         threads=8)
+#' }
+#' 
+#' #export
 check_reanno <- function(anno, reanno,  threads=1){
                           if(class(anno)=="PAC"){         
                             anno_seqs <- rownames(anno$Anno)}
@@ -39,7 +41,7 @@ check_reanno <- function(anno, reanno,  threads=1){
                             anno_seqs <- rownames(anno)}
                           if(class(anno)=="DNAStringSet"){
                             anno_seqs <- paste(anno)}
-                          reanno_df <- rbindlist(reanno, fill=FALSE)
+                          reanno_df <- data.table::rbindlist(reanno, fill=FALSE)
                           reanno_seqs <- unique(reanno_df$.id)
                           logi <- anno_seqs %in% reanno_seqs
                           return(logi)

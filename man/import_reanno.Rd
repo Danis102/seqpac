@@ -27,9 +27,6 @@ when report="full".}
 \item{reduce}{Character indicating a reference name (without file type
 extension) that should be exempted from report="full" and instead will
 generate a minimum report.}
-
-\item{PAC}{PAC-list object containing an Anno data.frame with sequences as
-row names.}
 }
 \value{
 List of data frames with additional information from reannotation
@@ -70,10 +67,14 @@ using \code{\link{add_reanno}}.
 }
 
 \examples{
-#bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-#bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
-#reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 
+\dontrun{
+
+bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
+reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+
+}
 }
 \seealso{
 \url{http://bowtie-bio.sourceforge.net/index.shtml} for information
@@ -84,7 +85,7 @@ using \code{\link{add_reanno}}.
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
 \code{\link{check_reanno}()},
-\code{\link{convert_seqnames}()},
+\code{\link{make_conv}()},
 \code{\link{make_reanno}()},
 \code{\link{map_reanno}()},
 \code{\link{simplify_reanno}()}

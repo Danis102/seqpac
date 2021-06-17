@@ -27,6 +27,7 @@
 #'   
 #' @examples
 #' 
+#' \dontrun{
 #' library(seqpac)
 #' 
 #' 
@@ -73,7 +74,7 @@
 #' ## integration into seqpac.
 #' 
 #' 
-#' 
+#' }
 #' 
 #' 
 #' #@export

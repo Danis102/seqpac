@@ -43,9 +43,11 @@
 #' 
 #' library(seqpac)
 #' 
-#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
 #' 
-#' plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=1)
+#' plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, 
+#'                             thresh=c(1,2), threads=1)
 #' names(plot_lst)
 #' cowplot::plot_grid(plotlist=plot_lst)
 #'
@@ -56,6 +58,8 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
   ###################### Setting up data ######################
   doParallel::registerDoParallel(threads) 
   `%dopar%` <- foreach::`%dopar%`
+  
+  i <- perc <- value <- NULL
   
   cat("\nOrganizing data...\n") 
   df <- data.frame(seq=rownames(PAC$Counts), mean_counts=as.integer(rowMeans(PAC$Counts)))
@@ -117,10 +121,10 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
       ggplot2::geom_vline(xintercept=100, color="red")+
       ggplot2::theme_bw()
     
-    fm1 <- tryCatch(nls(value ~ SSasymp(perc, Asym, R0, lrc), data = dat_sub), error=function(x){return(NULL)})
+    fm1 <- tryCatch(stats::nls(value ~ SSasymp(perc, Asym, R0, lrc), data = dat_sub), error=function(x){return(NULL)})
     if(!is.null(fm1)){
-      y_predict <- predict(fm1)
-      good_fit <- round(cor(dat_sub$value, y_predict), digits=4)
+      y_predict <- stats::predict(fm1)
+      good_fit <- round(stats::cor(dat_sub$value, y_predict), digits=4)
       plateau_rate <- round(exp(summary(fm1)$coefficients["lrc","Estimate"]), digits=4)
       p <- p + ggplot2::stat_smooth(method = "nls", formula = y ~ SSasymp(x, Asym, R0, lrc), se = FALSE, fullrange = TRUE)
       return(p + ggplot2::annotate(geom = "text", x = 105, 

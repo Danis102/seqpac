@@ -72,35 +72,47 @@ analysis using DESeq2.
 }
 \examples{
 
+\dontrun{
+
 # Note, these examples will generate some warnings since data is based on
 # heavily down-sampled fastq files, where many sequences recieves low counts in
 # specific groups.
 
 ## Load test data
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                package = "seqpac", mustWork = TRUE))
 
-## Simple model testing embryonic stages using Wald test with local fit (default)
+## Simple model with embryonic stages using Wald test with local fit (default)
 table(pac$Pheno$stage)
-#output_deseq <- PAC_deseq(pac, model= ~stage, threads=6)
+output_deseq <- PAC_deseq(pac, model= ~stage, threads=1)
 
-## Batch corrected, but still graphs will be generated from 'stage' since it is first in the model  
-#output_deseq <- PAC_deseq(pac, model= ~stage + batch)
+## Batch corrected, graphs are generated for 'stage' (=first in the model)  
+output_deseq <- PAC_deseq(pac, model= ~stage + batch)
 
 ## Using pheno_target we can change focus
-#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target=list("batch"))
+output_deseq <- PAC_deseq(pac, 
+                         model= ~stage + batch, pheno_target=list("batch"))
 
-## With pheno_target we can also change the direction fo the comparision change focus
+## With pheno_target we can change the direction fo the comparision
 # Stage1 vs Stage3:
-#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage1", "Stage3")),  threads=6)   
+output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+                         pheno_target = list("stage", c("Stage1", "Stage3")),  
+                         threads=1)   
 # Stage3 vs Stage5:
-#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage3", "Stage5")),  threads=6)  
+output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+                         pheno_target = list("stage", c("Stage3", "Stage5")),  
+                         threads=1)  
 # Stage5 vs Stage3 (reverse order):
-#output_deseq <- PAC_deseq(pac, model= ~stage + batch, pheno_target = list("stage", c("Stage5", "Stage3")),  threads=6)  
+output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+                         pheno_target = list("stage", c("Stage5", "Stage3")),  
+                         threads=1)  
 
 ## In the output you find PAC merged results, target plots and output_deseq   
-#names(output_deseq)
-#tibble::as_tibble(output_deseq$result)
+names(output_deseq)
+tibble::as_tibble(output_deseq$result)
+
+}
 
 }
 \seealso{
@@ -119,7 +131,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

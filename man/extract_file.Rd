@@ -42,9 +42,13 @@ resulting strings can be trimmed shorter at yet another identifier.
 }
 \examples{
 
+
+\dontrun{
+
 ## Download ss object from GtRNAdb ##
 dest_path <- file.path("/home/danis31/Desktop/Temp/trna.fa")
-download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/hg38-tRNAs.fa", destfile=dest_path)
+url <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Hsapi38/hg38-tRNAs.fa"
+download.file(url=url, destfile=dest_path)
 file_path <- "/home/danis31/Desktop/Temp/trna.fa"
 
 ## Extracts fasta names upto first white space ##
@@ -59,6 +63,9 @@ fst_names <- extract_file(file_path, search="tRNA-Val-TAC")
 ## Extracts custom rows but with a nicer finish  ##
 fst_names <- extract_file(file_path, search="tRNA-Val-TAC", cut="Sc:")
 
+}
+
+#export
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current package.

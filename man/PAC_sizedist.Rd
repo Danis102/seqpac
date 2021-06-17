@@ -11,45 +11,66 @@ PAC_sizedist(
   anno_target,
   pheno_target = NULL,
   summary_target = NULL,
-  colors = NULL
+  colors = NULL,
+  ymax = NULL
 )
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
 row names and a count table with raw counts.}
 
-\item{range}{Integer vector giving the range  in sequence lengths (default=c(min, max)).}
+\item{norm}{Character indicating what type of data to be used. If
+type="counts" the plots will be based on the raw Counts. If type="cpm" the
+analysis will be done on cpm values returned from \code{PAC_norm} function
+and stored in the norm folder of the PAC-list object. The name of any other
+table in the PAC$norm folder can also be used.}
+
+\item{range}{Integer vector giving the range  in sequence lengths
+(default=c(min, max)).}
 
 \item{anno_target}{List with: 
-1st object being character vector of target column(s) in Anno, 
-2nd object being a character vector of the target biotypes(s) in the target column (1st object).
-(default=NULL)}
+1st object being character vector of target
+column(s) in Anno, 2nd object being a character
+vector of the target biotypes(s) in the target
+column (1st object). (default=NULL)}
 
 \item{pheno_target}{List with: 
-1st object being character vector of target column(s) in Pheno, 
-2nd object being a character vector of the target group(s) in the target column (1st object).
-(default=NULL)}
+1st object being character vector of target
+column(s) in Pheno, 2nd object being a character
+vector of the target group(s) in the target column
+(1st object). (default=NULL)}
 
 \item{summary_target}{List with: 
-1st object being character target object in PAC$summary, 
-2nd object being a character vector of the target columns(s) in the target object (1st object).
-(default=NULL)}
+1st object being character target object in
+PAC$summary, 2nd object being a character vector of
+the target columns(s) in the target object (1st
+object). (default=NULL)}
+
+\item{colors}{Character vector with RGB color codes to be parsed to ggplot2.}
+
+\item{ymax}{Integer that sets the maximum y for all plots (all plots gets the
+same y-axes). If ymax=NULL, then ggplot2 will automatically set ymax for
+each plot individually (different y-axes).}
 }
 \value{
 A list of objects: 
-              1st object (Histograms::Samples): Individual histograms showing the nucleotide ratios per sample over the specified range.   
+              1st object (Histograms::Samples): Individual histograms showing
+              the nucleotide ratios per sample over the specified range.
               2nd object (Data::Samples): Data used to generate the plots.
-              3rd object (Stacked_bars::Groups): Stacked bars showing the mean ratios of each nucleotide per group over the specified range.
-              4th object (Error_bars::Groups): Error bar plots with mean ratio of each nucleotide per group over the specified range.
+              3rd object (Stacked_bars::Groups): Stacked bars showing the
+              mean ratios of each nucleotide per group over the specified
+              range.
+              4th object (Error_bars::Groups): Error bar plots with mean
+              ratio of each nucleotide per group over the specified range.
 }
 \description{
-\code{PAC_sizedist} plotting size distribution with bar charts, allowing 
-for visualization of sequence classes and summaries.
+\code{PAC_sizedist} plotting size distribution with bar charts, allowing for
+visualization of sequence classes and summaries.
 }
 \details{
 Given a PAC object the function will attempt to order sequences by their size
-(number of nucleotides) and visualize the contribution of specific classes of sequences
-(e.g. sRNA classes) at each size point.
+(number of nucleotides) and visualize the contribution of specific classes of
+sequences (e.g. sRNA classes) at each size point.
 }
 \examples{
 
@@ -57,18 +78,24 @@ Given a PAC object the function will attempt to order sequences by their size
 ### Stacked bars in seqpac 
 ##----------------------------------------
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
 PAC_filt <- PAC_norm(pac, norm="cpm")
-PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "cpm", type = "means", pheno_target=list("stage"))
+PAC_filt <- PAC_summary(PAC=PAC_filt, norm = "cpm", 
+                        type = "means", pheno_target=list("stage"))
 
 
 ord <- c("no_anno", "other", "miRNA", "tRNA", "rRNA", "snoRNA",  "lncRNA")
 
-sizedist_plots <- PAC_sizedist(PAC_filt, anno_target=list("Biotypes_mis0", ord), summary_target=list("cpmMeans_stage"))
+sizedist_plots <- PAC_sizedist(PAC_filt, 
+                               anno_target=list("Biotypes_mis0", ord), 
+                               summary_target=list("cpmMeans_stage"))
 cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 
-sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", anno_target=list("Biotypes_mis0", ord), pheno_target=list("batch", "Batch1"))
+sizedist_plots <- PAC_sizedist(PAC_filt, norm="counts", 
+                               anno_target=list("Biotypes_mis0", ord), 
+                               pheno_target=list("batch", "Batch1"))
 cowplot::plot_grid(plotlist=sizedist_plots[[1]], nrow = 3, ncol = 1)
 
 
@@ -90,7 +117,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},

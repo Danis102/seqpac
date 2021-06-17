@@ -13,21 +13,21 @@
 #' @param PAC PAC-list object.
 #' 
 #' @param anno_target List with: 
-#'                          1st object being character vector of target column(s) in Anno, 
-#'                          2nd object being a character vector of the target
-#'                          biotype(s) in the target column (1st object).
-#'                          Important, the 2nd object is order sensitive,
-#'                          meaning that categories will appear in the same
-#'                          order in the pie. (default=NULL)
+#'                          1st object being character vector of target
+#'                          column(s) in Anno, 2nd object being a character
+#'                          vector of the target biotype(s) in the target column
+#'                          (1st object). Important, the 2nd object is order
+#'                          sensitive, meaning that categories will appear in
+#'                          the same order in the pie. (default=NULL)
 #'
 #'
 #' @param pheno_target List with: 
-#'                          1st object being character vector of target column(s) in Pheno, 
-#'                          2nd object being a character vector of the target
-#'                          group(s) in the target column (1st object).
-#'                          Important, the 2nd object is order sensitive,
-#'                          meaning that categories will appear in the same
-#'                          order in the pie. (default=NULL)
+#'                          1st object being character vector of target
+#'                          column(s) in Pheno, 2nd object being a character
+#'                          vector of the target group(s) in the target column
+#'                          (1st object). Important, the 2nd object is order
+#'                          sensitive, meaning that categories will appear in
+#'                          the same order in the pie. (default=NULL)
 #'                          
 #' @param summary Character string defining whether to stack individual samples
 #'   or using a mean of samples. If summary="samples" individual samples will be
@@ -44,51 +44,83 @@
 #' @param angle Integer vector (poitive or negative) that sets the rotation of
 #'   the pie.
 #'   
+#' @param no_anno Logical whether PAC sequences without an annotation should be
+#'   removed prior to plotting. Specifically, if no_anno=FALSE then sequences
+#'   annotated with "no_anno" in the anno_target column will be removed prior to
+#'   plotting. When no_anno=TRUE (default), then all sequences will be included
+#'   (unless excluded in the anno_target object).
+#'   
 #' @return A pie plot
 #'
 #' @examples
+#' 
+#' 
+#' \dontrun{
 #' 
 #' ##########################################
 #' ### Pie chart in seqpac 
 #' ##----------------------------------------
 #' 
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
 #' 
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' # Choose an anno_target and plot samples (summary="samples"; default)
+#' output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis0"))
+#' cowplot::plot_grid(plotlist=output_pie, scale = 0.8)
+#' output_pie[[1]]
+#' output_pie[[6]]
 #' 
-#' # # Choose an anno_target and plot samples (summary="samples"; default)
-#' # output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis0"))
-#' # cowplot::plot_grid(plotlist=output_pie, scale = 0.8)
-#' # 
-#' # output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis3"))
-#' # cowplot::plot_grid(plotlist=output_pie, ncol=3, scale = 0.5)
-#' # 
-#' # 
-#' # # Make ordered pie charts of grand mean percent of all samples
-#' # ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), unique(pac$Anno$Biotypes_mis0))
-#' # output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), summary="all")
-#' # output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), summary="all")
-#' # cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, scale = 1.2)
-#' # 
-#' # # Rotate
-#' # PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
-#' # PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
-#' # 
-#' # # Compare biotype mapping with or without mismaches and group by PAC$Pheno
-#' # ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  # Make sure that both get same biotype order
-#' # output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis0", ord_bio))
-#' # output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", anno_target=list("Biotypes_mis3", ord_bio))
-#' # cowplot::plot_grid(plotlist=c(output_mis0, output_mis3), labels = names(c(output_mis0, output_mis3)), nrow=2)
-#'  
+#' output_pie <- PAC_pie(pac, anno_target=list("Biotypes_mis3"))
+#' cowplot::plot_grid(plotlist=output_pie, ncol=3, scale = 0.7)
+#' 
+#' #  Make ordered pie charts of grand mean percent of all samples
+#' ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), 
+#'                                     unique(pac$Anno$Biotypes_mis0))
+#' output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), 
+#'                         summary="all")
+#' output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), 
+#'                         summary="all")
+#' cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, 
+#'                    scale = 1.0)
+#'                    
+#' #  Shortcut to remove no annotations ("no_anno") in the anno_target column            
+#' PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=TRUE)                  
+#' PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=FALSE)
+#' 
+#' # Rotate
+#' PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
+#' PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
+#' 
+#' # Compare biotype mapping with or without mismaches and group by PAC$Pheno
+#' ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  
+#' output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", 
+#'                        anno_target=list("Biotypes_mis0", ord_bio))
+#' output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", 
+#'                        anno_target=list("Biotypes_mis3", ord_bio))
+#' cowplot::plot_grid(plotlist=c(output_mis0, output_mis3), 
+#'                    labels = names(c(output_mis0, output_mis3)), nrow=2)
+#'  }
 #'    
 #' @export
 
 
-PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, no_anno=TRUE, summary="sample", angle=-25){
+PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, 
+                    no_anno=TRUE, summary="sample", angle=-25){
+  
+  quiet <- function(x) { 
+    sink(tempfile()) 
+    on.exit(sink()) 
+    invisible(force(x)) 
+    }
+  
   stopifnot(PAC_check(PAC))
+  types <- variables <- NULL
   
   ## Prepare targets
   if(!is.null(pheno_target)){ 
-    if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    if(length(pheno_target)==1){ 
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
   }else{
     PAC$Pheno$eXtra_Col <- rownames(PAC$Pheno)
@@ -103,7 +135,8 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, no_an
   }
 
   ## Subset
-  PAC_sub <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  PAC_sub <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, 
+                        anno_target=anno_target)
   anno <- PAC_sub$Anno
   pheno <- PAC_sub$Pheno
   data <- PAC_sub$Counts
@@ -118,14 +151,14 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, no_an
   if(summary=="all"){
     tot_cnts <- mean(colSums(data))
     names(tot_cnts) <- "all"
-    data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+    data_shrt <- stats::aggregate(data, list(anno[, anno_target[[1]]]), "sum")
     data_shrt <- data.frame(Group.1=data_shrt[,1], all= rowMeans(data_shrt[,-1])) 
     
   }else{
   
     if(summary %in% c("sample","samples","pheno", "Pheno")){
       tot_cnts <- colSums(data)
-      data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+      data_shrt <- stats::aggregate(data, list(anno[, anno_target[[1]]]), "sum")
     }
     
     if(summary %in% c("pheno", "Pheno")){
@@ -158,16 +191,24 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, no_an
   bio <- anno_target[[2]] 
   extra  <- which(bio %in% c("no_anno", "other"))
   bio <- bio[c(extra, (1:length(bio))[!1:length(bio) %in% extra])] 
-  data_long_perc$Category <- factor(as.character(data_long_perc$Category), levels=bio)
+  data_long_perc$Category <- factor(as.character(data_long_perc$Category), 
+                                    levels=bio)
     
   # Pheno
   if(is.null(pheno_target)){
-    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(unique(data_long_perc$Sample)))
+    data_long_perc$Sample <- factor(
+      as.character(data_long_perc$Sample), 
+      levels=as.character(unique(data_long_perc$Sample)))
   }else{
     if(summary %in% c("sample","samples")){
-    stopifnot(any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE)
-    sampl_ord <- do.call("c", split(rownames(PAC$Pheno), factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])))
-    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(sampl_ord))
+    stopifnot(
+      any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE
+      )
+    sampl_ord <- do.call("c", split(rownames(PAC$Pheno), 
+                                    factor(PAC$Pheno[,pheno_target[[1]]], 
+                                           levels=pheno_target[[2]])))
+    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), 
+                                    levels=as.character(sampl_ord))
     data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
     }
   }
@@ -196,14 +237,20 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, no_an
     x$Percent[is.na(x$Percent)] <- 0
     return(x)
   })
-  plt_lst<- invisible(lapply(prec_lst, function(x){
-    p1  <- pie(x$Percent, labels=paste0(x$Category, "_", round(x$Percent, digits=0), "%"), col=rev(colors), init.angle = angle)
+  plt_lst<- quiet(lapply(prec_lst, function(x){
+    p1  <- graphics::pie(x$Percent, 
+               labels=paste0(x$Category, "_", round(x$Percent, digits=0), "%"), 
+               col=rev(colors), init.angle = angle)
     print(p1)
-    rp <- recordPlot()
+    rp <- grDevices::recordPlot()
     return(rp)
     }))
-  df <- data.frame(types=prec_lst[[1]]$Category, variables=prec_lst[[1]]$Category, levels=levels(prec_lst[[1]]$Category)) 
-  leg <- cowplot::get_legend(ggplot2::ggplot(df, ggplot2::aes(x=types, fill=variables)) + 
+  graphics::plot.new()
+  df <- data.frame(types=prec_lst[[1]]$Category, 
+                   variables=prec_lst[[1]]$Category, 
+                   levels=levels(prec_lst[[1]]$Category)) 
+  leg <- cowplot::get_legend(ggplot2::ggplot(
+    df, ggplot2::aes(x=types, fill=variables)) + 
                                ggplot2::geom_bar(color="black") + 
                                ggplot2::scale_fill_manual(values=rev(colors))) 
   return(c(plt_lst, list(legend=leg)))

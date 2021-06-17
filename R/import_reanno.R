@@ -27,9 +27,6 @@
 #'   \url{https://www.bioconductor.org/packages/release/bioc/html/Rbowtie.html}.
 #'   \url{https://github.com/Danis102} for updates on the current package.
 #'
-#' @param PAC PAC-list object containing an Anno data.frame with sequences as
-#'   row names.
-#'
 #' @param bowtie_path Path to a directory where bowtie output files can be
 #'   found.
 #'
@@ -59,14 +56,19 @@
 #'   \emph{reduce=<reference_names>} will circumvent this problem.
 #'
 #' @examples
-#' #bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-#' #bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
-#' #reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 #' 
+#' \dontrun{
+#' 
+#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
+#' bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
+#' reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+#' 
+#' }
 #' @export
 
 import_reanno <- function(bowtie_path, threads=1, coord=FALSE, 
                           report="minimum", reduce=NULL){
+  s <- NULL
   base <- ".out$"
   files <- list.files(bowtie_path, pattern = base, full.names=TRUE)
   options(scipen=999)
@@ -74,7 +76,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
   ## Check bowtie format (8 columns; "IIIIIII" present in column 6; 
   ## column 4 is an integer)
   row1 <- lapply(as.list(files), function(f){
-          x <- try(read.delim(f, nrows=1, header=FALSE), silent = TRUE)
+          x <- try(utils::read.delim(f, nrows=1, header=FALSE), silent = TRUE)
           if(inherits(x, "try-error"))
             return(data.frame(V1="No_hits"))
           else

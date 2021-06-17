@@ -41,7 +41,7 @@ library(seqpac)
 
 
 input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
+counts  <- make_counts(input, threads=1, parse="default_neb",
                        trimming="seqpac", plot=TRUE, 
                        evidence=c(experiment=2, sample=1))
 

@@ -45,10 +45,13 @@
 #'  
 #' @examples
 #' 
+#' 
+#'  \dontrun{
 #' # More details on the examples can be found in the vignette.
 #' 
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 #' 
 #' ###########################################################
 #' ### tRNA analysis in seqpac 
@@ -56,23 +59,29 @@
 #' 
 #' # First create an annotation blanc PAC with group means
 #' pac$Anno <- pac$Anno[,1, drop=FALSE]
-#' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
+#' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
+#'                         pheno_target=list("stage"), merge_pac = TRUE)
 #' 
 #' # Then reannotate only tRNA using the PAC_mapper function
-#' ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"
-#' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
+#' ref <- "/some/path/to/trna.fa"
+#' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
+#'                          mapper="reanno", mismatches=0, threads=8, 
+#'                          report_string=TRUE)
 #' 
 #' 
 #' ###########################################################
 #' ## Coverage plot of tRNA using PAC_covplot
 #' 
 #' # Single tRNA targeting a summary dataframe 
-#' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+#' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+#'             map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
 #' 
 #' # Find tRNAs with many fragments
 #' n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
 #' selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-#' cov_plt <- PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target=selct)
+#' cov_plt <- PAC_covplot(pac_trna, map=map_object, 
+#'                        summary_target= list("cpmMeans_stage"), 
+#'                        map_target=selct)
 #' cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
 #' 
 #' 
@@ -80,28 +89,33 @@
 #' ## Analyze range types with map_rangetype and PAC_trna functions
 #' 
 #' # Download ss object from GtRNAdb 
-#' dest_path <- file.path("/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.tar.gz")
-#' download.file(url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz", destfile=dest_path)
+#' dest_path <- file.path("/some/path/to/destination/file/trna.tar.gz")
+#' web_path <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz"
+#' download.file(url=web_path, destfile=dest_path)
 #' untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-#' ss_file <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/dm6-tRNAs-confidence-set.ss"
+#' ss_file <- "/some/path/to/dm6-tRNAs-confidence-set.ss"
 #' 
 #' # Classify fragments according to loop cleavage (small loops are omitted)       
-#' map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, min_loop_width=4)   # Generates warning         
-#' 
-#' # Remove reference tRNAs with no hits
-#' map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){x[[2]][1,1] == "no_hits"}))]
-#' map_object_ss[[2]]
+#' map_object_ss <- map_rangetype(map_object, type="ss", 
+#'                                ss=ss_file, min_loop_width=4)          
 #' 
 #' 
 #' ###########################################################
 #' # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
 #' 
-#' # Set tolerance for classification as a terminal tRF
-#' tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
+#' # Set tolerance for classification as a terminal tRF.
+#' tolerance = 5  
+#' 
+#' # Important note: 
+#' # We added three "Ns" in PAC_mapper (above). If, terminal classification should
+#' # correspond to the original tRNA sequences we need to acount for these Ns when
+#' # defining what is a terminal fragment. Here, we set "tolerance = 5", which
+#' # means that PAC sequences will recieve 5'/3' classification if they map to the
+#' # first two or last two nucleotides of the original full-length tRNAs (2+NNN
+#' # =5).
 #' 
 #' # Apply the tRNA_class function and make a tRNA type column
 #' pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
-#' pac_trna$Anno$type <- paste0(pac_trna$Anno$decoder, pac_trna$Anno$acceptor)
 #' head(pac_trna$Anno)
 #' 
 #' # Now use PAC_trna to generate some graphs based on grand means
@@ -131,51 +145,65 @@
 #'                    nrow=1, ncol=5)
 #'       
 #'    
+#' }   
 #'      
 #' @export
 
 tRNA_class <- function(PAC, map, terminal = 5){
-      if(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==TRUE)
-            {cat("The map object contains references without hits. Please remove these (see ?map_rangetype for example)")
-             stopifnot(any(unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==FALSE)
-            }
-      type_vector <- lapply(map, function(x){
-        map
-        # Setup
-          align <- x$Alignments
-          reference_length <- x$Ref_seq@ranges@width
-          ref_name <- x$Ref_seq@ranges@NAMES
-        # Classify according to terminal tolerance 
-          terminal_type <- ifelse(align$Align_start <= terminal, "5'",
-                                ifelse(reference_length - align$Align_end <= terminal, "3'", "i'"))
-        # Classify according to terminal tolerance 
-          half_type <- ifelse(align$type_start_loop2 == TRUE | align$type_end_loop2 == TRUE, "half", "tRF")
-          return(data.frame(tRNA_ref=ref_name, 
-                            seq=rownames(align), 
-                            class=paste(terminal_type, half_type, sep="-"),
-                            decoder=align$decoder,
-                            acceptor=align$acceptor))
-        })
-      # Merge all references
-      type_vector <- do.call("rbind", type_vector)
-      rownames(type_vector) <- NULL
-      # Split by sequence instead of references
-      type_vector <- split(type_vector, type_vector$seq)
-      # Collapse multimapping seqences into one column 
-      finished <-  lapply(type_vector, function(x){
-        df <- data.frame(seq=paste0(sort(unique(x$seq), collapse=";")), 
-                               class=paste0(sort(unique(x$class)), collapse=";"),
-                               decoder=paste0(sort(unique(x$decoder)), collapse=";"),
-                               acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
-                               tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"),
-                               type=paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-"))
+    logi_no_hits <- unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"}))
+  
+    if(any(logi_no_hits)==TRUE){
+          cat("The map object contains references without hits.",
+              "\nThese will be removed from output.")
+      
+      map <-  map[!unlist(lapply(map, function(x){
+                      x[[2]][1,1] == "no_hits"
+                      }))]
+      stopifnot(any(
+             unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==FALSE)
+          }
+    type_vector <- lapply(map, function(x){
+      # Setup
+        align <- x$Alignments
+        reference_length <- x$Ref_seq@ranges@width
+        ref_name <- x$Ref_seq@ranges@NAMES
+      # Classify according to terminal tolerance 
+        terminal_type <- ifelse(align$Align_start <= terminal, "5'",
+                           ifelse(reference_length - align$Align_end <= terminal, 
+                                  "3'", "i'"))
+      # Classify according to terminal tolerance 
+        half_type <- ifelse(
+          align$type_start_loop2 == TRUE | align$type_end_loop2 == TRUE, 
+          "half", "tRF")
+        return(data.frame(tRNA_ref=ref_name, 
+                          seq=rownames(align), 
+                          class=paste(terminal_type, half_type, sep="-"),
+                          decoder=align$decoder,
+                          acceptor=align$acceptor))
       })
-      finished <- do.call("rbind", finished)
-      # Extract tRNAs from PAC and merge results
-      PAC$Anno$seq <- rownames(PAC$Anno)
-      pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), subset_only=TRUE)
-      # Before you merge make sure both dataframes are matching
-      stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
-      pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
-      return(pac_trna)
+    # Merge all references
+    type_vector <- do.call("rbind", type_vector)
+    rownames(type_vector) <- NULL
+    # Split by sequence instead of references
+    type_vector <- split(type_vector, type_vector$seq)
+    # Collapse multimapping seqences into one column 
+    finished <-  lapply(type_vector, function(x){
+      df <- data.frame(seq=paste0(sort(unique(x$seq), collapse=";")), 
+                       class=paste0(sort(unique(x$class)), collapse=";"),
+                       decoder=paste0(sort(unique(x$decoder)), collapse=";"),
+                       acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
+                       tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
+      type <- paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-")
+      df$type <- paste0(type, collapse=";")
+      return(df)
+    })
+    finished <- do.call("rbind", finished)
+    # Extract tRNAs from PAC and merge results
+    PAC$Anno$seq <- rownames(PAC$Anno)
+    pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), 
+                           subset_only=TRUE)
+    # Before you merge make sure both dataframes are matching
+    stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
+    pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
+    return(pac_trna)
 }

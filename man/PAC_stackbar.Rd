@@ -19,20 +19,22 @@ PAC_stackbar(
 \item{PAC}{PAC-list object.}
 
 \item{anno_target}{List with: 
-1st object being character vector of target column(s) in Anno, 
-2nd object being a character vector of the target
-biotype(s) in the target column (1st object).
-Important, the 2nd object is order sensitive,
-meaning that categories will appear in the same
-order in the stacked bargraph. (default=NULL)}
+1st object being character vector of target
+column(s) in Anno, 2nd object being a character
+vector of the target biotype(s) in the target column
+(1st object). Important, the 2nd object is order
+sensitive, meaning that categories will appear in
+the same order in the stacked bargraph.
+(default=NULL)}
 
 \item{pheno_target}{List with: 
-1st object being character vector of target column(s) in Pheno, 
-2nd object being a character vector of the target
-group(s) in the target column (1st object).
-Important, the 2nd object is order sensitive,
-meaning that categories will appear in the same
-order in the stacked bargraph. (default=NULL)}
+1st object being character vector of target
+column(s) in Pheno, 2nd object being a character
+vector of the target group(s) in the target column
+(1st object). Important, the 2nd object is order
+sensitive, meaning that categories will appear in
+the same order in the stacked bargraph.
+(default=NULL)}
 
 \item{color}{Character vector with rgb colour hex codes in the same length
 as the number of biotypes. For example see:
@@ -69,7 +71,8 @@ in Counts or norm.
 \examples{
 
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
 
 ##########################################
 ### Stacked bars in seqpac 
@@ -86,11 +89,14 @@ cowplot::plot_grid(plotlist=list(p1, p2))
 # (Hint: if you want them to appear not on top, rename them)
 
 # Reorder samples by pheno_targets
-PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", anno_target=list("Biotypes_mis0"))
+PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", 
+             anno_target=list("Biotypes_mis0"))
 
 # Summarized over pheno_target 
-# (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary="pheno")
-PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno", pheno_target=list("stage"))
+# (as default PAC_stackbar orders by pheno_target but plots all samples, 
+#  unless summary="pheno")
+PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), 
+             summary="pheno", pheno_target=list("stage"))
 
 # Summerized over a grand mean of all samples
 PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="all")
@@ -112,7 +118,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_summary}()},

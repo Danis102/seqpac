@@ -5,6 +5,13 @@ library(seqpac)
 
 test_that("Testing make_counts, make_trim, make_cutadapt...", {
 ## Set up environment
+  
+  quiet <- function(x) { 
+    sink(tempfile()) 
+    on.exit(sink()) 
+    invisible(force(x)) 
+    }
+  
   input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
   input <-  list.files(input, patter="fastq.gz\\>", full.names = TRUE)
   smpl <- 1
@@ -27,31 +34,31 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
                quality=c(threshold=20, percent=0.8))
   
   if(grepl("unix", .Platform$OS.type)) {
-    invisible(capture.output(
+    quiet(
       counts_cut  <-  make_counts(input, threads=3,
-                            type="fastq", trimming="cutadapt",
+                            trimming="cutadapt",
                             parse=parse_cut,
                             evidence=c(experiment=2, sample=1),
                             save_temp = FALSE)
-      ))
+      )
   }
   
-  invisible(capture.output(
+  quiet(
     counts_seq  <-  make_counts(input, threads=3,
-                           type="fastq", trimming="seqpac",
+                           trimming="seqpac",
                            parse=parse_seq, 
                            evidence=c(experiment=2, sample=1),
                            save_temp = TRUE)
-  ))
+  )
   
     trim_files <- paste0(tempdir(), "/seqpac/")
     trim_files <- list.files(trim_files, pattern=".trim.fastq.gz$", full.names=TRUE)
     
-  invisible(capture.output(  
+  quiet(
     counts_trim  <-  make_counts(trim_files, threads=3,
-                           type="fastq", trimming = NULL,
+                           trimming = NULL,
                            evidence=c(experiment=2, sample=1))
-  ))
+  )
 
 ## Test counting and trimming
   ## Test both windows and linux

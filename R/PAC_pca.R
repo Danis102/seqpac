@@ -13,8 +13,8 @@
 #'@param PAC PAC-list object.
 #'
 #'@param norm Character indicating what type of data to be used. If
-#'  type="counts" the PCA will be conducted on the raw Counts. If type="rpm" the
-#'  analysis will be done on rpm values returned from \code{PAC_norm} function
+#'  type="counts" the PCA will be conducted on the raw Counts. If type="cpm" the
+#'  analysis will be done on cpm values returned from \code{PAC_norm} function
 #'  and stored in the norm folder of the PAC-list object. The name of any other
 #'  table in the PAC$norm folder can also be used.
 #'  
@@ -94,27 +94,41 @@
 #' 
 #' @export
 
-PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, pheno_target=NULL, anno_target=NULL, labels=NULL, ...){
+PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, 
+                    pheno_target=NULL, anno_target=NULL, labels=NULL, ...){
   
   if(length(pheno_target)==2){
-    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target))
+    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
+                                       pheno_target=pheno_target))
     }
   if(length(anno_target)==2){
-    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, anno_target=anno_target))
+    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
+                                       anno_target=anno_target))
     }
   stopifnot(PAC_check(PAC))
   
-  if(norm=="counts"){data <- PAC$Counts } else {data <- PAC$norm[[norm]]}   
+  if(norm=="counts"){
+      data <- PAC$Counts 
+    }else{
+      data <- PAC$norm[[norm]]
+    }   
   
   if(!is.null(labels)){
       geom <- c("point", "text")
       if(length(labels) > 1){
-            if(any(duplicated(labels))){colnames(data) <- paste(labels, 1:ncol(data), sep="_")
-            }else{colnames(data) <- as.character(labels)}
+            if(any(duplicated(labels))){
+              colnames(data) <- paste(labels, 1:ncol(data), sep="_")
+            }else{
+              colnames(data) <- as.character(labels)
+              }
       }
-  }else{ geom <- "point" }
+  }else{ 
+    geom <- "point" 
+    }
   
-  if(type=="pheno"|type=="both"){data <- t(data)}
+  if(type=="pheno"|type=="both"){
+    data <- t(data)
+    }
   pca_res <- FactoMineR::PCA(data, graph=FALSE)
   
   if(graphs==FALSE){
@@ -122,34 +136,78 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, pheno_target=
   }else{
 
     if(!is.null(pheno_target)|!is.null(anno_target)){
-      if(type=="pheno"){col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))}
-      if(type=="anno"){col <- as.factor(as.character(PAC$Anno[,anno_target[[1]]]))}
-      if(type=="both"){if(!is.null(pheno_target)){col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))}else{col <- "none"}}
-    } else {col <- "none"}
+      if(type=="pheno"){
+        col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))
+        }
+      if(type=="anno"){
+        col <- as.factor(as.character(PAC$Anno[,anno_target[[1]]]))
+        }
+      if(type=="both"){if(!is.null(pheno_target)){
+        col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))
+      }else{
+          col <- "none"}}
+    }else{
+      col <- "none"}
   
   grphs <- list(PC1_PC2=NULL, PC1_PC3=NULL, PC2_PC3=NULL)
   if(type=="pheno"){
-    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, axes=c(1,2), invisible="quali", pointsize=2, labelsize=3, title="PC1_PC2 - Pheno")
-    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(pca_res, habillage = col, geom=geom, repel=TRUE,  addEllipses = FALSE, axes=c(1,3), invisible="quali", pointsize=2, labelsize=3, title="PC1_PC3 - Pheno",)
-    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, axes=c(2,3), invisible="quali", pointsize=2, labelsize=3, title="PC2_PC3 - Pheno")
-    grphs <- lapply(grphs, function(x){x <- gginnards::move_layers(x, match_type="GeomPoint", position = "top")
-                                       x <- gginnards::move_layers(x, match_type="GeomTextRepel", position = "top")
-                                       return(x)})
+    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
+      pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
+      axes=c(1,2), invisible="quali", pointsize=2, labelsize=3, 
+      title="PC1_PC2 - Pheno")
+    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
+      pca_res, habillage = col, geom=geom, repel=TRUE,  addEllipses = FALSE, 
+      axes=c(1,3), invisible="quali", pointsize=2, labelsize=3, 
+      title="PC1_PC3 - Pheno",)
+    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
+      pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
+      axes=c(2,3), invisible="quali", pointsize=2, labelsize=3, 
+      title="PC2_PC3 - Pheno")
+    grphs <- lapply(grphs, function(x){
+      x <- gginnards::move_layers(x, match_type="GeomPoint",
+                                  position = "top")
+      x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
+                                  position = "top")
+      return(x)
+      })
     
   }
   if(type=="anno"){
-    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
-    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE, axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
-    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, axes=c(2,3), invisible="quali", pointsize=1,  title="PC2_PC3 - Anno")  
+    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
+      pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
+      axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
+    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
+      pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE, 
+      axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
+    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
+      pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
+      axes=c(2,3), invisible="quali", pointsize=1,  title="PC2_PC3 - Anno")  
   } 
   if(type=="both"){
-    grphs$PC1_PC2 <- factoextra::fviz_pca_biplot(pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(1,2), invisible="quali", pointsize=0.5, labelsize=3, title="PC1_PC2 - Biplot", ...)
-    grphs$PC1_PC3 <- factoextra::fviz_pca_biplot(pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(1,3), invisible="quali", pointsize=0.5, labelsize=3, title="PC1_PC3 - Biplot", ...)
-    grphs$PC2_PC3 <- factoextra::fviz_pca_biplot(pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(2,3), invisible="quali", pointsize=0.5, labelsize=3, title="PC2_PC3 - Biplot", ...)
-    grphs <- lapply(grphs, function(x){x <- gginnards::move_layers(x, match_type="GeomPoint", position = "bottom") 
-                                       x <- gginnards::move_layers(x, match_type="GeomArrow", position = "top")                                   
-                                       x <- gginnards::move_layers(x, match_type="GeomTextRepel", position = "top")
-                                       return(x)})
+    grphs$PC1_PC2 <- factoextra::fviz_pca_biplot(
+      pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", 
+      col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(1,2), 
+      invisible="quali", pointsize=0.5, labelsize=3, 
+      title="PC1_PC2 - Biplot", ...)
+    grphs$PC1_PC3 <- factoextra::fviz_pca_biplot(
+      pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", 
+      col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(1,3), 
+      invisible="quali", pointsize=0.5, labelsize=3, 
+      title="PC1_PC3 - Biplot", ...)
+    grphs$PC2_PC3 <- factoextra::fviz_pca_biplot(
+      pca_res, habillage = col, geom=c("arrow", "text"), geom.var = "point", 
+      col.var = "black", repel=TRUE, addEllipses = FALSE, axes=c(2,3), 
+      invisible="quali", pointsize=0.5, labelsize=3, 
+      title="PC2_PC3 - Biplot", ...)
+    grphs <- lapply(grphs, function(x){
+      x <- gginnards::move_layers(x, match_type="GeomPoint", 
+                                  position = "bottom") 
+      x <- gginnards::move_layers(x, match_type="GeomArrow", 
+                                  position = "top")
+      x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
+                                  position = "top")
+      return(x)
+      })
   }
   print(cowplot::plot_grid(plotlist=grphs, ncol=2, nrow=2))
   return(list(graphs=grphs, pca=pca_res))

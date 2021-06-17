@@ -16,8 +16,8 @@
 #'   normalized table can be generated using the \code{\link{PAC_norm}}
 #'   function.
 #'   
-#' @param norm Character indicating what type of data to be used. If 'counts' the raw
-#'   counts in Counts will be used (default). Given any other value, the
+#' @param norm Character indicating what type of data to be used. If 'counts'
+#'   the raw counts in Counts will be used (default). Given any other value, the
 #'   function will search for the value as a name on a data.frame stored in the
 #'   normalized list-folder.
 #'
@@ -49,24 +49,29 @@
 #' @examples
 #' 
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 #' 
 #' PAC_check(pac) # TRUE
 #' 
 #' # Easy to generate simple group summaries 
-#' pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"))       
-#' pac <- PAC_summary(pac, norm = "cpm", type = "se", pheno_target=list("stage"))
-#' pac <- PAC_summary(pac, norm = "cpm", type = "log2FC", pheno_target=list("stage"))
+#' pac <- PAC_summary(pac, norm = "cpm", 
+#'                    type = "means", pheno_target=list("stage"))       
+#' pac <- PAC_summary(pac, norm = "cpm", 
+#'                    type = "se", pheno_target=list("stage"))
+#' pac <- PAC_summary(pac, norm = "cpm", 
+#'                    type = "log2FC", pheno_target=list("stage"))
 #' 
 #' names(pac$summary)               # Names of individual summaries
 #' head(pac$summary$cpmMeans_stage) # View individual individual summaries
 #' tibble::as_tibble(pac$summary)  # View merge summaries
-#' df <- as.data.frame(tibble::as_tibble(pac$summary))  # Merge multiple summaries
+#' df <- as.data.frame(tibble::as_tibble(pac$summary)) # Merge multi summaries
 #' head(df)
 #' 
 #' 
 #' # If a pheno_target is left out, a mean of all samples will be returned:
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 #' pac <- PAC_summary(pac, norm = "cpm", type = "mean")  
 #' pac <- PAC_summary(pac, norm = "cpm", type = "percentgrand")
 #' names(pac$summary)
@@ -74,22 +79,29 @@
 #' 
 #' @export
 #' 
-PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev=FALSE, merge_pac=TRUE){
+PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, 
+                        rev=FALSE, merge_pac=TRUE){
   
 ## Prepare and subset ################
   if(!is.null(pheno_target)){ 
-    if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    if(length(pheno_target)==1){ 
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
   }
   PAC -> sav
-  PAC <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=NULL)
+  PAC <- PAC_filter(PAC, subset_only=TRUE, 
+                    pheno_target=pheno_target, anno_target=NULL)
 
   ### Extract data ###
   if(norm=="counts"){
     data <- PAC$Counts
   }else{  
     if(is.null(PAC$norm[[norm]])){
-      stop(paste0("There is no object called '", norm, "' in the norm list.\n  (Hint: Did you forget to normalize the data using for example PAC_rpm,\n  or would you rather run the function on raw counts using norm='counts'?)"))}  
+      stop(paste0("\nThere is no object called '", norm, "' in the norm list.",
+                  "\n(Hint: Did you forget to normalize the data using for",
+                  "\nexample PAC_rpm, or would you rather run the function",
+                  "\non raw counts using norm='counts'?)"))
+      }  
     data <- PAC$norm[[norm]]
   }
   
@@ -97,12 +109,15 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   pheno <- PAC$Pheno
   pheno$All <- "All"
   if(is.null(pheno_target)){
-    warning("No grouping factor was specified with pheno_target.\nCalculations are based on all samples.")
+    warning("No grouping factor was specified with pheno_target.",
+            "\nCalculations are based on all samples.")
     pheno_target <- list("All","All")
   }else{
-    if(length(pheno_target)==1){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
+    if(length(pheno_target)==1){
+      pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
     }else{
-      if(is.null(pheno_target[[2]])){pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
+      if(is.null(pheno_target[[2]])){
+        pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
       }}}
   indx <- pheno[, pheno_target[[1]]] %in% pheno_target[[2]]
   pheno <- pheno[indx,]
@@ -110,24 +125,34 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   stopifnot(identical(rownames(pheno), colnames(data)))
   start_lst <- as.list(pheno_target[[2]])
   names(start_lst) <- pheno_target[[2]]
-  sub_data_lst <- lapply(start_lst, function(x){ y <- data[, pheno[, pheno_target[[1]]] == x]; return(y)})
+  sub_data_lst <- lapply(start_lst, 
+                         function(x){ 
+                           y <- data[, pheno[, pheno_target[[1]]] == x]
+                           return(y)
+                           })
   
   ### Create pairwise combinations of pheno_target###
   
-  if (length(sub_data_lst) > 1) { combn_lst <- as.list(data.frame(combn(1:length(sub_data_lst),m = 2)))}
-  if (rev == TRUE) { combn_lst <- lapply(combn_lst, function(x) { c(x[2], x[1]) })}
+  if (length(sub_data_lst) > 1) { 
+    combn_lst <- as.list(data.frame(utils::combn(1:length(sub_data_lst),m = 2)))
+    }
+  if (rev == TRUE) { combn_lst <- lapply(combn_lst, function(x) { 
+    c(x[2], x[1]) })
+  }
   
   ### Apply log2FC to all pairwise combinations ###        
   if(type %in% c("log2FC", "Log2FC", "Log2Fc")){
-    group_means <- lapply(sub_data_lst, function(x){ mns <- rowMeans(x)
-    mns[mns == 0] <- 0.0000001
-    return(mns)})
+    group_means <- lapply(sub_data_lst, function(x){ 
+      mns <- rowMeans(x)
+      mns[mns == 0] <- 0.0000001
+      return(mns)
+      })
     log2FC_lst <- lapply(combn_lst, function(x){
       combn_data <- do.call("cbind", group_means[x])
       log2FC <- as.data.frame(log2(combn_data[,1]/combn_data[,2]))
       colnames(log2FC) <- paste(names(group_means)[x], collapse="_vs_")
       return(log2FC)
-    })
+      })
     fin <- do.call("cbind", log2FC_lst)
     rownames(fin) <- rownames(data)
     df_nam <- paste0("Log2FC_", pheno_target[[1]])
@@ -141,7 +166,6 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
     log2FC_lst <- lapply(group_means, function(x){
       combn_data <- data.frame(group_means=x, grand_means=grnd_mns)
       log2FC <- as.data.frame(log2(combn_data[,1]/combn_data[,2]))
-      #colnames(log2FC) <- paste(names(group_means)[x], collapse="_vs_grandMeans")
       return(log2FC)
     })
     fin <- do.call("cbind", log2FC_lst)
@@ -152,7 +176,9 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   
   ### Apply perc_change to all pairwise combinations ###       
   if(type %in% c("percent", "perc")){
-    group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
+    group_means <- lapply(sub_data_lst, function(x){ 
+      as.data.frame(rowMeans(x))
+      })
     perc_diff_lst <- lapply(combn_lst, function(x){
       combn_data <- do.call("cbind", group_means[x])
       perc_diff <- as.data.frame((combn_data[,1]/combn_data[,2])*100)
@@ -165,7 +191,9 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   }
   if(type %in% c("percentgrand", "percgrand", "percentGrand", "percGrand")){
     grnd_mns <- rowMeans(data)
-    group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
+    group_means <- lapply(sub_data_lst, function(x){ 
+      as.data.frame(rowMeans(x))
+      })
     perc_diff_lst <- lapply(group_means, function(x){
       combn_data <- data.frame(group_means=x, grand_means=grnd_mns)
       perc_diff <- as.data.frame((combn_data[,1]/combn_data[,2])*100)
@@ -181,14 +209,18 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL, rev
   
 ### means, sd and se ###  
   if(type %in% c("means", "Means", "mean", "Mean")){
-    group_means <- lapply(sub_data_lst, function(x){ as.data.frame(rowMeans(x))})
+    group_means <- lapply(sub_data_lst, function(x){ 
+      as.data.frame(rowMeans(x))
+      })
     fin <- do.call("cbind", group_means)
     colnames(fin) <- names(group_means)
     rownames(fin) <- rownames(data)
     df_nam <- paste0(norm,"Means_", pheno_target[[1]])
   }
   if(type %in% c("sd", "SD")){
-    group_sd <- lapply(sub_data_lst, function(x){as.data.frame(apply(x, 1, stats::sd))})
+    group_sd <- lapply(sub_data_lst, function(x){
+      as.data.frame(apply(x, 1, stats::sd))
+      })
     fin <- do.call("cbind", group_sd)
     colnames(fin) <- names(group_sd)
     rownames(fin) <- rownames(data)

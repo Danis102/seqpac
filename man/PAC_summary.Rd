@@ -20,8 +20,8 @@ contain normalized counts tables, saved in the norm list ('folder'). Such
 normalized table can be generated using the \code{\link{PAC_norm}}
 function.}
 
-\item{norm}{Character indicating what type of data to be used. If 'counts' the raw
-counts in Counts will be used (default). Given any other value, the
+\item{norm}{Character indicating what type of data to be used. If 'counts'
+the raw counts in Counts will be used (default). Given any other value, the
 function will search for the value as a name on a data.frame stored in the
 normalized list-folder.}
 
@@ -60,24 +60,29 @@ Given a PAC object this function summarize data in PAC$Counts or in the norm
 \examples{
 
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
 
 PAC_check(pac) # TRUE
 
 # Easy to generate simple group summaries 
-pac <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"))       
-pac <- PAC_summary(pac, norm = "cpm", type = "se", pheno_target=list("stage"))
-pac <- PAC_summary(pac, norm = "cpm", type = "log2FC", pheno_target=list("stage"))
+pac <- PAC_summary(pac, norm = "cpm", 
+                   type = "means", pheno_target=list("stage"))       
+pac <- PAC_summary(pac, norm = "cpm", 
+                   type = "se", pheno_target=list("stage"))
+pac <- PAC_summary(pac, norm = "cpm", 
+                   type = "log2FC", pheno_target=list("stage"))
 
 names(pac$summary)               # Names of individual summaries
 head(pac$summary$cpmMeans_stage) # View individual individual summaries
 tibble::as_tibble(pac$summary)  # View merge summaries
-df <- as.data.frame(tibble::as_tibble(pac$summary))  # Merge multiple summaries
+df <- as.data.frame(tibble::as_tibble(pac$summary)) # Merge multi summaries
 head(df)
 
 
 # If a pheno_target is left out, a mean of all samples will be returned:
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
 pac <- PAC_summary(pac, norm = "cpm", type = "mean")  
 pac <- PAC_summary(pac, norm = "cpm", type = "percentgrand")
 names(pac$summary)
@@ -101,7 +106,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

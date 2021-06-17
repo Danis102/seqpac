@@ -14,21 +14,23 @@
 #' @param PAC PAC-list object.
 #' 
 #' @param anno_target List with: 
-#'                          1st object being character vector of target column(s) in Anno, 
-#'                          2nd object being a character vector of the target
-#'                          biotype(s) in the target column (1st object).
-#'                          Important, the 2nd object is order sensitive,
-#'                          meaning that categories will appear in the same
-#'                          order in the stacked bargraph. (default=NULL)
+#'                          1st object being character vector of target
+#'                          column(s) in Anno, 2nd object being a character
+#'                          vector of the target biotype(s) in the target column
+#'                          (1st object). Important, the 2nd object is order
+#'                          sensitive, meaning that categories will appear in
+#'                          the same order in the stacked bargraph.
+#'                          (default=NULL)
 #'
 #'
 #' @param pheno_target List with: 
-#'                          1st object being character vector of target column(s) in Pheno, 
-#'                          2nd object being a character vector of the target
-#'                          group(s) in the target column (1st object).
-#'                          Important, the 2nd object is order sensitive,
-#'                          meaning that categories will appear in the same
-#'                          order in the stacked bargraph. (default=NULL)
+#'                          1st object being character vector of target
+#'                          column(s) in Pheno, 2nd object being a character
+#'                          vector of the target group(s) in the target column
+#'                          (1st object). Important, the 2nd object is order
+#'                          sensitive, meaning that categories will appear in
+#'                          the same order in the stacked bargraph.
+#'                          (default=NULL)
 #'                          
 #' @param color Character vector with rgb colour hex codes in the same length
 #'   as the number of biotypes. For example see:
@@ -56,7 +58,8 @@
 #' @examples
 #' 
 #' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 
 #' 
 #' ##########################################
@@ -74,24 +77,30 @@
 #' # (Hint: if you want them to appear not on top, rename them)
 #' 
 #' # Reorder samples by pheno_targets
-#' PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", anno_target=list("Biotypes_mis0"))
+#' PAC_stackbar(pac, pheno_target=list("batch"), summary="samples", 
+#'              anno_target=list("Biotypes_mis0"))
 #' 
 #' # Summarized over pheno_target 
-#' # (as default PAC_stackbar orders by pheno_target but plots all samples, unless summary="pheno")
-#' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno", pheno_target=list("stage"))
+#' # (as default PAC_stackbar orders by pheno_target but plots all samples, 
+#' #  unless summary="pheno")
+#' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), 
+#'              summary="pheno", pheno_target=list("stage"))
 #' 
 #' # Summerized over a grand mean of all samples
 #' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="all")
 #' @export
 
 
-PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, width=1.0, no_anno=TRUE, total=TRUE, summary="samples"){
+PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, 
+                        width=1.0, no_anno=TRUE, total=TRUE, summary="samples"){
   
   stopifnot(PAC_check(PAC))
+  Sample <- Percent <- Category <- tot_counts <- NULL
   
   ## Prepare targets
   if(!is.null(pheno_target)){ 
-    if(length(pheno_target)==1){ pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+    if(length(pheno_target)==1){ 
+      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
   }else{
     PAC$Pheno$eXtra_Col <- rownames(PAC$Pheno)
@@ -106,7 +115,8 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
   }
 
   ## Subset
-  PAC_sub <- PAC_filter(PAC, subset_only=TRUE, pheno_target=pheno_target, anno_target=anno_target)
+  PAC_sub <- PAC_filter(PAC, subset_only=TRUE, 
+                        pheno_target=pheno_target, anno_target=anno_target)
   anno <- PAC_sub$Anno
   pheno <- PAC_sub$Pheno
   data <- PAC_sub$Counts
@@ -121,11 +131,12 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
   if(summary=="all"){
     tot_cnts <- mean(colSums(data))
     names(tot_cnts) <- "all"
-    data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
-    data_shrt <- data.frame(Group.1=data_shrt[,1], all= rowMeans(data_shrt[,-1])) 
+    data_shrt <- stats::aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+    data_shrt <- data.frame(Group.1=data_shrt[,1], 
+                            all= rowMeans(data_shrt[,-1])) 
     
   }else{
-    data_shrt <- aggregate(data, list(anno[, anno_target[[1]]]), "sum")
+    data_shrt <- stats::aggregate(data, list(anno[, anno_target[[1]]]), "sum")
     if(summary %in% c("sample","samples")){
       tot_cnts <- colSums(data)
     }
@@ -161,16 +172,23 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
   if(length(extra)>0){
     bio <- c(sort(bio[extra]), bio[-extra])
   }
-  data_long_perc$Category <- factor(as.character(data_long_perc$Category), levels=bio)
+  data_long_perc$Category <- factor(as.character(data_long_perc$Category), 
+                                    levels=bio)
     
   # Pheno
   if(is.null(pheno_target)){
-    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(unique(data_long_perc$Sample)))
+    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), 
+                                    levels=as.character(
+                                      unique(data_long_perc$Sample)))
   }else{
     if(summary %in% c("sample","samples")){
-    stopifnot(any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE)
-    sampl_ord <- do.call("c", split(rownames(PAC$Pheno), factor(PAC$Pheno[,pheno_target[[1]]], levels=pheno_target[[2]])))
-    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), levels=as.character(sampl_ord))
+    stopifnot(any(!rownames(PAC$Pheno) %in% as.character(
+      data_long_perc$Sample))==FALSE)
+    sampl_ord <- do.call("c", split(rownames(PAC$Pheno), 
+                                    factor(PAC$Pheno[,pheno_target[[1]]], 
+                                           levels=pheno_target[[2]])))
+    data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), 
+                                    levels=as.character(sampl_ord))
     data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
     }
   }
@@ -179,7 +197,8 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
   tot_cnts <- tot_cnts[match(names(tot_cnts), unique(data_long_perc$Sample))]
   data_long_perc$tot_counts <- ""
   if(total==TRUE){
-    trg_1st <- levels(data_long_perc$Category)[length(levels(data_long_perc$Category))]
+    trg_1st <- levels(data_long_perc$Category)[
+      length(levels(data_long_perc$Category))]
     data_long_perc$tot_counts[data_long_perc$Category == trg_1st] <- tot_cnts
   }
   
@@ -193,18 +212,22 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, w
   }else{
     color <- rev(color)
   }
-  p1 <- ggplot2::ggplot(data_long_perc, ggplot2::aes(x=Sample, y=Percent, fill=Category)) +
+  p1 <- ggplot2::ggplot(data_long_perc,
+                        ggplot2::aes(x=Sample, y=Percent, fill=Category)) +
     ggplot2::geom_bar(stat="identity", col="black", width=width, size=0.3) + 
-    ggplot2::geom_text(ggplot2::aes(label=tot_counts), nudge_y=-3, nudge_x=0, angle = 0, color="black", size=4)+
-    ggthemes::geom_rangeframe(ggplot2::aes(y=c(0, rep(1, length(Percent)-1))))+
+    ggplot2::geom_text(ggplot2::aes(label=tot_counts), nudge_y=-3, nudge_x=0,
+                       angle = 0, color="black", size=4)+
+    ggplot2::geom_hline(yintercept=0, col="black")+
+    ggplot2::geom_hline(yintercept=100, col="black")+
     ggplot2::scale_fill_manual(values=rev(color))+
-     ggplot2::coord_cartesian(ylim=c(-2,100)) +
+    ggplot2::coord_cartesian(ylim=c(-2,100)) +
     ggplot2::ylab("Percent of total reads")+
-    ggthemes::theme_tufte()+
+    ggplot2::theme_classic()+
     ggplot2::theme(
-      #text = ggplot2::element_text(family="Arial"),
+      axis.ticks.length.y=ggplot2::unit(.25, "cm"),
       plot.caption =  ggplot2::element_text(size=12, face= "bold"),
-      axis.title.y = ggplot2::element_text(size=16, face= "bold"), 
+      axis.title.y = ggplot2::element_text(size=16, face= "bold"),
+      axis.line=ggplot2::element_blank(),      
       axis.title.x = ggplot2::element_blank(), 
       axis.text = ggplot2::element_text(size=12),
       axis.text.x = ggplot2::element_text(angle=45, hjust=1),

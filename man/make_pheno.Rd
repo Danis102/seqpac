@@ -50,6 +50,8 @@ script will attempt to add this data to the Pheno data.frame.
 }
 \examples{
 
+\dontrun{
+
 library(seqpac) 
 
 ### First make counts 
@@ -81,6 +83,8 @@ pheno <- make_pheno(pheno=pheno,
 # Note: a simple annotation table will be added automatically.
 
 pac <- make_PAC(pheno=pheno, counts=counts, anno=NULL)
+
+}
 
 }
 \seealso{

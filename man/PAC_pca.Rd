@@ -19,8 +19,8 @@ PAC_pca(
 \item{PAC}{PAC-list object.}
 
 \item{norm}{Character indicating what type of data to be used. If
-type="counts" the PCA will be conducted on the raw Counts. If type="rpm" the
-analysis will be done on rpm values returned from \code{PAC_norm} function
+type="counts" the PCA will be conducted on the raw Counts. If type="cpm" the
+analysis will be done on cpm values returned from \code{PAC_norm} function
 and stored in the norm folder of the PAC-list object. The name of any other
 table in the PAC$norm folder can also be used.}
 
@@ -123,7 +123,6 @@ Other PAC analysis:
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},

@@ -25,7 +25,7 @@
 #'   
 #' @examples
 #' 
-#' #' library(seqpac)
+#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #' 

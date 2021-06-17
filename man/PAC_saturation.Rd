@@ -54,9 +54,11 @@ approaches the plateau.
 
 library(seqpac)
 
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
 
-plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, thresh=c(1,2), threads=1)
+plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10, 
+                            thresh=c(1,2), threads=1)
 names(plot_lst)
 cowplot::plot_grid(plotlist=plot_lst)
 
@@ -79,7 +81,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
 \code{\link{PAC_summary}()},

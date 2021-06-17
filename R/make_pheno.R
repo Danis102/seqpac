@@ -47,6 +47,8 @@
 #'
 #' @examples
 #'
+#' \dontrun{
+#'
 #' library(seqpac) 
 #' 
 #' ### First make counts 
@@ -79,6 +81,8 @@
 #' 
 #' pac <- make_PAC(pheno=pheno, counts=counts, anno=NULL)
 #'
+#' }
+#'
 #' @export
 make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
   
@@ -91,7 +95,7 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
         stop("\nCannot find comma seperated header",
              "\nwith first column named 'Sample_ID'")
       }
-      pheno <- read.delim(pheno, skip= header-1,  header=TRUE, sep=",")
+      pheno <- utils::read.delim(pheno, skip= header-1,  header=TRUE, sep=",")
       cat("Illumina type SampleSheet.csv file was found.\n")
       ## Universal search for colnames:
       col_srch <- c("^Sample_ID$", "^Sample_Name$", 
@@ -104,7 +108,7 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       # path_stat <- list.files(dirnames(pheno, pattern=".txt", 
       #                                  full.names = TRUE)
       # if(length(path_stat) == 1){
-      #   stat <- read.delim(paste0(pheno, "/Samples_stat.txt"), 
+      #   stat <- utils::read.delim(paste0(pheno, "/Samples_stat.txt"), 
       #                                  header=TRUE, sep="\t")
       #   stopifnot(
       #     any(as.character(pheno$Sample_ID) %in% as.character(stat$SampleId)))
@@ -143,9 +147,9 @@ make_pheno<- function(pheno, type="manual", counts=NULL, progress_report=NULL){
       head_1 <- stringr::str_count (lines[header], ",")
       row_1 <- stringr::str_count (lines[header+1], ",")
       if(row_1-head_1>=0){
-        pheno <- read.delim(pheno,  header=TRUE, sep=",")
+        pheno <- utils::read.delim(pheno,  header=TRUE, sep=",")
       }else{
-        pheno <- read.delim(pheno,  header=TRUE, sep="\t")
+        pheno <- utils::read.delim(pheno,  header=TRUE, sep="\t")
       }
     }
     pheno$Sample_ID <- as.character(gsub("-", "_", 

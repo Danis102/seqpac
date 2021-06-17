@@ -166,13 +166,13 @@ library(seqpac)
 # For illumina type adaptors, 'parse="default_illumina"' may be used
 
 path_to_fastq <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-count_list <- make_counts(input=path_to_fastq, type = "fastq", trimming="seqpac", 
+count_list <- make_counts(input=path_to_fastq, trimming="seqpac", 
                           parse="default_neb")
 
 
 # That was quite slow, lets speed it up a bit by increasing threads
 # You may check how many threads you can run with "parallel::detectCores()"
-count_list <- make_counts(input=path_to_fastq, type = "fastq", trimming="seqpac", 
+count_list <- make_counts(input=path_to_fastq, trimming="seqpac", 
                           parse="default_neb", threads=9)
 
 
@@ -198,7 +198,7 @@ For linux users with all dependencies installed:
 # and fastq_quality_filter.
 # (Note, the 'default_neb' parse argument is specificly designed for sRNA trimming
 
-count_list <- make_counts(input=path_to_fastq, type = "fastq", trimming="cutadapt", parse="default_neb")
+count_list <- make_counts(input=path_to_fastq, trimming="cutadapt", parse="default_neb")
 
 ```
 See the manuals for 'make_counts', 'make_trim',
@@ -1548,18 +1548,21 @@ works in seqpac for advanced tRNA analysis using the test dataset:
 <br>
 ```{r, message=FALSE, include = TRUE, eval=FALSE}
 library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
 
 ###---------------------------------------------------------------------
 ## tRNA analysis in seqpac 
 
 # First create an annotation blanc PAC with group means
 pac$Anno <- pac$Anno[,1, drop=FALSE]
-pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", pheno_target=list("stage"), merge_pac = TRUE)
+pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
+                        pheno_target=list("stage"), merge_pac = TRUE)
 
 # Then reannotate only tRNA using the PAC_mapper function
 ref <- "/home/danis31/Desktop/Temp_docs/fasta/GtRNAdb/trna.fa"  # Your path to tRNA fasta 
-map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
+map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
+                         mapper="reanno", mismatches=0, threads=8, report_string=TRUE)
 
 ### Hint:
 # By adding N_up ad N_down you can make sure that modified fragments (like 3'
@@ -1576,7 +1579,8 @@ n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
 table(n_tRFs)
 names(map_object)[n_tRFs>2]
 selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-cov_plt <- PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), map_target=selct)
+cov_plt <- PAC_covplot(pac_trna, map=map_object, 
+                       summary_target= list("cpmMeans_stage"), map_target=selct)
 cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
 
 

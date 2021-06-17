@@ -35,6 +35,11 @@ object. Should contain search terms that can find unique strings in the
 reference names. The search terms are parse to grepl("<search terms>,
 names(<PAC_mapping object>)). (default=NULL)}
 
+\item{style}{Character string. If style="line" (default) then graphs are
+plotted as simple path/line plots (ggplot2::geom_path). If style="solid"
+then the area under the line is filled with same color as the lines but
+with transparency (ggplot2::geom_line + geom_ribbon, alpha=0.5).}
+
 \item{xseq}{Logical indicating whether the nucleotides should be plotted on
 the x-axis. Plotting long references with xseq=FALSE will increase script
 performance. (default=TRUE).}
@@ -65,7 +70,9 @@ function will attempt to plot the sequence coverage over long references.
 }
 \examples{
 
- ### Load data ###
+\dontrun{
+
+### Load data ###
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
@@ -77,15 +84,16 @@ pac <- PAC_summary(pac, norm = "cpm", type = "means",
 pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 
 ## Mapping and plotting
-#map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, 
+map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, 
                         threads=1, ref="<your_path_to_rRNA_reference>")
-#covplots<- PAC_covplot(pac_rRNA, map_rRNA, 
+covplots<- PAC_covplot(pac_rRNA, map_rRNA, 
                         summary_target = list("cpmMeans_stage"), 
                         xseq=FALSE, style="line", 
                         color=c("red", "black", "blue"))
-#cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], 
+cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], 
                     covplots[[4]], nrow=2, ncol=2)
 
+}
 
 }
 \seealso{
@@ -104,7 +112,6 @@ Other PAC analysis:
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},
-\code{\link{PAC_pirna}()},
 \code{\link{PAC_saturation}()},
 \code{\link{PAC_sizedist}()},
 \code{\link{PAC_stackbar}()},
