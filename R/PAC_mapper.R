@@ -36,14 +36,18 @@
 #'   character where sequences align against the reference. Works well with
 #'   tRNA, but makes the Alignments object difficult to work with when longer
 #'   references are used (default=FALSE).
-#'   
-#' @param keep_multi Logical whether multimapping should be allowed. If
-#'   keep_multi=TRUE, then sequences that maps multiple times to the same
-#'   reference will be reported >1 times in the output (indicated by .1, .2, .3
-#'   etc. in the reported sequence name). If keep_multi=FALSE (default), then
-#'   all multimapping sequences will be removed, resulting in 1 row per mapping
-#'   sequence. The function will always give a warning if multimapping occurs
-#'   between sequences and references.
+#'
+#' @param multi Character indicating how to deal with multimapping. If
+#'   \code{multi="keep"}, query sequences that maps multiple times to the same
+#'   reference sequence will be reported >1 times in the output (indicated by
+#'   .1, .2, .3 etc. in the reported sequence name). If \code{multi="remove"}
+#'   (default), then all multimapping sequences will be removed, resulting in 1
+#'   row for each query sequence that maps to the target reference sequence. The
+#'   function will always give a warning if a query sequence maps to multiple
+#'   sites within a reference sequence. However, this function discriminate
+#'   multimapping only within a reference sequence. Thus, if the fasta input
+#'   contains multiple reference sequences, a query sequence may be reported in
+#'   multiple references sequences.
 #'   
 #'   
 #' @return Stacked list, where each object on the highest level contains:

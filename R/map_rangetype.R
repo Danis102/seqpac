@@ -219,7 +219,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       
       ## Compensate for N_include
       if(!is.null(N_counts[[i]])){
-        if(!align$n_hits[1] == "no_hits"){
+        if(!align$Mismatch[1] == "no_hits"){
           ref_len <- ref_len - sum(unlist(N_counts[[i]]))
           align$Align_start   <- align$Align_start - N_counts[[i]][1]
           align$Align_end   <- align$Align_end - N_counts[[i]][2]
@@ -235,7 +235,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       
       ## Percent
       if(type=="percent"){
-        if(align$n_hits[1] == "no_hits"){
+        if(align$Mismatch[1] == "no_hits"){
           align$type_start_per <- "no_hits"
           align$type_mid_start_per <- "no_hits"
           align$type_mid_end_per <- "no_hits"
@@ -258,7 +258,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       
       ## Nucleotides
       if(type=="nucleotides"){
-        if(align$n_hits[1] == "no_hits"){
+        if(align$Mismatch[1] == "no_hits"){
           align$type_start_nuc <- "no_hits"
           align$type_end_nuc <- "no_hits"
         }else{
