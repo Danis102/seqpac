@@ -7,8 +7,8 @@
 PAC_mapper(
   PAC,
   ref,
-  mapper = "reanno",
   mismatches = 0,
+  multi = "remove",
   threads = 1,
   N_up = "",
   N_down = "",
@@ -20,16 +20,6 @@ PAC_mapper(
 
 \item{ref}{Character indicating the path to the fasta (.fa) reference
 file or a DNAStringSet with already loaded reference sequences.}
-
-\item{mapper}{Character indicating what align engine to be used. If
-mapper="reanno" (default) PAC_mapper will create temporary files and
-generate missing bowtie indexes for a reannotion workflow (see
-\code{?map_reanno}. Important, for PAC_mapper to successfully tap into the
-reannotation workflow, the names of ref (fasta or DNAStringSet) cannot
-contain any ";" characters. If mapper="vmatch", PAC_mapper will instead use
-the \code{vmatchPattern} function in the Biostrings package. While the
-mapper="reanno" is by far the fastest option, mapper="vmatch" does not
-require bowtie indexes.}
 
 \item{mismatches}{Integer indicating the number of mismatches that should be
 allowed in the mapping.}
@@ -52,6 +42,14 @@ the mature tRNA. No nucleotides are added by default.}
 character where sequences align against the reference. Works well with
 tRNA, but makes the Alignments object difficult to work with when longer
 references are used (default=FALSE).}
+
+\item{keep_multi}{Logical whether multimapping should be allowed. If
+keep_multi=TRUE, then sequences that maps multiple times to the same
+reference will be reported >1 times in the output (indicated by .1, .2, .3
+etc. in the reported sequence name). If keep_multi=FALSE (default), then
+all multimapping sequences will be removed, resulting in 1 row per mapping
+sequence. The function will always give a warning if multimapping occurs
+between sequences and references.}
 }
 \value{
 Stacked list, where each object on the highest level contains:
@@ -87,7 +85,7 @@ pac_trna <- PAC_summary(pac, norm = "cpm", type = "means",
 # Then reannotate only tRNA using the PAC_mapper function
 ref <- "/some/path/to/trna.fa"
 map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-                         mapper="reanno", mismatches=0, threads=8, 
+                         mismatches=0, threads=8, 
                          report_string=TRUE)
 
 

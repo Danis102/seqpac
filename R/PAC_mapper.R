@@ -15,16 +15,6 @@
 #' @param ref Character indicating the path to the fasta (.fa) reference
 #'   file or a DNAStringSet with already loaded reference sequences.
 #'
-#' @param mapper Character indicating what align engine to be used. If
-#'   mapper="reanno" (default) PAC_mapper will create temporary files and
-#'   generate missing bowtie indexes for a reannotion workflow (see
-#'   \code{?map_reanno}. Important, for PAC_mapper to successfully tap into the
-#'   reannotation workflow, the names of ref (fasta or DNAStringSet) cannot
-#'   contain any ";" characters. If mapper="vmatch", PAC_mapper will instead use
-#'   the \code{vmatchPattern} function in the Biostrings package. While the
-#'   mapper="reanno" is by far the fastest option, mapper="vmatch" does not
-#'   require bowtie indexes.
-#'   
 #' @param mismatches Integer indicating the number of mismatches that should be
 #'   allowed in the mapping.
 #'
@@ -46,6 +36,15 @@
 #'   character where sequences align against the reference. Works well with
 #'   tRNA, but makes the Alignments object difficult to work with when longer
 #'   references are used (default=FALSE).
+#'   
+#' @param keep_multi Logical whether multimapping should be allowed. If
+#'   keep_multi=TRUE, then sequences that maps multiple times to the same
+#'   reference will be reported >1 times in the output (indicated by .1, .2, .3
+#'   etc. in the reported sequence name). If keep_multi=FALSE (default), then
+#'   all multimapping sequences will be removed, resulting in 1 row per mapping
+#'   sequence. The function will always give a warning if multimapping occurs
+#'   between sequences and references.
+#'   
 #'   
 #' @return Stacked list, where each object on the highest level contains:
 #'                    (Object 1) Reference name and sequence. 
@@ -73,7 +72,7 @@
 #' # Then reannotate only tRNA using the PAC_mapper function
 #' ref <- "/some/path/to/trna.fa"
 #' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-#'                          mapper="reanno", mismatches=0, threads=8, 
+#'                          mismatches=0, threads=8, 
 #'                          report_string=TRUE)
 #' 
 #' 
@@ -156,10 +155,10 @@
 #'                    
 #' @export
 
-PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0, 
+PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
                        threads=1, N_up="", N_down="", report_string=FALSE){
 
-############################################  
+
 ## Setup
   j <- NULL 
   ## Setup reference  
@@ -199,7 +198,7 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0,
   suppressWarnings(dir.create(dirname(ref_path), recursive = TRUE))
   Biostrings::writeXStringSet(full, filepath=ref_path, format="fasta")
   
-  ## Make bowtie index if not available
+## Make bowtie index if not available
   # If file input check bowtie index; save results in check_file
   check_file <- FALSE
   if(is.character(ref)){
@@ -220,180 +219,144 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0,
     ref_path <- ref 
   }
   
-############################################  
-## PAC mapper using the reanno workflow
-  if(mapper=="reanno"){
-    # Make reanno object  
-    map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, 
-               type="internal", threads=threads, mismatches=mismatches,  
-               import="genome", keep_temp=FALSE)
-    map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
-    stopifnot(length(map$Full_anno$mis0) == 1)
-    # Reorganize reanno object to a PAC_mapper object
-    tRNA_test <- 0 
-    align <- lapply(map$Full_anno, function(x){
-      x <- x[[1]][!is.na(x[[1]]$ref_hits),]
-      splt_x <- strsplit(x[[4]], "(?<=;\\+\\||;-\\|)", perl=TRUE)
-      names(splt_x) <- x$seq
-      lst_align <- lapply(splt_x, function(y){
-        y <- gsub("\\|$", "", y)
-        temp <- do.call("rbind", strsplit(y, ";"))
-        nams <- temp[,1]
-        type_test1 <- grepl("tRNA", nams)
-        type_test2 <- grepl("_\\(\\+\\)|_\\(-\\)", nams)
-        if(sum(type_test1, type_test2) == 2 ){
-          tRNA_test <- tRNA_test+1
-          strnd_ref <- do.call("rbind", strsplit(nams, "\\d_\\("))[,2]
-          strnd_ref <- gsub("\\)", "", strnd_ref)
-          start_align <- as.numeric(gsub("start=", "", temp[,2]))
-          strnd_align <- temp[,3]
-          strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
-          df <- data.frame(ref_name = nams,
-                           ref_strand = strnd_ref,
-                           align_start = start_align,
-                           align_strand = strnd_align)
-        }else{
-          start_align <- as.numeric(gsub("start=", "", temp[,2]))
-          strnd_align <- temp[,3]
-          strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
-          df <- data.frame(ref_name = nams,
-                           ref_strand = "*",
-                           align_start = start_align,
-                           align_strand = strnd_align)
-          }          
-        })
-      df_align <- do.call("rbind", lst_align)
-    })
-    for(i in 1:length(align)){
-      align[[i]]$seqs <- gsub("\\.\\d+", "", rownames(align[[i]]))
-      align[[i]]$mismatch <- names(align)[i]
-    }
-    align <- do.call("rbind", align)
-    align_splt <- split(align, align$ref_name)
-    align <- lapply(align_splt, function(x){
-      dup_tab <- table(x$seqs)
-      nam_multi <- names(dup_tab)[dup_tab > 1]
-      ## Sequences mapping multiple times are removed
-      if(length(nam_multi) > 0){
-        warning("\nSequences were removed since they mapped >1",
-                ",\nto the same reference sequence:",  immediate. = TRUE)
+## Make reanno object  
+  map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, 
+             type="internal", threads=threads, mismatches=mismatches,  
+             import="genome", keep_temp=FALSE)
+  map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
+  stopifnot(length(map$Full_anno$mis0) == 1)
+
+## Reorganize reanno object to a PAC_mapper object
+  align_lst <- lapply(map$Full_anno, function(x){
+    x <- x[[1]][!is.na(x[[1]]$ref_hits),]
+    splt_x <- strsplit(x[[4]], "(?<=;\\+\\||;-\\|)", perl=TRUE)
+    names(splt_x) <- x$seq
+    lst_align <- lapply(splt_x, function(y){
+      y <- gsub("\\|$", "", y)
+      temp <- do.call("rbind", strsplit(y, ";"))
+      nams <- temp[,1]
+      start_align <- as.numeric(gsub("start=", "", temp[,2]))
+      strnd_align <- temp[,3]
+      strnd_align <- ifelse(strnd_align=="+", "sense", "antisense")
+      df <- data.frame(ref_name = nams,
+                       ref_strand = "*",
+                       align_start = start_align,
+                       align_strand = strnd_align)
+      })
+    df_align <- do.call("rbind", lst_align)
+  })
+  for(i in 1:length(align_lst)){
+    align_lst[[i]]$seqs <- gsub("\\.\\d+", "", rownames(align_lst[[i]]))
+    align_lst[[i]]$mismatch <- names(align_lst)[i]
+  }
+  # Rbind and fix names  
+  nam_mis <- paste(paste0(names(align_lst), "."), collapse="|")
+  align <- do.call("rbind", align_lst)
+  rownames(align) <-  gsub(nam_mis, "", rownames(align)) 
+  align_splt <- split(align, align$ref_name)
+  align <- lapply(align_splt, function(x){
+    rownames(x) <- NULL
+    dup_tab <- table(x$seqs)
+    nam_multi <- names(dup_tab)[dup_tab > 1]
+    # Sequences mapping multiple times are removed or kept
+    if(length(nam_multi) > 0){
+      if(multi=="remove"){
+        warning("\nSome sequences mapped >1 to the same reference.",
+                "\nSince multi='remove' these sequences will be removed:",
+                immediate. = TRUE)
         print(x[x$seqs %in% nam_multi,])
         x <- x[!x$seqs %in% nam_multi,]
+        rownames(x) <- x$seqs
       }
-      df <- data.frame(n_hits=1, Align_start=x$align_start, 
-                       Align_end=x$align_start+nchar(x$seqs)-1, 
-                       Align_width=nchar(x$seqs))  
-      rownames(x) <- x$seqs
-      rownames(df) <- x$seqs
-      return(df)
-    })
-    
-    # Fix bowtie names and match with original reference
-    splt_nam <- strsplit(names(full), " ")
-    splt_nam <- unlist(lapply(splt_nam, function(x){x[1]}))
-    nam_match <- match(splt_nam, names(align))
-    align_lst <- align[nam_match]
-    stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  
-                        splt_nam[!is.na(names(align_lst))]))
-    
-    ## Add full length reference
-    names(align_lst)[is.na(names(align_lst))] <- splt_nam[is.na(names(align_lst))]
-    fin_lst <- list(NULL)
-    for(i in 1:length(align_lst)){
-      if(is.null(align_lst[[i]])){
-        align_lst[[i]] <- data.frame(n_hits="no_hits", Align_start="no_hits", 
-                                     Align_end="no_hits", Align_width="no_hits")
-      }
-      fin_lst[[i]] <- list(Ref_seq=full[i], Alignments=align_lst[[i]])
-      names(fin_lst)[i] <- names(align_lst)[i] 
-    }
-  }
-      
-############################################
-## Vmatch PAC_mapper:
-  if(mapper=="vmatch"){
-    # Setup
-    Anno_frag  <- Biostrings::DNAStringSet(rownames(PAC$Anno))
-    query_strings <- as.list(as.character(rownames(PAC$Anno)))
-    
-    ## Aligning using parallel processing
-    cat("Now aligning", length(Anno_frag), "fragments over", length(full), 
-        "reference sequences using", threads, 
-        "threads (may take a few minutes) ...    ", paste(Sys.time()), "\n")
-    len <- length(full)
-    
-    ## Parallelize sequences
-    fin_lst <- list(NA)
-    for(i in 1:length(full)){ 
-      cat(paste0("\nAligning against:\n ", names(full)[i], "\n Start ", 
-                 Sys.time()))
-      seq_ref <- full[i]
-      
-      aligned_lst <- foreach::foreach(
-        t=1:length(query_strings), 
-        .packages=c("Biostrings", "stringr"), 
-        .final = function(x){
-          names(x)<- paste0(Anno_frag); return(x)}) %dopar% {
-            
-        y <- as.data.frame(
-          Biostrings::vmatchPattern(query_strings[[t]],  
-                                    seq_ref, max.mismatch=mismatches, 
-                                    fixed=FALSE))
-        
-        if(!nrow(y)< 1){
-          y <- y[,c(1,3:5)]
-          y$group <- nrow(y)
-          colnames(y) <- c("n_hits", "Align_start", "Align_end", "Align_width")
+      if(multi=="keep"){
+        warning("\nSome sequences mapped >1 to the same reference.",
+                "\nSince multi='keep', these sequences will be represented",
+                "\nmultiple times in the mapping (psuedoreplication):",
+                immediate. = TRUE)
+        print(x[x$seqs %in% nam_multi,])
+        splt <- split(x, x$seqs)
+        splt <- lapply(splt, function(y){
+          rownames(y) <- NULL
           return(y)
-        }else{
-          return(NULL)}
+          })
+        x <- do.call("rbind", splt)
       }
-      aligned   <- do.call("rbind", 
-                           aligned_lst[unlist(lapply(aligned_lst, function(x){
-                             !is.null(x)}))])                  
-      target_lst  <- list(Ref_seq=seq_ref, Alignments=aligned)
-      if(is.null(target_lst[[2]])){
-        target_lst[[2]] <- data.frame(n_hits="no_hits", Align_start="no_hits", 
-                                      Align_end="no_hits", 
-                                      Align_width="no_hits")
-        }
-      fin_lst[[i]] <- target_lst
-      names(fin_lst)[i] <- names(full)[i]
-      cat(paste0("\n Done ", Sys.time()))
+    }else{
+       rownames(x) <- x$seqs
     }
+    ifelse(x$align_strand=="sense", "+", "-")
+    df <- data.frame(Mismatch=gsub("mis", "", x$mismatch),
+                     Strand= ifelse(x$align_strand=="sense", "+", "-"),
+                     Align_start=x$align_start, 
+                     Align_end=x$align_start+nchar(x$seqs)-1, 
+                     Align_width=nchar(x$seqs))
+    rownames(df) <- rownames(x)
+    return(df)
+  })
+  
+# Fix bowtie names and match with original reference
+  splt_nam <- strsplit(names(full), " ")
+  splt_nam <- unlist(lapply(splt_nam, function(x){x[1]}))
+  nam_match <- match(splt_nam, names(align))
+  align_lst <- align[nam_match]
+  stopifnot(identical(names(align_lst)[!is.na(names(align_lst))],  
+                      splt_nam[!is.na(names(align_lst))]))
+  
+# Add full length reference
+  names(align_lst)[is.na(names(align_lst))] <- splt_nam[is.na(names(align_lst))]
+  fin_lst <- list(NULL)
+  for(i in 1:length(align_lst)){
+    if(is.null(align_lst[[i]])){
+      align_lst[[i]] <- data.frame(Mismatch="no_hits", Strand="no_hits", 
+                                   Align_start="no_hits", 
+                                   Align_end="no_hits", Align_width="no_hits")
+    }
+    fin_lst[[i]] <- list(Ref_seq=full[i], Alignments=align_lst[[i]])
+    names(fin_lst)[i] <- names(align_lst)[i] 
   }
-    
-############################################
-## Both vmatch and reanno
+
+# Generate alignment string
   doParallel::registerDoParallel(threads) 
   `%dopar%` <- foreach::`%dopar%`
   
   if(report_string==TRUE){
-      fin_lst <- lapply(fin_lst, function(x){
-        if(x$Alignments[1,1] =="no_hits"){
-          x$Alignments <- cbind(x$Alignments, 
-                                data.frame(Align_string="no_hits"))
-          x$Alignments <- data.frame(lapply(x$Alignments, as.character), 
-                                     stringsAsFactors=FALSE)
-          
-          #x$Alignments <- apply(x$Alignments, 2, as.character) 
-          return(x)
-        }else{
-          ref <- x$Ref_seq
-          algn <- x$Alignments 
-          n_ref <- nchar(as.character(ref))
-          algn_lst <- split(algn, factor(row.names(algn), 
-                                         levels=row.names(algn)))
-          positions_lst <- foreach::foreach(j=1:length(algn_lst), 
-                                            .final=function(y){
-                                              names(y) <- names(algn_lst)
-                                              return(y)})  %dopar% {
-            ref=ref
-            n_ref=n_ref
-            algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), 
-                              rownames(algn_lst[[j]]), 
-                              strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), 
-                              sep="")
+    if(multi=="keep"){
+      warning("\nOption multi='keep', is not compatible with report_string=TRUE",
+              "\nAlignment string will not be returned.")
+    }else{
+      ref_lgn <- lapply(fin_lst, function(x){Biostrings::width(x$Ref_seq)})
+      ref_lgn  <- max(do.call("c", ref_lgn))
+      if(ref_lgn>500){
+         warning("\nOption report_string=TRUE is only compatible with",
+                 "\nreference < 500 nt. Alignment string will not be returned.")
+      }else{
+        fin_lst <- lapply(fin_lst, function(x){
+          if(x$Alignments[1,1] =="no_hits"){
+            x$Alignments <- cbind(x$Alignments, 
+                                  data.frame(Align_string="no_hits"))
+            x$Alignments <- data.frame(lapply(x$Alignments, as.character), 
+                                       stringsAsFactors=FALSE)
+            return(x)
+          }else{
+            ref <- x$Ref_seq
+            algn <- x$Alignments 
+            n_ref <- nchar(as.character(ref))
+            algn_lst <- split(algn, factor(row.names(algn), 
+                                           levels=row.names(algn)))
+            positions_lst <- foreach::foreach(j=1:length(algn_lst), 
+                                              .final=function(y){
+                                                names(y) <- names(algn_lst)
+                                                return(y)})  %dopar% {
+              ref=ref
+              n_ref=n_ref
+              sq <- rownames(algn_lst[[j]])
+              if(algn_lst[[j]]$Strand == "-"){
+                 sq <- intToUtf8(rev(utf8ToInt(sq)))
+              }
+              algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), 
+                                sq, 
+                                strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), 
+                                sep="")
             return(algn_str)
           }
           df <- cbind(algn, 
@@ -404,9 +367,11 @@ PAC_mapper <- function(PAC, ref, mapper="reanno", mismatches=0,
           return(list(Ref_seq=ref, Alignments=df))
         }
       })
+     }
     }
-    
-    doParallel::stopImplicitCluster()
-    return(fin_lst)
-    }
+  }
+  doParallel::stopImplicitCluster()
+  class(fin_lst) <- c("list", "seqpac_map")
+  return(fin_lst)
+}
                           

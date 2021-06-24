@@ -159,7 +159,7 @@ library(seqpac)
     
     quiet(
       map_object <- PAC_mapper(pac, ref=ref, N_up = "NNN", N_down = "NNN", 
-                               mapper="reanno", mismatches=0, threads=8, 
+                               mismatches=0, threads=8, 
                                report_string=TRUE)
     )
     quiet(

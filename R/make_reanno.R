@@ -162,9 +162,7 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
                                "Full_reanno_mis0|",
                                "Full_reanno_mis1|",
                                "Full_reanno_mis2|",
-                               "Full_reanno_mis3|",
-                               "Full_reanno_mis4|",
-                               "Full_reanno_mis5"), 
+                               "Full_reanno_mis3"), 
                       full.names = TRUE)
   seqs <- (seq(1:length(files)))-1
   reanno_lst <- list(NA)
@@ -174,24 +172,40 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE){
     names(reanno_lst)[i] <- paste0("mis", seqs[i])
   }
   
+  # Identify mismatch cycles with no hits in any reference 
+  test_miss <- unlist(lapply(reanno_lst, length))
+  complete_nam <- names(reanno_lst)[which(test_miss == max(test_miss))][1]
+  complete_nam <- names(reanno_lst[[complete_nam]])
+
   cat("\n\nReorganizing and matching reannotation files with PAC ...\n")
   PAC_seq <- rownames(PAC$Anno)
   reanno_lst_match <- lapply(reanno_lst, function(x){
-    match_lst  <- lapply(x,  function(y){
-      y$.id <- as.character(y$.id)
-      y$ref_hits <- as.character(y$ref_hits)
-      anno_match <- y[match(PAC_seq, y$.id), ]
-      anno_match$.id[is.na(anno_match$.id)] <- PAC_seq[is.na(anno_match$.id)]
-      stopifnot(identical(PAC_seq, anno_match$.id))
-      names(anno_match)[names(anno_match)==".id"] <- "seq"
-      return(anno_match)
-    })
+    ## Fix if all references has no hits in 
+    if(length(x)==0){
+      chr_na<- as.character(NA)
+      na_tibb <- tibble::tibble(seq=PAC_seq, mis_n=chr_na, 
+                                  mis_where=chr_na, ref_hits=chr_na)
+      match_lst <- as.list(rep(NA, length(complete_nam)))
+      
+      match_lst <- lapply(match_lst, function(x){na_tibb}) 
+      names(match_lst) <- complete_nam
+    }else{
+      match_lst  <- lapply(x,  function(y){
+        y$.id <- as.character(y$.id)
+        y$ref_hits <- as.character(y$ref_hits)
+        anno_match <- y[match(PAC_seq, y$.id), ]
+        anno_match$.id[is.na(anno_match$.id)] <- PAC_seq[is.na(anno_match$.id)]
+        stopifnot(identical(PAC_seq, anno_match$.id))
+        names(anno_match)[names(anno_match)==".id"] <- "seq"
+        return(anno_match)
+      })
+    }
     return(match_lst)
-  })
+  })    
   
   ## Check and fix missing references
-  NA_check <- unlist(lapply(reanno_lst, function(x){
-    identical(names(reanno_lst[[1]]),  names(x))
+  NA_check <- unlist(lapply(reanno_lst_match, function(x){
+    identical(names(reanno_lst_match[[1]]),  names(x))
     }))
   if(any(!NA_check)){
     NA_which <- lapply(reanno_lst, function(x){
