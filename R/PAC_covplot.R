@@ -28,7 +28,7 @@
 #'   an anno_target, but instead extracts target references in the PAC_mapping
 #'   object. Should contain search terms that can find unique strings in the
 #'   reference names. The search terms are parse to grepl("<search terms>,
-#'   names(<PAC_mapping object>)). (default=NULL)
+#'   names(<PAC_mapper object>)). (default=NULL)
 #'
 #' @param xseq Logical indicating whether the nucleotides should be plotted on
 #'   the x-axis. Plotting long references with xseq=FALSE will increase script

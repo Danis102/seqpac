@@ -218,7 +218,7 @@ library(seqpac)
 
 
 
-# Preapare PAC_gtf
+# Test PAC_gtf
   load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                    package = "seqpac", mustWork = TRUE))
   # Create a gtf file
@@ -271,11 +271,12 @@ library(seqpac)
   quiet(
     simple_0 <- PAC_gtf(pac_test, mismatches=0, return="simplify", 
                             gtf=gtf, target=target, threads=8))
-  cat("OBS! Expected error")
+
   test_err  <- quiet(
     suppressWarnings(
       suppressMessages(try(PAC_gtf(pac_test, genome=genome, mismatches=0, 
-                      return="simplify", gtf=gtf, target=target, threads=8)))))
+                      return="simplify", gtf=gtf, target=target, threads=8), 
+                      silent = TRUE))))
   quiet(
     full_1 <- PAC_gtf(pac_test, mismatches=1, return="full", 
                             gtf=gtf, target=target, threads=8))
@@ -283,7 +284,7 @@ library(seqpac)
     all_2 <- PAC_gtf(pac_test, mismatches=2, return="all", 
                             gtf=gtf, target=target, threads=8))
   
-# Test PAC_gtf output  
+  # Tests for PAC_gtf output  
   expect_true(sum(grepl("mis0|mis1|mis2|mis3", colnames(simple_3))) == 4)
   expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
   expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)

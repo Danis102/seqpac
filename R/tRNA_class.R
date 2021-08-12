@@ -188,7 +188,7 @@ tRNA_class <- function(PAC, map, terminal = 5){
     type_vector <- split(type_vector, type_vector$seq)
     # Collapse multimapping seqences into one column 
     finished <-  lapply(type_vector, function(x){
-      df <- data.frame(seq=paste0(sort(unique(x$seq), collapse=";")), 
+      df <- data.frame(seq=paste0(sort(unique(x$seq)), collapse=";"), 
                        class=paste0(sort(unique(x$class)), collapse=";"),
                        decoder=paste0(sort(unique(x$decoder)), collapse=";"),
                        acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),

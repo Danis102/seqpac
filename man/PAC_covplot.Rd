@@ -33,7 +33,7 @@ stored in the summary 'folder' of a PAC object.}
 an anno_target, but instead extracts target references in the PAC_mapping
 object. Should contain search terms that can find unique strings in the
 reference names. The search terms are parse to grepl("<search terms>,
-names(<PAC_mapping object>)). (default=NULL)}
+names(<PAC_mapper object>)). (default=NULL)}
 
 \item{style}{Character string. If style="line" (default) then graphs are
 plotted as simple path/line plots (ggplot2::geom_path). If style="solid"
