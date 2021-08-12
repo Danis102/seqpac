@@ -97,6 +97,14 @@
 PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, 
                     pheno_target=NULL, anno_target=NULL, labels=NULL, ...){
   
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(length(pheno_target)==2){
     PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
                                        pheno_target=pheno_target))

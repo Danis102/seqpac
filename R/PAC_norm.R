@@ -42,6 +42,15 @@
 #' @export
 #' 
 PAC_norm <- function(PAC, norm="cpm", merge_pac=TRUE){
+  
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+
   if(norm %in% c("cpm", "rpm")){
     lib_sizes <- colSums(PAC$Counts)
     counts_cpm <- data.frame(
@@ -71,5 +80,14 @@ PAC_norm <- function(PAC, norm="cpm", merge_pac=TRUE){
     PAC$norm$rlog <- fin 
     
   }
-  if(merge_pac==TRUE){return(PAC)} else {return(fin)} 
+  ## Return
+  if(merge_pac==TRUE){
+    if(tp=="S4"){
+      return(as.PAC(PAC))
+    }else{
+      return(PAC)
+    }
+  }else{
+      return(fin)
+  } 
 }

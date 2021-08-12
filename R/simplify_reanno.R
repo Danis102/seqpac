@@ -46,10 +46,8 @@
 #'  
 #'@param merge_pac Logical whether the simplified annotation column should
 #'  automatically be added to the Anno object if a PAC list object were given as
-#'  input (default=FALSE). Alternatively, if a PAC object is provided in
-#'  merge_pac, the simplified column will be added to the Anno table for this
-#'  PAC object.
-#'  
+#'  input (default=FALSE). 
+#'   
 #'@return Character vector with single best-hit biotypes with fewest mismatches.
 #'  
 #'@examples
@@ -180,6 +178,13 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
                             merge_pac=FALSE, target_columns=NULL){
   
   ### Prepare:
+  if(isS4(input)){
+    tp <- "S4"
+    input <- as(input, "list")
+  }else{
+    tp <- "S3"
+  }
+
   if(sum(names(input)[1:3] == c("Pheno", "Anno", "Counts"))==3){
     anno <- input$Anno
   }else{ 
@@ -278,17 +283,20 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
   })
   bio_vect_fin <- as.data.frame(do.call("c", bio_vect_lst))
   colnames(bio_vect_fin) <- bio_name
-  if(sum(names(merge_pac)[1:3] == c("Pheno", "Anno", "Counts"))==3){
-    input <- merge_pac
-    input$Anno <- cbind(input$Anno, bio_vect_fin)
-  }else{  
+  
+### Output:
   if(merge_pac==FALSE){
-    input <- bio_vect_fin
+    return(bio_vect_fin)
   }
   if(merge_pac==TRUE){  
     stopifnot(identical(rownames(input$Anno), rownames(bio_vect_fin))) 
     input$Anno <- cbind(input$Anno, bio_vect_fin)
+     if(tp=="S4"){
+       return(as.PAC(input))
+    }else{
+       return(input)
     }
+  }else{
+    
   }
-  return(input)
-}
+}    

@@ -83,6 +83,14 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
                         rev=FALSE, merge_pac=TRUE){
   
 ## Prepare and subset ################
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(!is.null(pheno_target)){ 
     if(length(pheno_target)==1){ 
       pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
@@ -247,7 +255,11 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
     PAC$summary[[which(names(PAC$summary)=="new")]] <- as.data.frame(fin)
     names(PAC$summary)[which(names(PAC$summary)=="new")] <- df_nam
     stopifnot(PAC_check(PAC))
-  return(PAC)
+    if(tp=="S4"){
+      return(as.PAC(PAC))
+    }else{
+      return(PAC)
+    }  
   }else{
     fin_lst <- list(fin)
     names(fin_lst) <- df_nam

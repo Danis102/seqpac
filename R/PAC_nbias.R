@@ -101,6 +101,13 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL,
   counts <- nucleotide <- NULL
   
   # Prepare filtered PAC
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(!is.null(pheno_target)){ 
     if(length(pheno_target)==1){ 
       pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))

@@ -10,10 +10,8 @@ PAC_gtf(
   mismatches = 3,
   return = "simplify",
   stranded = FALSE,
-  gtf_repeat = NULL,
-  gtf_protein = NULL,
-  gtf_other = NULL,
-  target_other = NULL,
+  gtf = NULL,
+  target = NULL,
   threads = 1
 )
 }
@@ -55,26 +53,16 @@ reported. Note, stranded=FALSE is recommended since PAC_gtf will report on
 which strand each feature/sequence is mapping. Thus, strand specific
 analysis can be done in hindsight.}
 
-\item{gtf_repeat}{Character indicating the file path to a repeatMasker
-formated gtf file (containing 'repFamily', 'repClass' and 'repName' column
-names when imported using rtracklayer::readGFF). Can also directly be
-provided as a tibble data frame.}
-
-\item{gtf_protein}{Character indicating the file path to an Ensembl formated
-gtf file (containing 'type', 'gene_name', 'gene_biotype', 'exon_number',
-'strand' column names when imported using rtracklayer::readGFF). Can also
-directly be provided as a tibble data frame.}
-
-\item{gtf_other}{Named list of characters, indicating file path(s) to other
+\item{gtf}{Named list of characters, indicating file path(s) to other
 gtf files with differing formats. Can also directly be provided as a tibble
 dataframe in a named list.}
 
-\item{target_other}{Named list of character vectors indicating target columns
-in the listed gtf files in \emph{gtf_other}. Important, the listed objects
-must have the same length and names as in \emph{gtf_other}. The vector
-indicates the column names as if imported by rtracklayer::readGFF.}
-
 \item{threads}{Integer indicating the number of parallel processes.}
+
+\item{targets}{Named list of character vectors indicating target columns
+in the listed gtf files in \emph{gtf_other}. Important, the listed objects
+must have the same length and names as in \emph{gtf}. The vector
+indicates the column names as if imported by rtracklayer::readGFF.}
 }
 \value{
 List, tibble dataframe or updated PAC object. See \emph{return} for
@@ -101,18 +89,62 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 ##############################################################
-## Simplified repeatmasker annotation with genomic mapping
-  
+## Simple repeatmasker annotation with genomic mapping
+
+# Specify genome fasta and repeatMasker gtf:      
 genome <- "/some/path/to/genome.fa"
-gtf_repeat <- "/some/path/to/repeatMasker.gtf"
+gtf <- list(repeatMasker="/some/path/to/repeatMasker.gtf")
 
-# Only returns tibble:
+# Target columns in gtf file:
+target <- list(gtf=c("gene_name", "repClass", "repFamily")) 
+
+# Run PAC_gtf
 repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", 
-                         gtf_repeat=gtf_repeat, threads=10)
+                         gtf=gtf, threads=10)
 
-# Merge with PAC$Anno dataframe: 
-pac_merge <- PAC_gtf(pac, genome=genome, return="merge", 
-                     gtf_repeat=gtf_repeat, threads=10)        
+
+##############################################################
+## Fix different chromosome names in gtf file?
+
+# First download reference sequences from Ensembl, UCSC and NCBI (refSeq)
+# Then make a conversion table:
+
+ref_path_A <- "/some/path/to/ensembl.fa"
+ref_path_B <- "/some/path/to/ucsc.fa"
+ref_path_C <- "/some/path/to/refseq.fa"
+reference_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
+conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
+
+# Read gtf with rtracklayer:
+gtf <- "/some/path/to/repeatMasker.gtf"
+gtf <- "/data/Data_analysis/Genomes/Drosophila/dm6/RepeatMasker/dm6/repeatMasker_dm6_ucsc_2019.gtf"
+rm <- rtracklayer::readGFF(gtf)
+
+# Identify what type of names:
+table(rm$seqid)
+table(conv_table$name_UCSC)
+table(unique(rm$seqid) \%in\% unique(conv_table$name_UCSC))
+
+# Ensembl conversion for USCS gtf by matching conv_table: 
+ensembl_conv  <- conv_table$name_ensembl[match(rm$seqid,
+                                                conv_table$name_UCSC)]
+# Visually inspect conversion vector                                                         
+head(cbind(unique(ensembl_conv), unique(as.character(rm$seqid)))) 
+table(head(unique(paste(ensembl_conv, rm$seqid, sep="|"))))
+
+# Exchange and export new gtf
+rm$seqid <- ensembl_conv
+gr <- GenomicRanges::GRanges(seqnames=rm$seqid, 
+                             IRanges::IRanges(rm$start, 
+                                              rm$end), 
+                             strand=rm$strand)
+GenomicRanges::mcols(gr) <- data.frame(type="repeat", 
+                                       source="repeatMasker_dm6_ucsc",
+                                       repName = rm$gene_name, 
+                                       repClass = rm$repClass,
+                                       repFamily = rm$repFamily)
+                                       
+rtracklayer::export(gr, "/some/path/to/repeatMasker_ensembl.gtf", format="gtf")
 
 
 ##############################################################
@@ -120,18 +152,26 @@ pac_merge <- PAC_gtf(pac, genome=genome, return="merge",
 
 ## Generates an error because genome mapping was done
 ## with add_reanno(genome_max=10):
+
+# Target genome columns in PAC  
 genome_col <- colnames(
   pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
 
+
+# Read converted gtf and pinpoint to target columns in gtf file:
+gtf <- list(repeatMasker="/some/path/to/repeatMasker_ensembl.gtf") 
+target <- list(repeatMasker=c("repName", "repClass", "repFamily"))
+
+
 repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", 
-                       gtf_repeat=gtf_repeat, threads=10) 
+                       gtf=gtf, target=target, threads=10) 
 
 # Works because PAC_gtf automatically maps the 
 # genome with add_reanno(genome_max="all")
 genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\\\d_genome", 
                                               colnames(pac_merge$Anno))]
-repeat_full <- PAC_gtf(pac_merge, genome=genome_col, return="full", 
-                       gtf_repeat=gtf_repeat, threads=10)
+repeat_full <- PAC_gtf(pac, genome=genome, return="full", 
+                       gtf=gtf, target=target, threads=10)
 
 # return="full" returns all annotation for all each coordinate
 repeat_full[800:820]
@@ -161,46 +201,6 @@ many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify",
                        mismatches=0, gtf_repeat=gtf_repeat, 
                        gtf_protein=gtf_protein, threads=10)
 
-##############################################################
-## Convert of UCSC to Ensembl (Tanks to Devon Ryan and co-workers)
-
-# Go to https://github.com/dpryan79/ChromosomeMappings
-# Locate your genome of choice
-# Download from raw.githubusercontent:
-dm6_conv <- readr::read_tsv(
-  "https://raw.githubusercontent.com/dpryan79/ChromosomeMappings/master/BDGP6_UCSC2ensembl.txt", 
-  col_names=FALSE)
-names(dm6_conv) <- c("ucsc", "ensembl")
-
-# Fix mito genome name (should not contain "dmel_")
-dm6_conv[grepl("mito", dm6_conv$ensembl),]
-dm6_conv$ensembl <- gsub("dmel_mitochondrion_genome", "mitochondrion_genome", 
-                         dm6_conv$ensembl) 
-
-# Load local UCSC formated file and make a new converted vector 
-gtf_repeat <- "/some/path/to/repeatMasker.gtf"
-repeat_gtf <- rtracklayer::readGFF(gtf_repeat)
-convec <- dm6_conv$ensembl[match(as.character(repeat_gtf$seqid),  
-                                 as.character(dm6_conv$ucsc))]
-
-# Test that the convercsion went well
-test <- cbind(convec, as.character(repeat_gtf$seqid))
-test2 <- unique(paste( test[,1], test[,2], sep="|"))
-table(table(do.call("rbind", strsplit(test2, "\\\\|"))[,1]) == 1) # All TRUE
-
-# Exchange the chromosomal names, convert to genomic ranges and save as gtf 
-repeat_gtf$seqid <- convec
-gr <- GenomicRanges::GRanges(seqnames=repeat_gtf$seqid, 
-                             IRanges::IRanges(repeat_gtf$start, 
-                                              repeat_gtf$end), 
-                             strand=repeat_gtf$strand)
-GenomicRanges::mcols(gr) <- data.frame(type="repeat", 
-                                       source="repeatMasker_dm6_ucsc",
-                                       repName = repeat_gtf$repName, 
-                                       repClass = repeat_gtf$repClass,
-                                       repFamily = repeat_gtf$repFamily)
-rtracklayer::export(gr, file.path(dirname(gtf_repeat), 
-                    "repeatMasker_ensembl.gtf"), format="gtf")
 }
 
 }

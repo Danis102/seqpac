@@ -92,6 +92,15 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
                        box=TRUE){
   
   ..count.. <- values <- biotype <-  NULL
+  
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(!PAC_check(PAC)){
     stop("Input was not a PAC object.")
     }

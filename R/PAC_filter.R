@@ -80,11 +80,20 @@
 PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0, 
                        norm="counts", subset_only=FALSE, stat=FALSE, 
                        pheno_target=NULL, anno_target=NULL){
+  
   options(scipen=999)
   strt <- nrow(PAC$Counts)
   nsamp <- ncol(PAC$Counts)
   x_graph <- n_features <- NULL
   
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+
   ### Subset samples by Pheno                                                
   if(!is.null(pheno_target)){
     if(length(pheno_target)==1){
@@ -303,6 +312,11 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
   }
   ## Double check and return
   if(PAC_check(PAC)==TRUE){
-    return(PAC)}
+    if(tp=="S4"){
+       return(as.PAC(PAC))
+    }else{
+       return(PAC)
+    }
+  }
 }      
 

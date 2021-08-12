@@ -86,6 +86,13 @@
 PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, 
                         style="line", xseq=TRUE, colors=NULL, 
                         check_overide=FALSE){
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(is.null(summary_target[[1]])){
     stop("\nYou need to specify a target object in ",
          "\nPAC$summary with summary_target.")

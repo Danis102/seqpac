@@ -218,6 +218,13 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
                        parse_internal = "a=TRUE, f=TRUE", 
                        import="genome", keep_temp=FALSE){
   
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   ## setup
   stopifnot(PAC_check(PAC))
   mis_lst <- as.list(0:mismatches)

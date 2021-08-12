@@ -194,6 +194,13 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
   Group.1 <- means <- SE <- value <- ann1 <- perc <- ann2 <- NULL
   
   ## Setup ##
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   if(!is.null(anno_target_1)){
     if(!class(anno_target_1) =="list"){
       anno_target_1 <-list(anno_target_1)}  

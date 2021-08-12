@@ -39,7 +39,8 @@ library(seqpac)
   )
   
   quiet( 
-    reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
+    reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE, 
+                                 output="list")
   )
   quiet(  
     pac <- add_reanno(reanno_genome, type="genome", genome_max=10, 
@@ -74,7 +75,8 @@ library(seqpac)
                threads=8, keep_temp=FALSE)
   )
   quiet(  
-    reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
+    reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE,
+                                  output="list")
   )
     bio_search <- list(
                 rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
@@ -214,8 +216,86 @@ library(seqpac)
     expect_equal(class(trna_result$plots$Percent_bars$Stage1), c("gg", "ggplot"))
     expect_equal(length(trna_result$plots$Log2FC_Anno_1$layers), as.integer(3))
 
-  })
 
 
+# Preapare PAC_gtf
+  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                   package = "seqpac", mustWork = TRUE))
+  # Create a gtf file
+  anno <- pac$Anno
+  anno <- anno[!grepl("Warning", anno$mis0_chromosomes_genome),]
+  anno <- anno[!is.na(anno$mis0_chromosomes_genome),]
+  coord <- anno$mis0_chromosomes_genome
+  coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\|"))[,1])
+  coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\;start=|;")))
+  gr <- GenomicRanges::GRanges(seqnames=coord[,1], 
+                              IRanges::IRanges(as.numeric(coord[,2]), 
+                                               as.numeric(coord[,2])+anno$Size ), 
+                              strand=coord[,3])
+  GenomicRanges::mcols(gr) <- data.frame(biotype=anno$Biotypes_mis3, 
+                                        bio_zero=as.character(anno$mis0_bio))
+  spl <- sample(1:length(gr), round(length(gr)*0.3), replace=FALSE)
+  gr1 <- gr[spl]
+  gr2 <- gr[!1:length(gr) %in% spl]
   
+  # Prepare temp folder and save artifical gtf
+  if(grepl("windows", .Platform$OS.type)){
+    out1 <- paste0(tempdir(), "\\temp1.gtf")
+    out2 <- paste0(tempdir(), "\\temp2.gtf")
+  }else{
+    out1 <- paste0(tempdir(), "/temp1.gtf")
+    out2 <- paste0(tempdir(), "/temp2.gtf")
+  }
+  rtracklayer::export(gr1, out1, format="gtf")
+  rtracklayer::export(gr2, out2, format="gtf")
+  
+  # Run PAC gtf
+  genome <- paste0(getwd(), "/data_for_tests/rrna/rRNA.fa") 
+  #genome <- paste0(getwd(), "/tests/testthat/data_for_tests/rrna/rRNA.fa")
+  gtf <- list(gtf1=out1, gtf2=out2)
+  target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero") )
+  
+  pac$Anno <-  pac$Anno [, grepl("chromosomes_genome|Size", colnames(pac$Anno))]
+  
+  rm_bad0 <- ifelse(grepl("Warning",  pac$Anno$mis0_chromosomes_genome), "rm", "keep")
+  rm_bad1 <- ifelse(grepl("Warning",  pac$Anno$mis1_chromosomes_genome), "rm", "keep")
+  rm_bad2 <- ifelse(grepl("Warning",  pac$Anno$mis2_chromosomes_genome), "rm", "keep")
+  rm_bad3 <- ifelse(grepl("Warning",  pac$Anno$mis3_chromosomes_genome), "rm", "keep")
+  pac$Anno$temp <- paste0(rm_bad0, rm_bad1, rm_bad2, rm_bad3)
+  quiet(
+    pac_test <- PAC_filter(pac, anno_target=list("temp", "keepkeepkeepkeep")))	
 
+  quiet(
+    simple_3 <- PAC_gtf(pac_test, return="simplify", 
+                            gtf=gtf[1], target=target[1], threads=8))
+  quiet(
+    simple_0 <- PAC_gtf(pac_test, mismatches=0, return="simplify", 
+                            gtf=gtf, target=target, threads=8))
+  cat("OBS! Expected error")
+  test_err  <- quiet(
+    suppressWarnings(
+      suppressMessages(try(PAC_gtf(pac_test, genome=genome, mismatches=0, 
+                      return="simplify", gtf=gtf, target=target, threads=8)))))
+  quiet(
+    full_1 <- PAC_gtf(pac_test, mismatches=1, return="full", 
+                            gtf=gtf, target=target, threads=8))
+  quiet(
+    all_2 <- PAC_gtf(pac_test, mismatches=2, return="all", 
+                            gtf=gtf, target=target, threads=8))
+  
+# Test PAC_gtf output  
+  expect_true(sum(grepl("mis0|mis1|mis2|mis3", colnames(simple_3))) == 4)
+  expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
+  expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
+  expect_true(grepl("Your chromosome names in", test_err))
+  expect_true(sum(grepl("mis0|mis1|mis2|mis3", names(full_1))) > 1000)
+  expect_true(
+    sum(colnames(full_1[[2]]) == c("seqid","start","end","strand","biotype",
+                             "bio_zero","biotype","bio_zero"))== 8)
+  expect_true(
+    sum(colnames(full_1[[2]]) == c("seqid","start","end","strand","biotype",
+                             "bio_zero","biotype","bio_zero"))== 8)
+  expect_true(sum(names(all_2) == c("simplify", "full")) == 2)
+    
+})  
+  

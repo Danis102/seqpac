@@ -18,7 +18,7 @@
 #'
 #'@param mismatches Integer indicating the number of mismatches that should be
 #'  reported. Can never have a higher number than was originally specified with
-#'  the \\code{\link{map_reanno}} function. While default=0, reporting the
+#'  the \code{\link{map_reanno}} function. While default=0, reporting the
 #'  maximum number is recommended. Note, that the mismatch information is only
 #'  added to the report. Further classification can be generated with the
 #'  \code{\link{simplify_reanno}} function.
@@ -188,6 +188,13 @@
 
 add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, 
                        bio_perfect=FALSE, genome_max=10, merge_pac=NULL){
+  
+  if(isS4(reanno)){
+    tp <- "S4"
+    reanno <- as(reanno, "S3")
+  }else{
+    tp <- "S3"
+  }
   
   ## General setup ###############################
   stopifnot(any(do.call("c", lapply(reanno$Full_anno, function(x){
@@ -434,16 +441,25 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
   
   # Merge PAC
   if(!is.null(merge_pac) && !is.logical(merge_pac)){
+    if(isS4(merge_pac)){
+      tp <- "S4"
+      merge_pac <- as(merge_pac, "list")
+    }else{
+      tp <- "S3"
+    }
     if(!identical(rownames(reanno), rownames(merge_pac$Anno))){
       stop("\nReanno sequence (row) names do not match PAC sequence names.",
            "\nDid you use another PAC object as input for map_reanno?")
-    }  
+    }
     merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
     PAC_check(merge_pac)
-    return(merge_pac)
+    if(tp=="S4"){
+       return(as.PAC(merge_pac))
+    }else{
+       return(merge_pac)
+    }
   }else{
     return(tibble::as_tibble(reanno))
   }
-  detach(package:tidyverse)
 }
 

@@ -77,7 +77,7 @@
 #' }
 #' 
 #' 
-#' #@export
+#' #export
 # library(seqpac)
 # load("/data/Data_analysis/Projects/Drosophila/Other/IOR/Joint_analysis/R_analysis/PAC_merge_10counts100.Rdata")
 # PAC <- PAC_merge_10counts100

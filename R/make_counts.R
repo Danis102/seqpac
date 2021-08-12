@@ -77,8 +77,11 @@
 #'   
 #' @return 
 #' A list containing three objects:
+#' 
 #'   1. counts (data frame) = count table. 
+#'   
 #'   2. progress_report = progress report from trimming and evidence filter.
+#'   
 #'   3. evidence_plots = bar graphs showing the impact of evidence filter. 
 #'  
 #' @examples
@@ -94,7 +97,7 @@
 #' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #' 
 #' counts  <- make_counts(input, threads=1, parse="default_neb",
-#'                        type="fastq", trimming="seqpac", plot=TRUE,
+#'                        trimming="seqpac", plot=TRUE,
 #'                        evidence=c(experiment=2, sample=1))     
 #'     
 #'      
@@ -110,7 +113,7 @@
 #'              quality=c(threshold=20, percent=0.8))
 #'                
 #' counts  <-  make_counts(input, threads=1,
-#'                         type="fastq", trimming="seqpac",
+#'                         trimming="seqpac",
 #'                         parse=parse, 
 #'                         evidence=c(experiment=2, sample=1))           
 #'   
@@ -136,7 +139,7 @@
 #'               fastq_quality_filter = "-q 20 -p 80")
 #'  
 #'  counts  <-  make_counts(input, threads=1,
-#'                         type="fastq", trimming="cutadapt",
+#'                         trimming="cutadapt",
 #'                         parse=parse, 
 #'                         evidence=c(experiment=2, sample=1))   
 #'  
@@ -152,7 +155,7 @@
 #'  
 #'  ## 2 evidence over two indepenent samples, saving single sample 
 #'  ## sequences reaching 3 counts 
-#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", 
+#'  test <- make_counts(input=input,  trimming="seqpac", 
 #'                      parse="default_neb",  
 #'                      evidence=c(experiment=2, sample=3))
 #'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})

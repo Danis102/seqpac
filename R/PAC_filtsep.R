@@ -80,7 +80,14 @@
 PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100, 
                         pheno_target=NULL, output="sequence"){
   
-  ### Extract data ###
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  ## Extract data
   if(norm=="counts"){
     data <- PAC$Counts
   }else{  
@@ -94,7 +101,7 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100,
     data <- PAC$norm[[norm]]
   }
   
-  ### Subset dataset ###
+  ## Subset dataset
   pheno <- PAC$Pheno
   pheno$All <- "All"
   if(is.null(pheno_target)){
@@ -113,7 +120,7 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100,
   pheno <- pheno[indx,]
   data <- data[,indx]
   stopifnot(identical(rownames(pheno), colnames(data)))
-  ### Extract filtered anno sequence names ###     
+  ## Extract filtered anno sequence names    
   start_lst <- as.list(pheno_target[[2]])
   names(start_lst) <- pheno_target[[2]]
   sub_data_lst <- lapply(start_lst, function(x){ 

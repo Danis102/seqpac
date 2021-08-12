@@ -73,6 +73,14 @@
 #' @export
 
 PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
+  
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   sampl <- paste0("Please make sure that all samples are represented, ",
            "\nnamed and ordered the correct way in both tables.") 
   seqs <-  paste0("Please make sure that all sequences are represented, ",

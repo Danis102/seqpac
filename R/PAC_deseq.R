@@ -53,8 +53,11 @@
 #' @param threads Integer number of threads to run in parallel.
 #'
 #' @return A list of objects: 
+#' 
 #'    1st object - Summarized result table merged with PAC$Anno 
+#'    
 #'    2nd object - Target graphs (p-val distribution and volcano) 
+#'    
 #'    3rd object - All output from \code{\link[DESeq2]{DESeq}}
 #'    
 #' @examples
@@ -106,7 +109,14 @@
 
 PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald", 
                       fitType="local", threads=1, pheno_target=NULL){
-  
+
+## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }    
   cat("\n")
 ##### Prepare data
   pval <- log2FC <- neglog_padj <- DE <- NULL

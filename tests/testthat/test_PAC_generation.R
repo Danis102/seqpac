@@ -92,21 +92,37 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   
   
   invisible(capture.output(
-    pheno_1 <- make_pheno(pheno=pheno, progress_report=counts_seq$progress_report, counts=counts_seq$counts)
+    pheno_1 <- make_pheno(pheno=pheno, progress_report=counts_seq$progress_report,
+                          counts=counts_seq$counts)
   ))
   write.csv(pheno, file=paste0(tmp_dir, "temp.csv"), row.names=FALSE)
   
   invisible(capture.output(
-  pheno_2 <- make_pheno(pheno=paste0(tmp_dir, "temp.csv"), progress_report=counts_trim$progress_report, counts=counts_trim$counts)
+    pheno_2 <- make_pheno(pheno=paste0(tmp_dir, "temp.csv"),
+                          progress_report=counts_trim$progress_report, 
+                          counts=counts_trim$counts)
   ))
   
-  pac_seq <- make_PAC(pheno=pheno_1, counts=counts_seq$counts, anno=NULL)
-  pac_trim <- make_PAC(pheno=pheno_2, counts=counts_trim$counts, anno=NULL)
+  # Test make_PAC both S3 and S4
+  pac_seq <- make_PAC(pheno=pheno_1, 
+                      counts=counts_seq$counts, 
+                      output="S4")
+  pac_trim <- make_PAC(pheno=pheno_2, 
+                       counts=counts_trim$counts)
   
+  as(pac_seq, "list") -> pac_S3
   expect_true(PAC_check(pac_seq))
   expect_true(PAC_check(pac_trim))
+  expect_equal(names(pac_seq), c("Pheno","Anno","Counts"))
+  expect_equal(length(pac_seq), length(pac_S3))
+  expect_equal(nrow(pac_seq), nrow(pac_S3$Counts))
+  expect_equal(ncol(pac_seq), 2)
+  expect_equal(rownames(pac_seq), rownames(pac_S3$Counts))
+  as(pac_S3, "PAC") -> pac_S4
+  expect_equal(rownames(pac_seq), rownames(pac_S4))
+
   
-   ## Test cutadapt on Linux
+  ## Test cutadapt on Linux
   if(grepl("unix", .Platform$OS.type)) {
       cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
       cut_n  <- c(nrow(counts_cut$counts)>1, 

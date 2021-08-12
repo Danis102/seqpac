@@ -108,6 +108,14 @@
 PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL, 
                     no_anno=TRUE, summary="sample", angle=-25){
   
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   quiet <- function(x) { 
     sink(tempfile()) 
     on.exit(sink()) 

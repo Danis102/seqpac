@@ -159,12 +159,19 @@
 #'                    
 #' @export
 
-PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
+PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove", 
                        threads=1, N_up="", N_down="", report_string=FALSE){
 
 
 ## Setup
-  j <- NULL 
+  j <- NULL
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
   ## Setup reference  
   if(class(ref)=="DNAStringSet"){
     cat("\nImporting reference from DNAStringSet ...")
@@ -227,7 +234,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
   map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, 
              type="internal", threads=threads, mismatches=mismatches,  
              import="genome", keep_temp=FALSE)
-  map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE)
+  map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE, output="list")
   stopifnot(length(map$Full_anno$mis0) == 1)
 
 ## Reorganize reanno object to a PAC_mapper object

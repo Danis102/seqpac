@@ -39,9 +39,7 @@ used in the reannotation workflow (default=0).}
 
 \item{merge_pac}{Logical whether the simplified annotation column should
 automatically be added to the Anno object if a PAC list object were given as
-input (default=FALSE). Alternatively, if a PAC object is provided in
-merge_pac, the simplified column will be added to the Anno table for this
-PAC object.}
+input (default=FALSE).}
 
 \item{target_columns}{Character vector naming the target columns for the
 reannotation matrix. When \code{target_columns=NULL}(default), then the

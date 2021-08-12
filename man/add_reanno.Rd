@@ -20,7 +20,7 @@ add_reanno(
 
 \item{mismatches}{Integer indicating the number of mismatches that should be
 reported. Can never have a higher number than was originally specified with
-the \\code{\link{map_reanno}} function. While default=0, reporting the
+the \code{\link{map_reanno}} function. While default=0, reporting the
 maximum number is recommended. Note, that the mismatch information is only
 added to the report. Further classification can be generated with the
 \code{\link{simplify_reanno}} function.}

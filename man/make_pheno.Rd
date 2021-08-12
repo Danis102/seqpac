@@ -98,6 +98,7 @@ Other PAC generation:
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_trim}()},
+\code{\link{merge_lanes}()},
 \code{\link{progress_report}()}
 }
 \concept{PAC generation}

@@ -4,7 +4,7 @@
 \alias{PAC_saturation}
 \title{Filter a PAC object on sequence size and coverage}
 \usage{
-PAC_saturation(PAC, resample = 10, steps = 10, thresh = c(1, 10), threads = 4)
+PAC_saturation(PAC, resample = 10, steps = 10, thresh = c(1, 10), threads = 1)
 }
 \arguments{
 \item{PAC}{PAC-list object containing a Counts data.frame with sequences as
@@ -61,7 +61,6 @@ plot_lst  <- PAC_saturation(pac_master, resample=10, steps=10,
                             thresh=c(1,2), threads=1)
 names(plot_lst)
 cowplot::plot_grid(plotlist=plot_lst)
-
 
 }
 \seealso{

@@ -59,8 +59,11 @@ of log dispersions), "mean" (mean of gene-wise dispersion). See
 }
 \value{
 A list of objects: 
+
    1st object - Summarized result table merged with PAC$Anno 
+   
    2nd object - Target graphs (p-val distribution and volcano) 
+   
    3rd object - All output from \code{\link[DESeq2]{DESeq}}
 }
 \description{

@@ -51,11 +51,19 @@
 #' names(plot_lst)
 #' cowplot::plot_grid(plotlist=plot_lst)
 #'
-#'
+#' @import stats
 #' @export
 #'
-PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4){
+PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=1){
   ###################### Setting up data ######################
+  ## Check S4
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
+  
   doParallel::registerDoParallel(threads) 
   `%dopar%` <- foreach::`%dopar%`
   
@@ -125,7 +133,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10, thresh=c(1,10), threads=4
     if(!is.null(fm1)){
       y_predict <- stats::predict(fm1)
       good_fit <- round(stats::cor(dat_sub$value, y_predict), digits=4)
-      plateau_rate <- round(exp(summary(fm1)$coefficients["lrc","Estimate"]), digits=4)
+      plateau_rate <- round(exp(coef(fm1)[c("lrc")]), digits=4)
       p <- p + ggplot2::stat_smooth(method = "nls", formula = y ~ SSasymp(x, Asym, R0, lrc), se = FALSE, fullrange = TRUE)
       return(p + ggplot2::annotate(geom = "text", x = 105, 
                                    y = max(dat_sub$value)*0.5, 
