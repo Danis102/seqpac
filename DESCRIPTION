@@ -79,5 +79,4 @@ Suggests:
   UpSetR (>= 1.4.0),
   venneuler
 VignetteBuilder: 
-  knitr,
-  rmarkdown
+  knitr
