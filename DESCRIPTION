@@ -31,6 +31,11 @@ LazyData: true
 RoxygenNote: 7.1.1
 URL: https://github.com/Danis102/seqpac
 BugReports: https://github.com/Danis102/seqpac/issues
+biocViews: 
+  Workflow 
+  EpigeneticWorkflow 
+  AnnotationWorkflow 
+  GeneExpressionWorkflow
 Depend:
   Biostrings (>= 2.46.0),
   foreach (>= 1.5.1),

@@ -44,6 +44,7 @@
 #'   
 #' @examples
 #' 
+#' \dontrun{
 #' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
@@ -74,6 +75,7 @@
 #'  # Plot with UpSetR 
 #'  UpSetR::upset(filtsep_bin, sets = colnames(filtsep_bin), 
 #'                mb.ratio = c(0.55, 0.45), order.by = "freq", keep.order=TRUE)
+#'  }
 #'  
 #' @export
 
