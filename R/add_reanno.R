@@ -65,7 +65,7 @@
 #' 
 #' 
 #' 
-#' \dontrun{
+#' \donttest{
 #' 
 #' ######################################################### 
 #' ##### Example type = "internal" for genome alignment #### 

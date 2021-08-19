@@ -31,6 +31,7 @@ across Pheno, Anno and Counts.
 }
 \examples{
 
+\dontrun{
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
@@ -73,7 +74,7 @@ PAC_check(pac, sample_check=sample_names)
 
 #PAC_check(pac, seq_check=rev(seq_names))
 #PAC_check(pac, sample_check=rev(sample_names)) 
-
+}
 
 }
 \seealso{

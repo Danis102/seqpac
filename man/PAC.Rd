@@ -11,14 +11,13 @@ S4 version of the PAC object.
 Just like the S3 version, all subtables must have identical sequence (row)
 names. To extract tables from S4 objects, use the getter commands or use @
 (e.g. PAC@Pheno) just like $ for the S3 version (e.g. PAC$Pheno). You may
-also use a coercion method, e.g. \code{PAC_S3 <- as(PAC_S4, "S3")}
+also use a coercion method, e.g. \code{PAC_S3 <- as(PAC_S4, "list")}
 
-Holds up to 6 slots: \describe{
+Holds up to 5 slots: \describe{
    \item{\strong{Pheno}}{data.frame > information about the samples}
    \item{\strong{Anno}}{data.frame > simplified sequences annotations}
    \item{\strong{Counts}}{data.frame > sequence counts over samples}
    \item{\emph{norm (optional)}}{list of data.frames > normalized counts}
    \item{\emph{summary (optional)}}{list of data.frames > summarized counts or normalized counts}
-   \item{\emph{reanno (optional)}}{list of reanno objects > results from reannotation }
    }
 }

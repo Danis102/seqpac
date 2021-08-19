@@ -77,7 +77,7 @@ the same order of sequences as in the original PAC master file.
 
 
 
-\dontrun{
+\donttest{
 
 ######################################################### 
 ##### Example type = "internal" for genome alignment #### 

@@ -1,7 +1,7 @@
 Package: seqpac
 Type: Package
 Title: seqpac - Group-based Analysis of Short Reads Using Sequence Counts
-Version: 1.0.4
+Version: 1.1.1
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
     person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
