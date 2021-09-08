@@ -1,5 +1,10 @@
 .Rproj.user
 .Rhistory
 .RData
-.Ruserdata
+.Ruserdata.renviron
+.rprofile 
+.rproj
+.rproj.user
+.rhistory
+.rapp.history
 Meta
