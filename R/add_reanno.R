@@ -191,7 +191,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
   
   if(isS4(reanno)){
     tp <- "S4"
-    reanno <- as(reanno, "S3")
+    reanno <- as(reanno, "list")
   }else{
     tp <- "S3"
   }
