@@ -7,8 +7,9 @@
 as.PAC(from)
 }
 \arguments{
-\item{from}{PAC-list object containing an Anno data.frame with sequences as
-row names and a Count table with raw counts.}
+\item{from}{S3 PAC-object containing at least a Pheno table with samples as
+row names, Anno table with sequences as row names and a Count table with
+raw counts (columns=samples, rows=sequences).}
 }
 \value{
 An S4 PAC object.
@@ -41,7 +42,19 @@ class(pac_s4)
 isS4(pac_s4)   
 
 # Turn S3 PAC object into a S4                                    
-pac_s4 <- as(pac_s4, "list")
+pac_s3 <- as(pac_s4, "list")
+
+# Don't forget that in the summary and norm slots of the S4 PAC lies regular
+# S3 lists. Thus, to receive these tables from an S4 PAC you need to combine
+# both S4 and S3 receivers:
+
+pac_s4 <- PAC_norm(pac_s4, norm = "cpm")
+pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means", 
+                   pheno_target=list("stage"), merge_pac=TRUE)
+
+pac_s4 
+head(pac_s4@norm$cpm)
+head(pac_s4@summary$cpmMeans_stage)
 
 }
 \seealso{

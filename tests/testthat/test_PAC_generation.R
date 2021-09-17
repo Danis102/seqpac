@@ -118,7 +118,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   expect_equal(nrow(pac_seq), nrow(pac_S3$Counts))
   expect_equal(ncol(pac_seq), 2)
   expect_equal(rownames(pac_seq), rownames(pac_S3$Counts))
-  as(pac_S3, "PAC") -> pac_S4
+  as.PAC(pac_S3) -> pac_S4
   expect_equal(rownames(pac_seq), rownames(pac_S4))
 
   
