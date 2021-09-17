@@ -3,7 +3,11 @@
 \docType{class}
 \name{PAC-class}
 \alias{PAC-class}
+\alias{PAC}
 \title{S4 object for PAC}
+\usage{
+PAC(Pheno, Anno, Counts, norm, summary, reanno)
+}
 \description{
 S4 version of the PAC object.
 }

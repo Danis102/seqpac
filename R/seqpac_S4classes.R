@@ -43,6 +43,8 @@ setClass(Class = "PAC",
 
 #-------------------------------
 # Constructor PAC
+#' @rdname PAC
+#' @export
 PAC <- function(Pheno, Anno, Counts, norm, summary, reanno){
   new("PAC", Pheno=Pheno, Anno=Anno, Counts=Counts,
       norm=norm, summary=summary, reanno=reanno)}
@@ -81,50 +83,115 @@ setAs("PAC", "list",
         return(pac)
         })
 
+###############################################
+#' Converts an S3 PAC into a S4 PAC
+#'
+#' \code{as.PAC} Converts an S3 PAC object (list) to an S4 PAC object
+#' 
+#' Seqpac comes with two versions of the PAC object, either S4 or S3. The S3 PAC
+#' is simply a list where each object can be received using the $-sign. The S4
+#' version is a newer type of R object with predifined slots, that is recieved
+#' using the @-sign. This function converts an S3 PAC object (list) to an S4 PAC
+#' object. You can also use the S4 coercion method "as" to turn an S4 PAC into
+#' an S3. See examples below.
+#' 
+#' @family PAC analysis
+#'
+#' @seealso \url{https://github.com/Danis102} for updates on the current
+#'   package.
+#'
+#' @param from PAC-list object containing an Anno data.frame with sequences as
+#'   row names and a Count table with raw counts.
+#' 
+#' @return An S4 PAC object.
+#'   
+#' @examples
+#' library(seqpac)
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                   package = "seqpac", mustWork = TRUE))
+#'                   
+#' # check type
+#' 
+#' class(pac)
+#' isS4(pac)                        
+#'  
+#' # Turn S3 PAC object into a S4                                    
+#' pac_s4 <- as.PAC(pac)
+#'  
+#' class(pac_s4)
+#' isS4(pac_s4)   
+#' 
+#' # Turn S3 PAC object into a S4                                    
+#' pac_s4 <- as(pac_s4, "list")
+#' 
+#' @export
+#' 
+as.PAC <- function(from){
+       pac <- seqpac::PAC(Pheno=from$Pheno,
+                   Anno=from$Anno,
+                   Counts=from$Counts,
+                   norm=list(NULL),
+                   summary=list(NULL),
+                   reanno=list(NULL)
+                   )
+       if("norm" %in% names(from)){
+              pac@norm <- from$norm
+        }
+       if("summary" %in% names(from)){
+              pac@summary <- from$summary
+        }
+       if("reanno" %in% names(from)){
+              pac@reanno <- from$reanno
+        }
+       return(pac)
+        }
+
+
+
 #-------------------------------
 # Converts an S3 PAC into a S4 PAC
 
-setAs("PAC_S3", "PAC",
-                function(from){
-                     pac <- PAC(Pheno=from$Pheno,
-                                 Anno=from$Anno,
-                                 Counts=from$Counts,
-                                 norm=list(NULL),
-                                 summary=list(NULL),
-                                 reanno=list(NULL)
-                                 )
-                             if("norm" %in% names(from)){
-                                    pac@norm <- from$norm 
-                              }
-                             if("summary" %in% names(from)){
-                                    pac@summary <- from$summary 
-                              }
-                             if("reanno" %in% names(from)){
-                                    pac@reanno <- from$reanno 
-                              }
-                             return(pac)
-                              })
+# setAs("PAC_S3", "PAC",
+#                 function(from){
+#                      pac <- PAC(Pheno=from$Pheno,
+#                                  Anno=from$Anno,
+#                                  Counts=from$Counts,
+#                                  norm=list(NULL),
+#                                  summary=list(NULL),
+#                                  reanno=list(NULL)
+#                                  )
+#                              if("norm" %in% names(from)){
+#                                     pac@norm <- from$norm 
+#                               }
+#                              if("summary" %in% names(from)){
+#                                     pac@summary <- from$summary 
+#                               }
+#                              if("reanno" %in% names(from)){
+#                                     pac@reanno <- from$reanno 
+#                               }
+#                              return(pac)
+#                               })
 
 
-     # as.PAC <- function(from, ...){
-     #   pac <- PAC(Pheno=from$Pheno,
-     #               Anno=from$Anno,
-     #               Counts=from$Counts,
-     #               norm=list(NULL),
-     #               summary=list(NULL),
-     #               reanno=list(NULL)
-     #               )
-     #   if("norm" %in% names(from)){
-     #          pac@norm <- from$norm 
-     #    }
-     #   if("summary" %in% names(from)){
-     #          pac@summary <- from$summary 
-     #    }
-     #   if("reanno" %in% names(from)){
-     #          pac@reanno <- from$reanno 
-     #    }
-     #   return(pac)
-     #    } 
+# as_PAC <- function(from){
+#        pac <- PAC(Pheno=from$Pheno,
+#                    Anno=from$Anno,
+#                    Counts=from$Counts,
+#                    norm=list(NULL),
+#                    summary=list(NULL),
+#                    reanno=list(NULL)
+#                    )
+#        if("norm" %in% names(from)){
+#               pac@norm <- from$norm
+#         }
+#        if("summary" %in% names(from)){
+#               pac@summary <- from$summary
+#         }
+#        if("reanno" %in% names(from)){
+#               pac@reanno <- from$reanno
+#         }
+#        return(pac)
+#         }
 
 ################################################################################
 ################################################################################
@@ -155,7 +222,8 @@ setClass(Class = "reanno",
 
 #-------------------------------
 # Constructor reanno
-
+#' @rdname reanno
+#' @export
 reanno <- function(Overview, Full_anno){
   new("reanno", Overview=Overview, Full_anno=Full_anno)}
 

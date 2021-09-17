@@ -3,7 +3,11 @@
 \docType{class}
 \name{reanno-class}
 \alias{reanno-class}
+\alias{reanno}
 \title{S4 object for reanno output}
+\usage{
+reanno(Overview, Full_anno)
+}
 \value{
 Contains two slots:  1. Overview: A table holding a summary of the
 mapping. 2. Full_anno: Lists of tables holding the full imports per mismatch
