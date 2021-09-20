@@ -190,6 +190,7 @@ pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=1,
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
+\code{\link{as.reanno}()},
 \code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},
