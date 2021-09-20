@@ -2,7 +2,7 @@
 % Please edit documentation in R/seqpac_S4classes.R
 \name{as.reanno}
 \alias{as.reanno}
-\title{Converts an S3 PAC into a S4 PAC}
+\title{Converts an S3 reanno into a S4 reanno}
 \usage{
 as.reanno(from)
 }
@@ -41,12 +41,12 @@ an S3. See examples below.
    output <- paste0(tempdir(), "/seqpac/test")
  }
  
- Empty temp output folder
+# Empty temp output folder
  out_fls  <- list.files(output, recursive=TRUE, full.names = TRUE)
  suppressWarnings(file.remove(out_fls))
  
  
- # Run reanno workflow loading test genome fasta
+# Run reanno workflow loading test genome fasta
  mycoplasma_path <- paste0(getwd(), "/tests/testthat/data_for_tests/mycoplasma_genome")
  ref_paths <- list(genome1= list.files(mycoplasma_path, pattern=".fa", 
                                        full.names = TRUE),
@@ -74,21 +74,23 @@ class(reanno_genome)
 isS4(reanno_genome)
 names(reanno_genome)   
  
-# Turn S3 reanno object into a S4                                    
+# Turns S3 reanno object into a S4                                    
 reanno_s4 <- as.reanno(reanno_genome)
 class(reanno_s4)
 isS4(reanno_s4) 
  
-# Similar turn S3 PAC object into a S4                                    
+# Similar, turns S3 PAC object into a S4                                    
 pac_s4 <- as.PAC(pac)
 class(pac_s4)
 isS4(pac_s4)   
 
 
-# Turn S3 reanno object back into a S4 using specific S4 coercion:                               
+# Turns S3 reanno object back into a S4 using specific S4 coercion:                               
 reanno_s3 <- as(reanno_s4, "list")
+class(reanno_s3)
+isS4(reanno_s3)
 
-# Turn S3 PAC object into a S4                                    
+# Turns S3 PAC object into a S4                                    
 pac_s3 <- as(pac_s4, "list")
 
 # Don't forget that in the slots of S4 lies regular S3 objects. Thus,
