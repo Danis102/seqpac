@@ -20,7 +20,7 @@ An S4 PAC object.
 \details{
 Seqpac comes with two versions of the PAC object, either S4 or S3. The S3 PAC
 is simply a list where each object can be received using the $-sign. The S4
-version is a newer type of R object with predifined slots, that is recieved
+version is a newer type of R object with predefined slots, that is received
 using the @-sign. This function converts an S3 PAC object (list) to an S4 PAC
 object. You can also use the S4 coercion method "as" to turn an S4 PAC into
 an S3. See examples below.

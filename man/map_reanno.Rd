@@ -233,6 +233,7 @@ anno <- add_reanno(reanno, bio_search=bio_search, type="biotype",
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
+\code{\link{as.reanno}()},
 \code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},

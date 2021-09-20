@@ -103,6 +103,7 @@ conv_table <- make_conv(reference_list=reference_list, skip_after=" ")
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
+\code{\link{as.reanno}()},
 \code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_reanno}()},

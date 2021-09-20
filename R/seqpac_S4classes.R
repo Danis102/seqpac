@@ -370,6 +370,9 @@ setAs("reanno", "list",
 #' 
 #' # Turn S3 reanno object back into a S4 using specific S4 coercion:                               
 #' reanno_s3 <- as(reanno_s4, "list")
+#' class(reanno_s3)
+#' isS4(reanno_s3)
+#' 
 #' 
 #' # Turn S3 PAC object into a S4                                    
 #' pac_s3 <- as(pac_s4, "list")

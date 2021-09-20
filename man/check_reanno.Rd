@@ -47,6 +47,7 @@ reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>,
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
+\code{\link{as.reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},
 \code{\link{make_reanno}()},

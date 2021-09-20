@@ -202,6 +202,7 @@ anno <- add_reanno(reanno, bio_search=bio_search,
  current package.
 
 Other PAC reannotation: 
+\code{\link{as.reanno}()},
 \code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},
