@@ -421,23 +421,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
     col_fix <- "genome"
     colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))
   }
-  if(!is.null(merge_pac) && !is.logical(merge_pac)){
-    cat("\nMerging with PAC ...")
-    reanno <- reanno[,!colnames(reanno) == "seq"]
-    anno <- merge_pac$Anno
-    col_hits <- colnames(anno) %in% colsrch
-    if(any(col_hits)){ 
-      num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", 
-                             colnames(anno)[col_hits]))
-      if(is.na(num)){
-        col_fix <- paste0(col_fix, 2)
-      }else{
-        col_fix <- paste0(col_fix, num+1)}
-    }
-  }
-  colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
-  colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
-  colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
+  
   
   # Merge PAC
   if(!is.null(merge_pac) && !is.logical(merge_pac)){
@@ -451,9 +435,27 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
       stop("\nReanno sequence (row) names do not match PAC sequence names.",
            "\nDid you use another PAC object as input for map_reanno?")
     }
-    merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
-    PAC_check(merge_pac)
-    if(tp=="S4"){
+    
+    cat("\nMerging with PAC ...")
+    reanno <- reanno[,!colnames(reanno) == "seq"]
+    anno <- merge_pac$Anno
+    col_hits <- colnames(anno) %in% colsrch
+    if(any(col_hits)){ 
+      num <- as.numeric(gsub("_bio$|_genome$|^Mis0", "", 
+                             colnames(anno)[col_hits]))
+      if(is.na(num)){
+        col_fix <- paste0(col_fix, 2)
+      }else{
+        col_fix <- paste0(col_fix, num+1)}
+    }
+  
+  colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+  colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
+  colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
+  
+  merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
+  PAC_check(merge_pac)
+  if(tp=="S4"){
        return(as.PAC(merge_pac))
     }else{
        return(merge_pac)
