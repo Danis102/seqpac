@@ -48,7 +48,6 @@
 #'               PAC object with filtered data.   
 #'               (optional) A covarage plot 
 #' @examples
-#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #' 
