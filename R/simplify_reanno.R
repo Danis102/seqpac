@@ -79,9 +79,9 @@
 #'            type="external", mismatches=1,  import="biotype")
 #' 
 #' # Import map_reanno output into a reanno-object using make_reanno:
-#' reanno <- make_reanno(reanno_path=output_bio, PAC=pac, mis_fasta_check = TRUE)
-#' names(reanno)
-#' names(reanno$Full_anno)
+#' reanno_bio <- make_reanno(reanno_path=output_bio, PAC=pac, mis_fasta_check = TRUE)
+#' names(reanno_bio)
+#' names(reanno_bio$Full_anno)
 #' 
 #' 
 #' # Make search terms (regular expressions) where hits create annotations:  
@@ -96,7 +96,7 @@
 #'                 piRNA   =c("piR-"))
 #' 
 #' # Classify by search term using add_reanno:
-#' pac <- add_reanno(reanno, merge_pac=pac, bio_search=bio_search, 
+#' pac <- add_reanno(reanno_bio, merge_pac=pac, bio_search=bio_search, 
 #'                   type="biotype", bio_perfect=FALSE, mismatches = 1)
 #' head(pac$Anno)           # Note: two misX_bio ("mis0_bio" and "mis1_bio")
 #' table(pac$Anno$mis0_bio) # Annotations with 0 mismatches
@@ -118,12 +118,12 @@
 #'                 tRNA    =c("^tRNA"),
 #'                 piRNA   =c("piR-"))
 #' 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
+#' anno <- add_reanno(reanno_bio, bio_search=bio_search, type="biotype", 
 #'                    bio_perfect=FALSE, mismatches = 1)
 #' 
 #' # Find sequences that has been classified as other: 
 #' other_seqs  <- anno[grepl("other", anno$mis0_bio),]$seq_bio
-#' tab <- reanno$Full_anno$mis0$Ensembl
+#' tab <- reanno_bio$Full_anno$mis0$Ensembl
 #' tab[tab$seq %in% other_seqs,]         # lincRNA don't have a search term
 #' 
 #' 
@@ -138,11 +138,11 @@
 #'                 tRNA    =c("^tRNA"),
 #'                 piRNA   =c("piR-"))
 #'                 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
+#' anno <- add_reanno(reanno_bio, bio_search=bio_search, type="biotype", 
 #'                    bio_perfect=FALSE, mismatches = 1)
 #' 
 #' # Repeat search until no "Other" appear, then run  bio_perfect=TRUE: 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
+#' anno <- add_reanno(reanno_bio, bio_search=bio_search, type="biotype", 
 #'                    bio_perfect=TRUE, mismatches = 1)
 #' 
 #' 
