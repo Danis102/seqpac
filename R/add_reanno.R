@@ -461,7 +461,10 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
        return(merge_pac)
     }
   }else{
-    return(tibble::as_tibble(reanno))
+    colnames(reanno_bio) <- paste0(colnames(reanno_bio), "_", col_fix)
+    colnames(reanno_bio) <- gsub("genome_genome", "genome", colnames(reanno_bio))
+    colnames(reanno_bio) <- gsub("bio_bio", "bio", colnames(reanno_bio))
+    return(tibble::as_tibble(reanno_bio))
   }
 }
 
