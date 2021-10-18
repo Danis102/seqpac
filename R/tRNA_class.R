@@ -199,11 +199,21 @@ tRNA_class <- function(PAC, map, terminal = 5){
     })
     finished <- do.call("rbind", finished)
     # Extract tRNAs from PAC and merge results
-    PAC$Anno$seq <- rownames(PAC$Anno)
+    if(isS4(PAC)){
+    PAC@Anno$seq <- rownames(PAC@Anno)
+    pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), 
+                           subset_only=TRUE)
+    # Before you merge make sure both dataframes are matching
+    stopifnot(identical(rownames(pac_trna@Anno), as.character(finished$seq)))
+    pac_trna@Anno <- cbind(pac_trna@Anno[,1, drop=FALSE], finished[,-1])
+        }
+    else {
+         PAC$Anno$seq <- rownames(PAC$Anno)
     pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), 
                            subset_only=TRUE)
     # Before you merge make sure both dataframes are matching
     stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
     pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
+        }
     return(pac_trna)
 }
