@@ -175,8 +175,8 @@ show.PAC <- function(object) {
   mx_seq <- round(max(rowMeans(pac$Counts)), digits=0)
   mn_seq <- round(min(rowMeans(pac$Counts)), digits=0)
   cat(paste0("   mean total counts: ", avg, " (min:", mn, "/max:", mx, ")\n"))
-  cat("   best sequence:", mx_seq, "mean counts\n")
-  cat("   worst sequence:", mn_seq, "mean counts\n")
+  cat("   sequence with highest:", mx_seq, "mean counts\n")
+  cat("    sequence with lowest:", mn_seq, "mean counts\n")
   if("norm" %in% names(object)){
     cat("normalized tables:", length(pac$norm),"\n")
     cat(names(pac$norm),"\n")
