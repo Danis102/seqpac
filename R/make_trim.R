@@ -134,32 +134,78 @@
 #'   
 #' @examples
 #' 
-#' \dontrun{ 
+#' ############################################################ 
+#' ### Seqpac fastq trimming with the make_trim function 
+#' ### (for more streamline options see the make_counts function) 
 #' 
-#' library(seqpac)
-#' input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-#' output <- "/some/path/to/output_folder"
+#' # First generate some smallRNA fastq.
+#' # Only one untrimmed fastq comes with seqpac
+#' # Thus, we need to randomly sample that one using the ShortRead-package
+#'  
+#' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+#'                 full.names = TRUE)
+#'
+#' closeAllConnections()
+#'
+#' sampler <- ShortRead::FastqSampler(fq, 20000)
+#' set.seed(123)
+#' fqs <- list(fq1=ShortRead::yield(sampler),
+#'            fq2=ShortRead::yield(sampler),
+#'            fq3=ShortRead::yield(sampler),
+#'            fq4=ShortRead::yield(sampler),
+#'            fq5=ShortRead::yield(sampler),
+#'            fq6=ShortRead::yield(sampler))
+#'
+#' # Now generate a temp folder were we can store the fastq files
+#' 
+#' input <- paste0(tempdir(), "/seqpac_temp/")
+#' if(grepl("windows", .Platform$OS.type)){
+#'  input <- gsub( "\\\\", "/", input)
+#' }  
+#' dir.create(input, showWarnings=FALSE)
+#'
+#' # And then write the random fastq to the temp folder
+#' for (i in 1:length(fqs)){
+#'  input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
+#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+#'                        full=FALSE, compress=TRUE)
+#' }
+#' 
+#' # Run make_trim using NEB-next adaptor
+#' # (Here we store the trimmed files in the input folder)
+#' # (but you may choose where to store them using the output option)
+#' 
+#' list.files(input) #before
 #' 
 #' prog_report  <-  make_trim(
-#'        input=input, output=output, 
+#'        input=input, output=input, 
 #'        threads=1, check_mem=TRUE, 
 #'        adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
 #'        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
 #'        polyG=c(type="hard_trim", min=20, mismatch=0.1),
 #'        seq_range=c(min=14, max=70),
 #'        quality=c(threshold=20, percent=0.8))
+#'        
+#' list.files(input) #after 
+#'  
+#' # How did it go? Check progress report:  
+#' prog_report     
+#'        
 #' 
-#' prog_report  <-  make_trim(
-#'        input=input, output=output, threads=1, 
-#'        adapt_3_set=c(type="hard_save", min=10, mismatch=0.1), 
-#'        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCA", 
-#'        polyG=c(type="hard_trim", min=20, mismatch=0.1),
-#'        seq_range=c(min=14, max=70),
-#'        quality=c(threshold=20, percent=0.8))                                            
-#'                      
-#' 
-#' }
-#' 
+#' ## Principle:
+#' # input <- "/some/path/to/untrimmed_fastq_folder"
+#' # output <- "/some/path/to/output_folder_for_trimmed_fastq"
+#' # 
+#' # prog_report  <-  make_trim(
+#' #      input=input, output=output, 
+#' #      threads=<how_many_parallel>, 
+#' #      check_mem=<should_memory_be_checked?>, 
+#' #      adapt_3_set=<options_for_main_trimming, 
+#' #      adapt_3=<sequence_to be trimmed, 
+#' #      polyG=<Illumina_Nextseq_type_poly_G_trimming>,
+#' #      seq_range=<what_sequence_range_to_save>,
+#' #      quality=<quality_filtering_options>))
 #' 
 #' @export
 
@@ -204,16 +250,18 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE,
     cat(paste0("\n--- Worst scenario maximum system", 
                " burden is estimated to ",
                worst, " GB of approx. ", mem," GB RAM available."))
-    if(worst*1.1 > mem){ 
-      warning("\nIn worst scenario trimming may generate an impact",
+    if(worst>0){
+        if(worst*1.1 > mem){ 
+          warning("\nIn worst scenario trimming may generate an impact",
               " close to what the system can stand.",
               "\nPlease free more memory per thread if function fails.", 
               immediate. = TRUE)
-    }
-    if(worst*0.5 > mem){ 
-      stop("\nTrimming will generate an impact well above what the", 
+              }
+        if(worst*0.5 > mem){ 
+          stop("\nTrimming will generate an impact well above what the", 
            " system can stand.",
            "\nIf you still wish to try, please set check_mem=FALSE.")
+        }
     }
     cat(paste0("\n--- Trimming check passed.\n"))
   }
