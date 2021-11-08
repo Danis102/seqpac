@@ -56,34 +56,104 @@
 #'
 #' @examples
 #' 
-#' \dontrun{
 #' 
-#' ### Load data ###
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-#'                   package = "seqpac", mustWork = TRUE))
+#' ## Load PAC-object data ###
+#'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                    package = "seqpac", mustWork = TRUE))
 #' 
 #' ## Make summaries and extract rRNA
-#' pac <- PAC_norm(pac, norm="cpm")
 #' pac <- PAC_summary(pac, norm = "cpm", type = "means", 
 #'                    pheno_target=list("stage", unique(pac$Pheno$stage)))
+#'                    
+#'                    
 #' pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
+#' pac_tRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "tRNA"))
 #'
-#' ## Mapping and plotting
-#' map_rRNA <- PAC_mapper(pac_rRNA, mapper="reanno", mismatches=0, 
-#'                         threads=1, ref="<your_path_to_rRNA_reference>")
-#' covplots<- PAC_covplot(pac_rRNA, map_rRNA, 
+#'
+#' ## Give path to a fasta reference (with or without bowtie index)
+#' #  (Here we use an rRNA fasta included in seqpac) 
+#' 
+#' ref_rRNA <- system.file("extdata/rrna", "rRNA.fa", 
+#'                          package = "seqpac", mustWork = TRUE)
+#'                          
+#' ref_tRNA_no_index <- system.file("extdata/trna_no_index", "tRNA_copy.fa", 
+#'                          package = "seqpac", mustWork = TRUE)                         
+#'
+#'                          
+#' ## You may skip this. PAC_mapper will ask if you want to remove temp folder.  
+#' # (This temp folder must be removed for the example to run autonomously.)
+#' 
+#'  if(grepl("windows", .Platform$OS.type)){
+#'  temp_folder <- paste0(tempdir(), "\\seqpac")
+#'   }else{
+#'   temp_folder <- paste0(tempdir(), "/seqpac")}
+#'     
+#'  unlink(temp_folder, recursive=TRUE)                                                   
+#'                                                                              
+#'                                                                                                                                  
+#' ## Map using PAC-mapper                          
+#' 
+#' map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
+#'                         threads=1, ref=ref_rRNA)
+#'  
+#' unlink(temp_folder, recursive=TRUE)    
+#'  
+#'                                                                                                    
+#' ## Now try a fasta with no bowtie index using PAC-mapper                                                                 
+#' map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
+#'                         threads=1, ref=ref_tRNA_no_index)                        
+#'  
+#'                                                
+#' ## Plot rRNA according to embryonic stage using PAC_covplot                       
+#' cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
 #'                         summary_target = list("cpmMeans_stage"), 
 #'                         xseq=FALSE, style="line", 
 #'                         color=c("red", "black", "blue"))
-#' cowplot::plot_grid(covplots[[1]], covplots[[2]], covplots[[3]], 
-#'                     covplots[[4]], nrow=2, ncol=2)
+#'                         
+#' cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
+#'                     cov_rRNA[[4]], nrow=2, ncol=2)
 #'
-#'}
+#'
+#'
+#' ## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
+#' # (OBS! Long reference will not )                     
+#' cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
+#'                         summary_target = list("cpmMeans_stage"), 
+#'                         xseq=TRUE, style="line", 
+#'                         color=c("red", "black", "blue"))
+#'
+#' cov_tRNA[[1]]
+#'                     
+#' ## Explore the map-object                    
+#' head(map_tRNA[[1]])
+#' names(map_tRNA)
+#' map_tRNA[[1]]
+#'
+#' ## Check wish reached decent number
+#' # (OBS! This is a very down sampled dataset)
+#' logi_hi <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 10 }))
+#' logi_lo <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 2 }))
 #' 
+#' table(logi_hi)  
+#' names(map_tRNA[logi_hi])
+#' 
+#' table(logi_lo)  
+#' names(map_tRNA[logi_lo])
+#'     
+#' targets <- c("Ala-AGC-1-1", "Lys-CTT-1-13","Ser-AGA-2-2")
+#' 
+#' cov_tRNA_sub <- PAC_covplot(pac_tRNA, map_tRNA, 
+#'                         summary_target = list("cpmMeans_stage"),
+#'                         map_target = targets,
+#'                         xseq=TRUE, style="line", 
+#'                         color=c("red", "black", "blue"))                  
+#'                                                       
+#' cowplot::plot_grid(plotlist= cov_tRNA_sub) 
+#'                     
+#'                                                               
 #' @export
 
-PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL, 
+PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL, 
                         style="line", xseq=TRUE, colors=NULL, 
                         check_overide=FALSE){
   if(isS4(PAC)){
@@ -93,7 +163,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL,
     tp <- "S3"
   }
   
-  if(is.null(summary_target[[1]])){
+  if(is.null(summary_target)){
     stop("\nYou need to specify a target object in ",
          "\nPAC$summary with summary_target.")
   }
@@ -116,7 +186,7 @@ PAC_covplot <- function(PAC, map, summary_target=names(PAC), map_target=NULL,
   data$empty_ <- 0 # Avoids problems with automatic vectorization
   
   sub_map <- map[names(map) %in% map_target]
-  if(length(sub_map)==1){
+  if(length(sub_map)==0){
     sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]
   }
   uni_map <- unique(do.call("c", lapply(sub_map, function(x){
