@@ -86,82 +86,134 @@
 #'  
 #' @examples
 #' 
-#' \dontrun{
-#' 
-#'  library(seqpac)
 #'   
 #' ############################################################ 
-#' ### Seqpac fastq trimming with the make_trim function 
+#' ### Seqpac fastq trimming with the make_counts function 
 #' ### using default settings for NEBNext small RNA adaptor 
 #' 
-#' input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' # First generate some smallRNA fastq.
+#' # Only one untrimmed fastq comes with seqpac
+#' # Thus, we need to randomly sample that one using the ShortRead-package
+#'  
+#' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+#'                 full.names = TRUE)
+#'
+#' closeAllConnections()
+#'
+#' sampler <- ShortRead::FastqSampler(fq, 20000)
+#' set.seed(123)
+#' fqs <- list(fq1=ShortRead::yield(sampler),
+#'            fq2=ShortRead::yield(sampler),
+#'            fq3=ShortRead::yield(sampler),
+#'            fq4=ShortRead::yield(sampler),
+#'            fq5=ShortRead::yield(sampler),
+#'            fq6=ShortRead::yield(sampler))
+#'
+#' # Now generate a temp folder were we can store the fastq files
 #' 
+#' input <- paste0(tempdir(), "/seqpac_temp")
+#' if(grepl("windows", .Platform$OS.type)){
+#'  input <- gsub( "\\\\", "/", input)
+#' }  
+#' dir.create(input, showWarnings=FALSE)
+#'
+#' # And then write the random fastq to the temp folder
+#' for (i in 1:length(fqs)){
+#'  input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
+#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+#'                        full=FALSE, compress=TRUE)
+#' }
+#'
+#' # Now we can run make_counts
+#' # Notice that make_counts will generate another temp folder, that will 
+#' # be emptied on finalization. By setting save_temp=TRUE you may save the 
+#' # content.  
+#'  
 #' counts  <- make_counts(input, threads=1, parse="default_neb",
 #'                        trimming="seqpac", plot=TRUE,
-#'                        evidence=c(experiment=2, sample=1))     
-#'     
+#'                        evidence=c(experiment=2, sample=1))
+#'
+#' head(counts$counts)
+#' head(counts$progress_report)
+#' cowplot::plot_grid(plotlist=counts$evidence_plots, ncol=1, nrow=2)
+#' 
+#' # Notice that that there are fewer unique sequences than number of reads 
+#' # passing the filter. In normal, large, fastq we keep 95-99% of all reads 
+#' # while filtering out 30-40% of the sequences that only appear in 1 fastq 
+#' # Thus, the evidence filter may gain you performance in later analysis by 
+#' # avoiding nonsense sequences. 
 #'      
 #' ############################################################      
-#' ### Seqpac trimming using the make_trim function
-#' ### using user settings parsed to make_trim
-#'  
-#' # Make a parse list (see ?make_trim):  
+#' ### Parse your own trimming setting to make_trim using the
+#' ### make_counts function
+#' 
+#' # How to make a parse list see ?make_trim:
+#'   
 #' parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
 #'              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
 #'              polyG=c(type="hard_trim", min=10, mismatch=0.1),
 #'              seq_range=c(min=14, max=70),
-#'              quality=c(threshold=20, percent=0.8))
-#'                
+#'              quality=c(threshold=20, percent=0.8),
+#'              check_mem =FALSE)
+#'              
+#'
 #' counts  <-  make_counts(input, threads=1,
 #'                         trimming="seqpac",
 #'                         parse=parse, 
-#'                         evidence=c(experiment=2, sample=1))           
+#'                         evidence=c(experiment=2, sample=1))
+#'   
 #'   
 #'   
 #' ############################################################      
 #' ### Seqpac trimming using the make_cutadapt function
 #' ### (Important: Needs an external installations of cutadapt 
 #' ###  and fastq_quality_filter) 
+#' #
+#' # Parse for make_cutadapt is a list of 2 character string expressions.
+#' # The first is parsed to cutadapt and the other to fastq_quality_filter 
+#' # For parallel processes '-j 1' is recommended since seqpac will   
+#' # parallelize across samples and not within. Run system("cutadapt -h") and 
+#' # system("fastq_quality_filter -h") for more options.
+#' # 
+#' # cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
+#' #                    " --discard-untrimmed --nextseq-trim=20",
+#' #                    " -O 10 -m 14 -M 70")
+#' # 
+#' # parse = list(cutadapt = cut_prse,
+#' #              fastq_quality_filter = "-q 20 -p 80")
+#' # 
+#' # counts  <-  make_counts(input, threads=1,
+#' #                        trimming="cutadapt",
+#' #                        parse=parse, 
+#' #                        evidence=c(experiment=2, sample=1))
 #' 
-#'  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
+#'    
+#'          
 #'  
-#'  Parse for make_cutadapt is a list of 2 character string expressions.
-#'  The first is parsed to cutadapt and the other to fastq_quality_filter 
-#'  For parallel processes '-j 1' is recommended since seqpac will   
-#'  parallelize across samples and not within. Run system("cutadapt -h") and 
-#'  system("fastq_quality_filter -h") for more options.
+#'  #############################################################
+#'  ### Lets change the evidence filter
+#'  ###
 #'  
-#'  cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
-#'                     " --discard-untrimmed --nextseq-trim=20",
-#'                     " -O 10 -m 14 -M 70")
+#'  # 2 evidence over two indepenent samples, saving single sample 
+#'  # sequences reaching 3 counts:
 #'  
-#'  parse = list(cutadapt = cut_prse,
-#'               fastq_quality_filter = "-q 20 -p 80")
-#'  
-#'  counts  <-  make_counts(input, threads=1,
-#'                         trimming="cutadapt",
-#'                         parse=parse, 
-#'                         evidence=c(experiment=2, sample=1))   
-#'  
-#'  
-#'  ## 2 evidence over two indepenent samples, saving single sample 
-#'  ## sequences reaching 10 counts
-#'  test <- make_counts(input=input,  type="fastq", trimming="seqpac", 
-#'                      parse="default_neb",  
-#'                      evidence=c(experiment=2, sample=10))
-#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,]  28 single sample sequences reached 10 counts
-#'  
-#'  
-#'  ## 2 evidence over two indepenent samples, saving single sample 
-#'  ## sequences reaching 3 counts 
-#'  test <- make_counts(input=input,  trimming="seqpac", 
+#'  test <- make_counts(input=input, trimming="seqpac", 
 #'                      parse="default_neb",  
 #'                      evidence=c(experiment=2, sample=3))
 #'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,] 1319 single sample sequences reached 3 counts
+#'  test$counts[extras==1,]  # 6 single sample sequences reached 3 counts
 #'  
-#'  }
+#'  # 2 evidence over two independent samples, saving single sample 
+#'  # sequences reaching 2 counts
+#'   
+#'  test <- make_counts(input=input,  trimming="seqpac", 
+#'                      parse="default_neb",  
+#'                      evidence=c(experiment=2, sample=2))
+#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+#'  test$counts[extras==1,] # 120 single sample sequences reached 2 counts
+#'  
+#'
 #'  
 #'  
 #' @export
@@ -170,13 +222,12 @@ make_counts <- function(input, trimming=NULL, threads=1,
                         plot=TRUE, parse="default_illumina", 
                         evidence=c(experiment=2, sample=1), save_temp=FALSE){
   
-  anno <- value <- variable <- NULL
-  
+  anno <- value <- variable <- i <- NULL
   #############################
   ###### fastq as input #######
   cat("Started at ", paste0(Sys.time()), "\n")
   gc(reset=TRUE)
-    
+  
   ## Read file system
   if(sum(!dir.exists(input))== length(input)){
     count_files <- input
@@ -186,7 +237,11 @@ make_counts <- function(input, trimming=NULL, threads=1,
   }
   count_files <- count_files[!grepl("Undetermined_", count_files)]
   count_files_nams <- basename(count_files)
-  cat("\nInput type was set to fastq.")
+  if(is.null(trimming)){
+    cat("\nInput type was set to already trimmed fastq.")
+  }else{
+    cat("\nInput type was set to untrimmed fastq.")
+  }
   cat("\nThe following fastq files were found in the path:\n")
   print(count_files)
   
@@ -212,8 +267,8 @@ make_counts <- function(input, trimming=NULL, threads=1,
     if(grepl("default", parse[[1]][1])){
       if(parse[[1]][1]=="default_neb"){
         cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCA",
-                      " --discard-untrimmed --nextseq-trim=20", 
-                      " -O 10 -m 14 -M 70 -e 0.1")
+                           " --discard-untrimmed --nextseq-trim=20", 
+                           " -O 10 -m 14 -M 70 -e 0.1")
         parse <- list(cutadapt= cut_prse,
                       fastq_quality_filter="-q 20 -p 80")
       }
@@ -345,8 +400,7 @@ make_counts <- function(input, trimming=NULL, threads=1,
   doParallel::registerDoParallel(threads) 
   seq_lst   <- foreach::foreach(i=1:length(fls), .final = function(x){
     names(x) <- basename(fls); return(x)}) %dopar% {
-      
-      if(evidence[2]>1){
+      if(!is.null(evidence)&& evidence[2]>1){
         fstq <- ShortRead::readFastq(fls[[i]], withIds=FALSE)
         tab <- table(paste0(ShortRead::sread(fstq)))
         extra <- names(tab)[tab >= evidence[2]]
@@ -370,50 +424,64 @@ make_counts <- function(input, trimming=NULL, threads=1,
   
   ###################################
   ###### Apply evidence filter ######
-  # Experiemnt
-  if(evidence[1]==2){
-    seqs_keep <- unique(as.character(seqs[duplicated(seqs)]))
-  }
-  if(evidence[1]>2){
-    seqs_keep <- unlist(
-      lapply(seq_lst, function(x){
-        tab <- table(x)
-        names(tab)[tab>=evidence]
-      }), use.names = TRUE)
-  }
-  if(evidence[1]<2){
+  ## Experiment
+  if(is.null(evidence)){
     seqs_keep <- unique(seqs)
+  }else{ 
+    if(evidence[1]==2){
+      seqs_keep <- unique(as.character(seqs[duplicated(seqs)]))
+    }
+    if(evidence[1]>2){
+      seqs_keep <- unlist(
+        lapply(seq_lst, function(x){
+          tab <- table(x)
+          names(tab)[tab>=evidence]
+        }), use.names = TRUE)
+    }
+    if(evidence[1]<2){
+      seqs_keep <- unique(seqs)
+    }
   }
   rm(seqs)
   
-  # Sample
-  if(evidence[2]>1){
-    lst_extras <- lapply(seq_lst, function(x){
-      extras <- x$uni[x$logi_extra]
-      n_extras <- sum(!extras %in% seqs_keep)
-      return(list(extras=extras, n_extras=n_extras))
-    })
-    all_extras <- unique(unlist(lapply(lst_extras, function(x){
-      x$extras}), use.names=FALSE))
-    seqs_keep <- unique(c(seqs_keep, all_extras))
-  }
-  
-  # Save n uni seqs stats
+  ## Save n uni seqs stats
   n_uniseq <- unlist(lapply(seq_lst, function(x){
     length(x$uni)
   }))
-  rm(seq_lst)
+  
+  ## evidence filter NULL message
+  if(is.null(evidence)){
+    cat(paste0("\nYou specified evidence=NULL. All sequences will be saved...",
+               "\n(may take additional time and resources)"))
+  }
+  
+  ## Sample
+  if(!is.null(evidence)){
+    if(evidence[2]>1){
+      lst_extras <- lapply(seq_lst, function(x){
+        extras <- x$uni[x$logi_extra]
+        n_extras <- sum(!extras %in% seqs_keep)
+        return(list(extras=extras, n_extras=n_extras))
+      })
+      all_extras <- unique(unlist(lapply(lst_extras, function(x){
+        x$extras}), use.names=FALSE))
+      seqs_keep <- unique(c(seqs_keep, all_extras))
+    }
+    
+    cat(paste0("\nMaking a count table with sequences appearing in at least ", 
+               evidence[1]," independent samples ..."))
+    
+    if(evidence[2]>1){
+      cat(paste0("\nAlso saves sequences with less evidence but >= ", 
+                 evidence[2], " counts in a single sample."))
+      cat(paste0(
+        "\n(Please set evidence$sample = 1 if this was not intended.)"))
+    }
+  }
   
   ###############################
-  ###### Make count table #######
-  cat(paste0("\nMaking a count table with sequences appearing in at least ", 
-             evidence[1]," independent samples ..."))
-  if(evidence[2]>1){
-    cat(paste0("\nAlso saves sequences with less evidence but >= ", 
-               evidence[2], " counts in a single sample."))
-    cat(paste0(
-      "\n(Please set evidence$sample == 1 if this was not intended.)"))
-  }
+  ###### Make count table #######   
+  rm(seq_lst)
   gc(reset=TRUE)  
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
   reads_lst <- foreach::foreach(i=1:length(fls),.final = function(x){
@@ -473,6 +541,7 @@ make_counts <- function(input, trimming=NULL, threads=1,
   
   ###################################################
   ###### Add evidence stats to progress report ######
+  
   stat_dt <- cbind(data.frame(uni_seqs=n_uniseq, stringsAsFactors =FALSE), 
                    do.call("rbind", lapply(reads_lst, function(x){x$stat})))
   stat_dt$reads_not_pass_evidence <- stat_dt$tot_reads - stat_dt$reads_pass_evidence
@@ -486,6 +555,10 @@ make_counts <- function(input, trimming=NULL, threads=1,
   df_long$value <- as.numeric(df_long$value)
   df_long$sample <- as.factor(df_long$sample)
   main_title <- "Reads passed that evidence"
+  
+  if(is.null(evidence)){
+    evidence=c(experiment=1, sample=1)
+  }
   
   p_func <- function(df, y_lab, main_title, sub_title){
     df$variable <- factor(df$variable)
@@ -515,28 +588,29 @@ make_counts <- function(input, trimming=NULL, threads=1,
                                                "reads_not_pass_evidence"),], 
                y_lab="number of reads", 
                main_title=paste0("Sequences present in at least ", 
-                                 evidence[1], " samples"),
+                                 evidence[1], " sample(s)"),
                sub_title=if(evidence[2]>1){paste0("(unless >", 
                                                   evidence[2], 
                                                   "reads in a single sample)")
-                 }else{
-                   NULL
-                   })
+               }else{
+                 NULL
+               })
   p2 <- p_func(df_long[df_long$variable %in% c("uniseqs_pass_evidence", 
                                                "uniseqs_not_pass_evidence"),], 
                y_lab="number of unique sequences", 
                main_title=paste0("Sequences present in at least ", 
-                                 evidence[1], " samples"),
+                                 evidence[1], " sample(s)"),
                sub_title=if(evidence[2]>1){paste0("(unless >", evidence[2], 
                                                   "reads in a single sample)")
-                 }else{
-                   NULL}
-               )
+               }else{
+                 NULL}
+  )
   plt_lst <- list(reads=p1, uniseqs=p2)
   if(plot==TRUE){
     print(cowplot::plot_grid(plotlist=plt_lst, ncol=1, nrow=2))
-  }else{
-    plt_lst <- "Evidence plot was omitted by user"
+  }
+  if(plot==FALSE){
+    plt_lst <- "Evidence plot was omitted by user input"
   }
   
   prog_report <- cbind(prog_report, 
