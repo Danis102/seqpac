@@ -17,23 +17,22 @@
 #' 
 #' S4 version of the PAC object. 
 #' 
-#' Just like the S3 version, all subtables must have identical sequence (row)
+#' Just like the S3 version, all sub-tables must have identical sequence (row)
 #' names. To extract tables from S4 objects, use the getter commands or use @
 #' (e.g. PAC@Pheno) just like $ for the S3 version (e.g. PAC$Pheno). You may
 #' also use a coercion method, e.g. \code{PAC_S3 <- as(PAC_S4, "list")}
 #' 
 #' Holds up to 5 slots: \describe{
 #'    \item{\strong{Pheno}}{data.frame > information about the samples}
-#'    \item{\strong{Anno}}{data.frame > simplified sequences annotations}
+#'    \item{\strong{Anno}}{data.frame > sequences annotations}
 #'    \item{\strong{Counts}}{data.frame > sequence counts over samples}
 #'    \item{\emph{norm (optional)}}{list of data.frames > normalized counts}
 #'    \item{\emph{summary (optional)}}{list of data.frames > summarized counts or normalized counts}
 #'    }
 #'    
 #' @rdname PAC
-#' 
+#' @return Generates a S4 PAC-object.
 #' @examples
-#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #'                   
@@ -140,7 +139,6 @@ setAs("PAC", "list",
 #' @return An S4 PAC object.
 #'   
 #' @examples
-#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #'                   
@@ -216,67 +214,79 @@ as.PAC <- function(from){
 #' 
 #' @examples
 #' 
-#'  library(seqpac)
+#' ##### Create an reanno object
 #' 
-#' # load data
-#'  load(system.file("extdata", "drosophila_sRNA_pac_filt.Rdata", 
-#'                   package = "seqpac", mustWork = TRUE))
-#'  pac = pac_cpm_filt
+#' ##  First load a PAC- object
+#' 
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                    package = "seqpac", mustWork = TRUE))
 #'  
-#'  ## Genome example
-#'  # setup temporary output folder depending on windows or linux 
+#' ##  Then specify paths to fasta references
+#' # If you are having problem see the vignette small RNA guide for more info.
 #'  
-#'  if(grepl("windows", .Platform$OS.type)){
-#'    output <- paste0(tempdir(), "\\seqpac\\test")
-#'  }else{
-#'    output <- paste0(tempdir(), "/seqpac/test")
-#'  }
+#'  trna_path <- system.file("extdata/trna", "tRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)  
+#'  rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)
 #'  
-#' # Empty temp output folder
-#'  out_fls  <- list.files(output, recursive=TRUE, full.names = TRUE)
-#'  suppressWarnings(file.remove(out_fls))
-#'  
-#' # Run reanno workflow loading test genome fasta
-#'  mycoplasma_path <- paste0(getwd(), "/tests/testthat/data_for_tests/mycoplasma_genome")
-#'  ref_paths <- list(genome1= list.files(mycoplasma_path, pattern=".fa", 
-#'                                        full.names = TRUE),
-#'                    genome2= list.files(mycoplasma_path, pattern=".fa", 
-#'                                        full.names = TRUE))
-#'  
-#'  map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output,
-#'                 type="internal", mismatches=3, import="genome", 
-#'                 threads=8, keep_temp=FALSE)
+#'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
+#'                                     
+#' ##  Add output path of your choice.
+#' # Here we use the R temporary folder depending on platform                                     
+#'if(grepl("windows", .Platform$OS.type)){
+#'  output <- paste0(tempdir(), "\\seqpac\\test")
+#'}else{
+#'  output <- paste0(tempdir(), "/seqpac/test")}
+#' 
+#' ## Make sure it is empty (otherwise you will be prompted for a question)
+#' out_fls  <- list.files(output, recursive=TRUE)
+#' closeAllConnections()
+#' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 #'
-#'  reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE, 
-#'                                 output="list")
-#'                                 
-#'  pac <- add_reanno(reanno_genome, type="genome", genome_max=10, 
-#'                      mismatches=1, merge_pac=pac)
-#' 
-#' class(pac)
-#' isS4(pac)                        
+#' ##  Then map your PAC-object against the fasta references                                  
+#'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
+#'                type="internal", mismatches=2,  import="biotype", 
+#'                threads=2, keep_temp=FALSE)
+#'     
+#' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
+#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#'                                     
+#' ## Now make some search terms against reference names to create shorter names
+#' # Theses can be used to create factors in downstream analysis
+#' # One search hit (regular expressions) gives one new short name 
+#' bio_search <- list(
+#'               rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
+#'               trna =c("_tRNA", "mt:tRNA"))
 #'  
-#' class(reanno_genome)
-#' isS4(reanno_genome)
-#' names(reanno_genome)   
 #'  
+#' ## You can merge directly with your PAC-object by adding your original 
+#' # PAC-object, that you used with map_reanno, to merge_pac option.
+#'  pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
+#'                        type="biotype", bio_perfect=FALSE, 
+#'                        mismatches = 2, merge_pac=pac)
+#'                        
+#'                        
+#' ## Turn your S3 list to an S4 reanno-object
+#' class(reanno_biotype)
+#' isS4(reanno_biotype)
+#' names(reanno_biotype)   
+#'
+#' reanno_s3 <- as(reanno_biotype, "list")
+#' class(reanno_s3)
+#' isS4(reanno_s3)   
+#'
 #' # Turns S3 reanno object into a S4                                    
-#' reanno_s4 <- as.reanno(reanno_genome)
+#' reanno_s4 <- as.reanno(reanno_s3)
 #' class(reanno_s4)
 #' isS4(reanno_s4) 
 #'  
-#' # Similar turns S3 PAC object into a S4                                    
+#' # Similar, turns S3 PAC object into a S4
+#' class(pac)
+#' isS4(pac)  
+#'                                                                         
 #' pac_s4 <- as.PAC(pac)
 #' class(pac_s4)
 #' isS4(pac_s4)   
-#' 
-#' # Turns S3 reanno object back into a S4 using specific S4 coercion:                               
-#' reanno_s3 <- as(reanno_s4, "list")
-#' class(reanno_s3)
-#' isS4(reanno_s3)
-#' 
-#' # Turns S3 PAC object into a S4                                    
-#' pac_s3 <- as(pac_s4, "list")
 #' 
 #' # Don't forget that in the slots of S4 lies regular S3 objects. Thus,
 #' # to receive these tables from an S4  you need to combine both S4 and S3
@@ -371,73 +381,79 @@ setAs("reanno", "list",
 #'   
 #' @examples
 #' 
-#'  library(seqpac)
+#' ######################################################### 
+#' ##### Create an reanno object
 #' 
-#' ## load data
-#'  load(system.file("extdata", "drosophila_sRNA_pac_filt.Rdata", 
-#'                   package = "seqpac", mustWork = TRUE))
-#'  pac = pac_cpm_filt
+#' ##  First load a PAC- object
+#' 
+#'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                    package = "seqpac", mustWork = TRUE))
 #'  
-#'  ## Genome example
-#'  # setup temporary output folder depending on windows or linux 
+#' ##  Then specify paths to fasta references
+#' # If you are having problem see the vignette small RNA guide for more info.
 #'  
-#'  if(grepl("windows", .Platform$OS.type)){
-#'    output <- paste0(tempdir(), "\\seqpac\\test")
-#'  }else{
-#'    output <- paste0(tempdir(), "/seqpac/test")
-#'  }
+#'  trna_path <- system.file("extdata/trna", "tRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)  
+#'  rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)
 #'  
-#'# Empty temp output folder
-#'  out_fls  <- list.files(output, recursive=TRUE, full.names = TRUE)
-#'  suppressWarnings(file.remove(out_fls))
-#'  
-#'  
-#' # Run reanno workflow loading test genome fasta
-#'  mycoplasma_path <- paste0(getwd(), "/tests/testthat/data_for_tests/mycoplasma_genome")
-#'  ref_paths <- list(genome1= list.files(mycoplasma_path, pattern=".fa", 
-#'                                        full.names = TRUE),
-#'                    genome2= list.files(mycoplasma_path, pattern=".fa", 
-#'                                        full.names = TRUE))
-#'  
-#'  
+#'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
+#'                                     
+#' ##  Add output path of your choice.
+#' # Here we use the R temporary folder depending on platform                                     
+#'if(grepl("windows", .Platform$OS.type)){
+#'  output <- paste0(tempdir(), "\\seqpac\\test")
+#'}else{
+#'  output <- paste0(tempdir(), "/seqpac/test")}
+#' 
+#' ## Make sure it is empty (otherwise you will be prompted for a question)
+#' out_fls  <- list.files(output, recursive=TRUE)
+#' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 #'
-#'  map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output,
-#'                 type="internal", mismatches=3, import="genome", 
-#'                 threads=8, keep_temp=FALSE)
+#' ##  Then map your PAC-object against the fasta references                                  
+#'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
+#'                type="internal", mismatches=2,  import="biotype", 
+#'                threads=2, keep_temp=FALSE)
+#'     
+#' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
+#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#'                                     
+#' ## Now make some search terms against reference names to create shorter names
+#' # Theses can be used to create factors in downstream analysis
+#' # One search hit (regular expressions) gives one new short name 
+#' bio_search <- list(
+#'               rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
+#'               trna =c("_tRNA", "mt:tRNA"))
+#'  
+#'  
+#' ## You can merge directly with your PAC-object by adding your original 
+#' # PAC-object, that you used with map_reanno, to merge_pac option.
+#'  pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
+#'                        type="biotype", bio_perfect=FALSE, 
+#'                        mismatches = 2, merge_pac=pac)
+#'                        
+#'                        
+#' ## Turn your S3 list to an S4 reanno-object
+#' class(reanno_biotype)
+#' isS4(reanno_biotype)
+#' names(reanno_biotype)   
 #'
-#'  reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE, 
-#'                                 output="list")
-#'                                 
-#'                                 
-#'  pac <- add_reanno(reanno_genome, type="genome", genome_max=10, 
-#'                      mismatches=1, merge_pac=pac)
-#' 
-#' 
-#' class(pac)
-#' isS4(pac)                        
-#'  
-#' class(reanno_genome)
-#' isS4(reanno_genome)
-#' names(reanno_genome)   
-#'  
+#' reanno_s3 <- as(reanno_biotype, "list")
+#' class(reanno_s3)
+#' isS4(reanno_s3)   
+#'
 #' # Turns S3 reanno object into a S4                                    
-#' reanno_s4 <- as.reanno(reanno_genome)
+#' reanno_s4 <- as.reanno(reanno_s3)
 #' class(reanno_s4)
 #' isS4(reanno_s4) 
 #'  
-#' # Similar, turns S3 PAC object into a S4                                    
+#' # Similar, turns S3 PAC object into a S4
+#' class(pac)
+#' isS4(pac)  
+#'                                                                         
 #' pac_s4 <- as.PAC(pac)
 #' class(pac_s4)
 #' isS4(pac_s4)   
-#' 
-#' 
-#' # Turns S3 reanno object back into a S4 using specific S4 coercion:                               
-#' reanno_s3 <- as(reanno_s4, "list")
-#' class(reanno_s3)
-#' isS4(reanno_s3)
-#' 
-#' # Turns S3 PAC object into a S4                                    
-#' pac_s3 <- as(pac_s4, "list")
 #' 
 #' # Don't forget that in the slots of S4 lies regular S3 objects. Thus,
 #' # to receive these tables from an S4  you need to combine both S4 and S3
