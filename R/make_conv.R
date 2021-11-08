@@ -53,28 +53,47 @@
 #'   
 #' @examples
 #' 
-#' 
+#' ## Only for testing:
+#' fasta_path <- system.file("extdata/trna", "tRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE) 
+#' ref1 <- Biostrings::readDNAStringSet(fasta_path) 
+#' ref1 <- ref1[1:295]
+#' sqnames <- do.call("rbind",(strsplit(names(ref1), "\\d chr")))[,2]
+#' names(ref1) <- do.call("rbind",(strsplit(sqnames, " \\(")))[,1]
+#' logi_dup <- duplicated(do.call("rbind", strsplit(names(ref1),"\\:"))[,1])
+#' ref1 <- ref1[!logi_dup]
+#' ref2 <- ref1
+#' names(ref2) <- paste0("chr", names(ref2))
+#' # Save new reference in temporary folder                                     
+#' if(grepl("windows", .Platform$OS.type)){
+#'   tmpdr <- paste0(tempdir(), "\\seqpac")
+#' }else{
+#'   tmpdr <- paste0(tempdir(), "/seqpac")}
+#' dir.create(tmpdr, showWarnings=FALSE) 
+#' ref_path1 <- paste0(tmpdr, "/ref1.fa")
+#' ref_path2 <- paste0(tmpdr, "/ref2.fa") 
+#' Biostrings::writeXStringSet(ref1, filepath=ref_path1, format="fasta")
+#' Biostrings::writeXStringSet(ref2, filepath=ref_path2, format="fasta")
+#' ref_list <- list(ensembl=ref_path1, ucsc=ref_path2)
+#' conv_table <- make_conv(reference_list=ref_list)
+#' conv_table
+#'               
+#'
+#' ## The principles:
 #' \dontrun{
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_anno.Rdata", 
-#'                 package = "seqpac", mustWork = TRUE))
 #' 
 #' ref_path_A <- "/some/path/to/ensembl.fa"
 #' ref_path_B <- "/some/path/to/ucsc.fa"
 #' ref_path_C <- "/some/path/to/refseq.fa"
 #' 
-#' reference_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
+#' ref_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
 #' 
 #' # Best (user defined names):
-#' conv_table <- make_conv(reference_list=reference_list) 
+#' conv_table <- make_conv(reference_list=ref_list) 
 #' 
 #' # But also (no names)
 #' conv_table <- make_conv(ref_path_A, ref_path_B, ref_path_C)
 #' conv_table <- make_conv(ref_path_A, ref_path_C)
-#' 
-#' 
-#' # Make short names (skip everything after white space)
-#' conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
 #' 
 #' 
 #' # Make short names (skip everything after white space)
@@ -90,6 +109,9 @@ make_conv <- function(reference_list=NULL,
   sav_width <- list(NULL)
   if(is.null(reference_list)){
    reference_list <- list(refA=ref_path_A, refB=ref_path_B, refC=ref_path_C)
+  }  
+  if(length(reference_list)==2){
+    reference_list <- c(reference_list , list(refC=ref_path_C))
   }
   
   # Generate md5 hash ref 1
