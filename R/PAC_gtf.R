@@ -82,7 +82,7 @@
 #' gtf <- list(repeatMasker="/some/path/to/repeatMasker.gtf")
 #' 
 #' # Target columns in gtf file:
-#' target <- list(gtf=c("gene_name", "repClass", "repFamily")) 
+#' targets <- list(gtf=c("gene_name", "repClass", "repFamily")) 
 #' 
 #' # Run PAC_gtf
 #' repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", 
@@ -147,18 +147,18 @@
 #' 
 #' # Read converted gtf and pinpoint to target columns in gtf file:
 #' gtf <- list(repeatMasker="/some/path/to/repeatMasker_ensembl.gtf") 
-#' target <- list(repeatMasker=c("repName", "repClass", "repFamily"))
+#' targets <- list(repeatMasker=c("repName", "repClass", "repFamily"))
 #' 
 #' 
 #' repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", 
-#'                        gtf=gtf, target=target, threads=10) 
+#'                        gtf=gtf, targets=targets, threads=10) 
 #' 
 #' # Works because PAC_gtf automatically maps the 
 #' # genome with add_reanno(genome_max="all")
 #' genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", 
 #'                                               colnames(pac_merge$Anno))]
 #' repeat_full <- PAC_gtf(pac, genome=genome, return="full", 
-#'                        gtf=gtf, target=target, threads=10)
+#'                        gtf=gtf, targets=targets, threads=10)
 #' 
 #' # return="full" returns all annotation for all each coordinate
 #' repeat_full[800:820]
@@ -194,7 +194,7 @@
 
 
 PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=FALSE,
-                   gtf=NULL, target=NULL, 
+                   gtf=NULL, targets=NULL, 
                    threads=1){
   ## Check S4
   if(isS4(PAC)){
@@ -246,9 +246,9 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
            "\nnames using for example rtracklayer::readGFF('<path_to_gtf>').")
     }
     logi_target <- sum(
-       names(gtf_lst[[i]]) %in% target[[i]])== length(target[[i]])
-    miss_trg <- which(!target[[i]] %in% names(gtf_lst[[i]]))
-    miss_trg <- paste(target[[i]][miss_trg], collapse="; ") 
+       names(gtf_lst[[i]]) %in% targets[[i]])== length(targets[[i]])
+    miss_trg <- which(!targets[[i]] %in% names(gtf_lst[[i]]))
+    miss_trg <- paste(targets[[i]][miss_trg], collapse="; ") 
     if(!logi_target){
       stop("
            \nInput gtf '", nam, "' does not contain all target columns.",
@@ -457,7 +457,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   for(i in 1:length(gtf_gr)){
     gtf_nam <- names(gtf_gr)[i]
     cat(paste0("\n   |--> Extract and compile '", gtf_nam, "' ..."))  
-    trg_cols <- target[[i]]
+    trg_cols <- targets[[i]]
 
     # Run overlap and extract anno 
     coord_anno <-  foreach::foreach(t=1:length(coord_gr), 
