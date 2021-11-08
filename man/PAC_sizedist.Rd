@@ -77,7 +77,6 @@ sequences (e.g. sRNA classes) at each size point.
 ##########################################
 ### Stacked bars in seqpac 
 ##----------------------------------------
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 
@@ -112,7 +111,6 @@ Other PAC analysis:
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},

@@ -42,19 +42,16 @@ and remove sequences with low quality.
 }
 \examples{
  
- 
 \dontrun{  
-library(seqpac)
-  
 ############################################################      
 ### Seqpac trimming using the make_cutadapt function
 ### (Important: Needs an external installations of cutadapt 
 ###  and fastq_quality_filter) 
-
- input = system.file("extdata", package = "seqpac", mustWork = TRUE)
- output =  "/some/path/to/temp/folder"
+#  
+   input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+   output =  "/some/path/to/temp/folder"
  
- output = "/home/danis31/Desktop/Temp"
+   output = "/home/danis31/Desktop/Temp"
  
  # Parse for make_cutadapt is a list of 2 character string expressions.
  # The first is parsed to cutadapt and the other to fastq_quality_filter 
@@ -74,8 +71,69 @@ library(seqpac)
            fastq_quality_filter="-q 20 -p 80")
               
  logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
+ 
  }
  
+############################################################ 
+### Seqpac fastq trimming with the make_trim function 
+### (for more streamline options see the make_counts function) 
+
+# First generate some smallRNA fastq.
+# Only one untrimmed fastq comes with seqpac
+# Thus, we need to randomly sample that one using the ShortRead-package
+ 
+sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+                full.names = TRUE)
+
+closeAllConnections()
+
+sampler <- ShortRead::FastqSampler(fq, 20000)
+set.seed(123)
+fqs <- list(fq1=ShortRead::yield(sampler),
+           fq2=ShortRead::yield(sampler),
+           fq3=ShortRead::yield(sampler),
+           fq4=ShortRead::yield(sampler),
+           fq5=ShortRead::yield(sampler),
+           fq6=ShortRead::yield(sampler))
+
+# Now generate temp a folder for the untrimmed fastq files
+
+input <- paste0(tempdir(), "/seqpac_temp/")
+if(grepl("windows", .Platform$OS.type)){
+ input <- gsub( "\\\\\\\\", "/", input)
+}
+
+# Only for autonomous example we must empty the folder bofore creating:
+unlink(input, recursive = TRUE)
+dir.create(input, showWarnings=FALSE, recursive=TRUE)
+
+
+# And then write the random fastq to the temp folder
+for (i in 1:length(fqs)){
+ input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
+ ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+                       full=FALSE, compress=TRUE)
+}
+
+# Run make_trim using NEB-next adaptor
+
+list.files(input) #before
+
+prog_report  <-  make_trim(
+       input=input, output=input, 
+       threads=1, check_mem=FALSE, 
+       adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+       adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+       polyG=c(type="hard_trim", min=20, mismatch=0.1),
+       seq_range=c(min=14, max=70),
+       quality=c(threshold=20, percent=0.8))
+       
+list.files(input) #after 
+ 
+# How did it go? Check progress report:  
+prog_report
+     
 }
 \seealso{
 \url{https://cutadapt.readthedocs.io/en/stable/} for download and

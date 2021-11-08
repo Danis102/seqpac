@@ -4,27 +4,19 @@
 \alias{make_pheno}
 \title{Make Phenotype File}
 \usage{
-make_pheno(pheno, type = "manual", counts = NULL, progress_report = NULL)
+make_pheno(pheno, counts = NULL, progress_report = NULL)
 }
 \arguments{
 \item{pheno}{Character vector with the path to a .csv file or a
 data.frame with a column named "Sample_ID".}
 
-\item{type}{Character indicating what type to file to expect. If
-type="manual", the function will attempt to read a file named 'pheno.csv',
-in which the a column has been named 'Sample_ID' containing the exact
-sample names matching basenames of the fastq sample files. If
-\emph{type="basespace"} the function will attempt to read and join
-information from 'SampleSheetUsed.csv' and 'Samples_stat.txt' in
-pheno that have been downloaded from Illumina Basespace.}
-
 \item{counts}{Data.frame object with the same column names as in
-Sample_ID column of the .csv file.}
+Sample_ID column of the pheno.}
 
 \item{progress_report}{Data.frame object with progress report.}
 }
 \value{
-data.frame
+A Pheno data.frame compatible with \code{\link{make_PAC}}
 }
 \description{
 \code{make_pheno} generates a Pheno data.frame object containing additional
@@ -36,61 +28,111 @@ the file. Alternatively, a data.frame with sample information can be
 provided. If provided with a count table, (see \code{\link{make_counts}}), it
 will attempt to organize the the row names according to the column names in
 the counts table.
-
-The function was originally written for Illumina SampleSheetUsed.csv files
-downloaded from the BaseSpace server using the basemount software. It will,
-however, be compatible with any comma seperated text file with any of its
-first lines containing a header with the first column named 'Sample_ID'.
-
-The function will also attempt to read a 'Samples_stat.txt' (tab seperate
-file) file also downloaded from Illumina BaseSpace. This file will add
-original number of reads (past filter) generated in the sequencing. If
-provided with a progress_report object (see \code{\link{make_counts}} the
-script will attempt to add this data to the Pheno data.frame.
 }
 \examples{
 
-\dontrun{
-
-library(seqpac) 
-
 ### First make counts 
 
-input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-counts  <- make_counts(input, threads=1, parse="default_neb", type="fastq",
-                       trimming="seqpac", plot=TRUE, 
+# First generate some smallRNA fastq.
+# Only one untrimmed fastq comes with seqpac
+# Thus, we need to randomly sample that one using the ShortRead-package
+ 
+sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+                full.names = TRUE)
+
+closeAllConnections()
+
+sampler <- ShortRead::FastqSampler(fq, 20000)
+set.seed(123)
+fqs <- list(fq1=ShortRead::yield(sampler),
+           fq2=ShortRead::yield(sampler),
+           fq3=ShortRead::yield(sampler),
+           fq4=ShortRead::yield(sampler),
+           fq5=ShortRead::yield(sampler),
+           fq6=ShortRead::yield(sampler))
+
+# Now generate a temp folder were we can store the fastq files
+# (for autonomous example, make sure it is empty and correct platform)
+
+input <- paste0(tempdir(), "/seqpac_temp")
+if(grepl("windows", .Platform$OS.type)){
+ input <- gsub( "\\\\\\\\", "/", input)
+}
+fls  <- list.files(input, recursive=TRUE)
+if(length(fls)>0){unlink(input, recursive=TRUE)}
+dir.create(input, showWarnings=FALSE)
+
+
+# And then write the random fastq to the temp folder
+for (i in 1:length(fqs)){
+ input_file <- paste0(input,"/", names(fqs)[i], ".fastq.qz")
+ ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+                       full=FALSE, compress=TRUE)
+}
+
+# Now we can run make_counts
+# Notice that make_counts will generate another temp folder, that will 
+# be emptied on finalization. By setting save_temp=TRUE you may save the 
+# content.  
+ 
+counts  <- make_counts(input, threads=1, parse="default_neb",
+                       trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))
 
 
-### Then generate a phenotype table with make_pheno (herre using file names)
+colnames(counts$counts)
 
-#  Note:  'Sample_ID' column need to be the 
-#          same IDs as colnames in the counts table.
 
-pheno <- as.data.frame(
-           do.call("rbind", 
-           strsplit(list.files(input,pattern="*.fastq.gz"), 
-           "_|\\\\."))[,c(1,2,3,4)]) 
-colnames(pheno) <- c("stage", "batch", "index", "sample") 
-pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
-pheno <- make_pheno(pheno=pheno, 
-                    progress_report=counts$progress_report, 
-                    counts=counts$counts)
+### Then generate a phenotype table with make_pheno
 
+#  Note:  'Sample_ID' column needs to be similar IDs as 
+#          colnames in the counts table. You may also 
+#          specify a path to a txt file.
+
+Sample_ID <- colnames(counts$counts)
+
+pheno <- data.frame(Sample_ID=Sample_ID,
+                       Treatment=c(rep("heat", times=3), 
+                                   rep("control", times=3)),
+                       Batch=rep(c("1", "2", "3"), times=2)) 
+                                               
+pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
+                     counts=counts$counts)
+
+
+# make_pheno matches partial names 
  
+Sample_ID <- gsub(".fastq.qz","", colnames(counts$counts))
+ 
+pheno <- data.frame(Sample_ID=Sample_ID,
+                       Treatment=c(rep("heat", times=3), 
+                                   rep("control", times=3)),
+                       Batch=rep(c("1", "2", "3"), times=2))
+
+pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
+                     counts=counts$counts)
+ 
+pheno 
+
+# Note that progress report from make_counts is added if you specify it  
+     
 ### Lastly combine into PAC
 
-# Note: a simple annotation table will be added automatically.
+pac <- make_PAC(pheno=pheno, counts=counts$counts)
 
-pac <- make_PAC(pheno=pheno, counts=counts, anno=NULL)
 
-}
+pac
+names(pac)
+
+# Note: a simple annotation table is added automatically.
+head(anno(pac))
+
 
 }
 \seealso{
-\url{https://github.com/junchaoshi/sports1.0} for download and
-  documentation about running Sports. \url{https://github.com/Danis102} for
-  updates on the current package.
+\url{https://github.com/Danis102} for updates on the current
+  package.
 
 Other PAC generation: 
 \code{\link{PAC_check}()},

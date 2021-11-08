@@ -31,50 +31,18 @@ across Pheno, Anno and Counts.
 }
 \examples{
 
-\dontrun{
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 
 PAC_check(pac)  # TRUE
 
-# Remove first row in Anno
+# Remove first row in Anno and check compatibility
 new_Anno <- pac$Anno[-1,]               
-
-
 #PAC_check(pac, seq_check=new_Anno) # Error   
 
-# Add to pac
+# Add to pac an check
 pac$Anno <- new_Anno                    
 #PAC_check(pac) # Error                      
-
-## Reload data
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-                  package = "seqpac", mustWork = TRUE))
-PAC_check(pac)  # TRUE
-
-# Remove a sample column in normalized table 
-new_norm <- pac$norm$cpm[,-1]           
-PAC_check(pac, seq_check=new_norm)      # All sequences are good
-#PAC_check(pac, sample_check=new_norm)  # Error
-
-pac$norm$cpm <- new_norm                # Add to pac
-#PAC_check(pac)                         # Error 
-
-## Reload data
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-                  package = "seqpac", mustWork = TRUE))
-PAC_check(pac)  # TRUE
-
-seq_names <- rownames(pac$Counts)
-sample_names <- colnames(pac$Counts) 
-
-PAC_check(pac, seq_check=seq_names)
-PAC_check(pac, sample_check=sample_names) 
-
-#PAC_check(pac, seq_check=rev(seq_names))
-#PAC_check(pac, sample_check=rev(sample_names)) 
-}
 
 }
 \seealso{

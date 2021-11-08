@@ -37,7 +37,6 @@ Using the counts in a PAC object to generate normalized values in a dataframe
 with the same rownames as in the original PAC object
 }
 \examples{
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 pac_norm  <- PAC_norm(pac, norm="cpm") 
@@ -57,7 +56,6 @@ Other PAC analysis:
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},

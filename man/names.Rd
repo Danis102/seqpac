@@ -2,18 +2,43 @@
 % Please edit documentation in R/seqpac_generics_methods.R
 \name{names,PAC-method}
 \alias{names,PAC-method}
-\alias{rownames,PAC-method}
 \alias{names,reanno-method}
-\title{sequence names}
+\title{names of objects in reanno}
 \usage{
 \S4method{names}{PAC}(x)
 
-\S4method{rownames}{PAC}(x)
-
 \S4method{names}{reanno}(x)
 }
-\description{
-sequence names
+\value{
+The names of the content in a PAC-object.
 
+Names of the items in the reanno-object.
+}
+\description{
 names of objects in reanno
+}
+\examples{
+
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                  package = "seqpac", mustWork = TRUE))
+
+# extra fuctionality with s4 PAC-object:
+pac_s4 <- as.PAC(pac)
+pac_s4
+names(pac_s4)
+length(pac_s4)
+nrow(pac_s4)
+ncol(pac_s4)
+rownames(pac_s4)
+colnames(pac_s4)
+pheno(pac_s4) 
+head(anno(pac_s4))
+head(counts(pac_s4))
+head(norm(pac_s4)$cpm)
+
+pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
+                   type = "means", pheno_target=list("stage")) 
+pac_s4                   
+head(summary(pac_s4)$cpmMeans_stage)
+
 }

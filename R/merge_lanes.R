@@ -33,16 +33,72 @@
 #'
 #' @examples
 #' 
-#' \dontrun{
-#' in_path <- "/some/path/to/fastq.gz/lane/files"
-#' out_path <- "/some/path/to/fastq.gz/merged/files"
-#'
-#' merge_lanes(in_path, out_path, threads=12)
+#' ## The simple principle: 
+#' # in_path <- "/some/path/to/lane/files/fastq.gz"
+#' # out_path <- "/some/path/to/merged/files/"
+#' # merge_lanes(in_path, out_path, threads=12)
 #' 
+#' 
+#' ## Real example
+#' # First generate some smallRNA fastq.
+#' # Only one untrimmed fastq comes with seqpac
+#' # Thus, we need to randomly sample that one using the ShortRead-package
+#'  
+#' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+#' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+#'                 full.names = TRUE)
+#'
+#' closeAllConnections()
+#'
+#' sampler <- ShortRead::FastqSampler(fq, 20000)
+#' set.seed(123)
+#' fqs <- list(fq1_lane1=ShortRead::yield(sampler),
+#'            fq1_lane2=ShortRead::yield(sampler),
+#'            fq1_lane3=ShortRead::yield(sampler),
+#'            fq2_lane1=ShortRead::yield(sampler),
+#'            fq2_lane2=ShortRead::yield(sampler),
+#'            fq2_lane3=ShortRead::yield(sampler))
+#'
+#' # Now generate a temp folder were we can store the fastq files
+#' # (for autonomous example, make sure it is empty and correct platform)
+#' 
+#' input <- paste0(tempdir(), "/seqpac_temp")
+#' if(grepl("windows", .Platform$OS.type)){
+#'  input <- gsub( "\\\\", "/", input)
 #' }
+#' fls  <- list.files(input, recursive=TRUE)
+#' if(length(fls)>0){unlink(input, recursive=TRUE)}
+#' dir.create(input, showWarnings=FALSE)
+#' 
+#' 
+#'
+#' # And then write the random fastq to the temp folder
+#' for (i in 1:length(fqs)){
+#'  input_file <- paste0(input, "/", names(fqs)[i], ".fastq.gz")
+#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+#'                        full=FALSE, compress=TRUE)
+#' }
+#' 
+#' # Create an output folder
+#' output <- paste0(input, "/merged")
+#' dir.create(output, showWarnings=FALSE)
+#' 
+#' 
+#' # Then merge the fastq files
+#' merge_lanes(input, output, threads=4)
+#' 
+#' # You will find the files in:
+#' input
+#' output
+#' 
+#' # warning: clean up:
+#' file.remove(list.files(input, full=TRUE, pattern=".fastq.gz"))
+#' file.remove(list.files(output, full=TRUE, pattern=".fastq.gz"))
+#' 
 #' @export
 
 merge_lanes <- function(in_path, out_path, threads=1){
+  j <- NULL
   fls <- list.files(in_path, pattern=".fastq.gz")
   fls_full <- list.files(in_path, pattern=".fastq.gz", full.names = TRUE)
 

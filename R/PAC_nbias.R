@@ -60,15 +60,7 @@
 #' @examples
 #' 
 #' 
-#' library(seqpac)
-#' 
-#' # Using master pac plotting 1st nt bias (default)
-#' load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", 
-#'                   mustWork = TRUE))
-#' output_nbias <- PAC_nbias(pac_master)
-#' cowplot::plot_grid(plotlist=output_nbias$Histograms)
-#' 
-#' # Using filtered
+#' # Load a PAC-object 
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #' output_nbias <- PAC_nbias(pac)

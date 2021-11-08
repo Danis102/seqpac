@@ -32,7 +32,6 @@
 #'   normalized counts table added to the norm folder (PAC$norm).
 #'   
 #' @examples
-#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #' pac_norm  <- PAC_norm(pac, norm="cpm") 

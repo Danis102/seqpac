@@ -64,7 +64,6 @@
 #' ##########################################
 #' ### Stacked bars in seqpac 
 #' ##----------------------------------------
-#' library(seqpac)
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                   package = "seqpac", mustWork = TRUE))
 #' 

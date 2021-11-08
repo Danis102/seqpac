@@ -64,29 +64,28 @@ Given a PAC object the function will extract sequences within a given size
 interval and percent coverage across independent samples.
 }
 \examples{
-library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", 
-                  package = "seqpac", mustWork = TRUE))
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
 
 ###--------------------------------------------------------------------- 
 ## Extracts all sequences between 10-80 nt in length with at least 5 counts in
 ## 20\% of all samples.
-pac_lowfilt <- PAC_filter(pac_master, size=c(10,80), threshold=5, 
+pac_lowfilt <- PAC_filter(pac, size=c(10,80), threshold=5, 
                          coverage=20, norm = "counts",  
                          pheno_target=NULL, anno_target=NULL)
 
 ###--------------------------------------------------------------------- 
 ## Extracts sequences with 22 nt size and the samples in Batch1 and Batch2.
-pac_subset <- PAC_filter(pac_master, subset_only = TRUE,
+pac_subset <- PAC_filter(pac, subset_only = TRUE,
                         pheno_target=list("batch", c("Batch1", "Batch2")), 
                         anno_target=list("Size", "22"))
 
 ###--------------------------------------------------------------------- 
 ## Extracts all sequences with >=5 counts in 100\% of samples a within stage
-filtsep <- PAC_filtsep(pac_master, norm="counts", threshold=5, 
+filtsep <- PAC_filtsep(pac, norm="counts", threshold=5, 
                       coverage=100, pheno_target= list("stage"))
 
-pac_filt <- PAC_filter(pac_master, subset_only = TRUE,
+pac_filt <- PAC_filter(pac, subset_only = TRUE,
                      anno_target= unique(do.call("c", as.list(filtsep))))
 
 
@@ -103,7 +102,6 @@ Other PAC analysis:
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},

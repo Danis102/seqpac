@@ -11,7 +11,7 @@ PAC_gtf(
   return = "simplify",
   stranded = FALSE,
   gtf = NULL,
-  target = NULL,
+  targets = NULL,
   threads = 1
 )
 }
@@ -57,12 +57,12 @@ analysis can be done in hindsight.}
 gtf files with differing formats. Can also directly be provided as a tibble
 dataframe in a named list.}
 
-\item{threads}{Integer indicating the number of parallel processes.}
-
 \item{targets}{Named list of character vectors indicating target columns
 in the listed gtf files in \emph{gtf_other}. Important, the listed objects
 must have the same length and names as in \emph{gtf}. The vector
 indicates the column names as if imported by rtracklayer::readGFF.}
+
+\item{threads}{Integer indicating the number of parallel processes.}
 }
 \value{
 List, tibble dataframe or updated PAC object. See \emph{return} for
@@ -96,7 +96,7 @@ genome <- "/some/path/to/genome.fa"
 gtf <- list(repeatMasker="/some/path/to/repeatMasker.gtf")
 
 # Target columns in gtf file:
-target <- list(gtf=c("gene_name", "repClass", "repFamily")) 
+targets <- list(gtf=c("gene_name", "repClass", "repFamily")) 
 
 # Run PAC_gtf
 repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", 
@@ -160,18 +160,18 @@ genome_col <- colnames(
 
 # Read converted gtf and pinpoint to target columns in gtf file:
 gtf <- list(repeatMasker="/some/path/to/repeatMasker_ensembl.gtf") 
-target <- list(repeatMasker=c("repName", "repClass", "repFamily"))
+targets <- list(repeatMasker=c("repName", "repClass", "repFamily"))
 
 
 repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", 
-                       gtf=gtf, target=target, threads=10) 
+                       gtf=gtf, targets=targets, threads=10) 
 
 # Works because PAC_gtf automatically maps the 
 # genome with add_reanno(genome_max="all")
 genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\\\d_genome", 
                                               colnames(pac_merge$Anno))]
 repeat_full <- PAC_gtf(pac, genome=genome, return="full", 
-                       gtf=gtf, target=target, threads=10)
+                       gtf=gtf, targets=targets, threads=10)
 
 # return="full" returns all annotation for all each coordinate
 repeat_full[800:820]
@@ -214,7 +214,6 @@ Other PAC analysis:
 \code{\link{PAC_filtsep}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},

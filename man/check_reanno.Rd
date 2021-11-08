@@ -31,10 +31,10 @@ annotations to a PAC-list object.
 }
 \examples{
 
-\dontrun{
-reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
-                        threads=8)
-}
+#
+# reanno <- import_reanno(bowtie_path=<your_path_to_bowtie_output_directory>, 
+#                         threads=8)
+
 
 #export
 }

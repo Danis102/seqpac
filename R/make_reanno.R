@@ -42,122 +42,149 @@
 #'
 #' @examples
 #' 
+#' ######################################################### 
+#' ##### Simple example for reference mapping 
+#' ##### Please see manual for simply_reanno for more advanced mapping
 #' 
-#' \dontrun{
 #' 
 #' ######################################################### 
-#' ##### Example type = "internal" for genome alignment #### 
-#' #
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt.Rdata", 
-#'                  package = "seqpac", mustWork = TRUE))
-#' pac <- pac_cpm_filt
+#' ##### Create an reanno object
 #' 
-#' ## Path to bowtie indexed reference genome fasta 
+#' ##  First load a PAC- object
 #' 
-#' ref_paths <- list(genome="/some/path/to/genome.fa")
+#'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                    package = "seqpac", mustWork = TRUE))
+#'  pac$Anno <- pac$Anno[,1, drop = FALSE]
+#'  
+#'  
+#' ##  Then specify paths to fasta references
+#' # If you are having problem see the vignette small RNA guide for more info.
+#'  
+#'  trna_path <- system.file("extdata/trna", "tRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)  
+#'  rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)
+#'  
+#'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
+#'                                     
+#' ##  Add output path of your choice.
+#' # Here we use the R temporary folder depending on platform                                     
+#'if(grepl("windows", .Platform$OS.type)){
+#'  output <- paste0(tempdir(), "\\seqpac\\test")
+#'}else{
+#'  output <- paste0(tempdir(), "/seqpac/test")}
 #' 
-#' ## Path to output folder:
-#' output_genome <- "/some/path/to/output_folder/"
-#' 
-#' ## Run map_reanno internally for genome mapping
-#' map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output_genome, 
-#'            type="internal", mismatches=3, import="genome", 
-#'            threads=1, keep_temp=TRUE)
-#' 
-#' ## Subsequent reannotion workflow for genome
-#' reanno <- make_reanno(reanno_path=output_genome, PAC=pac, 
-#'                       mis_fasta_check = TRUE)
-#' pac <- add_reanno(reanno=reanno, mismatches = 3,  merge_pac=pac, 
-#'                   type = "genome", genome_max = 10)
-#'   
-#' ############################################################################ 
-#' ##### Example type= external for biotype classification with 0 mismatch #### 
-#' #
-#' ## Path to bowtie indexed fasta references   
-#' ref_paths <- list(miRNA="/some/path/to//miRNA.fa",
-#'                   Ensembl="/some/path/to/ensembl.ncrna.fa",
-#'                   rRNA="/some/path/to/rRNA.fa",
-#'                   tRNA="/some/path/to/tRNA.fa",
-#'                   piRNA="/some/path/to/piRNA.fa")
-#' 
-#' ## Path to output folder:
-#' output_bio <- "/some/path/to/output_folder/"
-#' 
-#' ## Run map_reanno for biotype classification
-#' map_reanno(pac, ref_paths=ref_paths, output_path=output_bio, 
-#'            type="external", mismatches=0,  import="biotype", threads=1)
-#' #
-#' ## Subsequent reannotion workflow for sequence classification
+#' ## Make sure it is empty (otherwise you will be prompted for a question)
+#' out_fls  <- list.files(output, recursive=TRUE)
+#' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
+#'
+#' ##  Then map your PAC-object against the fasta references                                  
+#'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
+#'                type="internal", mismatches=2,  import="biotype", 
+#'                threads=2, keep_temp=FALSE)
+#'     
+#' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
+#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#'                                     
+#' ## Now make some search terms against reference names to create shorter names
+#' # Theses can be used to create factors in downstream analysis
+#' # One search hit (regular expressions) gives one new short name 
 #' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S"),
-#'                 tRNA    =c("^tRNA", "MT"),
-#'                 piRNA   =c("piR-"))
-#'                 
-#' reanno <- make_reanno(reanno_path=output_bio, PAC=pac, mis_fasta_check = TRUE)
-#' pac <- add_reanno(reanno, merge_pac=pac, bio_search=bio_search, 
-#'                   type="biotype", bio_perfect=FALSE, mismatches = 0)
+#'               rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
+#'               trna =c("_tRNA", "mt:tRNA"))
+#'  
+#'  
+#' ## You can merge directly with your PAC-object by adding your original 
+#' # PAC-object, that you used with map_reanno, to merge_pac option.
+#'  pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
+#'                        type="biotype", bio_perfect=FALSE, 
+#'                        mismatches = 2, merge_pac=pac)
+#'                        
+#'                        
+#' ## Turn your S3 list to an S4 reanno-object
+#' class(reanno_biotype)
+#' isS4(reanno_biotype)
+#' names(reanno_biotype)   
+#'
+#' reanno_s3 <- as(reanno_biotype, "list")
+#' class(reanno_s3)
+#' isS4(reanno_s3)   
+#'
+#' # Turns S3 reanno object into a S4                                    
+#' reanno_s4 <- as.reanno(reanno_s3)
+#' class(reanno_s4)
+#' isS4(reanno_s4) 
+#'  
+#' # Similar, turns S3 PAC object into a S4
+#' class(pac)
+#' isS4(pac)  
+#'                                                                         
+#' pac_s4 <- as.PAC(pac)
+#' class(pac_s4)
+#' isS4(pac_s4)   
 #' 
-#' head(pac$Anno)
+#' # Don't forget that in the slots of S4 lies regular S3 objects. Thus,
+#' # to receive these tables from an S4  you need to combine both S4 and S3
+#' # receivers:
+#' 
+#' pac_s4 <- PAC_norm(pac_s4, norm = "cpm")
+#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means", 
+#'                    pheno_target=list("stage"), merge_pac=TRUE)
+#' 
+#' pac_s4 
+#' head(pac_s4@norm$cpm)
+#' head(pac_s4@summary$cpmMeans_stage)
+#' 
+#' 
+#' 
+#' ############################################################################ 
+#' ## Similarly you can use Bowtie indexed genome fasta references
+#' ## But don't forget to use import="genome" for coordinate import
+#' #   
+#' # ref_paths <- list(genome="<path_to_bowtie_indexed_fasta>")
+#' # 
+#' # ## Path to output folder:
+#' # output_genome <- "<your_path_to_output>"
 #' #
-#' ## Merge with PAC object
-#' pac_master <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                          bio_perfect=FALSE, mismatches = 3, 
-#'                          merge_pac=pac_master) 
-#' head(pac_master$Anno)
-#' 
-#' 
-#' 
+#' ### Run map_reanno 
+#' # map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output_genome, 
+#' #           type="internal", mismatches=3, import="genome", 
+#' #           threads=8, keep_temp=TRUE)
+#' #
+#' #
+#' #
 #' ####################################################
-#' #### The trick to succeed with bio_perfect=TRUE ####
+#' #### The trick to succeed with bio_perfect=TRUE 
 #' 
 #' ## Run add_reanno with bio_perfect="FALSE" (look where "Other=XX" occurs)
-#' #
-#' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
-#'                 tRNA    =c("^tRNA"),
-#'                 piRNA   =c("piR-"))
 #' 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
+#' anno <- add_reanno(reanno_biotype, bio_search=bio_search, type="biotype", 
 #'                    bio_perfect=FALSE, mismatches = 0)
 #' 
 #' ## Find sequences that has been classified as other 
-#' other_seqs  <- anno[grepl("other", anno$mis0_bio),]$seq_bio
-#' tab <- reanno$Full_anno$mis0$Ensembl
-#' tab[tab$seq %in% other_seqs,]         # lincRNA don't have a search term
+#' other_seqs  <- anno[grepl("other", anno$mis0),]$seq
+#' tab <- reanno_biotype@Full_anno$mis0$trna
+#' tab[tab$seq %in% other_seqs,]         #No other hit in trna
+#' 
+#' tab <- reanno_biotype@Full_anno$mis0$rrna
+#' tab[tab$seq %in% other_seqs,] 
 #' 
 #' 
-#' ## Add a search terms that catches all lincRNA 
-#' 
+#' ## Add a search terms that catches the other rrna 
 #' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
-#'                 tRNA    =c("^tRNA"),
-#'                 piRNA   =c("piR-"))
+#'               rrna=c("5S", "5.8S", "12S", "16S", 
+#'                      "18S", "28S", "pre_S45", "Other_"),
+#'               trna =c("_tRNA", "mt:tRNA"))
 #'                 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                    bio_perfect=FALSE, mismatches = 0)
+#' anno <- add_reanno(reanno_biotype, bio_search=bio_search, 
+#'                    type="biotype", bio_perfect=FALSE, mismatches = 0)
 #' 
-#' ## Repeat search until no "Other" appear, then run  bio_perfect=TRUE: 
+#' ## Repeat search until no "Other" appear when running add_reanno, 
+#' ## then run  bio_perfect=TRUE: 
 #' 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                    bio_perfect=TRUE, mismatches = 0)
+#' anno <- add_reanno(reanno_biotype, bio_search=bio_search,  
+#'                    type="biotype", bio_perfect=TRUE, mismatches = 0)
 #' 
-#' }
 #'
 #' @export
 

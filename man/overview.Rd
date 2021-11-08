@@ -8,10 +8,67 @@
 \usage{
 overview(x)
 
-overview(x) <- value
+overview() <- value
 
 \S4method{overview}{reanno}(x)
 }
+\value{
+The overview table of a reanno-object as a data frame.
+
+Overview table of reanno-object.
+}
 \description{
 overview table of reanno object
+}
+\examples{
+######################################################### 
+##### Create an reanno object
+
+##  First load a PAC- object
+
+ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                   package = "seqpac", mustWork = TRUE))
+ pac$Anno <- pac$Anno[,1, drop = FALSE]
+ 
+ 
+##  Then specify paths to fasta references
+# If you are having problem see the vignette small RNA guide for more info.
+ 
+ trna_path <- system.file("extdata/trna", "tRNA.fa", 
+                          package = "seqpac", mustWork = TRUE)  
+ rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
+                          package = "seqpac", mustWork = TRUE)
+ 
+ ref_paths <- list(trna= trna_path, rrna= rrna_path)
+                                    
+##  Add output path of your choice.
+# Here we use the R temporary folder depending on platform                                     
+if(grepl("windows", .Platform$OS.type)){
+ output <- paste0(tempdir(), "\\\\seqpac\\\\test")
+}else{
+ output <- paste0(tempdir(), "/seqpac/test")}
+
+## Make sure it is empty (otherwise you will be prompted for a question)
+out_fls  <- list.files(output, recursive=TRUE)
+closeAllConnections()
+suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
+
+##  Then map your PAC-object against the fasta references                                  
+ map_reanno(pac, ref_paths=ref_paths, output_path=output,
+               type="internal", mismatches=2,  import="biotype", 
+               threads=2, keep_temp=FALSE)
+
+##  Then generate a reanno-object of the temporary bowtie-files 
+reanno_object <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
+
+## Accessing content and S4/S3 conversion:
+names(reanno_object)
+overview(reanno_object)
+full(reanno_object)
+rownames(reanno_object)
+length(reanno_object)
+nrow(reanno_object)
+reanno_s3 <- as(reanno_object, "list")
+reanno_s4 <- as.reanno(reanno_s3)
+
 }

@@ -78,15 +78,7 @@ in relation to the sequence counts in Counts.
 \examples{
 
 
-library(seqpac)
-
-# Using master pac plotting 1st nt bias (default)
-load(system.file("extdata", "drosophila_sRNA_pac.Rdata", package = "seqpac", 
-                  mustWork = TRUE))
-output_nbias <- PAC_nbias(pac_master)
-cowplot::plot_grid(plotlist=output_nbias$Histograms)
-
-# Using filtered
+# Load a PAC-object 
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 output_nbias <- PAC_nbias(pac)
@@ -122,7 +114,6 @@ Other PAC analysis:
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
 \code{\link{PAC_pie}()},

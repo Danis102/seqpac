@@ -8,25 +8,27 @@
 \usage{
 PAC(Pheno, Anno, Counts, norm, summary, reanno)
 }
+\value{
+Generates a S4 PAC-object.
+}
 \description{
 S4 version of the PAC object.
 }
 \details{
-Just like the S3 version, all subtables must have identical sequence (row)
+Just like the S3 version, all sub-tables must have identical sequence (row)
 names. To extract tables from S4 objects, use the getter commands or use @
 (e.g. PAC@Pheno) just like $ for the S3 version (e.g. PAC$Pheno). You may
 also use a coercion method, e.g. \code{PAC_S3 <- as(PAC_S4, "list")}
 
 Holds up to 5 slots: \describe{
    \item{\strong{Pheno}}{data.frame > information about the samples}
-   \item{\strong{Anno}}{data.frame > simplified sequences annotations}
+   \item{\strong{Anno}}{data.frame > sequences annotations}
    \item{\strong{Counts}}{data.frame > sequence counts over samples}
    \item{\emph{norm (optional)}}{list of data.frames > normalized counts}
    \item{\emph{summary (optional)}}{list of data.frames > summarized counts or normalized counts}
    }
 }
 \examples{
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
                   

@@ -60,7 +60,6 @@ based on
 \examples{
 
 ## Prepare
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 pac <- PAC_norm(pac, norm="cpm")
@@ -111,7 +110,6 @@ Other PAC analysis:
 \code{\link{PAC_filtsep}()},
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_mapper}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},

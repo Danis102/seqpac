@@ -39,36 +39,98 @@ generate a simple PAC list-object.
 }
 \examples{
 
-library(seqpac) 
-
 ### First make counts 
 
+# First generate some smallRNA fastq.
+# Only one untrimmed fastq comes with seqpac
+# Thus, we need to randomly sample that one using the ShortRead-package
+ 
+sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+                full.names = TRUE)
 
-input = system.file("extdata", package = "seqpac", mustWork = TRUE)
+closeAllConnections()
+
+sampler <- ShortRead::FastqSampler(fq, 20000)
+set.seed(123)
+fqs <- list(fq1=ShortRead::yield(sampler),
+           fq2=ShortRead::yield(sampler),
+           fq3=ShortRead::yield(sampler),
+           fq4=ShortRead::yield(sampler),
+           fq5=ShortRead::yield(sampler),
+           fq6=ShortRead::yield(sampler))
+
+# Now generate a temp folder were we can store the fastq files
+
+input <- paste0(tempdir(), "/seqpac_temp/")
+if(grepl("windows", .Platform$OS.type)){
+ input <- gsub( "\\\\\\\\", "/", input)
+}  
+dir.create(input, showWarnings=FALSE)
+
+# And then write the random fastq to the temp folder
+for (i in 1:length(fqs)){
+ input_file <- paste0(input, names(fqs)[i], ".fastq.qz")
+ ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+                       full=FALSE, compress=TRUE)
+}
+
+# Now we can run make_counts
+# Notice that make_counts will generate another temp folder, that will 
+# be emptied on finalization. By setting save_temp=TRUE you may save the 
+# content.  
+ 
 counts  <- make_counts(input, threads=1, parse="default_neb",
-                       trimming="seqpac", plot=TRUE, 
+                       trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))
 
 
-### Then generate a phenotype table with make_pheno (herre using file names)
+colnames(counts$counts)
 
-#  Note:  'Sample_ID' column need to be the same IDs as 
-#          colnames in the counts table.
 
-pheno <- as.data.frame(do.call("rbind", 
-                       strsplit(list.files(input,pattern="*.fastq.gz"), 
-                       "_|\\\\."))[,c(1,2,3,4)]) 
-colnames(pheno) <- c("stage", "batch", "index", "sample") 
-pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
+### Then generate a phenotype table with make_pheno
+
+#  Note:  'Sample_ID' column needs to be similar IDs as 
+#          colnames in the counts table. You may also 
+#          specify a path to a txt file.
+
+Sample_ID <- colnames(counts$counts)
+
+pheno <- data.frame(Sample_ID=Sample_ID,
+                       Treatment=c(rep("heat", times=3), 
+                                   rep("control", times=3)),
+                       Batch=rep(c("1", "2", "3"), times=2)) 
+                                               
 pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
-                    counts=counts$counts)
+                     counts=counts$counts)
 
+
+# make_pheno matches partial names 
  
+Sample_ID <- gsub(".fastq.qz","", colnames(counts$counts))
+ 
+pheno <- data.frame(Sample_ID=Sample_ID,
+                       Treatment=c(rep("heat", times=3), 
+                                   rep("control", times=3)),
+                       Batch=rep(c("1", "2", "3"), times=2))
+
+pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
+                     counts=counts$counts)
+ 
+pheno 
+
+# Note that progress report from make_counts is added if you specify it  
+     
 ### Lastly combine into PAC
 
-# Note: a simple annotation table will be added automatically.
+pac <- make_PAC(pheno=pheno, counts=counts$counts)
 
-pac <- make_PAC(pheno=pheno, counts=counts)
+
+pac
+names(pac)
+
+# Note: a simple annotation table is added automatically.
+head(anno(pac))
 
 }
 \seealso{

@@ -70,105 +70,159 @@ map sequences in PAC and mapping extract information.
 }
 \examples{
 
-\dontrun{
-# More details on the examples can be found in the vignette.
 
-library(seqpac)
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-                 package = "seqpac", mustWork = TRUE))
+## Load PAC-object data ###
+ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                   package = "seqpac", mustWork = TRUE))
 
-###########################################################
-### tRNA analysis in seqpac 
-##----------------------------------------
-
-# First create an annotation blanc PAC with group means
-pac$Anno <- pac$Anno[,1, drop=FALSE]
-pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
-                        pheno_target=list("stage"), merge_pac = TRUE)
-
-# Then reannotate only tRNA using the PAC_mapper function
-ref <- "/some/path/to/trna.fa"
-map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-                         mismatches=0, threads=8, 
-                         report_string=TRUE)
+## Make summaries and extract rRNA
+pac <- PAC_summary(pac, norm = "cpm", type = "means", 
+                   pheno_target=list("stage", unique(pac$Pheno$stage)))
+                   
+                   
+pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
+pac_tRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "tRNA"))
 
 
-###########################################################
-## Coverage plot of tRNA using PAC_covplot
+## Give path to a fasta reference (with or without bowtie index)
+#  (Here we use an rRNA fasta included in seqpac) 
 
-# Single tRNA targeting a summary dataframe 
-PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-            map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+ref_rRNA <- system.file("extdata/rrna", "rRNA.fa", 
+                         package = "seqpac", mustWork = TRUE)
+                         
+ref_tRNA_no_index <- system.file("extdata/trna_no_index", "tRNA_copy.fa", 
+                         package = "seqpac", mustWork = TRUE)                         
 
-# Find tRNAs with many fragments
-n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
-selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-cov_plt <- PAC_covplot(pac_trna, map=map_object, 
-                       summary_target= list("cpmMeans_stage"), 
-                       map_target=selct)
-cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
+                         
+## You may skip this. PAC_mapper will ask if you want to remove temp folder.  
+# (This temp folder must be removed for the example to run autonomously.)
+
+ if(grepl("windows", .Platform$OS.type)){
+ temp_folder <- paste0(tempdir(), "\\\\seqpac")
+  }else{
+  temp_folder <- paste0(tempdir(), "/seqpac")}
+    
+ unlink(temp_folder, recursive=TRUE)                                                   
+                                                                             
+                                                                                                                                 
+## Map using PAC-mapper                          
+
+map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
+                        threads=1, ref=ref_rRNA)
+ 
+unlink(temp_folder, recursive=TRUE)    
+ 
+                                                                                                   
+## Now try a fasta with no bowtie index using PAC-mapper                                                                 
+map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
+                        threads=1, ref=ref_tRNA_no_index)                        
+ 
+                                               
+## Plot rRNA according to embryonic stage using PAC_covplot                       
+cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
+                        summary_target = list("cpmMeans_stage"), 
+                        xseq=FALSE, style="line", 
+                        color=c("red", "black", "blue"))
+                        
+cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
+                    cov_rRNA[[4]], nrow=2, ncol=2)
+
+
+
+## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
+# (OBS! Long reference will not )                     
+cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
+                        summary_target = list("cpmMeans_stage"), 
+                        xseq=TRUE, style="line", 
+                        color=c("red", "black", "blue"))
+
+cov_tRNA[[1]]
+                    
+## Explore the map-object                    
+head(map_tRNA[[1]])
+names(map_tRNA)
+map_tRNA[[1]]
+
+## Check wish reached decent number
+# (OBS! This is a very down sampled dataset)
+logi_hi <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 10 }))
+logi_lo <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 2 }))
+
+table(logi_hi)  
+names(map_tRNA[logi_hi])
+
+table(logi_lo)  
+names(map_tRNA[logi_lo])
+    
+targets <- c("Ala-AGC-1-1", "Lys-CTT-1-13","Ser-AGA-2-2")
+
+cov_tRNA_sub <- PAC_covplot(pac_tRNA, map_tRNA, 
+                        summary_target = list("cpmMeans_stage"),
+                        map_target = targets,
+                        xseq=TRUE, style="line", 
+                        color=c("red", "black", "blue"))                  
+                                                      
+cowplot::plot_grid(plotlist= cov_tRNA_sub) 
 
 
 ###########################################################
 ## Analyze range types with map_rangetype and PAC_trna functions
-
-# Download ss object from GtRNAdb 
-dest_path <- file.path("/some/path/to/destination/file/trna.tar.gz")
-web_path <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz"
-download.file(url=web_path, destfile=dest_path)
-untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-ss_file <- "/some/path/to/dm6-tRNAs-confidence-set.ss"
-
+#
+## Download ss object from GtRNAdb 
+# dest_path <- file.path("/some/path/to/destination/file/trna.tar.gz")
+# web_path <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz"
+# download.file(url=web_path, destfile=dest_path)
+# untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
+# ss_file <- "/some/path/to/dm6-tRNAs-confidence-set.ss"
+#
 # Classify fragments according to loop cleavage (small loops are omitted)       
-map_object_ss <- map_rangetype(map_object, type="ss", 
-                               ss=ss_file, min_loop_width=4)          
-
-# Remove reference tRNAs with no hits
-map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){
-                     x[[2]][1,1] == "no_hits"
-                     }))]
-map_object_ss[[2]]
-
-
-
+# map_object_ss <- map_rangetype(<your_map_object>, type="ss", 
+#                               ss=ss_file, min_loop_width=4)          
+#
+## Remove reference tRNAs with no hits
+# map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){
+#                     x[[2]][1,1] == "no_hits"
+#                      }))]
+# map_object_ss[[2]]
+#
+#
+#
 ###########################################################
-# Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
-
-# Set tolerance for classification as a terminal tRF
-tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
-
-# Apply the tRNA_class function and make a tRNA type column
-pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
-head(pac_trna$Anno)
-
-# Now use PAC_trna to generate some graphs based on grand means
-trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-  join = TRUE, top = 15, log2fc = TRUE,
-  pheno_target = list("stage", c("Stage1", "Stage3")), 
-  anno_target_1 = list("type"),
-  anno_target_2 = list("class"))
-
-cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
-                   trna_result$plots$Log2FC_Anno_1,
-                   trna_result$plots$Percent_bars$Grand_means,
-                   nrow=1, ncol=3)
-
-# By setting join = FALSE you will get group means
-trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-  join = FALSE, top = 15, log2fc = TRUE,
-  pheno_target = list("stage", c("Stage1", "Stage3")), 
-  anno_target_1 = list("type"),
-  anno_target_2 = list("class"))
-
-cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
-                   trna_result$plots$Expression_Anno_1$Stage3,
-                   trna_result$plots$Log2FC_Anno_1,
-                   trna_result$plots$Percent_bars$Stage1,
-                   trna_result$plots$Percent_bars$Stage3,
-                   nrow=1, ncol=5)
+## Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
+#
+## Set tolerance for classification as a terminal tRF
+# tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
+#
+## Apply the tRNA_class function and make a tRNA type column
+# pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
+# head(pac_trna$Anno)
+#
+## Now use PAC_trna to generate some graphs based on grand means
+# trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#   join = TRUE, top = 15, log2fc = TRUE,
+#   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#   anno_target_1 = list("type"),
+#   anno_target_2 = list("class"))
+#
+# cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
+#                    trna_result$plots$Log2FC_Anno_1,
+#                    trna_result$plots$Percent_bars$Grand_means,
+#                    nrow=1, ncol=3)
+#
+## By setting join = FALSE you will get group means
+# trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
+#   join = FALSE, top = 15, log2fc = TRUE,
+#   pheno_target = list("stage", c("Stage1", "Stage3")), 
+#   anno_target_1 = list("type"),
+#   anno_target_2 = list("class"))
+#
+# cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
+#                    trna_result$plots$Expression_Anno_1$Stage3,
+#                    trna_result$plots$Log2FC_Anno_1,
+#                    trna_result$plots$Percent_bars$Stage1,
+#                    trna_result$plots$Percent_bars$Stage3,
+#                    nrow=1, ncol=5)
       
-   
-}                  
                    
 }
 \seealso{
@@ -182,7 +236,6 @@ Other PAC analysis:
 \code{\link{PAC_filtsep}()},
 \code{\link{PAC_gtf}()},
 \code{\link{PAC_jitter}()},
-\code{\link{PAC_mismap}()},
 \code{\link{PAC_nbias}()},
 \code{\link{PAC_norm}()},
 \code{\link{PAC_pca}()},
