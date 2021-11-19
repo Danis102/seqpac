@@ -127,8 +127,6 @@ cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA,
 cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
                     cov_rRNA[[4]], nrow=2, ncol=2)
 
-
-
 ## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
 # (OBS! Long reference will not )                     
 cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
@@ -143,7 +141,7 @@ head(map_tRNA[[1]])
 names(map_tRNA)
 map_tRNA[[1]]
 
-## Check wish reached decent number
+## Check which reached decent number
 # (OBS! This is a very down sampled dataset)
 logi_hi <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 10 }))
 logi_lo <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 2 }))

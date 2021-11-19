@@ -27,7 +27,7 @@
 #'   
 #' @param return Character indicating what information to return. 
 #' 
-#'    If return="simplify" (default), a table containing with one unique
+#'    If return="simplify" (default), a table with one unique
 #'    sequence per row will be returned. Multiple hits between genomic
 #'    coordinates and gtf coordinates will be merged and only unique annotations
 #'    will be reported.
@@ -39,7 +39,7 @@
 #'    be returned as a list.
 #'    
 #'    If return="merge", a simplified table will be merged with the Anno table
-#'    of the provided PAC object, and an updated PAC object containing the new
+#'    of the provided PAC object, and the updated PAC object containing the new
 #'    annotations will be returned.
 #'
 #' @param gtf Named list of characters, indicating file path(s) to other
@@ -61,20 +61,67 @@
 #'   
 #' @param threads Integer indicating the number of parallel processes.
 #'   
-#' @return List, tibble dataframe or updated PAC object. See \emph{return} for
-#'   more information.
+#' @return List, tibble dataframe or updated PAC object. See option
+#'   \emph{return} for more information.
 #'   
 #'   
 #' @examples
 #'
-#'
-#' \dontrun{
-#' 
-#' library(seqpac)
+#' # Load PAC
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                  package = "seqpac", mustWork = TRUE))
 #' 
+#' # Create a gtf file from PAC coordinates
+#' anno <- pac$Anno
+#' anno <- anno[!grepl("Warning", anno$mis0_chromosomes_genome),]
+#' anno <- anno[!is.na(anno$mis0_chromosomes_genome),]
+#' coord <- anno$mis0_chromosomes_genome
+#' coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\|"))[,1])
+#' coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\;start=|;")))
+#' gr <- GenomicRanges::GRanges(seqnames=coord[,1], 
+#'                              IRanges::IRanges(as.numeric(coord[,2]), 
+#'                                               as.numeric(coord[,2])+anno$Size ), 
+#'                              strand=coord[,3])
+#' 
+#' GenomicRanges::mcols(gr) <- data.frame(biotype=anno$Biotypes_mis3, 
+#'                                        bio_zero=as.character(anno$mis0_bio))
+#' spl <- sample(1:length(gr), round(length(gr)*0.3), replace=FALSE)
+#' gr1 <- gr[spl]
+#' gr2 <- gr[!1:length(gr) %in% spl]
+#' 
+#' # Prepare temp folder and save artifical gtf
+#' out1 <- paste0(tempdir(), "/temp1.gtf")
+#' out2 <- paste0(tempdir(), "/temp2.gtf")
+#' 
+#' rtracklayer::export(gr1, out1, format="gtf")
+#' rtracklayer::export(gr2, out2, format="gtf")
+#' 
+#' # Make sure PAC contains full genome coordinates
+#' # (In the add_reanno function you may choose how many coordinates to report)
+#' # (If there are more, a 'Warning' will be added to the annotation)
+#' # (Here we remove those to avoid problems)
+#' 
+#' new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", colnames(pac$Anno))]
+#' test <- new_anno[, 3:ncol(new_anno)]
+#' test <- apply(test, 2, function(x){substr(x, 1, 7)})
+#' test <- apply(test2, 1, function(x){paste(x, collapse = "")})
+#' new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
+#' pac$Anno <- new_anno
+#' pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))	
+#'
+#' #  Run PAC_gtf
+#' gtf <- list(gtf1=out1, gtf2=out2)
+#' target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero"))
+#' 
+#' pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
+#'                     gtf=gtf, target=target, threads=8)
+#'                     
+#' \dontrun{
+#' 
 #' ##############################################################
+#' ## More advanced examples (non-autonomous)
+#' ##############################################################
+#' 
 #' ## Simple repeatmasker annotation with genomic mapping
 #'
 #' # Specify genome fasta and repeatMasker gtf:      
@@ -84,8 +131,11 @@
 #' # Target columns in gtf file:
 #' targets <- list(gtf=c("gene_name", "repClass", "repFamily")) 
 #' 
-#' # Run PAC_gtf
-#' repeat_simple <- PAC_gtf(pac, genome=genome, return="simplify", 
+#' # Run PAC_gtf 
+#' # Note: no need for genome coordinates in PAC, because we provide
+#' # a bowtie-indexed fasta reference in 'genome'.
+#' 
+#' repeat_simple <- PAC_gtf(PAC, genome=genome, return="simplify", 
 #'                          gtf=gtf, threads=10)
 #'
 #'
@@ -103,8 +153,7 @@
 #' 
 #' # Read gtf with rtracklayer:
 #' gtf <- "/some/path/to/repeatMasker.gtf"
-#' gtf <- "/data/Data_analysis/Genomes/Drosophila/dm6/RepeatMasker/dm6/repeatMasker_dm6_ucsc_2019.gtf"
-#' rm <- rtracklayer::readGFF(gtf)
+#' repm <- rtracklayer::readGFF(gtf)
 #' 
 #' # Identify what type of names:
 #' table(rm$seqid)
@@ -130,11 +179,15 @@
 #'                                        repClass = rm$repClass,
 #'                                        repFamily = rm$repFamily)
 #'                                        
-#' rtracklayer::export(gr, "/some/path/to/repeatMasker_ensembl.gtf", format="gtf")
+#' rtracklayer::export(gr, "/some/path/to/repeatMasker_ensembl.gtf", 
+#'                     format="gtf")
 #' 
 #' 
 #' ##############################################################
 #' ### Full output previously mapped columns up to 3 mismatches
+#' 
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 #' 
 #' ## Generates an error because genome mapping was done
 #' ## with add_reanno(genome_max=10):
@@ -143,12 +196,9 @@
 #' genome_col <- colnames(
 #'   pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
 #' 
-
-#' 
 #' # Read converted gtf and pinpoint to target columns in gtf file:
 #' gtf <- list(repeatMasker="/some/path/to/repeatMasker_ensembl.gtf") 
 #' targets <- list(repeatMasker=c("repName", "repClass", "repFamily"))
-#' 
 #' 
 #' repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", 
 #'                        gtf=gtf, targets=targets, threads=10) 
@@ -160,33 +210,35 @@
 #' repeat_full <- PAC_gtf(pac, genome=genome, return="full", 
 #'                        gtf=gtf, targets=targets, threads=10)
 #' 
-#' # return="full" returns all annotation for all each coordinate
+#' # return="full" returns all annotation for each coordinate
 #' repeat_full[800:820]
 #' head(repeat_full["TGCGGAAGGATCATTA_mis0"])
 #'      
 #' 
 #' ###############################################################
-#' ### With additional gtfs including custom other
+#' ### With additional gtfs
 #' 
-#' gtf_repeat <- "/some/path/to/repeatMasker.gtf"
+#' gtf_repeat <- "/some/path/to/repeatMasker_ensembl.gtf"
 #' gtf_protein <- "/some/path/to/reference.genome.gtf" # e.g. from ensembl ftp 
 #' 
-#' # Note, target_other points to columns in each gtf listed in gtf_other 
-#' # and the list objects must therefore have the same names:
-#' gtf_other=list(rep=gtf_repeat, prot=gtf_protein)
-#' target_other=list(rep="repFamily", prot=c("type", "gene_id")) 
+#' # Note, targets points to columns in each gtf listed in gtf 
+#' # and the targets list must therefore have the same names:
 #' 
-#' genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", 
+#' gtf_lst = list(rep=gtf_repeat, prot=gtf_protein)
+#' target_lst = list(rep="repFamily", prot=c("type", "gene_id")) 
+#' 
+#' genome_col <- colnames(PAC$Anno)[grepl("^genome|mis\\d_genome", 
 #'                                               colnames(pac_merge$Anno))]
-#' many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", 
-#'                        mismatches=3, gtf_repeat=gtf_repeat, 
-#'                        gtf_protein=gtf_protein,gtf_other=gtf_other, 
-#'                        target_other=target_other, threads=10)
+#'                                            
+#' # With mismatches (3 mismatches)
+#' many_simply <- PAC_gtf(PAC, genome=genome_col, return="simplify", 
+#'                        mismatches=3, gtf=gtf_lst, target=target_lst, 
+#'                        threads=8)
 #' 
 #' # With perfect alignments (0 mismatches)
-#' many_simply <- PAC_gtf(pac_merge, genome=genome_col, return="simplify", 
-#'                        mismatches=0, gtf_repeat=gtf_repeat, 
-#'                        gtf_protein=gtf_protein, threads=10)
+#' many_simply <- PAC_gtf(PAC, genome=genome_col, return="simplify", 
+#'                        mismatches=0, gtf=gtf_lst, targets=target_lst  
+#'                        , threads=8)
 #' 
 #' }
 #' 

@@ -30,16 +30,16 @@ against a reference fasta file.}
   For example, if intervals=list(start=1:5, mid=45:50, end=95:100) then the
   function will classify sequences starting within the 5% first nucleotides
   in the references as 'type_start_per', and sequences ending within the 5%
-  last nucleotides of the references as "type_end_nuc". It will also,
+  last nucleotides of the references as "type_end_per". It will also,
   classify sequences starting within 45-50% of the references as
   "type_mid_start_per" and sequences ending within 45-50% of the references
   as 'type_mid_end_per'.
 
-  If type="ss", then intevals is obtain from an ss file, obtained for example
+  If type="ss", then intervals is obtain from an ss file, obtained for example
   from tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}) or at GtRNAdb
   \url{http://gtrnadb.ucsc.edu/}.
 
-  Important, the intervals list is name senstive. If type="nuclotides"
+  Important, the intervals list is name sensitive. If type="nuclotides"
   intervals can only contain two intervals named 'start' and 'end', while if
   type="percent" then intervals needs to contain three intervals named
   'start', 'mid' and 'end'.
@@ -76,7 +76,7 @@ counted in the terminals. This conveniently controls the N_up and N_down
 arguments in the \code{\link{PAC_mapper}} function. If N_include=FALSE
 (default), start and end of tRNA will be measured from the first and last
 canonical nucleotides (A, T, C, G). Thus, if fragments align to an
-NNN-terminal, it will recieve a netagitve value. If N_include=TRUE, N
+NNN-terminal, it will receive a negitve value. If N_include=TRUE, N
 wild-cards will be treated as any other nucleotide.}
 }
 \value{

@@ -18,8 +18,11 @@ PAC_mapper(
 \arguments{
 \item{PAC}{PAC-list object.}
 
-\item{ref}{Character indicating the path to the fasta (.fa) reference
-file or a DNAStringSet with already loaded reference sequences.}
+\item{ref}{Character indicating the path to the fasta (.fa) reference file or
+a DNAStringSet with already loaded reference sequences. If a Bowtie index
+is missing for the reference, PAC_mapper will attempt to temporally
+generate such index automatically. Thus, large large references are
+discouraged. Please use the original reanno workflow for large references.}
 
 \item{mismatches}{Integer indicating the number of mismatches that should be
 allowed in the mapping.}
@@ -58,15 +61,15 @@ references are used (default=FALSE).}
 \value{
 Stacked list, where each object on the highest level contains:
                    (Object 1) Reference name and sequence. 
-                   (Object 2) Dataframe showing the mapping results of
-                              each quiary sequence that mapped to Object 1.
+                   (Object 2) Data.frame showing the mapping results of
+                              each query sequence that mapped to Object 1.
 }
 \description{
-\code{PAC_mapper} Mapping sequences against a reference.
+\code{PAC_mapper} Map sequences against a small reference.
 }
 \details{
 Given a PAC object and the path to a fasta reference file, this function will
-map sequences in PAC and mapping extract information.
+map sequences in the PAC using a 'backdoor' into the reanno workflow.
 }
 \examples{
 
