@@ -118,7 +118,7 @@ rtracklayer::export(gr2, out2, format="gtf")
 new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", colnames(pac$Anno))]
 test <- new_anno[, 3:ncol(new_anno)]
 test <- apply(test, 2, function(x){substr(x, 1, 7)})
-test <- apply(test2, 1, function(x){paste(x, collapse = "")})
+test <- apply(test, 1, function(x){paste(x, collapse = "")})
 new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
 pac$Anno <- new_anno
 pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))	
