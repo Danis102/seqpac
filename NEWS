@@ -1,10 +1,22 @@
+
+CHANGES IN VERSION 0.99.1 
+--------------------------
+	* Preparations for Bioconductor
+	* Updates in vignette and manuals to accomodate more autonomous examples
+	* Some minor bug fixes and changes to the reanno workflow 
+
+CHANGES IN VERSION 0.99.0 
+--------------------------
+	* Due to rules for Bioconductor submissions version number was decreased 
+
+-----------------------------------
+--Biocundoctor submisson ----------
+----------------------------------
+	
 CHANGES IN VERSION 1.1.1
 --------------------------
-	* Final hard release August 2021  
+	* First hard release August 2021  
 
---------------------------
-
---Early developmental releases----------
 CHANGES IN VERSION 1.0.4 
 --------------------------
 	* Major updates to accomodate package specific tests, and devtools/BiocCheck 
