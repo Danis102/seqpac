@@ -202,7 +202,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
   }
   
   if(!is.null(anno_target_1)){
-    if(!class(anno_target_1) =="list"){
+    if(!methods::is(anno_target_1, "list")){
       anno_target_1 <-list(anno_target_1)}  
     if(length(anno_target_1)==1){
       anno_target_1[[2]] <- unique(PAC$Anno[, anno_target_1[[1]]])
@@ -212,7 +212,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       stop("You have to provide a invalid anno_target list object.")}
   
   if(!is.null(anno_target_2)){
-    if(!class(anno_target_2) =="list"){
+    if(!methods::is(anno_target_2, "list")){
       anno_target_2 <-list(anno_target_2)}  
     if(length(anno_target_2)==1){
       anno_target_2[[2]] <- unique(PAC$Anno[, anno_target_2[[1]]])
@@ -222,7 +222,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       stop("You have to provide a invalid anno_target list object.")}
   
   if(!is.null(pheno_target)){
-    if(!class(pheno_target) =="list"){
+    if(!methods::is(pheno_target, "list")){
       pheno_target <- list(pheno_target)}    
     if(length(pheno_target)==1){
       pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])

@@ -282,7 +282,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
     ss_anno <- tryCatch(readLines(ss), error=function(e){ss})
     
     ## First make a split function if not already a list  
-    if(!class(ss_anno) == "list"){
+    if(!methods::is(ss_anno, "list")){
       logi_breaks <- ss_anno == ""
       breaks <- 1
       fact <- NULL

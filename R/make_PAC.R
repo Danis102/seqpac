@@ -132,7 +132,7 @@
 #' @export
 
 make_PAC<- function(pheno, anno=NULL, counts, output="S4"){
-  if(class(counts)=="list"){
+  if(methods::is(counts, "list")){
     counts <- counts[["counts"]]
   }
   if(is.null(anno)){

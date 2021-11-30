@@ -110,8 +110,8 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
       if(is.character(sample_check)){
         if(length(sample_check)==1){
           whr  <- which(unlist(lapply(PAC, function(x){  
-            if(!class(x)=="list"){return(FALSE)}
-            if(class(x)=="list"){any(grepl(sample_check, names(x)))}})))
+            if(!methods::is(x, "list")){return(FALSE)}
+            if(methods::is(x, "list")){any(grepl(sample_check, names(x)))}})))
           if(length(whr)==1){
             if(sum(grepl(paste(rownames(PAC$Pheno)[1:2], collapse="|"), 
                          rownames(PAC[[whr]][[sample_check]])))==2){
@@ -174,10 +174,11 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
       if(is.character(seq_check)){
         if(length(seq_check)==1){
           whr  <- which(unlist(lapply(PAC, function(x){  
-            if(!class(x)=="list"){return(FALSE)}
-            if(class(x)=="list"){any(grepl(seq_check, names(x)))}})))
+            if(!methods::is(x, "list")){return(FALSE)}
+            if(methods::is(x, "list")){any(grepl(seq_check, names(x)))}})))
           if(length(whr)==1){
-            if(!identical(rownames(PAC$Anno), rownames(PAC[[whr]][[seq_check]]))){
+            if(!identical(rownames(PAC$Anno), 
+                          rownames(PAC[[whr]][[seq_check]]))){
               stop(
                 paste0(
                   "\nSequence (row) names in new table are not identical",

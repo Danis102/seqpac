@@ -259,7 +259,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   seqs <- rownames(PAC$Anno)
   
   ##### Import gtfs ####################################
-  if(!class(gtf)=="list"){
+  if(!methods::is(gtf, "list")){
     gtf <- list(gtf)
     if(is.null(names(gtf))){
       names(gtf) <- 1:length(gtf)
@@ -267,7 +267,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   }
   cat("\nImporting gtf files ...")
   gtf_lst <- lapply(gtf, function(x){
-    if(class(x)[1] == "character"){    
+    if(methods::is(x[1], "character")){    
       if(file.exists(x)){
         gtf <- tibble::as_tibble(rtracklayer::readGFF(x), 
                                  .name_repair="minimal")

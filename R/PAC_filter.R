@@ -136,9 +136,10 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
   
   ### Subset data by Anno
   if(!is.null(anno_target)){
-    if(class(anno_target)=="list"){if(length(anno_target)==1){
+    if(methods::is(anno_target,"list")){
+      if(length(anno_target)==1){
       anno_target[[2]] <- unique(PAC$Anno[, anno_target[[1]]])
-    }
+     }
     }else{
       PAC$Anno$all_names <- rownames(PAC$Anno)
       anno_target <- list("all_names", anno_target)

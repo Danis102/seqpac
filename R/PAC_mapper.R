@@ -52,6 +52,12 @@
 #'   contains multiple reference sequences, a query sequence may be reported in
 #'   multiple references sequences.
 #'   
+#' @param override Logical whether or not the map_reanno function should prompt
+#'   you for a question if there are files in the temporary path. As default,
+#'   override=FALSE will prevent deleting large files by accident, but requires
+#'   an interactive R session. Setting override=TRUE may solve non-interactive
+#'   problems.
+#'   
 #'   
 #' @return Stacked list, where each object on the highest level contains:
 #'                    (Object 1) Reference name and sequence. 
@@ -83,31 +89,15 @@
 #' ref_tRNA_no_index <- system.file("extdata/trna_no_index", "tRNA_copy.fa", 
 #'                          package = "seqpac", mustWork = TRUE)                         
 #'
-#'                          
-#' ## You may skip this. PAC_mapper will ask if you want to remove temp folder.  
-#' # (This temp folder must be removed for the example to run autonomously.)
-#' 
-#'  if(grepl("windows", .Platform$OS.type)){
-#'  temp_folder <- paste0(tempdir(), "\\seqpac")
-#'   }else{
-#'   temp_folder <- paste0(tempdir(), "/seqpac")}
-#'     
-#'  unlink(temp_folder, recursive=TRUE)                                                   
-#'                                                                              
 #'                                                                                                                                  
 #' ## Map using PAC-mapper                          
-#' 
 #' map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
-#'                         threads=1, ref=ref_rRNA)
-#'  
-#' unlink(temp_folder, recursive=TRUE)    
-#'  
+#'                         threads=1, ref=ref_rRNA, override=TRUE)
 #'                                                                                                    
 #' ## Now try a fasta with no bowtie index using PAC-mapper                                                                 
 #' map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
-#'                         threads=1, ref=ref_tRNA_no_index)                        
-#'  
-#'                                                
+#'                         threads=1, ref=ref_tRNA_no_index, override=TRUE)                        
+#'                                                 
 #' ## Plot rRNA according to embryonic stage using PAC_covplot                       
 #' cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
 #'                         summary_target = list("cpmMeans_stage"), 
@@ -217,7 +207,8 @@
 #' @export
 
 PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove", 
-                       threads=1, N_up="", N_down="", report_string=FALSE){
+                       threads=1, N_up="", N_down="", report_string=FALSE, 
+                       override=FALSE){
 
 
 ## Setup
@@ -230,7 +221,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
     tp <- "S3"
   }
   ## Setup reference  
-  if(class(ref)=="DNAStringSet"){
+  if(methods::is(ref, "DNAStringSet")){
     cat("\nImporting reference from DNAStringSet ...")
     full <- ref
   }else{
@@ -238,7 +229,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
       cat("\nReading reference from fasta file ...")
       full <- Biostrings::readDNAStringSet(ref)
     }else{
-      if(class(ref)=="character"){
+      if(methods::is(ref, "character")){
         cat("\nTry to import reference from character vector ...")
         full <- Biostrings::DNAStringSet(ref)
       }else{
@@ -292,7 +283,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
 ## Make reanno object  
   map_reanno(PAC, ref_paths=list(reference=ref_path), output_path=outpath, 
              type="internal", threads=threads, mismatches=mismatches,  
-             import="genome", keep_temp=FALSE)
+             import="genome", keep_temp=FALSE, override=override)
   map <- make_reanno(outpath, PAC=PAC, mis_fasta_check = TRUE, output="list")
   stopifnot(length(map$Full_anno$mis0) == 1)
 

@@ -14,7 +14,8 @@ map_reanno(
   parse_external = "-a -f",
   parse_internal = "a=TRUE, f=TRUE",
   import = "genome",
-  keep_temp = FALSE
+  keep_temp = FALSE,
+  override = FALSE
 )
 }
 \arguments{
@@ -78,7 +79,12 @@ in the output path should be deleted. Note, this option is only used for
 troubleshooting. The bowtie output files are named as the reference files
 and are overwritten in each mismatch cycle. Thus, for safe saving of
 mismatch 0 bowtie output make sure that \code{mismatches=0}. If not, the
-mismatch 1 cycle will overwrite the botwie files.}
+mismatch 1 cycle will overwrite the bowtie files.}
+
+\item{override}{Logical whether or not the function should prompt you for a
+question if there are files in output_path. As default, override=FALSE will
+prevent deleting large files by accident, but requires an interactive R
+session. Setting override=TRUE may solve non-interactive problems.}
 }
 \value{
 Will primarily generate .Rdata files in the destination folder
@@ -264,7 +270,6 @@ anno <- add_reanno(reanno_biotype, bio_search=bio_search,
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
 \code{\link{as.reanno}()},
-\code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},
 \code{\link{make_reanno}()},

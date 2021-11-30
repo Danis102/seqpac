@@ -171,7 +171,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   
   # Print summary working with different DESeq versions
   test <- try(cat(DESeq2::summary(res_DESeq2)), silent = TRUE)
-  if(class(test) == "try-error"){ 
+  if(methods::is(test,"try-error")){ 
     cat(DESeq2::summary.DESeqResults(res_DESeq2))
   }else{
     print(test)
