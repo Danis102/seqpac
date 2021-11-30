@@ -122,10 +122,11 @@
 #'
 #' @param check_mem Logical whether a memory check should be performed. A memory
 #'   check estimates the approximate memory usage given the fastq file sizes and
-#'   number of threads. The check happens before entering the parallell trimming
-#'   loop, and will give an immedaite warning given intermedialty risky memory
-#'   estimates, and an error if the is risk very high. (default=TRUE)
-#'
+#'   number of threads. The check happens before entering the parallel trimming
+#'   loop, and will give an immediate warning given intermediary risky memory
+#'   estimates, and an error if the risk is very high. Note, this option depends
+#'   on the parallel and benchmarkme packages. (default=FALSE)
+#'   
 #' @return Exports a compressed trimmed fastq file to the output folder (file
 #'   name: basename+trim.fastq.gz). If any type="save" has been set, an
 #'   additional fastq file (file name includes 'REMOVED') will be exported. In
@@ -179,8 +180,7 @@
 #' list.files(input) #before
 #' 
 #' prog_report  <-  make_trim(
-#'        input=input, output=input, 
-#'        threads=1, check_mem=TRUE, 
+#'        input=input, output=input, threads=1, 
 #'        adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
 #'        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
 #'        polyG=c(type="hard_trim", min=20, mismatch=0.1),
@@ -209,7 +209,7 @@
 #' 
 #' @export
 
-make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=TRUE, 
+make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE, 
                       threads=1,polyG=c(type=NULL, min=NULL, mismatch=NULL),
                       adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
                       adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
