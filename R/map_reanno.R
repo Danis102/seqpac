@@ -83,8 +83,13 @@
 #'   troubleshooting. The bowtie output files are named as the reference files
 #'   and are overwritten in each mismatch cycle. Thus, for safe saving of
 #'   mismatch 0 bowtie output make sure that \code{mismatches=0}. If not, the
-#'   mismatch 1 cycle will overwrite the botwie files.
-#'
+#'   mismatch 1 cycle will overwrite the bowtie files.
+#'   
+#' @param override Logical whether or not the function should prompt you for a
+#'   question if there are files in output_path. As default, override=FALSE will
+#'   prevent deleting large files by accident, but requires an interactive R
+#'   session. Setting override=TRUE may solve non-interactive problems. 
+#'   
 #' @return Will primarily generate .Rdata files in the destination folder
 #'   (\code{output_path}) containing summarized information about the reference
 #'   alignments. One file is generated for every mismatch specified in
@@ -247,7 +252,7 @@
 map_reanno <- function(PAC, type="internal", output_path, ref_paths, 
                        mismatches=3, threads=1, parse_external= "-a -f", 
                        parse_internal = "a=TRUE, f=TRUE", 
-                       import="genome", keep_temp=FALSE){
+                       import="genome", keep_temp=FALSE, override=FALSE){
   
   if(isS4(PAC)){
     tp <- "S4"
@@ -280,16 +285,26 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   ## Look for files and folders in output path
   drs <- list.dirs(output_path, full.names = FALSE, recursive = FALSE) 
   fls <- list.files(output_path, recursive = FALSE)
-  if(length(fls[!fls %in% drs])>0){
-    cat("\n")
-    warning(paste0("\n  There are files in the output folder:\n  ", 
-                   output_path,  "\n  Is it ok to delete them? (y/n)"), 
-            immediate.=TRUE, call.=FALSE)
-    response <- readline()
-    if(!response %in% c("y", "Y")){
-      stop(paste0("Please move or delete the files in the output folder."))
+  
+  
+    if(length(fls[!fls %in% drs])>0){
+      cat("\n")
+      if(override==FALSE){
+      warning(paste0("\n  There are files in the output folder:\n  ", 
+                     output_path,  "\n  Is it ok to delete them? (y/n)"), 
+              immediate.=TRUE, call.=FALSE)
+      response <- readline()
+      }
+      if(override==TRUE){
+        warning(paste0("\n  There are files in the output folder:\n  ", 
+                       output_path,  "\noverride=TRUE, files will be deleted!"), 
+                immediate.=TRUE, call.=FALSE)
+        response <- "y"
+      }
+      if(!response %in% c("y", "Y")){
+        stop(paste0("Please move or delete the files in the output folder."))
+      }
     }
-  }
   if(!dir.exists(output_path)){
     suppressWarnings(dir.create(output_path, recursive = TRUE))  
   }else{
