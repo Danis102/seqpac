@@ -118,7 +118,6 @@ head(pac_s4@summary$cpmMeans_stage)
 
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
-\code{\link{check_reanno}()},
 \code{\link{import_reanno}()},
 \code{\link{make_conv}()},
 \code{\link{make_reanno}()},

@@ -85,7 +85,6 @@ reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
 Other PAC reannotation: 
 \code{\link{add_reanno}()},
 \code{\link{as.reanno}()},
-\code{\link{check_reanno}()},
 \code{\link{make_conv}()},
 \code{\link{make_reanno}()},
 \code{\link{map_reanno}()},
