@@ -9,16 +9,13 @@ In R:<br>
 `devtools::install_github("Danis102/seqpac", dependencies=TRUE)`
 
 
-If you're having problems, please try our development branch prior to posting an issue:<br>
-`devtools::install_github("Danis102/seqpac", dependencies=TRUE, ref="development")`
-
 <br>
 
 
 
 ---
 ### How to use 
-[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.Rmd)
+[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.html)
 
 <br>
 
