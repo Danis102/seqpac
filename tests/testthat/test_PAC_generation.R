@@ -12,18 +12,41 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
     invisible(force(x)) 
     }
   
-  input <- system.file("extdata", package = "seqpac", mustWork = TRUE)
-  input <-  list.files(input, patter="fastq.gz\\>", full.names = TRUE)
-  smpl <- 1
-  while(length(smpl) ==1){
-      smpl <- unique(round(runif(2, min = 1, max = length(input)), digits=0))
-  }
-  input <- input[smpl]
+  sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+  fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+                   full.names = TRUE)
   
-  tmp_dir <- paste0(tempdir(), "/seqpac/")
-  tmp_files <- list.files(tmp_dir, full.names=TRUE, recursive=FALSE)
-  if(any(file.exists(tmp_files))){file.remove(tmp_files)}
-    
+  closeAllConnections()
+  
+  sampler <- ShortRead::FastqSampler(fq, 20000)
+  set.seed(123)
+  fqs <- list(fq1=ShortRead::yield(sampler),
+              fq2=ShortRead::yield(sampler),
+              fq3=ShortRead::yield(sampler),
+              fq4=ShortRead::yield(sampler),
+              fq5=ShortRead::yield(sampler),
+              fq6=ShortRead::yield(sampler))
+
+  # Now generate a temp folder were we can store the fastq files
+  
+  input <- paste0(tempdir(), "/seqpac_temp/")
+  if(grepl("windows", .Platform$OS.type)){
+    input <- gsub( "\\\\", "/", input)
+  }  
+  dir.create(input, showWarnings=FALSE)
+  
+  # And then write the random fastq to the temp folder
+  for (i in 1:length(fqs)){
+    input_file <- paste0(input, names(fqs)[i], ".fastq.qz")
+    ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
+                          full=FALSE, compress=TRUE)
+  }
+  
+  # Now we can run make_counts
+  # Notice that make_counts will generate another temp folder, that will 
+  # be emptied on finalization. By setting save_temp=TRUE you may save the 
+  # content.  
+  
   parse_cut = list(cutadapt="-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT --discard-untrimmed --nextseq-trim=20 -O 10 -m 14 -M 70",
               fastq_quality_filter="-q 20 -p 80")
   
@@ -31,7 +54,8 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
                adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
                polyG=c(type="hard_trim", min=10, mismatch=0.1),
                seq_range=c(min=14, max=70),
-               quality=c(threshold=20, percent=0.8))
+               quality=c(threshold=20, percent=0.8),
+               check_mem = TRUE)
   
   if(grepl("unix", .Platform$OS.type)) {
     quiet(
@@ -59,17 +83,24 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
                            trimming = NULL,
                            evidence=c(experiment=2, sample=1))
   )
+  quiet(  
+    counts_null  <-  make_counts(trim_files, threads=3,
+                                 trimming = NULL,
+                                 evidence=NULL)
+  )
+    
+  
 
 ## Test counting and trimming
   ## Test both windows and linux
   seq_clss  <- unlist(lapply(lapply(counts_seq, function(x){x[[1]]}), class), use.names=FALSE)
   seq_n  <- c(nrow(counts_seq$counts)>1, 
-              ncol(counts_seq$counts) == length(input),
-              nrow(counts_seq$progress_report) == length(input))
+              ncol(counts_seq$counts) == length(trim_files),
+              nrow(counts_seq$progress_report) == length(trim_files))
   trim_clss  <- unlist(lapply(lapply(counts_trim, function(x){x[[1]]}), class), use.names=FALSE)
   trim_n  <- c(nrow(counts_trim$counts)>1, 
-              ncol(counts_trim$counts) == length(input),
-              nrow(counts_trim$progress_report) == length(input))
+              ncol(counts_trim$counts) == length(trim_files),
+              nrow(counts_trim$progress_report) == length(trim_files))
 
   expect_identical(names(counts_seq), c("counts","progress_report", "evidence_plots"))
   expect_identical(names(counts_trim), c("counts","progress_report", "evidence_plots"))
@@ -86,22 +117,25 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
 # ## Test make pheno and 
 # test_that("Testing make_pheno and make_PAC ...", {
   
-  pheno <- as.data.frame(do.call("rbind", strsplit(basename(input), "_|\\."))[,c(1,2,3,4)]) 
-  colnames(pheno) <- c("stage", "batch", "index", "sample") 
-  pheno$Sample_ID <- apply(pheno, 1, function(x){paste(x, collapse="_")}) 
+  Sample_ID <- gsub(".fastq.qz","", colnames(counts_seq$counts))
   
+  pheno <- data.frame(Sample_ID=Sample_ID,
+                      Treatment=c(rep("heat", times=3), 
+                                  rep("control", times=3)),
+                      Batch=rep(c("1", "2", "3"), times=2)) 
   
-  invisible(capture.output(
-    pheno_1 <- make_pheno(pheno=pheno, progress_report=counts_seq$progress_report,
-                          counts=counts_seq$counts)
-  ))
-  write.csv(pheno, file=paste0(tmp_dir, "temp.csv"), row.names=FALSE)
+  quiet(                                                  
+  pheno_1 <- make_pheno(pheno=pheno, progress_report=counts_seq$progress_report, 
+                        counts=counts_seq$counts) 
+ )  
+ write.csv(pheno, file=paste0(input, "temp.csv"), row.names=FALSE)
   
-  invisible(capture.output(
-    pheno_2 <- make_pheno(pheno=paste0(tmp_dir, "temp.csv"),
+
+ quiet(
+     pheno_2 <- make_pheno(pheno=paste0(input, "temp.csv"),
                           progress_report=counts_trim$progress_report, 
                           counts=counts_trim$counts)
-  ))
+)
   
   # Test make_PAC both S3 and S4
   pac_seq <- make_PAC(pheno=pheno_1, 
@@ -116,7 +150,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   expect_equal(names(pac_seq), c("Pheno","Anno","Counts"))
   expect_equal(length(pac_seq), length(pac_S3))
   expect_equal(nrow(pac_seq), nrow(pac_S3$Counts))
-  expect_equal(ncol(pac_seq), 2)
+  expect_equal(ncol(pac_seq), 6)
   expect_equal(rownames(pac_seq), rownames(pac_S3$Counts))
   as.PAC(pac_S3) -> pac_S4
   expect_equal(rownames(pac_seq), rownames(pac_S4))
@@ -134,7 +168,5 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
       pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
       expect_true(PAC_check(pac_cut))
   }
-  
-  
 })
   

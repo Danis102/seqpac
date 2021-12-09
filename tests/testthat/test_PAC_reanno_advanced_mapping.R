@@ -12,9 +12,9 @@ library(seqpac)
       invisible(force(x)) 
       }
 
-  load(system.file("extdata", "drosophila_sRNA_pac_filt.Rdata", 
-                   package = "seqpac", mustWork = TRUE))
-  pac = pac_cpm_filt
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                    package = "seqpac", mustWork = TRUE))
+pac$Anno <- pac$Anno[,1, drop=FALSE] 
   
   ## Genome
   if(grepl("windows", .Platform$OS.type)){
@@ -22,13 +22,13 @@ library(seqpac)
   }else{
     output <- paste0(tempdir(), "/seqpac/test")
   }
-  # tests uses testhat folder for getwd()
-  mycoplasma_path <- paste0(getwd(), "/data_for_tests/mycoplasma_genome") 
-  #mycoplasma_path <- paste0(getwd(), "/tests/testthat/data_for_tests/mycoplasma_genome")
-  ref_paths <- list(genome1= list.files(mycoplasma_path, pattern=".fa", 
-                                        full.names = TRUE),
-                    genome2= list.files(mycoplasma_path, pattern=".fa", 
-                                        full.names = TRUE))
+
+  mycoplasma_path <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+                           package = "seqpac", mustWork = TRUE)
+  
+  
+  ref_paths <- list(genome1= mycoplasma_path,
+                    genome2= mycoplasma_path)
   
   out_fls  <- list.files(output, recursive=TRUE, full.names = TRUE)
   suppressWarnings(file.remove(out_fls))
@@ -49,11 +49,6 @@ library(seqpac)
 
   
   ## Biotype
-  #output <- paste0(tempdir(), "/seqpac/test")
-  #out_fls  <- list.files(output, recursive=TRUE)
-  #suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
-  
-  #doParallel::stopImplicitCluster()
   closeAllConnections()
   out_fls  <- list.files(output, recursive=TRUE, full.names = TRUE)
   if(grepl("windows", .Platform$OS.type)){
@@ -61,14 +56,15 @@ library(seqpac)
   }
   suppressWarnings(file.remove(out_fls))
   
-  trna_path <- paste0(getwd(), "/data_for_tests/trna")
-  rrna_path <- paste0(getwd(), "/data_for_tests/rrna")
-  #trna_path <- paste0(getwd(), "/tests/testthat/data_for_tests/trna")
-  #rrna_path <- paste0(getwd(), "/tests/testthat/data_for_tests/rrna")
-  ref_paths <- list(trna= list.files(trna_path, pattern=".fa", 
-                                     full.names = TRUE),
-                    rrna= list.files(rrna_path, pattern=".fa", 
-                                     full.names = TRUE))
+  trna_path <- system.file("extdata/trna", "tRNA.fa", 
+                             package = "seqpac", mustWork = TRUE)
+  
+  
+  rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
+                           package = "seqpac", mustWork = TRUE)
+  
+  ref_paths <- list(trna= trna_path, rrna= rrna_path)
+
   quiet(  
     map_reanno(pac, ref_paths=ref_paths, output_path=output,
                type="internal", mismatches=2,  import="biotype", 
@@ -145,10 +141,12 @@ library(seqpac)
 
 
 # Test PAC_mapper, cov_plots
-    ref <- paste0(getwd(), "/data_for_tests/trna_no_index/tRNA_copy.fa")
-    ss <- paste0(getwd(), "/data_for_tests/trna_no_index/tRNA.ss")
-    #ref <- paste0(getwd(), "/tests/testthat/data_for_tests/trna_no_index/tRNA_copy.fa")
-    #ss <- paste0(getwd(), "/tests/testthat/data_for_tests/trna_no_index/tRNA.ss")
+    
+    ref <- system.file("extdata/trna_no_index", "tRNA_copy.fa", 
+                       package = "seqpac", mustWork = TRUE)
+    
+    ss <- system.file("extdata/trna_no_index", "tRNA.ss", 
+                       package = "seqpac", mustWork = TRUE)
     
     closeAllConnections()
     if(grepl("windows", .Platform$OS.type)){
