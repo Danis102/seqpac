@@ -18,7 +18,7 @@ If you're having problems, please try our development branch prior to posting an
 
 ---
 ### How to use 
-[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.md)
+[A guide to sRNA analysis using sequence-based counts](/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.Rmd)
 
 <br>
 
