@@ -6,7 +6,34 @@
 \alias{PAC}
 \title{S4 object for PAC}
 \usage{
-PAC(Pheno, Anno, Counts, norm, summary, reanno)
+PAC(Pheno, Anno, Counts, norm, summary)
+}
+\arguments{
+\item{Pheno}{Phenotype data.frame table with sample ID as row names and where
+columns are variables associated with the samples. Can be generated using
+the make_pheno function.}
+
+\item{Anno}{Annotation data.frame table with unique sequences as row names
+and where columns are variables associated with the sequences.}
+
+\item{Counts}{Counts table (data.frame) with unique sequences as row names
+(identical to Anno) and where columns are sample ID (identical to row names
+for Pheno. Should contain raw counts and can be generated using the
+make_counts function.}
+
+\item{norm}{List of data.frames. May be regarded as a "folder" with
+normalized counts tables. The listed data.frames must have identical
+sequence names as Counts/Anno (rows) and sample IDs (columns) as
+Counts/Pheno. Can be generated using the PAC_norm function, but seqpac
+functions will attempt use any normalized table stored in norm that are in
+agreement with the above cafeterias.}
+
+\item{summary}{List of data.frames, just like norm, but contains summarized
+raw or normalized counts (e.g. means, standard errors, fold changes).
+Important, the listed data.frames must have identical sequence names as
+Counts/Anno (rows), but columns don't need sample IDs. Can be generated
+using the PAC_summary function, but seqpac functions will attempt use any
+summarized table stored in the summary "folder".}
 }
 \value{
 Generates a S4 PAC-object.

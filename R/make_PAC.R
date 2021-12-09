@@ -26,8 +26,8 @@
 #'   \code{\link{make_counts}}.
 #'   
 #' @param output Character indicating output format. If type="S4" (default),
-#'   then the reanno object is returned as an S4 object. If type="S3", the
-#'   reanno object will be returned as a list of data.frames
+#'   then the PAC object is returned as an S4 object. If type="S3", the
+#'   PAC object will be returned as a list of data.frames
 #'   
 #'
 #' @return Ordered PAC list object, checked for compatibility with downstream
@@ -161,8 +161,7 @@ make_PAC<- function(pheno, anno=NULL, counts, output="S4"){
                       Anno=PAC_unord$Anno,
                       Counts=PAC_unord$Counts,
                       norm=list(NULL),
-                      summary=list(NULL),
-                      reanno=list(NULL)
+                      summary=list(NULL)
                       )
   }
     

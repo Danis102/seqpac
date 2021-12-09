@@ -69,17 +69,37 @@ setClass(Class = "PAC",
                   Anno= "data.frame",
                   Counts= "data.frame",
                   norm= "list",
-                  summary="list",
-                  reanno= "list"
+                  summary="list"
                   ))
 
 #-------------------------------
 # Constructor PAC
 #' @rdname PAC
+#' @param Pheno Phenotype data.frame table with sample ID as row names and where
+#'   columns are variables associated with the samples. Can be generated using
+#'   the make_pheno function.
+#' @param Anno Annotation data.frame table with unique sequences as row names
+#'   and where columns are variables associated with the sequences.
+#' @param Counts Counts table (data.frame) with unique sequences as row names
+#'   (identical to Anno) and where columns are sample ID (identical to row names
+#'   for Pheno. Should contain raw counts and can be generated using the
+#'   make_counts function.
+#' @param norm List of data.frames. May be regarded as a "folder" with
+#'   normalized counts tables. The listed data.frames must have identical
+#'   sequence names as Counts/Anno (rows) and sample IDs (columns) as
+#'   Counts/Pheno. Can be generated using the PAC_norm function, but seqpac
+#'   functions will attempt use any normalized table stored in norm that are in
+#'   agreement with the above cafeterias.
+#' @param summary List of data.frames, just like norm, but contains summarized
+#'   raw or normalized counts (e.g. means, standard errors, fold changes).
+#'   Important, the listed data.frames must have identical sequence names as
+#'   Counts/Anno (rows), but columns don't need sample IDs. Can be generated
+#'   using the PAC_summary function, but seqpac functions will attempt use any
+#'   summarized table stored in the summary "folder".
 #' @export
-PAC <- function(Pheno, Anno, Counts, norm, summary, reanno){
+PAC <- function(Pheno, Anno, Counts, norm, summary){
   new("PAC", Pheno=Pheno, Anno=Anno, Counts=Counts,
-      norm=norm, summary=summary, reanno=reanno)}
+      norm=norm, summary=summary)}
 
 #-------------------------------
 # Test validity
@@ -107,9 +127,6 @@ setAs("PAC", "list",
         }
         if(!is.null(from@summary[[1]])){
          pac <- c(pac, list(summary= from@summary))
-        }
-        if(!is.null(from@reanno[[1]])){
-         pac <- c(pac, list(reanno= from@reanno))
         }
         class(pac) <- c("PAC_S3","list")
         return(pac)
@@ -175,17 +192,13 @@ as.PAC <- function(from){
                    Anno=from$Anno,
                    Counts=from$Counts,
                    norm=list(NULL),
-                   summary=list(NULL),
-                   reanno=list(NULL)
+                   summary=list(NULL)
                    )
        if("norm" %in% names(from)){
               pac@norm <- from$norm
         }
        if("summary" %in% names(from)){
               pac@summary <- from$summary
-        }
-       if("reanno" %in% names(from)){
-              pac@reanno <- from$reanno
         }
        return(pac)
         }
@@ -309,6 +322,12 @@ setClass(Class = "reanno",
 #-------------------------------
 # Constructor reanno
 #' @rdname reanno
+#' @param Overview A tibble data.frame with summarized results from mapping
+#'   using the \code{\link{map_reanno}} function that has been imported into R
+#'   using the \code{\link{make_reanno}} function. Rows represents sequences
+#'   from the original PAC-object.
+#' @param Full_anno A multi-level list with tibble data.frames that contains all
+#'   that was imported by \code{\link{make_reanno}}
 #' @export
 reanno <- function(Overview, Full_anno){
   new("reanno", Overview=Overview, Full_anno=Full_anno)}
