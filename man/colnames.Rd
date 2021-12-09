@@ -6,6 +6,9 @@
 \usage{
 \S4method{colnames}{PAC}(x)
 }
+\arguments{
+\item{x}{A S4 object of class PAC.}
+}
 \value{
 The sample names held by the Counts table (column names) and the
   Pheno table (row names) of a PAC-object.

@@ -9,6 +9,9 @@
 
 \S4method{nrow}{reanno}(x)
 }
+\arguments{
+\item{x}{A S4 object of class PAC.}
+}
 \value{
 The number of sequences in a PAC-object.
 

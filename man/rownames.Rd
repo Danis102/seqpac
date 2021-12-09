@@ -9,6 +9,9 @@
 
 \S4method{rownames}{reanno}(x)
 }
+\arguments{
+\item{x}{A S4 object of class PAC.}
+}
 \value{
 The sequences (row names) held by the Counts/Anno tables of a
   PAC-object.

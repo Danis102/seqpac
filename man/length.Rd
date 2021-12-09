@@ -9,6 +9,9 @@
 
 \S4method{length}{reanno}(x)
 }
+\arguments{
+\item{x}{A S4 object of class PAC.}
+}
 \value{
 The number of items in a PAC-object.
 
@@ -24,7 +27,7 @@ length of reanno object
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                   package = "seqpac", mustWork = TRUE))
 
-# extra fuctionality with s4 PAC-object:
+# extra functionality with s4 PAC-object:
 pac_s4 <- as.PAC(pac)
 pac_s4
 names(pac_s4)

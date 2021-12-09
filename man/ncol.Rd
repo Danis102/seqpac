@@ -6,6 +6,9 @@
 \usage{
 \S4method{ncol}{PAC}(x)
 }
+\arguments{
+\item{x}{A S4 object of class PAC.}
+}
 \value{
 The number of samples in a PAC-object.
 }

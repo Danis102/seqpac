@@ -8,6 +8,15 @@
 \usage{
 reanno(Overview, Full_anno)
 }
+\arguments{
+\item{Overview}{A tibble data.frame with summarized results from mapping
+using the \code{\link{map_reanno}} function that has been imported into R
+using the \code{\link{make_reanno}} function. Rows represents sequences
+from the original PAC-object.}
+
+\item{Full_anno}{A multi-level list with tibble data.frames that contains all
+that was imported by \code{\link{make_reanno}}}
+}
 \value{
 Contains two slots:  1. Overview: A table holding a summary of the
 mapping. 2. Full_anno: Lists of tables holding the full imports per mismatch

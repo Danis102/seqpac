@@ -2,27 +2,38 @@
 % Please edit documentation in R/seqpac_generics_methods.R
 \name{overview}
 \alias{overview}
+\alias{overview,}
 \alias{overview<-}
 \alias{overview,reanno-method}
-\title{overview table of reanno object}
+\alias{overview<-,reanno,data.frame-method}
+\title{overview(reanno)}
 \usage{
-overview(x)
+overview(object)
 
-overview() <- value
+\S4method{overview}{reanno}(object)
 
-\S4method{overview}{reanno}(x)
+\S4method{overview}{reanno,data.frame}(object) <- value
+}
+\arguments{
+\item{object}{A S4 reanno-object containing an overview table.}
+
+\item{value}{Tibble data.frame with the same property as the Overview table
+of the reanno object, e.g. having the same names in seq column as row names
+(sequences) in the original PAC-object used to generate the reanno object.
+See examples and ?make_reanno for details.}
 }
 \value{
-The overview table of a reanno-object as a data frame.
+The overview table of a reanno-object as a tibble data.frame (class
+  tbl_df, tbl, data.frame).
 
-Overview table of reanno-object.
+Updated reanno-object.
 }
 \description{
-overview table of reanno object
+Access the overview table in a S4 reanno object
 }
 \examples{
 ######################################################### 
-##### Create an reanno object
+##### Create a reanno object
 
 ##  First load a PAC- object
 
@@ -72,3 +83,8 @@ reanno_s3 <- as(reanno_object, "list")
 reanno_s4 <- as.reanno(reanno_s3)
 
 }
+\seealso{
+Other reanno methods: 
+\code{\link{full}()}
+}
+\concept{reanno methods}

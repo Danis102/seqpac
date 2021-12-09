@@ -2,29 +2,39 @@
 % Please edit documentation in R/seqpac_generics_methods.R
 \name{full}
 \alias{full}
+\alias{full,}
 \alias{full<-}
 \alias{full,reanno-method}
-\title{full annotation list of reanno object}
+\alias{full<-,reanno,list-method}
+\title{full(reanno)}
 \usage{
-full(x)
+full(object)
 
-full() <- value
+\S4method{full}{reanno}(object)
 
-\S4method{full}{reanno}(x)
+\S4method{full}{reanno,list}(object) <- value
+}
+\arguments{
+\item{object}{A S4 reanno-object containing an Full_anno list.}
+
+\item{value}{List of tibble data.frames with the same property as the
+Full_anno list of tibble data.frames in the reanno object, e.g. having the
+same names in seq column as row names (sequences) in the original
+PAC-object used to generate the reanno object. See examples and
+?make_reanno for details.}
 }
 \value{
 All the results that were imported into the reanno-object returned as
-  a list of data frames.
+  a list of tibble data.frames (class tbl_df, tbl, data.frame).
 
-All the results that were imported into the reanno-object returned as
-  a list of data frames.
+Updated S4 reanno-object.
 }
 \description{
-full annotation list of reanno object
+Access the multilevel list of imported data.frames in a S4 reanno object
 }
 \examples{
 ######################################################### 
-##### Create an reanno object
+##### Create a reanno object
 
 ##  First load a PAC- object
 
@@ -71,5 +81,10 @@ rownames(reanno_object)
 length(reanno_object)
 nrow(reanno_object)
 reanno_s3 <- as(reanno_object, "list")
-reanno_s4 <- as.reanno(reanno_s3)  
+reanno_s4 <- as.reanno(reanno_s3)   
 }
+\seealso{
+Other reanno methods: 
+\code{\link{overview}()}
+}
+\concept{reanno methods}
