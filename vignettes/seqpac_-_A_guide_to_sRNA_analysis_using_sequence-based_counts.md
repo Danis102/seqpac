@@ -1,7 +1,7 @@
 ---
 title: "seqpac - A guide to sRNA analysis using sequence-based counts"
 author: "Daniel Nätt"
-date: "2021-12-09"
+date: "2021-12-10"
 output: 
   html_document:
     keep_md: true
@@ -79,6 +79,11 @@ allowing more mismatches or changes in hierarchical classifications (often
 applied in sRNA analysis when a sequence align with multiple classes of sRNA).
 
 <br>
+**But the best with sequence-based counting where you preserve sequence
+integrity, is probably that you will be able blast your candidate sequences at
+your favorite database, to verify and find out more about them.**
+
+<br>
 
 ## 1.2 The seqpac workflow
 The input file format for seqpac is fastq, which can be generated from most
@@ -151,7 +156,7 @@ library(seqpac)
             fq6=ShortRead::yield(sampler))
 
  # Now generate a temp folder were we can store the fastq files
- # (you may of course use your on destination folder) 
+ # (you may of course use your own destination folder) 
  # (path style depends on platform; autonomous example need empty folder)
  path_to_fastq <- paste0(tempdir(), "/seqpac_temp")
  if(grepl("windows", .Platform$OS.type)){
@@ -522,8 +527,8 @@ Here are some examples:
 
 ```r
  ###--------------------------------------------------------------------- 
-## Extracts all sequences between 20-30 nt in length with at least 5 counts in
-## 20% of all samples.
+## Extracts all sequences between 20-30 nt in length with at least 5 counts 
+## in 20% of all samples.
 pac_filt <- PAC_filter(pac, size=c(20,30), threshold=5, 
                           coverage=20, norm = "counts",  
                           pheno_target=NULL, anno_target=NULL)
@@ -535,8 +540,8 @@ pac_filt <- PAC_filter(pac, size=c(20,30), threshold=5,
 
 ```r
 ###--------------------------------------------------------------------- 
-## Optionally, a simple coverage/threshold graph at different filter depths can
-## plotted with stat=TRUE (but it will promt you for a question).
+## Optionally, a simple coverage/threshold graph at different filter depths 
+## can be plotted with stat=TRUE (but it will promt you for a question).
 pac_filt <- PAC_filter(pac, threshold=5, coverage=20, 
                        norm = "counts", stat=TRUE,  
                        pheno_target=NULL, anno_target=NULL)
@@ -553,7 +558,7 @@ pac_filt <- PAC_filter(pac, subset_only = TRUE,
 #> -- Anno target was specified, will retain: 378 of 9131 seqs.
 
 ###--------------------------------------------------------------------- 
-## Extracts all sequences with >=5 counts in 100% of samples a within each stage
+## Extracts  sequences with >=5 counts in 100% of samples within each stage
 filtsep <- PAC_filtsep(pac, norm="counts", threshold=5, 
                        coverage=100, pheno_target= list("stage"))
 
@@ -580,8 +585,7 @@ olap <- reshape2::melt(filtsep,
 plot(venneuler::venneuler(olap[,c(2,1)]))
 
 ###--------------------------------------------------------------------- 
-## Setting output="binary", instead prepares data for upset plots using the
-## UpSetR package:
+## Setting output="binary", prepares data for upset plots (UpSetR package): 
 filtsep_bin <- PAC_filtsep(pac, norm="counts", threshold=5, 
                            coverage=100, pheno_target= list("stage"), 
                            output="binary")
@@ -633,7 +637,7 @@ homoskedastic values with functions available in the DESeq2 package.
 It is easy to generate your own normalized count table using your
 method of choice, and import it as a data.frame to the *norm* folder in the PAC
 object. Just remember that row and column names must be identical to the
-original Counts table. Use `PAC_check` to verify that this is the case.
+original Counts table. Use `PAC_check` to verify.
 
 Lets generate two normalized count tables with cpm and vst:
 
@@ -1280,7 +1284,7 @@ tab <- PAC_summary(pac, norm = "counts", type = "means",
 #> 
 #> -- Pheno target was specified, will retain: 9 of 9 samples.
 
-# When merge_pac=TRUE the summarized table is added to the PAC$summary 'folder'  
+# When merge_pac=TRUE the table is added to the PAC$summary 'folder'  
 pac_test <- PAC_summary(pac, norm = "counts", type = "means", 
                         pheno_target=list("stage"), merge_pac=TRUE)
 #> 
@@ -1405,7 +1409,7 @@ output_deseq <- PAC_deseq(pac, model= ~stage + batch, threads=6)
 output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
                           pheno_target=list("batch")) 
 
-# With pheno_target we can also change the direction fo the comparison 
+# With pheno_target we can also change the direction of the comparison 
 # (zygotic transcription has not started)
 output_deseq <- PAC_deseq(pac, model= ~stage, 
                           pheno_target=list("stage", c("Stage3", "Stage1")))
