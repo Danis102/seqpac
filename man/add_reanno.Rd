@@ -183,7 +183,7 @@ head(pac_s4@summary$cpmMeans_stage)
 ### Run map_reanno 
 # map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output_genome, 
 #           type="internal", mismatches=3, import="genome", 
-#           threads=8, keep_temp=TRUE)
+#           threads=2, keep_temp=TRUE)
 #
 #
 #

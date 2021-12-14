@@ -32,7 +32,7 @@
 #' @return Merged fastq files in destination folder.
 #'
 #' @examples
-#' 
+#'
 #' ## The simple principle: 
 #' # in_path <- "/some/path/to/lane/files/fastq.gz"
 #' # out_path <- "/some/path/to/merged/files/"
@@ -85,7 +85,7 @@
 #' 
 #' 
 #' # Then merge the fastq files
-#' merge_lanes(input, output, threads=4)
+#' merge_lanes(input, output, threads=2)
 #' 
 #' # You will find the files in:
 #' input

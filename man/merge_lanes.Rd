@@ -90,7 +90,7 @@ dir.create(output, showWarnings=FALSE)
 
 
 # Then merge the fastq files
-merge_lanes(input, output, threads=4)
+merge_lanes(input, output, threads=2)
 
 # You will find the files in:
 input

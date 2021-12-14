@@ -105,7 +105,7 @@
 #' # Then reannotate only tRNA using the PAC_mapper function
 #' ref <- "/some/path/to/trna.fa"
 #' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-#'                          mapper="reanno", mismatches=0, threads=8, 
+#'                          mapper="reanno", mismatches=0, threads=2, 
 #'                          report_string=TRUE)
 #' 
 #' 

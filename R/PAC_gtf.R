@@ -114,7 +114,7 @@
 #' target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero"))
 #' 
 #' pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
-#'                     gtf=gtf, target=target, threads=8)
+#'                     gtf=gtf, target=target, threads=2)
 #'                     
 #' \dontrun{
 #' 
