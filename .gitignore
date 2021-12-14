@@ -3,7 +3,7 @@
 .RData
 .Ruserdata.renviron
 .rprofile 
-*.Rproj
+seqpac.Rproj
 .rproj
 .rproj.user
 .rhistory
