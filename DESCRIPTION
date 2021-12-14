@@ -62,8 +62,7 @@ Imports:
   stringr (>= 1.4.0),
   stats (>= 3.4.4),
   tibble (>= 3.1.2),
-  methods,
-  R.utils
+  methods
 Suggests:
   benchmarkme (>= 0.6.0),
   DESeq2 (>= 1.18.1),
@@ -74,6 +73,7 @@ Suggests:
   rmarkdown,
   testthat,
   UpSetR (>= 1.4.0),
-  venneuler
+  venneuler,
+  R.utils
 VignetteBuilder: 
   knitr
