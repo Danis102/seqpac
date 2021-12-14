@@ -1,10 +1,9 @@
 .Rproj.user
-.Rproj
 .Rhistory
 .RData
 .Ruserdata.renviron
 .rprofile 
-.Rproj
+*.Rproj
 .rproj
 .rproj.user
 .rhistory
