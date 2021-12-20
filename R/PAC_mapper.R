@@ -322,6 +322,11 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
                                    Align_start="no_hits", 
                                    Align_end="no_hits", Align_width="no_hits")
     }
+    if (nrow(align_lst[[i]])==0) {
+      align_lst[[i]] <- data.frame(Mismatch = "no_hits", 
+                                   Strand = "no_hits", Align_start = "no_hits", 
+                                   Align_end = "no_hits", Align_width = "no_hits")
+    }
     fin_lst[[i]] <- list(Ref_seq=full[i], Alignments=align_lst[[i]])
     names(fin_lst)[i] <- names(align_lst)[i] 
   }
