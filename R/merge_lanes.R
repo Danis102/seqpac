@@ -29,6 +29,8 @@
 #' @param threads Integer indicating the number of parallel processes that
 #'   should be used.
 #'
+#' @param lanes Integer indicating the number of lanes to be merged. Default = 4
+#'
 #' @return Merged fastq files in destination folder.
 #'
 #' @examples
@@ -42,9 +44,9 @@
 #' }
 #' @export
 
-merge_lanes <- function(in_path, out_path, threads=1){
-  fls <- list.files(in_path, pattern=".fastq.gz")
-  fls_full <- list.files(in_path, pattern=".fastq.gz", full.names = TRUE)
+merge_lanes <- function(in_path, out_path, threads=1, lanes=4){
+  fls <- list.files(in_path, pattern=".fastq.gz", , recursive  = TRUE)
+  fls_full <- list.files(in_path, pattern=".fastq.gz", full.names = TRUE, , recursive  = TRUE)
 
   # Error if no files are found
   if(length(fls) < 1){
@@ -67,7 +69,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   # Fix name vy trimming in the end until shorter unique
   fls_nam <- fls
   length(fls_nam) <- length(fls)
-  while(length(fls_nam) == length(fls)){
+  while(length(fls_nam) > (length(fls)/lanes)){
     fls_nam <- lapply(fls_nam, function(x){
              substring(x, 1, nchar(x)-1)
     })
@@ -75,7 +77,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   }
 
   # trim further and test if still valid
-  test <- unique(gsub("_L00$|_L0$|_L$|_$", "", fls_nam))
+  test <- unique(gsub("_L.*", "", fls_nam))
   if(length(test) == length(fls_nam)){
     fls_nam <- test
   }
