@@ -1,19 +1,20 @@
 Package: seqpac
 Type: Package
-Title: seqpac - Group-based Analysis of Short Reads Using Sequence Counts
-Version: 0.99.2
+Title: Seqpac: A New Framework for smallRNA analysis in R using Sequence-Based Counts
+Version: 0.99.3
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
     person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
     person("Signe", "Skog", email="signe.skog@liu.se", role= "ctb"),
     person("Anita", "Öst", email="anita.ost@liu.se", role= c("aut", "fnd"))
     )
-Description: A collection of functions used for complete analysis of short sequenced reads. 
-    The package was originally developed for small RNA analysis, but can be implemented on 
-    any sequencing raw data (provided as a fastq-file) where intended unit of measurement 
+Maintainer: Daniel Natt <daniel.natt@liu.se>
+Description: Seqpac provides functions and a workflow for analysis of short sequenced reads. 
+    It was originally developed for small RNA analysis, but can be implemented on 
+    any sequencing raw data (provided as a fastq-file), where the unit of measurement 
     is counts of unique sequences. The core of the seqpac workflow is the generation and 
-    subsequence analysis/visualization of a standardized list object called PAC. Using an 
-    innovative target system, seqpac extracts, analyze and visualize group differences 
+    subsequence analysis/visualization of a standardized object called PAC. Using an 
+    innovative target system, Seqpac process, analyze and visualize group differences 
     using the PAC object.
     A PAC object in its most basic form is a list containing three types of data frames: 
     - Phenotype table (P): Sample names (rows) with associated metadata (columns) e.g. groups. 
@@ -24,25 +25,26 @@ Description: A collection of functions used for complete analysis of short seque
     - Row names in A must be identical with row names in C.
     Thus P and A describes the columns and rows in C, respectively. The targeting system, will either 
     target specific samples in P (pheno_target) or sequences in A (anno_target) and group them according 
-    to a target column in P and A, respectively.
-License: file LICENSE
+    to a target column in P and A, respectively (see vignettes for more details).
+License: GPL-3
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.1.2
 URL: https://github.com/Danis102/seqpac
 BugReports: https://github.com/Danis102/seqpac/issues
 biocViews:
-  Workflow, GeneExpressionWorkflow, EpigeneticsWorkflow, AnnotationWorkflow
-Depend:
+  Workflow, BasicWorkflow, GeneExpressionWorkflow, EpigeneticsWorkflow, 
+  AnnotationWorkflow
+Depends:
+  R (>= 4.1.0)
+Imports:
   Biostrings (>= 2.46.0),
   foreach (>= 1.5.1),
-  GenomicRanges (>= 1.30.3,
+  GenomicRanges (>= 1.30.3),
   Rbowtie (>= 1.18.0),
   ShortRead (>= 1.36.1),
-  tibble (>= 3.1.2)
-Imports:
+  tibble (>= 3.1.2),
   BiocParallel (>= 1.12.0),
-  Biostrings (>= 2.46.0),
   cowplot (>= 0.9.4),
   data.table (>= 1.14.0),
   digest (>= 0.6.27),
@@ -50,30 +52,27 @@ Imports:
   dplyr (>= 1.0.6),
   factoextra (>= 1.0.7),
   FactoMineR (>= 1.41),
-  foreach (>= 1.5.1),
-  GenomicRanges (>= 1.30.3),
   ggplot2 (>= 3.3.3),
   IRanges (>= 2.12.0),
   parallel (>= 3.4.4),
-  Rbowtie (>= 1.18.0),
   reshape2 (>= 1.4.4),
   rtracklayer (>= 1.38.3),  
-  ShortRead (>= 1.36.1),
   stringr (>= 1.4.0),
   stats (>= 3.4.4),
-  tibble (>= 3.1.2),
-  methods
+  methods,
+  S4Vectors 
 Suggests:
   benchmarkme (>= 0.6.0),
   DESeq2 (>= 1.18.1),
   GenomeInfoDb (>= 1.14.0),  
   gginnards (>= 0.0.2),
-  knitr,
   qqman (>= 0.1.8),
   rmarkdown,
+  BiocStyle,
+  knitr,
   testthat,
   UpSetR (>= 1.4.0),
   venneuler,
   R.utils
-VignetteBuilder: 
+VignetteBuilder:
   knitr
