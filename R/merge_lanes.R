@@ -63,15 +63,10 @@
 #' # (for autonomous example, make sure it is empty and correct platform)
 #' 
 #' input <- paste0(tempdir(), "/seqpac_temp")
-#' if(grepl("windows", .Platform$OS.type)){
-#'  input <- gsub( "\\\\", "/", input)
-#' }
 #' fls  <- list.files(input, recursive=TRUE)
 #' if(length(fls)>0){unlink(input, recursive=TRUE)}
 #' dir.create(input, showWarnings=FALSE)
 #' 
-#' 
-#'
 #' # And then write the random fastq to the temp folder
 #' for (i in 1:length(fqs)){
 #'  input_file <- paste0(input, "/", names(fqs)[i], ".fastq.gz")
@@ -83,17 +78,22 @@
 #' output <- paste0(input, "/merged")
 #' dir.create(output, showWarnings=FALSE)
 #' 
-#' 
 #' # Then merge the fastq files
 #' merge_lanes(input, output, threads=2)
 #' 
 #' # You will find the files in:
 #' input
 #' output
+#'
 #' 
-#' # warning: clean up:
-#' file.remove(list.files(input, full=TRUE, pattern=".fastq.gz"))
-#' file.remove(list.files(output, full=TRUE, pattern=".fastq.gz"))
+#' ##-----------------------------------------##
+#' ## Warning: Clean up temp folder           ##
+#' # (Sometimes needed for automated examples) 
+#' 
+#' closeAllConnections()
+#' fls_temp  <- tempdir()
+#' fls_temp  <- list.files(fls_temp, recursive=TRUE, full.names = TRUE)
+#' suppressWarnings(file.remove(fls_temp))
 #' 
 #' @export
 
@@ -142,10 +142,11 @@ merge_lanes <- function(in_path, out_path, threads=1){
   done <- foreach::foreach(j=1:length(fls_nam)) %dopar% {
     fl_base<- fls_nam[j]
     lns  <- which(grepl(fl_base, fls_full))
-    out_nam  <- paste0(out_path, "/", fl_base, ".fastq.gz")
-    if(grepl("win|WIN|Win", Sys.info()["sysname"])){
-        out_nam <- gsub("\\", "/", out_nam, fixed=TRUE)
-        }
+    #out_nam  <- paste0(out_path, "/", fl_base, ".fastq.gz")
+    out_nam  <- file.path(out_path, "/", fl_base, ".fastq.gz")
+    # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
+    #     out_nam <- gsub("\\", "/", out_nam, fixed=TRUE)
+    #     }
     for(i in 1:length(lns)){
         if(i == 1){
           file.copy(fls_full[lns[i]], out_nam)
@@ -157,16 +158,3 @@ merge_lanes <- function(in_path, out_path, threads=1){
   return("TRUE")
   doParallel::stopImplicitCluster()
 }
-
-
-    
-    
-    
-    
-    
-    
-  
- 
-
-
- 

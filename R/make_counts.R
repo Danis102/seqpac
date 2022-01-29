@@ -248,6 +248,7 @@ make_counts <- function(input, trimming=NULL, threads=1,
   ## Setup temporary folder
   if(!is.null(trimming)){
     output <- paste0(tempdir(), "/seqpac/")
+    #output <- file.path(tempdir(), "/seqpac/")
     if(dir.exists(output)){
       out_fls  <- list.files(output)
       suppressWarnings(file.remove(out_fls)) 

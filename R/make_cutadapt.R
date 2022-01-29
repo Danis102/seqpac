@@ -150,7 +150,8 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   
   # Make dir
   if(!dir.exists(output)){
-    suppressWarnings(dir.create(output))  
+    #suppressWarnings(dir.create(output))
+    dir.create(output, showWarnings=FALSE, recursive = TRUE)
   }
   
   # Make output names and check output folder
@@ -162,11 +163,11 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   out_file <- file.path(output, nam_trim)
   out_dir <- list.files(output, pattern=nam_trim, recursive = FALSE)
   if(length(out_dir)>0){
-    stop(paste0(
+    stop(
       "\n  Output trimmed fastq file names are identical to existing.",
       "\n  files in output:  ", out_dir, 
       "\n  Please move or delete the file in the output folder:\n  ", 
-      output))
+      output)
   }
   
   # Make sure parse is one line

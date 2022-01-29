@@ -116,131 +116,6 @@
 #' pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
 #'                     gtf=gtf, target=target, threads=2)
 #'                     
-#' \dontrun{
-#' 
-#' ##############################################################
-#' ## More advanced examples (non-autonomous)
-#' ##############################################################
-#' 
-#' ## Simple repeatmasker annotation with genomic mapping
-#'
-#' # Specify genome fasta and repeatMasker gtf:      
-#' genome <- "/some/path/to/genome.fa"
-#' gtf <- list(repeatMasker="/some/path/to/repeatMasker.gtf")
-#' 
-#' # Target columns in gtf file:
-#' targets <- list(gtf=c("gene_name", "repClass", "repFamily")) 
-#' 
-#' # Run PAC_gtf 
-#' # Note: no need for genome coordinates in PAC, because we provide
-#' # a bowtie-indexed fasta reference in 'genome'.
-#' 
-#' repeat_simple <- PAC_gtf(PAC, genome=genome, return="simplify", 
-#'                          gtf=gtf, threads=10)
-#'
-#'
-#' ##############################################################
-#' ## Fix different chromosome names in gtf file?
-#' 
-#' # First download reference sequences from Ensembl, UCSC and NCBI (refSeq)
-#' # Then make a conversion table:
-#' 
-#' ref_path_A <- "/some/path/to/ensembl.fa"
-#' ref_path_B <- "/some/path/to/ucsc.fa"
-#' ref_path_C <- "/some/path/to/refseq.fa"
-#' reference_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
-#' conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
-#' 
-#' # Read gtf with rtracklayer:
-#' gtf <- "/some/path/to/repeatMasker.gtf"
-#' repm <- rtracklayer::readGFF(gtf)
-#' 
-#' # Identify what type of names:
-#' table(rm$seqid)
-#' table(conv_table$name_UCSC)
-#' table(unique(rm$seqid) %in% unique(conv_table$name_UCSC))
-#' 
-#' # Ensembl conversion for USCS gtf by matching conv_table: 
-#' ensembl_conv  <- conv_table$name_ensembl[match(rm$seqid,
-#'                                                 conv_table$name_UCSC)]
-#' # Visually inspect conversion vector                                                         
-#' head(cbind(unique(ensembl_conv), unique(as.character(rm$seqid)))) 
-#' table(head(unique(paste(ensembl_conv, rm$seqid, sep="|"))))
-#' 
-#' # Exchange and export new gtf
-#' rm$seqid <- ensembl_conv
-#' gr <- GenomicRanges::GRanges(seqnames=rm$seqid, 
-#'                              IRanges::IRanges(rm$start, 
-#'                                               rm$end), 
-#'                              strand=rm$strand)
-#' GenomicRanges::mcols(gr) <- data.frame(type="repeat", 
-#'                                        source="repeatMasker_dm6_ucsc",
-#'                                        repName = rm$gene_name, 
-#'                                        repClass = rm$repClass,
-#'                                        repFamily = rm$repFamily)
-#'                                        
-#' rtracklayer::export(gr, "/some/path/to/repeatMasker_ensembl.gtf", 
-#'                     format="gtf")
-#' 
-#' 
-#' ##############################################################
-#' ### Full output previously mapped columns up to 3 mismatches
-#' 
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-#'                  package = "seqpac", mustWork = TRUE))
-#' 
-#' ## Generates an error because genome mapping was done
-#' ## with add_reanno(genome_max=10):
-#' 
-#' # Target genome columns in PAC  
-#' genome_col <- colnames(
-#'   pac$Anno)[grepl("chromosomes_genome", colnames(pac$Anno))]
-#' 
-#' # Read converted gtf and pinpoint to target columns in gtf file:
-#' gtf <- list(repeatMasker="/some/path/to/repeatMasker_ensembl.gtf") 
-#' targets <- list(repeatMasker=c("repName", "repClass", "repFamily"))
-#' 
-#' repeat_full <- PAC_gtf(pac, genome=genome_col, return="full", 
-#'                        gtf=gtf, targets=targets, threads=10) 
-#' 
-#' # Works because PAC_gtf automatically maps the 
-#' # genome with add_reanno(genome_max="all")
-#' genome_col <- colnames(pac_merge$Anno)[grepl("^genome|mis\\d_genome", 
-#'                                               colnames(pac_merge$Anno))]
-#' repeat_full <- PAC_gtf(pac, genome=genome, return="full", 
-#'                        gtf=gtf, targets=targets, threads=10)
-#' 
-#' # return="full" returns all annotation for each coordinate
-#' repeat_full[800:820]
-#' head(repeat_full["TGCGGAAGGATCATTA_mis0"])
-#'      
-#' 
-#' ###############################################################
-#' ### With additional gtfs
-#' 
-#' gtf_repeat <- "/some/path/to/repeatMasker_ensembl.gtf"
-#' gtf_protein <- "/some/path/to/reference.genome.gtf" # e.g. from ensembl ftp 
-#' 
-#' # Note, targets points to columns in each gtf listed in gtf 
-#' # and the targets list must therefore have the same names:
-#' 
-#' gtf_lst = list(rep=gtf_repeat, prot=gtf_protein)
-#' target_lst = list(rep="repFamily", prot=c("type", "gene_id")) 
-#' 
-#' genome_col <- colnames(PAC$Anno)[grepl("^genome|mis\\d_genome", 
-#'                                               colnames(pac_merge$Anno))]
-#'                                            
-#' # With mismatches (3 mismatches)
-#' many_simply <- PAC_gtf(PAC, genome=genome_col, return="simplify", 
-#'                        mismatches=3, gtf=gtf_lst, target=target_lst, 
-#'                        threads=8)
-#' 
-#' # With perfect alignments (0 mismatches)
-#' many_simply <- PAC_gtf(PAC, genome=genome_col, return="simplify", 
-#'                        mismatches=0, gtf=gtf_lst, targets=target_lst  
-#'                        , threads=8)
-#' 
-#' }
 #' 
 #' @export
 
@@ -282,8 +157,8 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   ##### Check gtf file and columns ####################################  
   for (i in 1:length(gtf_lst)){
     nam <- names(gtf_lst)[i]
-    
-    logi_fl <-  "tbl_df" %in% class(gtf_lst[[i]]) 
+    #logi_fl <-  "tbl_df" %in% class(gtf_lst[[i]]) #Remove class() Bioc
+    logi_fl <-  methods::is(gtf_lst[[i]], "tbl_df")
     if(!logi_fl){
       stop("
            \nFile was missing for '", nam, "' gtf. Please, check file path.")
@@ -342,12 +217,11 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
                               import ="genome", threads=threads), silent = TRUE)
         if(!is.null(err2)){
             stop(
-              paste0(
                 "\nFunction map_reanno failed. Possible reasons:",
                 "\n\tNo bowtie installation",
                 "\n\tBad fasta reference",
                 "\n\tNo bowtie index (see ?Rbowtie::bowtie_build)",
-                "\n\nLast log says:\n", err2))
+                "\n\nLast log says:\n", err2)
           }
         }
         reanno <- make_reanno(outpath, PAC=PAC, 
@@ -525,12 +399,15 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
         names(uni_gtf) <- trg_cols
       }else{
         olap <- suppressWarnings(GenomicRanges::findOverlaps(x, gtf_gr[[i]]))
-        gtf <- gtf_lst[[i]][olap@to, trg_cols]
+        #gtf <- gtf_lst[[i]][olap@to, trg_cols]
+                gtf <- gtf_lst[[i]][S4Vectors::subjectHits(olap), trg_cols]
+        
         uni_gtf <- data.frame(matrix(NA, nrow=length(x), 
                                      ncol=length(trg_cols)))
         names(uni_gtf) <- trg_cols
         if(!nrow(gtf)==0){
-          splt <- split(gtf, as.factor(olap@from))
+          #splt <- split(gtf, as.factor(olap@from))
+          splt <- split(gtf, as.factor(S4Vectors::queryHits(olap)))
           uni_anno <- lapply(splt, function(z){
             uni <- apply(z, 2, function(y){
               y <- y[!is.na(y)]

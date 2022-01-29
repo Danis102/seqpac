@@ -75,47 +75,43 @@ analysis using DESeq2.
 }
 \examples{
 
-\dontrun{
 
 # Note, these examples will generate some warnings since data is based on
-# heavily down-sampled fastq files, where many sequences recieves low counts in
+# heavily down-sampled fastq files, where many sequences receives low counts in
 # specific groups.
 
 ## Load test data
-library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                 package = "seqpac", mustWork = TRUE))
 
 ## Simple model with embryonic stages using Wald test with local fit (default)
 table(pac$Pheno$stage)
-output_deseq <- PAC_deseq(pac, model= ~stage, threads=1)
+output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage, threads=1))
 
 ## Batch corrected, graphs are generated for 'stage' (=first in the model)  
-output_deseq <- PAC_deseq(pac, model= ~stage + batch)
+output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch))
 
 ## Using pheno_target we can change focus
-output_deseq <- PAC_deseq(pac, 
-                         model= ~stage + batch, pheno_target=list("batch"))
+output_deseq <- suppressWarnings(PAC_deseq(pac, 
+                         model= ~stage + batch, pheno_target=list("batch")))
 
 ## With pheno_target we can change the direction fo the comparision
 # Stage1 vs Stage3:
-output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
                          pheno_target = list("stage", c("Stage1", "Stage3")),  
-                         threads=1)   
+                         threads=1))   
 # Stage3 vs Stage5:
-output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
                          pheno_target = list("stage", c("Stage3", "Stage5")),  
-                         threads=1)  
+                         threads=1))  
 # Stage5 vs Stage3 (reverse order):
-output_deseq <- PAC_deseq(pac, model= ~stage + batch, 
+output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
                          pheno_target = list("stage", c("Stage5", "Stage3")),  
-                         threads=1)  
+                         threads=1))  
 
 ## In the output you find PAC merged results, target plots and output_deseq   
 names(output_deseq)
 tibble::as_tibble(output_deseq$result)
-
-}
 
 }
 \seealso{

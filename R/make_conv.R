@@ -80,26 +80,23 @@
 #'               
 #'
 #' ## The principles:
-#' \dontrun{
-#' 
-#' ref_path_A <- "/some/path/to/ensembl.fa"
-#' ref_path_B <- "/some/path/to/ucsc.fa"
-#' ref_path_C <- "/some/path/to/refseq.fa"
-#' 
-#' ref_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
-#' 
-#' # Best (user defined names):
-#' conv_table <- make_conv(reference_list=ref_list) 
-#' 
-#' # But also (no names)
-#' conv_table <- make_conv(ref_path_A, ref_path_B, ref_path_C)
-#' conv_table <- make_conv(ref_path_A, ref_path_C)
-#' 
-#' 
-#' # Make short names (skip everything after white space)
-#' conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
-#' 
-#' }
+#' #
+#' #ref_path_A <- "/some/path/to/ensembl.fa"
+#' #ref_path_B <- "/some/path/to/ucsc.fa"
+#' #ref_path_C <- "/some/path/to/refseq.fa"
+#' #
+#' #ref_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
+#' #
+#' ## Best (user defined names):
+#' #conv_table <- make_conv(reference_list=ref_list) 
+#' #
+#' ## But also (no names)
+#' #conv_table <- make_conv(ref_path_A, ref_path_B, ref_path_C)
+#' #conv_table <- make_conv(ref_path_A, ref_path_C)
+#' #
+#' #
+#' ## Make short names (skip everything after white space)
+#' #conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
 #' 
 #' @export
 make_conv <- function(reference_list=NULL,
@@ -109,7 +106,13 @@ make_conv <- function(reference_list=NULL,
   sav_width <- list(NULL)
   if(is.null(reference_list)){
    reference_list <- list(refA=ref_path_A, refB=ref_path_B, refC=ref_path_C)
-  }  
+  }
+  if(!is.null(skip_after)){
+    if(!length(reference_list)== length(skip_after)){
+      stop("\nReference length and skipafter length don't match.",
+           "\nPlease provide input in the correct format.")
+      }
+  }
   if(length(reference_list)==2){
     reference_list <- c(reference_list , list(refC=ref_path_C))
   }
@@ -278,22 +281,20 @@ make_conv <- function(reference_list=NULL,
       }
      names(skip_after) <- names(reference_list)
     }
-    if(any(!grepl(paste0(names(skip_after), collapse="|"), colnames(df)))){
+    
+    nam_check <- grepl(paste0(names(skip_after), collapse="|"), colnames(df))
+    if(!sum(nam_check) == length(skip_after)){
       stop("\nReference names and skipafter names don't match.",
            "\nPlease provide input in the correct format.")
     }
-    if(!length(reference_list)== length(skip_after)){
-      stop("\nReference length and skipafter length don't match.",
-           "\nPlease provide input in the correct format.")
-    }
-      
-    for(i in 1:length(reference_list)){
-      clmn <- which(grepl(names(skip_after)[i], 
-                          colnames(df)[1:length(reference_list)]))
-      suppressWarnings(
+  
+    for(i in 1:length(skip_after)){
+      clmn <- which(grepl(names(skip_after)[i],colnames(df))) 
+                     
+    #  suppressWarnings(
         df[,clmn] <- do.call("rbind", strsplit(df[,clmn], 
                                              split=skip_after[i]))[,1]
-      )
+    #  )
     }
   }
   if(output=="tibble"){
@@ -303,5 +304,3 @@ make_conv <- function(reference_list=NULL,
   }
   cat("\n")
 }
-
-  

@@ -95,26 +95,23 @@ conv_table
               
 
 ## The principles:
-\dontrun{
-
-ref_path_A <- "/some/path/to/ensembl.fa"
-ref_path_B <- "/some/path/to/ucsc.fa"
-ref_path_C <- "/some/path/to/refseq.fa"
-
-ref_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
-
-# Best (user defined names):
-conv_table <- make_conv(reference_list=ref_list) 
-
-# But also (no names)
-conv_table <- make_conv(ref_path_A, ref_path_B, ref_path_C)
-conv_table <- make_conv(ref_path_A, ref_path_C)
-
-
-# Make short names (skip everything after white space)
-conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
-
-}
+#
+#ref_path_A <- "/some/path/to/ensembl.fa"
+#ref_path_B <- "/some/path/to/ucsc.fa"
+#ref_path_C <- "/some/path/to/refseq.fa"
+#
+#ref_list <- list(ensembl=ref_path_A, UCSC=ref_path_B, NCBI=ref_path_C)
+#
+## Best (user defined names):
+#conv_table <- make_conv(reference_list=ref_list) 
+#
+## But also (no names)
+#conv_table <- make_conv(ref_path_A, ref_path_B, ref_path_C)
+#conv_table <- make_conv(ref_path_A, ref_path_C)
+#
+#
+## Make short names (skip everything after white space)
+#conv_table <- make_conv(reference_list=reference_list, skip_after=" ") 
 
 }
 \seealso{

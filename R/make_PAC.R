@@ -164,15 +164,5 @@ make_PAC<- function(pheno, anno=NULL, counts, output="S4"){
                       summary=list(NULL)
                       )
   }
-    
-  
   return(PAC_unord)
 }
-
-                                
-      
-  
-  
-  
-  
-  

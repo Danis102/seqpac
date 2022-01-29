@@ -25,8 +25,8 @@
 #' @param norm Character specifying if filtering should be done using "counts",
 #'   "cpm" or another normalized data table in PAC$norm (default="counts").
 #' 
-#' @param stat (optional) Logical specifying if an coverage graph should be
-#'   generated or not (default=FALSE).
+#' @param stat (optional) Logical specifying if a coverage graph should be
+#'   generated and if users should be promted prior to proceeding. (default=FALSE).
 #'
 #' @param subset_only Logical whether only subsetting using pheno_target and/or
 #'   anno_target should be done. If subset=FALSE (default) both subsetting and
@@ -224,10 +224,10 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     
     ### Check col and row names
     if(!identical(rownames(PAC$Anno), rownames(df))){
-      stop("\n\nError: Not matching rownames in input files! (Anno vs Counts)")
+      stop("\nSequence names not matching in input files! (Anno vs Counts)")
     }
     if(!identical(rownames(PAC$Pheno), colnames(df))){
-      stop("\n\nError: Not matching rownames in input files!")
+      stop("\nSample names not matching in input files!(Pheno vs Counts)")
     }
     
     ### Create filter

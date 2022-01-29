@@ -85,107 +85,42 @@
 #'   
 #' @examples
 #' 
-#' 
-#'  \dontrun{
-#' # More details on the examples can be found in the vignette.
-#' 
-#' library(seqpac)
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-#'                  package = "seqpac", mustWork = TRUE))
-#' 
 #' ###########################################################
-#' ### tRNA analysis in seqpac 
+#' ### test the map_rangetype function
+#' # More complicated examples can be found in the vignette.
 #' ##----------------------------------------
 #' 
-#' # First create an annotation blanc PAC with group means
+#' # First create an annotation blank PAC with group means
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#'                  package = "seqpac", mustWork = TRUE))
 #' pac$Anno <- pac$Anno[,1, drop=FALSE]
 #' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
 #'                         pheno_target=list("stage"), merge_pac = TRUE)
 #' 
-#' # Then reannotate only tRNA using the PAC_mapper function
-#' ref <- "/some/path/to/trna.fa"
+#' # Then re-annotate only tRNA using the PAC_mapper function
+#' ref <- system.file("extdata/trna", "tRNA.fa", 
+#'                          package = "seqpac", mustWork = TRUE)
 #' map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-#'                          mapper="reanno", mismatches=0, threads=2, 
-#'                          report_string=TRUE)
+#'                          mismatches=0, threads=2, report_string=TRUE, 
+#'                          override=TRUE)
 #' 
-#' 
-#' ###########################################################
 #' ## Coverage plot of tRNA using PAC_covplot
 #' 
-#' # Single tRNA targeting a summary dataframe 
+#' # Single tRNA targeting a summary table 
 #' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-#'             map_target="tRNA-Ala-AGC-1-1_chr3R:17657145-17657217_(+)")
+#'             map_target="tRNA-Ala-AGC-1-1")
+#'             
+#' ## Classify range types with map_rangetype (see vignette for examples
+#' # on how to use ss-files for detailed tRNA loop structure).
 #' 
-#' # Find tRNAs with many fragments
-#' n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
-#' selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-#' cov_plt <- PAC_covplot(pac_trna, map=map_object, 
-#'                        summary_target= list("cpmMeans_stage"), 
-#'                        map_target=selct)
-#' cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
-#' 
-#' 
-#' ###########################################################
-#' ## Analyze range types with map_rangetype and PAC_trna functions
-#' 
-#' # Download ss object from GtRNAdb 
-#' dest_path <- file.path("/some/path/to/destination/file/trna.tar.gz")
-#' web_path <- "http://gtrnadb.ucsc.edu/genomes/eukaryota/Dmela6/dm6-tRNAs.tar.gz"
-#' download.file(url=web_path, destfile=dest_path)
-#' untar(dest_path, exdir= dirname(dest_path), files = "dm6-tRNAs-confidence-set.ss")
-#' ss_file <- "/some/path/to/dm6-tRNAs-confidence-set.ss"
-#' 
-#' # Classify fragments according to loop cleavage (small loops are omitted)       
-#' map_object_ss <- map_rangetype(map_object, type="ss", 
-#'                                ss=ss_file, min_loop_width=4)          
-#' 
-#' # Remove reference tRNAs with no hits
-#' map_object_ss <-  map_object_ss[!unlist(lapply(map_object_ss, function(x){
-#'                      x[[2]][1,1] == "no_hits"
-#'                      }))]
-#' map_object_ss[[2]]
-#' 
-#' 
-#' 
-#' ###########################################################
-#' # Function classifying 5'-tRF, 5'halves, i-tRF, 3'-tRF, 3'halves
-#' 
-#' # Set tolerance for classification as a terminal tRF
-#' tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
-#' 
-#' # Apply the tRNA_class function and make a tRNA type column
-#' pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
-#' head(pac_trna$Anno)
-#' 
-#' # Now use PAC_trna to generate some graphs based on grand means
-#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#'   join = TRUE, top = 15, log2fc = TRUE,
-#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
-#'   anno_target_1 = list("type"),
-#'   anno_target_2 = list("class"))
-#' 
-#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
-#'                    trna_result$plots$Log2FC_Anno_1,
-#'                    trna_result$plots$Percent_bars$Grand_means,
-#'                    nrow=1, ncol=3)
-#' 
-#' # By setting join = FALSE you will get group means
-#' trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#'   join = FALSE, top = 15, log2fc = TRUE,
-#'   pheno_target = list("stage", c("Stage1", "Stage3")), 
-#'   anno_target_1 = list("type"),
-#'   anno_target_2 = list("class"))
-#' 
-#' cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
-#'                    trna_result$plots$Expression_Anno_1$Stage3,
-#'                    trna_result$plots$Log2FC_Anno_1,
-#'                    trna_result$plots$Percent_bars$Stage1,
-#'                    trna_result$plots$Percent_bars$Stage3,
-#'                    nrow=1, ncol=5)
-#'       
-#'    
-#' }                    
-#' 
+#' # Classify fragments using percent intervals       
+#' map_object <- map_rangetype(map_object, 
+#'                 intervals = list(start = 1:5, mid = 45:55, end = 95:100))
+#'        
+## Explore the map-object with range classifications                    
+#' names(map_object)
+#' map_object[[1]]
+#'
 #' @export
 
  
@@ -460,4 +395,3 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
   range_types <- range_types[!is.null(range_types)]
   return(range_types)
 }
-   

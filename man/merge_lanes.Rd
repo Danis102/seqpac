@@ -68,14 +68,9 @@ fqs <- list(fq1_lane1=ShortRead::yield(sampler),
 # (for autonomous example, make sure it is empty and correct platform)
 
 input <- paste0(tempdir(), "/seqpac_temp")
-if(grepl("windows", .Platform$OS.type)){
- input <- gsub( "\\\\\\\\", "/", input)
-}
 fls  <- list.files(input, recursive=TRUE)
 if(length(fls)>0){unlink(input, recursive=TRUE)}
 dir.create(input, showWarnings=FALSE)
-
-
 
 # And then write the random fastq to the temp folder
 for (i in 1:length(fqs)){
@@ -88,7 +83,6 @@ for (i in 1:length(fqs)){
 output <- paste0(input, "/merged")
 dir.create(output, showWarnings=FALSE)
 
-
 # Then merge the fastq files
 merge_lanes(input, output, threads=2)
 
@@ -96,9 +90,15 @@ merge_lanes(input, output, threads=2)
 input
 output
 
-# warning: clean up:
-file.remove(list.files(input, full=TRUE, pattern=".fastq.gz"))
-file.remove(list.files(output, full=TRUE, pattern=".fastq.gz"))
+
+##-----------------------------------------##
+## Warning: Clean up temp folder           ##
+# (Sometimes needed for automated examples) 
+
+closeAllConnections()
+fls_temp  <- tempdir()
+fls_temp  <- list.files(fls_temp, recursive=TRUE, full.names = TRUE)
+suppressWarnings(file.remove(fls_temp))
 
 }
 \seealso{

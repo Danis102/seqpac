@@ -36,8 +36,8 @@ to reach the threshold for a sequence to be included (default=0).}
 anno_target should be done. If subset=FALSE (default) both subsetting and
 other filtering will be done.}
 
-\item{stat}{(optional) Logical specifying if an coverage graph should be
-generated or not (default=FALSE).}
+\item{stat}{(optional) Logical specifying if a coverage graph should be
+generated and if users should be promted prior to proceeding. (default=FALSE).}
 
 \item{pheno_target}{(optional) List with: 
 1st object being a character vector of target column in Pheno, 

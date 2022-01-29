@@ -47,7 +47,7 @@
 #' class(pac_s4)
 #' isS4(pac_s4)   
 #' 
-#' # Turns S3 PAC object into a S4                                    
+#' # Turns S4 PAC object into a S3                                    
 #' pac_s3 <- as(pac_s4, "list")
 #' 
 #' # Don't forget that in the summary and norm slots of the S4 PAC lies regular

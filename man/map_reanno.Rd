@@ -118,45 +118,70 @@ locally installed version of bowtie.
 ##### Simple example for reference mapping 
 ##### Please see manual for simply_reanno for more advanced mapping
 
-
 ######################################################### 
 ##### Create an reanno object
 
-##  First load a PAC- object and remove previous mapping from anno
-
+### First, if you haven't already generated Bowtie indexes for the included
+# fasta references you need to do so. If you are having problem see the small
+# RNA guide (vignette) for more info.
+                                                             
+ ## tRNA:
+ trna_file <- system.file("extdata/trna", "tRNA.fa", 
+                          package = "seqpac", mustWork = TRUE)
+ trna_dir<- gsub("tRNA.fa", "", trna_file)
+ 
+ if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+     Rbowtie::bowtie_build(trna_file, 
+                           outdir=trna_dir, 
+                           prefix="tRNA", force=TRUE)
+                           }
+ ## rRNA:
+ rrna_file <- system.file("extdata/rrna", "rRNA.fa", 
+                          package = "seqpac", mustWork = TRUE)
+ rrna_dir<- gsub("rRNA.fa", "", rrna_file)
+ 
+ if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){                               
+     Rbowtie::bowtie_build(rrna_file, 
+                           outdir=rrna_dir, 
+                           prefix="rRNA", force=TRUE)
+                           }
+ ## Genome:
+ mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+                                package = "seqpac", mustWork = TRUE)
+ mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
+ 
+ if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){                               
+     Rbowtie::bowtie_build(mycoplasma_file, 
+                           outdir=mycoplasma_dir, 
+                           prefix="mycoplasma", force=TRUE)
+                           }                           
+                           
+                           
+                                                           
+##  Then load a PAC-object and remove previous mapping from anno:
  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                    package = "seqpac", mustWork = TRUE))
  pac$Anno <- pac$Anno[,1, drop = FALSE]
  
- 
-##  Then specify paths to fasta references
-# If you are having problem see the vignette small RNA guide for more info.
- 
- trna_path <- system.file("extdata/trna", "tRNA.fa", 
-                          package = "seqpac", mustWork = TRUE)  
- rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
-                          package = "seqpac", mustWork = TRUE)
- 
- ref_paths <- list(trna= trna_path, rrna= rrna_path)
+ ref_paths <- list(trna= trna_file, rrna= rrna_file)
+
                                     
-##  Add output path of your choice.
-# Here we use the R temporary folder depending on platform                                     
-if(grepl("windows", .Platform$OS.type)){
- output <- paste0(tempdir(), "\\\\seqpac\\\\test")
-}else{
- output <- paste0(tempdir(), "/seqpac/test")}
+##  You may add an output path of your choice, but here we use a temp folder:
+ output <- paste0(tempdir(),"/seqpac/test")
 
-## Make sure it is empty (otherwise you will be prompted for a question)
-out_fls  <- list.files(output, recursive=TRUE)
-suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 
-##  Then map your PAC-object against the fasta references                                  
+##  Then map the PAC-object against the fasta references. 
+# Warning: if you use your own data, you may want override=FALSE, to avoid
+# deleting previous mapping by mistake.
+
  map_reanno(pac, ref_paths=ref_paths, output_path=output,
                type="internal", mismatches=2,  import="biotype", 
-               threads=2, keep_temp=FALSE)
+               threads=2, keep_temp=FALSE, override=TRUE)
+ 
     
 ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
 reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+ 
                                     
 ## Now make some search terms against reference names to create shorter names
 # Theses can be used to create factors in downstream analysis
@@ -172,59 +197,54 @@ bio_search <- list(
                        type="biotype", bio_perfect=FALSE, 
                        mismatches = 2, merge_pac=pac)
                        
-                       
-## Turn your S3 list to an S4 reanno-object
-class(reanno_biotype)
-isS4(reanno_biotype)
-names(reanno_biotype)   
 
+## Turn your S4 reanno-object to S3 list and back:  
 reanno_s3 <- as(reanno_biotype, "list")
 class(reanno_s3)
 isS4(reanno_s3)   
 
-# Turns S3 reanno object into a S4                                    
+# And back to S4:                                    
 reanno_s4 <- as.reanno(reanno_s3)
-class(reanno_s4)
 isS4(reanno_s4) 
  
 # Similar, turns S3 PAC object into a S4
-class(pac)
-isS4(pac)  
-                                                                        
 pac_s4 <- as.PAC(pac)
-class(pac_s4)
 isS4(pac_s4)   
 
 # Don't forget that in the slots of S4 lies regular S3 objects. Thus,
-# to receive these tables from an S4  you need to combine both S4 and S3
-# receivers:
+# to receive these tables from an S4 you need to combine both S4 and S3
+# receivers or S4 specific recievers:
 
-pac_s4 <- PAC_norm(pac_s4, norm = "cpm")
 pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means", 
                    pheno_target=list("stage"), merge_pac=TRUE)
 
 pac_s4 
-head(pac_s4@norm$cpm)
+head(norm(pac_s4)$cpm)
 head(pac_s4@summary$cpmMeans_stage)
 
 
 
 ############################################################################ 
-## Similarly you can use Bowtie indexed genome fasta references
+## Similarly, you can use Bowtie indexed genome fasta references
 ## But don't forget to use import="genome" for coordinate import
 #   
 # ref_paths <- list(genome="<path_to_bowtie_indexed_fasta>")
-# 
-# ## Path to output folder:
-# output_genome <- "<your_path_to_output>"
 #
+# output_genome <- "<your_path_to_output_folder>"
+
+## We can actually map against several genomes simultaneously:
+# (to illustrate the principle we run the mycoplasma genome twice)
+
+ ref_paths <- list(genome1=mycoplasma_file, genome2=mycoplasma_file)
+
 ### Run map_reanno 
-# map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output_genome, 
-#           type="internal", mismatches=3, import="genome", 
-#           threads=8, keep_temp=TRUE)
-#
-#
-#
+map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output, 
+           type="internal", mismatches=3, import="genome", 
+           threads=2, keep_temp=TRUE, override=TRUE)
+
+reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
+
+
 ####################################################
 #### The trick to succeed with bio_perfect=TRUE 
 
@@ -235,10 +255,10 @@ anno <- add_reanno(reanno_biotype, bio_search=bio_search, type="biotype",
 
 ## Find sequences that has been classified as other 
 other_seqs  <- anno[grepl("other", anno$mis0),]$seq
-tab <- reanno_biotype@Full_anno$mis0$trna
+tab <- full(reanno_biotype)$mis0$trna
 tab[tab$seq \%in\% other_seqs,]         #No other hit in trna
 
-tab <- reanno_biotype@Full_anno$mis0$rrna
+tab <- full(reanno_biotype)$mis0$rrna
 tab[tab$seq \%in\% other_seqs,] 
 
 

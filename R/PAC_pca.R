@@ -102,12 +102,17 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
   }
   
   if(length(pheno_target)==2){
-    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
-                                       pheno_target=pheno_target))
+    #PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
+    #                                   pheno_target=pheno_target))
+    PAC <- PAC_filter(PAC, subset_only=TRUE, 
+                                       pheno_target=pheno_target)
+    
     }
   if(length(anno_target)==2){
-    PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
-                                       anno_target=anno_target))
+    #PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
+    #                                   anno_target=anno_target))
+    PAC <- PAC_filter(PAC, subset_only=TRUE, 
+                                       anno_target=anno_target)
     }
   stopifnot(PAC_check(PAC))
   

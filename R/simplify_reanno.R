@@ -52,42 +52,69 @@
 #'  
 #'@examples
 #'#' ######################################################### 
-#' ##### hierarchical classification uning simplify_reanno
+#' ##### hierarchical classification using simplify_reanno
 #' 
-#' ##  First load a PAC- object
-#' 
+#' ### First, if you haven't already generated Bowtie indexes for the included
+#' # fasta references you need to do so. If you are having problem see the small
+#' # RNA guide (vignette) for more info.
+#'                                                              
+#'  ## tRNA:
+#'  trna_file <- system.file("extdata/trna", "tRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)
+#'  trna_dir<- gsub("tRNA.fa", "", trna_file)
+#'  
+#'  if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+#'      Rbowtie::bowtie_build(trna_file, 
+#'                            outdir=trna_dir, 
+#'                            prefix="tRNA", force=TRUE)
+#'                            }
+#'  ## rRNA:
+#'  rrna_file <- system.file("extdata/rrna", "rRNA.fa", 
+#'                           package = "seqpac", mustWork = TRUE)
+#'  rrna_dir<- gsub("rRNA.fa", "", rrna_file)
+#'  
+#'  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){                               
+#'      Rbowtie::bowtie_build(rrna_file, 
+#'                            outdir=rrna_dir, 
+#'                            prefix="rRNA", force=TRUE)
+#'                            }
+#'  ## Genome:
+#'  mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+#'                                 package = "seqpac", mustWork = TRUE)
+#'  mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
+#'  
+#'  if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){                               
+#'      Rbowtie::bowtie_build(mycoplasma_file, 
+#'                            outdir=mycoplasma_dir, 
+#'                            prefix="mycoplasma", force=TRUE)
+#'                            }                           
+#'                            
+#'                            
+#'                                                            
+#' ##  Then load a PAC-object and remove previous mapping from anno:
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
 #'  pac$Anno <- pac$Anno[,1, drop = FALSE]
 #'  
-#'  
-#' ##  Then specify paths to fasta references for creating a reanno object
-#' # If you are having problem see the vignette small RNA guide for more info.
-#'  
-#'  trna_path <- system.file("extdata/trna", "tRNA.fa", 
-#'                           package = "seqpac", mustWork = TRUE)  
-#'  rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
-#'                           package = "seqpac", mustWork = TRUE)
-#'  
-#'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
+#'  ref_paths <- list(trna= trna_file, rrna= rrna_file)
+#' 
 #'                                     
-#' ##  Add output path of your choice.
-#' # Here we use the R temporary folder depending on platform
-#' # (only needed for autonomous examples)                                     
-#'  if(grepl("windows", .Platform$OS.type)){
-#'  output <- paste0(tempdir(), "\\seqpac\\test")
-#'  }else{
-#'  output <- paste0(tempdir(), "/seqpac/test")}
-#'  out_fls  <- list.files(output, recursive=TRUE)
-#'  suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
-#'
-#' ##  Then map your PAC-object against the fasta references                                  
+#' ##  You may add an output path of your choice, but here we use a temp folder:
+#'  output <- paste0(tempdir(),"/seqpac/test")
+#' 
+#' 
+#' ##  Then map the PAC-object against the fasta references. 
+#' # Warning: if you use your own data, you may want override=FALSE, to avoid
+#' # deleting previous mapping by mistake.
+#' 
 #'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
 #'                type="internal", mismatches=2,  import="biotype", 
-#'                threads=2, keep_temp=FALSE)
+#'                threads=2, keep_temp=FALSE, override=TRUE)
+#'  
 #'     
 #' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
 #' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#'  
 #'                                     
 #' ## Now make some search terms against reference names to create shorter names
 #' # Theses can be used to create factors in downstream analysis
@@ -158,132 +185,6 @@
 #' pac_s4 <- as.PAC(pac)
 #' class(pac_s4)
 #' isS4(pac_s4)   
-#' 
-#' 
-#' \dontrun{
-#' 
-#' ##--------------------------------------------------------------------------#
-#' ## Advanced examples for reanno mapping
-#' ## Please see manuals for map_reanno, make reanno, add_reanno for 
-#' ## simple examples
-#' ##--------------------------------------------------------------------------#
-#' 
-#' # Read and prepared PAC object:
-#'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
-#'                    package = "seqpac", mustWork = TRUE))
-#'  pac$Anno <- pac$Anno[,1, drop = FALSE]
-#' 
-#' ##--------------------------------------------------------------------------#
-#' ## Example biotype classification allowing 1 mismatch
-#' ##--------------------------------------------------------------------------#
-#' 
-#' # Path to bowtie indexed fasta references:   
-#' ref_paths <- list(miRNA="/some/path/to/miRNA.fa",
-#'                   Ensembl="/some/path/to/ensembl.ncrna.fa",
-#'                   rRNA="/some/path/to/rRNA.fa",
-#'                   tRNA="/some/path/to/tRNA.fa",
-#'                   piRNA="/some/path/to/piRNA.fa")
-#' 
-#' # Path to output folder:
-#' output_bio <- "/some/path/to/output_folder/"
-#' 
-#' # Run map_reanno for biotype classification:
-#' map_reanno(pac, ref_paths=ref_paths, output_path=output_bio, 
-#'            type="external", mismatches=1,  import="biotype")
-#' 
-#' # Import map_reanno output into a reanno-object using make_reanno:
-#' reanno <- make_reanno(reanno_path=output_bio, PAC=pac, mis_fasta_check = TRUE)
-#' names(reanno)
-#' names(reanno$Full_anno)
-#' 
-#' 
-#' # Make search terms (regular expressions) where hits create annotations:  
-#' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S"),
-#'                 tRNA    =c("^tRNA", "MT"),
-#'                 piRNA   =c("piR-"))
-#' 
-#' # Classify by search term using add_reanno:
-#' pac <- add_reanno(reanno, merge_pac=pac, bio_search=bio_search, 
-#'                   type="biotype", bio_perfect=FALSE, mismatches = 1)
-#' head(pac$Anno)           # Note: two misX_bio ("mis0_bio" and "mis1_bio")
-#' table(pac$Anno$mis0_bio) # Annotations with 0 mismatches
-#' 
-#' 
-#' 
-#' ##--------------------------------------------------------------------------#
-#' ## The trick to succeed with bio_perfect=TRUE
-#' ##--------------------------------------------------------------------------#
-#' 
-#' # Run add_reanno with bio_perfect="FALSE" (look where "Other=XX" occur):
-#' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
-#'                 tRNA    =c("^tRNA"),
-#'                 piRNA   =c("piR-"))
-#' 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                    bio_perfect=FALSE, mismatches = 1)
-#' 
-#' # Find sequences that has been classified as other: 
-#' other_seqs  <- anno[grepl("other", anno$mis0_bio),]$seq_bio
-#' tab <- reanno$Full_anno$mis0$Ensembl
-#' tab[tab$seq %in% other_seqs,]         # lincRNA don't have a search term
-#' 
-#' 
-#' # Add a search terms that catches all lincRNA: 
-#' bio_search <- list(
-#'                 miRNA="dme-",
-#'                 Ensembl =c("lincRNA", "miRNA", "pre_miRNA", "rRNA", "snoRNA", 
-#'                           "snRNA", "tRNA", "Uhg", "7SLRNA", "asRNA", "hpRNA", 
-#'                           "RNaseMRP","RNaseP", "sbRNA", "scaRNA", "sisRNA", 
-#'                           "snmRNA", "snoRNA", "snRNA","Su\\(Ste\\)"),
-#'                 rRNA    =c("5.8S", "28S", "18S", "rRNA"),
-#'                 tRNA    =c("^tRNA"),
-#'                 piRNA   =c("piR-"))
-#'                 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                    bio_perfect=FALSE, mismatches = 1)
-#' 
-#' # Repeat search until no "Other" appear, then run  bio_perfect=TRUE: 
-#' anno <- add_reanno(reanno, bio_search=bio_search, type="biotype", 
-#'                    bio_perfect=TRUE, mismatches = 1)
-#' 
-#' 
-#' ##--------------------------------------------------------------------------#
-#' ## Hierarchical classification with simplify_reanno
-#' ##--------------------------------------------------------------------------#
-#' table(pac$Anno$mis0_bio)
-#' 
-#' # Setup hierarchy 
-#' hierarchy <- list( rRNA="Ensembl_rRNA|rRNA_other|rRNA_5.8S|rRNA_28S|rRNA_18S",
-#'                    Mt_tRNA="tRNA:MT",
-#'                    tRNA="Ensembl_tRNA|tRNA__tRNA",
-#'                    miRNA ="^miRNA|Ensembl_miRNA|Ensembl_pre_miRNA",
-#'                    snoRNA="Ensembl_snoRNA",
-#'                    lncRNA="Ensembl_lincRNA",
-#'                    piRNA="piRNA"   
-#'                   )
-#' 
-#' # No mistmach allowed
-#' pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=0, 
-#'                       bio_name="Biotypes_mis0", merge_pac=TRUE)
-#' 
-#' # Up to 1 mismatches allowed
-#' pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=1, 
-#'                        bio_name="Biotypes_mis1", merge_pac=TRUE)
-#' 
-#' }
-#'
 #' 
 #' @export
 
@@ -412,4 +313,4 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
   }else{
     
   }
-}    
+}

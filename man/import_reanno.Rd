@@ -47,7 +47,7 @@ This function imports bowtie output and summarizes the content.
 }
 \details{
 Given the path to alignment outputs from bowtie, \code{\link{import_reanno}}
-will attempt to read these files into R and generate a list of unordered
+will attempt to read these files into R and generate a list of unsorted
 data.frames where each row summarizes all annotations for a given sequence.
 It is called by \code{\link{map_reanno}} to generate summarized data from
 bowtie output saved as .Rdata files. These files can then be re-imported into
@@ -68,13 +68,42 @@ using \code{\link{add_reanno}}.
 
 \examples{
 
-\dontrun{
+######################################################### 
+##### Test import_reanno
 
-bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_genome"
-bowtie_path <- "/home/danis31/Desktop/Temp_docs/reanno_srna"
-reanno1 <- import_reanno(bowtie_path, report="full",  threads=1)
+### First, if you haven't already generated Bowtie indexes for the included
+# fasta reference you need to do so. If you are having problem see the small
+# RNA guide (vignette) for more info.
 
+## tRNA reference:
+trna_file <- system.file("extdata/trna", "tRNA.fa", 
+                         package = "seqpac", mustWork = TRUE)
+trna_dir<- gsub("tRNA.fa", "", trna_file)
+
+if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+  Rbowtie::bowtie_build(trna_file, 
+                        outdir=trna_dir, 
+                        prefix="tRNA", force=TRUE)
 }
+##  Then load a PAC-object and remove previous mapping from anno:
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+                 package = "seqpac", mustWork = TRUE))
+
+ref_paths <- list(trna= trna_file)
+
+##  You may add an output path of your choice, but here we use a temp folder:
+output <- paste0(tempdir(),"/seqpac/test")
+
+##  Then map the PAC-object against the fasta references. Warning: if you use
+# your own data, you may want override=FALSE, to avoid deleting previous mapping
+# by mistake. keep_temp=TRUE can be used to run import_reanno independently.
+
+map_reanno(pac, ref_paths=ref_paths, output_path=output,
+           type="internal", mismatches=2,  import="biotype", 
+           threads=2, keep_temp=TRUE, override=TRUE)
+
+reanno1 <- import_reanno(output, report="Biotype",  threads=1)
+
 }
 \seealso{
 \url{http://bowtie-bio.sourceforge.net/index.shtml} for information

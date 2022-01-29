@@ -104,10 +104,10 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
     data <- PAC$Counts
   }else{  
     if(is.null(PAC$norm[[norm]])){
-      stop(paste0("\nThere is no object called '", norm, "' in the norm list.",
-                  "\n(Hint: Did you forget to normalize the data using for",
-                  "\nexample PAC_rpm, or would you rather run the function",
-                  "\non raw counts using norm='counts'?)"))
+      stop("\nThere is no object called '", norm, "' in the norm list.",
+           "\n(Hint: Did you forget to normalize the data using for",
+           "\nexample PAC_rpm, or would you rather run the function",
+           "\non raw counts using norm='counts'?)")
       }  
     data <- PAC$norm[[norm]]
   }

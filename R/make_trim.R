@@ -275,14 +275,15 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   out_file <- file.path(output, nam_trim)
   out_dir <- list.files(output, pattern=nam_trim, recursive = FALSE)
   if(length(out_dir)>0){
-    stop(paste0("\n  There are files in the output folder:\n  ", 
-                out_dir, 
-                "\n  Please move or delete the file in the output folder."))
+    stop("\n  There are files in the output folder:\n  ", 
+          out_dir, 
+          "\n  Please move or delete those file(s).")
   }
   
   # Make dir
   if(!dir.exists(output)){
-    suppressWarnings(dir.create(output, recursive = TRUE))  
+    #suppressWarnings(dir.create(output, recursive = TRUE))
+    dir.create(output, showWarnings=FALSE, recursive = TRUE)
   }
   
   #####################################
