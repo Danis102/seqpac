@@ -35,9 +35,9 @@ against a reference fasta file.}
   "type_mid_start_per" and sequences ending within 45-50% of the references
   as 'type_mid_end_per'.
 
-  If type="ss", then intervals is obtain from an ss file, obtained for example
-  from tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}) or at GtRNAdb
-  \url{http://gtrnadb.ucsc.edu/}.
+  If type="ss", then intervals is obtain from an ss file, obtained for
+  example from tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}) or at
+  GtRNAdb \url{http://gtrnadb.ucsc.edu/}.
 
   Important, the intervals list is name sensitive. If type="nuclotides"
   intervals can only contain two intervals named 'start' and 'end', while if
@@ -61,9 +61,9 @@ sequence names using \code{\link{lapply}} prior to running the function.}
 
 \item{min_loop_width}{Integer setting the minimum number of nucleotides for a
 loop. Only applicable when type="ss". Loops in ss-files are defined by ">"
-followed by x number of "." ending with "<". For example:\cr 
-\code{GCATCGGTGGTTCAGTGGTAGAATGCTCGCCTCGCGGGCGGCCCGGGTTCGATTCCCGGCCGATGCA}\cr 
-\code{>>>>>>>..>>>>.......<<<<.>>>>>...<<<<<....>>>>>.......<<<<<<<<<<<<.}\cr 
+followed by x number of "." ending with "<". For example:\cr
+\code{ATCGGTGGTTCAGTGGTAGAATGCTCGCCTCGCGGGCGGCCCGGGTTCGATTCCCGGCCGATG}\cr
+\code{>>>>>..>>>>.......<<<<.>>>>>...<<<<<....>>>>>.......<<<<<<<<<<<}\cr
 Here are three possible loops: "AGTGGTA", "CTC", "TTCGATT". If
 min_loop_width=3, the middle loop (">...<"="CTC") will be classified as a
 loop. If min_loop_width=4 (default), the middle loop will not be classified
@@ -118,13 +118,14 @@ map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN",
 ## Coverage plot of tRNA using PAC_covplot
 
 # Single tRNA targeting a summary table 
-PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-            map_target="tRNA-Ala-AGC-1-1")
+PAC_covplot(pac_trna, map=map_object, 
+                      summary_target= list("cpmMeans_stage"),
+                      map_target="tRNA-Ala-AGC-1-1")
             
 ## Classify range types with map_rangetype (see vignette for examples
 # on how to use ss-files for detailed tRNA loop structure).
 
-# Classify fragments using percent intervals       
+# Classify fragments using percent intervals
 map_object <- map_rangetype(map_object, 
                 intervals = list(start = 1:5, mid = 45:55, end = 95:100))
        

@@ -38,7 +38,7 @@
 #'   typically used for isotype classification in tsRNA analysis (example:
 #'   LysCTT, GlyGGC etc). Specifying only the column name, will automatically
 #'   include all classifications in the anno_target column.
-#'          
+#'    
 #' @param anno_target_2 Same as anno_target_2 but specifying the the second
 #'   classification typically used for 3'-5' classification in tsRNA analysis
 #'   (example: 5'tsRNA, 5'tsRNA-halves, i'-tsRNA,  3'tsRNA, 3'tsRNA-halves).
@@ -107,7 +107,8 @@
 #'
 #'##--------------------------------------##
 #'## Create a map object using PAC_mapper ##
-#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN", 
+#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, 
+#'                         N_up = "NNN", N_down = "NNN",
 #'                         mismatches=0, threads=2, 
 #'                         report_string=TRUE, override = TRUE)
 #'# Warning: override = TRUE, will remove everything in temporary output path.
@@ -118,7 +119,7 @@
 #'## Coverage plots of tRNA using PAC_covplot ##
 #'
 #'# Single tRNA targeting a summary dataframe 
-#'PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+#'PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"),
 #'            map_target="tRNA-Ala-AGC-1-1")
 #'
 #'# Find tRNAs with many fragments and then plot
@@ -175,7 +176,7 @@
 #'# Here is one example using our PAC_trna function: 
 #'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
 #'                        join = TRUE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage5")), 
+#'                        pheno_target = list("stage", c("Stage1", "Stage5")),
 #'                        anno_target_1 = list("type"),
 #'                        anno_target_2 = list("class"))
 #'
@@ -188,7 +189,7 @@
 #'# By setting join = FALSE you will get group means instead of grand means:
 #'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
 #'                        join = FALSE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'                        pheno_target = list("stage", c("Stage1", "Stage3")),
 #'                        anno_target_1 = list("type"),
 #'                        anno_target_2 = list("class"))
 #'
@@ -209,7 +210,6 @@
 #'                        full.names = TRUE)
 #'suppressWarnings(file.remove(fls_temp)) 
 #' 
-#'  
 #' @export
 
 PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, 
@@ -420,13 +420,13 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position="none", 
                      axis.title.y= ggplot2::element_blank(), 
-                     panel.grid.major.y=ggplot2::element_line(linetype="dashed", 
-                                                               colour="grey", 
-                                                               size=0.5), 
-                     panel.grid.major.x = ggplot2::element_line(colour="grey", 
-                                                                size=0.5), 
-                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
-                     axis.text.y = ggplot2::element_text(angle = 0, hjust = 0), 
+                     panel.grid.major.y=ggplot2::element_line(linetype="dashed",
+                                                               colour="grey",
+                                                               size=0.5),
+                     panel.grid.major.x = ggplot2::element_line(colour="grey",
+                                                                size=0.5),
+                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0),
+                     axis.text.y = ggplot2::element_text(angle = 0, hjust = 0),
                      axis.line.x = ggplot2::element_blank())+
       ggplot2::scale_y_log10(limits = c(min(breaks),max(breaks)), 
                              breaks=breaks)+
@@ -457,11 +457,13 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
     # plot_lst$Log2FC_Anno_1 <- ggplot(
     #   plot_df, aes(x=variable, y=value, fill=variable)) +
     #   geom_hline(yintercept = 0, size=1.5, color="azure4")+
-    #   geom_jitter(aes(color= "grey"), position=position_jitter(0.1), cex=1.3) +
+    #   geom_jitter(aes(color= "grey"), 
+    #                   position=position_jitter(0.1), cex=1.3) +
     #   stat_summary(geom = "errorbar",  width=0.5, size=1.0, 
     #                fun.data = mean_se, position = "identity") +
     #   stat_summary(geom = "point", colour="black", stroke=1.5, 
-    #                shape=21, size = 3.5, fun.y = mean, position = "identity") +
+    #                shape=21, size = 3.5, 
+    #                fun.y = mean, position = "identity") +
     #   labs(title="Log2 Fold change C vs B")+
     #   ylab("Log2 Fold change +/- SE") +
     #   scale_fill_manual(values=c(col_isotype))+
@@ -479,21 +481,23 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
     #         axis.line.y =element_blank())+
     #   coord_flip(ylim=c(-1.3, 2.25))
   }
-  #Independent##################################################################
+  #Independent###############################################################
   if(paired==FALSE && log2fc==TRUE){
     ## Error bars for log2_FC types - independent
     if(join==TRUE){
       Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
                             factor(do.call("rbind",  
-                                           strsplit(rownames(Ann1_agg_lst[[1]]), 
+                                           strsplit(
+                                             rownames(Ann1_agg_lst[[1]]),
                                                     "\\."))[,1], 
                                    levels=pheno_target[[2]]))
     }
     data_lst <- lapply(Ann1_agg_lst, function(x){
         #Remove suppressWarning for Bioconductor: 
-        #suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, levels=lvls)), 
-        #                           mean))
-        agg <- stats::aggregate(x$value, list(factor(x$Group.1, levels=lvls)), mean)
+        #suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, 
+        #                                   levels=lvls)), mean))
+        agg <- stats::aggregate(x$value, 
+                                list(factor(x$Group.1, levels=lvls)), mean)
         colnames(agg)[colnames(agg)=="x"] <- "value"
         return(agg)
         })
@@ -503,7 +507,8 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
     logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
     lim <- max(sqrt(logfc$value^2))
     plot_lst$Log2FC_Anno_1 <- ggplot2::ggplot(logfc, 
-                                              ggplot2::aes(x=Group.1, y=value, 
+                                              ggplot2::aes(x=Group.1, 
+                                                           y=value,
                                                            fill=Group.1, 
                                                            ymin=value, 
                                                            ymax=value)) +
@@ -518,12 +523,13 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position="none", 
                      axis.title.y = ggplot2::element_blank(), 
-                     panel.grid.major.y=ggplot2::element_line(linetype="dashed", 
-                                                              colour="grey", 
-                                                              size=0.5), 
-                     panel.grid.major.x = ggplot2::element_line(colour="grey", 
+                     panel.grid.major.y=
+                       ggplot2::element_line(linetype="dashed",
+                                             colour="grey", 
+                                             size=0.5), 
+                     panel.grid.major.x = ggplot2::element_line(colour="grey",
                                                                 size=0.5), 
-                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0), 
+                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0),
                      axis.text.y = ggplot2::element_blank(),
                      axis.line.x = ggplot2::element_blank(), 
                      axis.line.y = ggplot2::element_blank())+
@@ -572,7 +578,8 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       ggplot2::scale_fill_manual(values=rev(rgb_vec_ann2))+
       ggplot2::theme_classic()+
       ggplot2::theme(axis.title.y= ggplot2::element_blank(), 
-                     axis.text.x = ggplot2::element_text(angle = 0, hjust = 0),
+                     axis.text.x = ggplot2::element_text(angle = 0, 
+                                                         hjust = 0),
                      axis.line.x = ggplot2::element_blank(), 
                      axis.line.y = ggplot2::element_blank())+
       ggplot2::coord_flip(ylim=c(0, 1))

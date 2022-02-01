@@ -36,9 +36,9 @@
 #'   "type_mid_start_per" and sequences ending within 45-50% of the references
 #'   as 'type_mid_end_per'.
 #'
-#'   If type="ss", then intervals is obtain from an ss file, obtained for example
-#'   from tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}) or at GtRNAdb
-#'   \url{http://gtrnadb.ucsc.edu/}.
+#'   If type="ss", then intervals is obtain from an ss file, obtained for
+#'   example from tRNAscan-SE (\url{http://lowelab.ucsc.edu/tRNAscan-SE/}) or at
+#'   GtRNAdb \url{http://gtrnadb.ucsc.edu/}.
 #'
 #'   Important, the intervals list is name sensitive. If type="nuclotides"
 #'   intervals can only contain two intervals named 'start' and 'end', while if
@@ -71,9 +71,9 @@
 #'   
 #' @param min_loop_width Integer setting the minimum number of nucleotides for a
 #'   loop. Only applicable when type="ss". Loops in ss-files are defined by ">"
-#'   followed by x number of "." ending with "<". For example:\cr 
-#'   \code{GCATCGGTGGTTCAGTGGTAGAATGCTCGCCTCGCGGGCGGCCCGGGTTCGATTCCCGGCCGATGCA}\cr 
-#'   \code{>>>>>>>..>>>>.......<<<<.>>>>>...<<<<<....>>>>>.......<<<<<<<<<<<<.}\cr 
+#'   followed by x number of "." ending with "<". For example:\cr
+#'   \code{ATCGGTGGTTCAGTGGTAGAATGCTCGCCTCGCGGGCGGCCCGGGTTCGATTCCCGGCCGATG}\cr
+#'   \code{>>>>>..>>>>.......<<<<.>>>>>...<<<<<....>>>>>.......<<<<<<<<<<<}\cr
 #'   Here are three possible loops: "AGTGGTA", "CTC", "TTCGATT". If
 #'   min_loop_width=3, the middle loop (">...<"="CTC") will be classified as a
 #'   loop. If min_loop_width=4 (default), the middle loop will not be classified
@@ -107,17 +107,18 @@
 #' ## Coverage plot of tRNA using PAC_covplot
 #' 
 #' # Single tRNA targeting a summary table 
-#' PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
-#'             map_target="tRNA-Ala-AGC-1-1")
+#' PAC_covplot(pac_trna, map=map_object, 
+#'                       summary_target= list("cpmMeans_stage"),
+#'                       map_target="tRNA-Ala-AGC-1-1")
 #'             
 #' ## Classify range types with map_rangetype (see vignette for examples
 #' # on how to use ss-files for detailed tRNA loop structure).
 #' 
-#' # Classify fragments using percent intervals       
+#' # Classify fragments using percent intervals
 #' map_object <- map_rangetype(map_object, 
 #'                 intervals = list(start = 1:5, mid = 45:55, end = 95:100))
 #'        
-## Explore the map-object with range classifications                    
+## Explore the map-object with range classifications
 #' names(map_object)
 #' map_object[[1]]
 #'
@@ -262,10 +263,10 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
     ## Test if map is mature tRNA                          
     logi_map_mature <- any(!unlist(lapply(map, function(x){
       grepl("CCA\\>", x$Ref_seq)
-      })))
+    })))
     logi_ss_mature <- any(!unlist(lapply(fin_ss, function(x){
       grepl("CCA\\>", x$Ref_seqs)
-      })))
+    })))
     if(logi_map_mature == FALSE && logi_ss_mature == TRUE){
       cat("\nIt seems the map object, but not the ss object, contains only",
           "\nmature tRNA (CCA in the 3'end). Will attempt to add CCA to ss",
@@ -277,7 +278,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
     ## Test if all references are included
     original_refs <- unlist(lapply(map, function(x){
       gsub("N", "", paste0(x$Ref_seq))
-      }))
+    }))
     logi_all  <- original_refs  %in% fin_ss_df$Ref_seqs
     match_original  <- match(fin_ss_df$Ref_seqs, original_refs)
     # Remove the missing references
@@ -297,7 +298,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
     # Match the ss
     original_refs <- unlist(lapply(map, function(x){
       gsub("N", "", paste0(x$Ref_seq))
-      }))
+    }))
     match_ss  <- match(original_refs, fin_ss_df$Ref_seqs)
     fin_ss_df <- fin_ss_df[match_ss,]
     
@@ -305,7 +306,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
     stopifnot(identical(fin_ss_df$Ref_seqs, 
                         paste0(unlist(lapply(map, function(x){
                           gsub("N", "", paste0(x$Ref_seq))
-                          })))))
+                        })))))
     stopifnot(identical(names(N_counts), names(map)))
     range_types <- map
     for(i in 1:nrow(fin_ss_df)){
@@ -354,7 +355,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       # should not be counted.
       code_split <-  as.data.frame(
         stringr::str_locate_all(as.character(trgt$ss_anno), 
-                                paste0(">[\\.X]{", min_loop_width,",}<"))[[1]])  
+                                paste0(">[\\.X]{", min_loop_width,",}<"))[[1]])
       # Start and ends needs to be adjusted; +1 at starts and -1 at ends
       code_split$start <- code_split$start +1  
       code_split$end <- code_split$end -1  

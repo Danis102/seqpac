@@ -26,8 +26,8 @@
 #'   T and anticodon loops found in canonical tRNAs. Such tRNAs will be removed
 #'   from the analysis.
 #'
-#' @param terminal Integer setting the terminal tolerance. Example, when terminal
-#'   is set to 5 (default) sequenced reads starting within the 5 first
+#' @param terminal Integer setting the terminal tolerance. Example, when
+#'   terminal is set to 5 (default) sequenced reads starting within the 5 first
 #'   nucleotides of the full-length tRNA reference will be classifed as 5'. If
 #'   it instead ends within the 5 last nucleotides of the full-length tRNA
 #'   reference it will be classified as 3'. If a read neither starts nor ends
@@ -71,7 +71,7 @@
 #'
 #'##--------------------------------------##
 #'## Create a map object using PAC_mapper ##
-#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN", 
+#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN",
 #'                         mismatches=0, threads=2, 
 #'                         report_string=TRUE, override = TRUE)
 #'# Warning: override = TRUE, will remove everything in temporary output path.
@@ -82,7 +82,7 @@
 #'## Coverage plots of tRNA using PAC_covplot ##
 #'
 #'# Single tRNA targeting a summary dataframe 
-#'PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+#'PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"),
 #'            map_target="tRNA-Ala-AGC-1-1")
 #'
 #'# Find tRNAs with many fragments and then plot
@@ -99,7 +99,7 @@
 #'
 #'# Classify according to loop structure using ss file provided with seqpac
 #'map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, 
-#'                               min_loop_width=4)          
+#'                               min_loop_width=4)
 #'# Note 1: You may download your own ss file at for example GtRNAdb
 #'# Note 2: The ss file must match the reference used in creating the map_object
 #'
@@ -139,7 +139,7 @@
 #'# Here is one example using our PAC_trna function: 
 #'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
 #'                        join = TRUE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage5")), 
+#'                        pheno_target = list("stage", c("Stage1", "Stage5")),
 #'                        anno_target_1 = list("type"),
 #'                        anno_target_2 = list("class"))
 #'
@@ -152,7 +152,7 @@
 #'# By setting join = FALSE you will get group means instead of grand means:
 #'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
 #'                        join = FALSE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage3")), 
+#'                        pheno_target = list("stage", c("Stage1", "Stage3")),
 #'                        anno_target_1 = list("type"),
 #'                        anno_target_2 = list("class"))
 #'
@@ -176,79 +176,80 @@
 #' @export
 
 tRNA_class <- function(PAC, map, terminal = 5){
-    
+  
   ## Check S4
-    if(isS4(PAC)){
-      tp <- "S4"
-      PAC <- as(PAC, "list")
-    }else{
-      tp <- "S3"
-    }
+  if(isS4(PAC)){
+    tp <- "S4"
+    PAC <- as(PAC, "list")
+  }else{
+    tp <- "S3"
+  }
   
-    logi_no_hits <- unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"}))
+  logi_no_hits <- unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"}))
   
-    if(any(logi_no_hits)==TRUE){
-          cat("The map object contains references without hits.",
-              "\nThese will be removed from output.")
-      
-      map <-  map[!unlist(lapply(map, function(x){
-                      x[[2]][1,1] == "no_hits"
-                      }))]
-      stopifnot(any(
-             unlist(lapply(map, function(x){x[[2]][1,1] == "no_hits"})))==FALSE)
-          }
-    type_vector <- lapply(map, function(x){
-      # Setup
-        align <- x$Alignments
-        #reference_length <- x$Ref_seq@ranges@width
-        reference_length <- IRanges::width(x$Ref_seq)
-        #ref_name <- x$Ref_seq@ranges@NAMES
-        ref_name <- names(x$Ref_seq)
-      # Classify according to terminal tolerance 
-        terminal_type <- ifelse(align$Align_start <= terminal, "5'",
-                           ifelse(reference_length - align$Align_end <= terminal, 
-                                  "3'", "i'"))
-      # Classify according to terminal tolerance 
-        half_type <- ifelse(
-          align$type_start_loop2 == TRUE | align$type_end_loop2 == TRUE, 
-          "half", "tRF")
-        return(data.frame(tRNA_ref=ref_name, 
-                          seq=rownames(align), 
-                          class=paste(terminal_type, half_type, sep="-"),
-                          decoder=align$decoder,
-                          acceptor=align$acceptor))
-      })
-    # Merge all references
-    type_vector <- do.call("rbind", type_vector)
-    rownames(type_vector) <- NULL
-    # Split by sequence instead of references
-    type_vector <- split(type_vector, type_vector$seq)
-    # Collapse multimapping seqences into one column 
-    finished <-  lapply(type_vector, function(x){
-      df <- data.frame(seq=paste0(sort(unique(x$seq)), collapse=";"), 
-                       class=paste0(sort(unique(x$class)), collapse=";"),
-                       decoder=paste0(sort(unique(x$decoder)), collapse=";"),
-                       acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
-                       tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
-      type <- paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-")
-      df$type <- paste0(type, collapse=";")
-      return(df)
-    })
-    finished <- do.call("rbind", finished)
-    # Extract tRNAs from PAC and merge results
-    PAC$Anno$seq <- rownames(PAC$Anno)
-    pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), 
-                           subset_only=TRUE)
-    # Before you merge make sure both dataframes are matching
-    stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
-    pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
+  if(any(logi_no_hits)==TRUE){
+    cat("The map object contains references without hits.",
+        "\nThese will be removed from output.")
     
-    ## Double check and return
-    if(PAC_check(pac_trna)==TRUE){
-      if(tp=="S4"){
-        return(as.PAC(pac_trna))
-      }else{
-        return(pac_trna)
-      }
+    map <-  map[!unlist(lapply(map, function(x){
+      x[[2]][1,1] == "no_hits"
+    }))]
+    stopifnot(any(
+      unlist(lapply(map, function(x){
+        x[[2]][1,1] == "no_hits"})))==FALSE)
+  }
+  type_vector <- lapply(map, function(x){
+    # Setup
+    align <- x$Alignments
+    #reference_length <- x$Ref_seq@ranges@width
+    reference_length <- IRanges::width(x$Ref_seq)
+    #ref_name <- x$Ref_seq@ranges@NAMES
+    ref_name <- names(x$Ref_seq)
+    # Classify according to terminal tolerance 
+    terminal_type <- ifelse(align$Align_start <= terminal, "5'",
+                       ifelse(reference_length - align$Align_end <= terminal, 
+                                   "3'", "i'"))
+    # Classify according to terminal tolerance 
+    half_type <- ifelse(
+      align$type_start_loop2 == TRUE | align$type_end_loop2 == TRUE, 
+      "half", "tRF")
+    return(data.frame(tRNA_ref=ref_name, 
+                      seq=rownames(align), 
+                      class=paste(terminal_type, half_type, sep="-"),
+                      decoder=align$decoder,
+                      acceptor=align$acceptor))
+  })
+  # Merge all references
+  type_vector <- do.call("rbind", type_vector)
+  rownames(type_vector) <- NULL
+  # Split by sequence instead of references
+  type_vector <- split(type_vector, type_vector$seq)
+  # Collapse multimapping seqences into one column 
+  finished <-  lapply(type_vector, function(x){
+    df <- data.frame(seq=paste0(sort(unique(x$seq)), collapse=";"), 
+                     class=paste0(sort(unique(x$class)), collapse=";"),
+                     decoder=paste0(sort(unique(x$decoder)), collapse=";"),
+                     acceptor=paste0(sort(unique(x$acceptor)), collapse=";"),
+                     tRNA_ref=paste0(sort(unique(x$tRNA_ref)), collapse=";"))
+    type <- paste(sort(unique(x$decoder)), sort(unique(x$acceptor)), sep="-")
+    df$type <- paste0(type, collapse=";")
+    return(df)
+  })
+  finished <- do.call("rbind", finished)
+  # Extract tRNAs from PAC and merge results
+  PAC$Anno$seq <- rownames(PAC$Anno)
+  pac_trna <- PAC_filter(PAC, anno_target=list("seq", finished$seq), 
+                         subset_only=TRUE)
+  # Before you merge make sure both dataframes are matching
+  stopifnot(identical(rownames(pac_trna$Anno), as.character(finished$seq)))
+  pac_trna$Anno <- cbind(pac_trna$Anno[,1, drop=FALSE], finished[,-1])
+  
+  ## Double check and return
+  if(PAC_check(pac_trna)==TRUE){
+    if(tp=="S4"){
+      return(as.PAC(pac_trna))
+    }else{
+      return(pac_trna)
     }
+  }
 }

@@ -88,9 +88,9 @@
 #'                         summary="all")
 #' cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, 
 #'                    scale = 1.0)
-#'                    
-#' #  Shortcut to remove no annotations ("no_anno") in the anno_target column            
-#' PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=TRUE)                  
+#' 
+#' #  Shortcut to remove no annotations ("no_anno") in the anno_target column
+#' PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=TRUE)
 #' PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=FALSE)
 #' 
 #' @export
@@ -151,7 +151,8 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
     tot_cnts <- mean(colSums(data))
     names(tot_cnts) <- "all"
     data_shrt <- stats::aggregate(data, list(anno[, anno_target[[1]]]), "sum")
-    data_shrt <- data.frame(Group.1=data_shrt[,1], all= rowMeans(data_shrt[,-1])) 
+    data_shrt <- data.frame(Group.1=data_shrt[,1], 
+                            all= rowMeans(data_shrt[,-1]))
     
   }else{
   
@@ -216,7 +217,8 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   # tot_cnts <- tot_cnts[match(names(tot_cnts), unique(data_long_perc$Sample))]
   # data_long_perc$tot_counts <- ""
   # if(total==TRUE){
-  #   trg_1st <- levels(data_long_perc$Category)[length(levels(data_long_perc$Category))]
+  #   trg_1st <- levels(data_long_perc$Category)[
+  #                     length(levels(data_long_perc$Category))]
   #   data_long_perc$tot_counts[data_long_perc$Category == trg_1st] <- tot_cnts
   # }
   
@@ -264,6 +266,6 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   leg <- cowplot::get_legend(ggplot2::ggplot(
     df, ggplot2::aes(x=types, fill=variables)) + 
                                ggplot2::geom_bar(color="black") + 
-                               ggplot2::scale_fill_manual(values=rev(colors))) 
+                               ggplot2::scale_fill_manual(values=rev(colors)))
   return(c(plt_lst, list(legend=leg)))
 }

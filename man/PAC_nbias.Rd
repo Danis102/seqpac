@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_nbias.R
 \name{PAC_nbias}
 \alias{PAC_nbias}
-\title{Generates a nucleotide bias analysis from sequences and counts in a PAC object}
+\title{Generates a nucleotide bias analysis from a PAC object}
 \usage{
 PAC_nbias(
   PAC,

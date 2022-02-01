@@ -91,7 +91,8 @@
 
 
 PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL, 
-                        width=1.0, no_anno=TRUE, total=TRUE, summary="samples"){
+                        width=1.0, no_anno=TRUE, total=TRUE, 
+                        summary="samples"){
   ## Check S4
   if(isS4(PAC)){
     tp <- "S4"

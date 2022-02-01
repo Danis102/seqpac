@@ -19,8 +19,8 @@ incomplete secondary structures with either more or fewer loops than the D,
 T and anticodon loops found in canonical tRNAs. Such tRNAs will be removed
 from the analysis.}
 
-\item{terminal}{Integer setting the terminal tolerance. Example, when terminal
-is set to 5 (default) sequenced reads starting within the 5 first
+\item{terminal}{Integer setting the terminal tolerance. Example, when
+terminal is set to 5 (default) sequenced reads starting within the 5 first
 nucleotides of the full-length tRNA reference will be classifed as 5'. If
 it instead ends within the 5 last nucleotides of the full-length tRNA
 reference it will be classified as 3'. If a read neither starts nor ends
@@ -76,7 +76,7 @@ ss_file <- system.file("extdata/trna2", "tRNA2.ss",
 
 ##--------------------------------------##
 ## Create a map object using PAC_mapper ##
-map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN", 
+map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN",
                         mismatches=0, threads=2, 
                         report_string=TRUE, override = TRUE)
 # Warning: override = TRUE, will remove everything in temporary output path.
@@ -87,7 +87,7 @@ map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN",
 ## Coverage plots of tRNA using PAC_covplot ##
 
 # Single tRNA targeting a summary dataframe 
-PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"),
            map_target="tRNA-Ala-AGC-1-1")
 
 # Find tRNAs with many fragments and then plot
@@ -104,7 +104,7 @@ cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
 
 # Classify according to loop structure using ss file provided with seqpac
 map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, 
-                              min_loop_width=4)          
+                              min_loop_width=4)
 # Note 1: You may download your own ss file at for example GtRNAdb
 # Note 2: The ss file must match the reference used in creating the map_object
 
@@ -144,7 +144,7 @@ pac_trna <- tRNA_class(pac_trna, map_object_ss, terminal=5)
 # Here is one example using our PAC_trna function: 
 trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
                        join = TRUE, top = 15, log2fc = TRUE,
-                       pheno_target = list("stage", c("Stage1", "Stage5")), 
+                       pheno_target = list("stage", c("Stage1", "Stage5")),
                        anno_target_1 = list("type"),
                        anno_target_2 = list("class"))
 
@@ -157,7 +157,7 @@ cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
 # By setting join = FALSE you will get group means instead of grand means:
 trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
                        join = FALSE, top = 15, log2fc = TRUE,
-                       pheno_target = list("stage", c("Stage1", "Stage3")), 
+                       pheno_target = list("stage", c("Stage1", "Stage3")),
                        anno_target_1 = list("type"),
                        anno_target_2 = list("class"))
 

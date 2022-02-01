@@ -20,11 +20,11 @@ into the final conversion table. The function may also take each reference
 path as single character strings (ref_path_A, ref_path_B, ref_path_C), but
 then any user-defined reference name will be lost (see example below).}
 
-\item{ref_path_A}{Character string with the path 1st fasta reference (leading)}
+\item{ref_path_A}{Character string with path to 1st fasta reference (leading)}
 
-\item{ref_path_B}{Character string with the path 2nd fasta reference}
+\item{ref_path_B}{Character string with path to 2nd fasta reference}
 
-\item{ref_path_C}{Character string with the path 3rd fasta reference}
+\item{ref_path_C}{Character string with path to 3rd fasta reference}
 
 \item{output}{Character indicating what type of output. As default
 output="tibble" will result in a table in the tibble format as described in
@@ -79,7 +79,7 @@ logi_dup <- duplicated(do.call("rbind", strsplit(names(ref1),"\\\\:"))[,1])
 ref1 <- ref1[!logi_dup]
 ref2 <- ref1
 names(ref2) <- paste0("chr", names(ref2))
-# Save new reference in temporary folder                                     
+# Save new reference in temporary folder 
 if(grepl("windows", .Platform$OS.type)){
   tmpdr <- paste0(tempdir(), "\\\\seqpac")
 }else{

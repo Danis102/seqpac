@@ -80,7 +80,8 @@
 #' coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\;start=|;")))
 #' gr <- GenomicRanges::GRanges(seqnames=coord[,1], 
 #'                              IRanges::IRanges(as.numeric(coord[,2]), 
-#'                                               as.numeric(coord[,2])+anno$Size ), 
+#'                                               as.numeric(coord[,2])+
+#'                                               anno$Size ), 
 #'                              strand=coord[,3])
 #' 
 #' GenomicRanges::mcols(gr) <- data.frame(biotype=anno$Biotypes_mis3, 
@@ -101,13 +102,14 @@
 #' # (If there are more, a 'Warning' will be added to the annotation)
 #' # (Here we remove those to avoid problems)
 #' 
-#' new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", colnames(pac$Anno))]
+#' new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", 
+#'                                colnames(pac$Anno))]
 #' test <- new_anno[, 3:ncol(new_anno)]
 #' test <- apply(test, 2, function(x){substr(x, 1, 7)})
 #' test <- apply(test, 1, function(x){paste(x, collapse = "")})
 #' new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
 #' pac$Anno <- new_anno
-#' pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))	
+#' pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))
 #'
 #' #  Run PAC_gtf
 #' gtf <- list(gtf1=out1, gtf2=out2)
@@ -115,13 +117,13 @@
 #' 
 #' pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
 #'                     gtf=gtf, target=target, threads=2)
-#'                     
+#' 
 #' 
 #' @export
 
 
-PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=FALSE,
-                   gtf=NULL, targets=NULL, 
+PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", 
+                   stranded=FALSE, gtf=NULL, targets=NULL, 
                    threads=1){
   ## Check S4
   if(isS4(PAC)){
@@ -183,7 +185,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
            "\nusing for example rtracklayer::readGFF('<path_to_gtf>').")
     }
   }
-  ##### Setup genome and run reanno if necessary ####################################
+  ##### Setup genome and run reanno if necessary ########################
   # If user do not know columns
   if(is.null(genome)){
     anno_genome <- tibble::as_tibble(PAC$Anno, .name_repair="minimal")
@@ -205,10 +207,11 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
         if(grepl("win|WIN|Win", Sys.info()["sysname"])){
             outpath <- gsub("\\", "/", outpath, fixed=TRUE)
         }
-        err <- try(map_reanno(PAC, ref_paths=list(genome=genome), 
-                                 output_path=outpath, type="internal", 
+        err <- try(map_reanno(PAC, ref_paths=list(genome=genome),
+                                 output_path=outpath, type="internal",
                                  mismatches=mismatches,
-                                 import ="genome", threads=threads), silent = TRUE)
+                                 import ="genome", threads=threads),
+                   silent = TRUE)
         if(!is.null(err)){
         outpath <- tempfile(pattern = "", fileext = ".out")
         err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), 
@@ -260,8 +263,8 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
   })
   if(any(logi_check)){
     stop(
-    "\nCoordinates in genome appear to have truncation warnings ('Warning>').",
-      "\nThis indicates that genome was mapped with reporting a limited number",
+    "\nCoordinates in genome appear to have truncation marks ('[W]arning>').",
+      "\nThis indicates that genome was mapped reporting a limited number",
       "\nof alignments per sequence. Please, rerun the 'add_reanno' function",
       "\nusing max_genome='all', or provide the path to a fasta genome",
       "\nreference in 'genome'.")
@@ -328,7 +331,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
           "'.\n     Could be wise to double check that chrosomsome names ",
           "\n     are compatible."))
     }
-  }                       
+  }
   
   ##### Annotating ####################################
   cat("\n\nAnnotating against the gtf file(s)  ...")
@@ -391,7 +394,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify", stranded=F
                                     .final = function(t){
                                       names(t) <- names(coord_gr); return(t)
                                       }) %dopar% {
-      x <- coord_gr[[t]]      
+      x <- coord_gr[[t]]
       if(paste(x[1])=="NA"){
         uni_gtf <- tibble::as_tibble(matrix(NA, nrow=1, 
                                             ncol=length(trg_cols)), 

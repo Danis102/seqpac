@@ -34,13 +34,13 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 class(pac)
 isS4(pac)                        
  
-# Turns S3 PAC object into a S4                                    
+# Turns S3 PAC object into a S4
 pac_s4 <- as.PAC(pac)
  
 class(pac_s4)
 isS4(pac_s4)   
 
-# Turns S3 PAC object into a S4                                    
+# Turns S3 PAC object into a S4
 pac_s3 <- as(pac_s4, "list")
 
 # Don't forget that in the summary and norm slots of the S4 PAC lies regular
@@ -52,8 +52,8 @@ pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means",
                    pheno_target=list("stage"), merge_pac=TRUE)
 
 pac_s4 
-head(pac_s4@norm$cpm)
-head(pac_s4@summary$cpmMeans_stage)
+head(norm(pac_s4)$cpm)
+head(summary(pac_s4)$cpmMeans_stage)
 
 }
 \seealso{

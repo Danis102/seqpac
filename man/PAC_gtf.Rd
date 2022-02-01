@@ -94,7 +94,8 @@ coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\\\|"))[,1])
 coord <- suppressWarnings(do.call("rbind", strsplit(coord, "\\\\;start=|;")))
 gr <- GenomicRanges::GRanges(seqnames=coord[,1], 
                              IRanges::IRanges(as.numeric(coord[,2]), 
-                                              as.numeric(coord[,2])+anno$Size ), 
+                                              as.numeric(coord[,2])+
+                                              anno$Size ), 
                              strand=coord[,3])
 
 GenomicRanges::mcols(gr) <- data.frame(biotype=anno$Biotypes_mis3, 
@@ -115,13 +116,14 @@ rtracklayer::export(gr2, out2, format="gtf")
 # (If there are more, a 'Warning' will be added to the annotation)
 # (Here we remove those to avoid problems)
 
-new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", colnames(pac$Anno))]
+new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", 
+                               colnames(pac$Anno))]
 test <- new_anno[, 3:ncol(new_anno)]
 test <- apply(test, 2, function(x){substr(x, 1, 7)})
 test <- apply(test, 1, function(x){paste(x, collapse = "")})
 new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
 pac$Anno <- new_anno
-pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))	
+pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))
 
 #  Run PAC_gtf
 gtf <- list(gtf1=out1, gtf2=out2)
@@ -129,7 +131,7 @@ target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero"))
 
 pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
                     gtf=gtf, target=target, threads=2)
-                    
+
 
 }
 \seealso{

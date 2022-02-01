@@ -205,7 +205,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
         p <- p+ggplot2::geom_boxplot(width=0.3, fill="white", col="black", 
                                      alpha=0.7,  outlier.shape = NA)
         }
-      
+
     }
     if(type=="violin"){
       p <- ggplot2::ggplot(
@@ -225,14 +225,13 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
                        axis.text.x = ggplot2::element_text(angle = 45, 
                                                            hjust = 0.95, 
                                                            size=13), 
-                       axis.title.y = ggplot2::element_text(size=15) ,  
+                       axis.title.y = ggplot2::element_text(size=15),
                        axis.text.y = ggplot2::element_text(size=13))+
         ggplot2::scale_fill_manual(values=colors)
  
       if(box==TRUE){
         p <- p + ggplot2::geom_boxplot(width=0.3, fill="white", col="black", 
                                        alpha=0.7,  outlier.shape = NA)}
-      
     }
     return(p)
   })

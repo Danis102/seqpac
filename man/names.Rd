@@ -41,7 +41,7 @@ head(norm(pac_s4)$cpm)
 
 pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
                    type = "means", pheno_target=list("stage")) 
-pac_s4                   
+pac_s4
 head(summary(pac_s4)$cpmMeans_stage)
 
 ######################################################### 
@@ -65,7 +65,7 @@ head(summary(pac_s4)$cpmMeans_stage)
  ref_paths <- list(trna= trna_path, rrna= rrna_path)
                                     
 ##  Add output path of your choice.
-# Here we use the R temporary folder depending on platform                                     
+# Here we use the R temporary folder depending on platform
 if(grepl("windows", .Platform$OS.type)){
  output <- paste0(tempdir(), "\\\\seqpac\\\\test")
 }else{
@@ -76,7 +76,7 @@ out_fls  <- list.files(output, recursive=TRUE)
 closeAllConnections()
 suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 
-##  Then map your PAC-object against the fasta references                                  
+##  Then map your PAC-object against the fasta references
  map_reanno(pac, ref_paths=ref_paths, output_path=output,
                type="internal", mismatches=2,  import="biotype", 
                threads=2, keep_temp=FALSE)

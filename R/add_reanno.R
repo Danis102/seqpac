@@ -79,7 +79,7 @@
 #'                           package = "seqpac", mustWork = TRUE)
 #'  trna_dir<- gsub("tRNA.fa", "", trna_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){     
 #'      Rbowtie::bowtie_build(trna_file, 
 #'                            outdir=trna_dir, 
 #'                            prefix="tRNA", force=TRUE)
@@ -89,17 +89,17 @@
 #'                           package = "seqpac", mustWork = TRUE)
 #'  rrna_dir<- gsub("rRNA.fa", "", rrna_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){
 #'      Rbowtie::bowtie_build(rrna_file, 
 #'                            outdir=rrna_dir, 
 #'                            prefix="rRNA", force=TRUE)
 #'                            }
 #'  ## Genome:
-#'  mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+#'  mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa",
 #'                                 package = "seqpac", mustWork = TRUE)
 #'  mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){
 #'      Rbowtie::bowtie_build(mycoplasma_file, 
 #'                            outdir=mycoplasma_dir, 
 #'                            prefix="mycoplasma", force=TRUE)
@@ -128,8 +128,8 @@
 #'                threads=2, keep_temp=FALSE, override=TRUE)
 #'  
 #'     
-#' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
-#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#' ##  Then import and generate a reanno-object of the temporary bowtie-files
+#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
 #'  
 #'                                     
 #' ## Now make some search terms against reference names to create shorter names
@@ -169,7 +169,7 @@
 #' 
 #' pac_s4 
 #' head(norm(pac_s4)$cpm)
-#' head(pac_s4@summary$cpmMeans_stage)
+#' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' 
 #' 
@@ -231,22 +231,21 @@
 #' 
 #' @export
 
-
 add_reanno <- function(reanno, mismatches=0, type="genome", bio_search, 
                        bio_perfect=FALSE, genome_max=10, merge_pac=NULL){
-  
+
   if(isS4(reanno)){
     tp <- "S4"
     reanno <- as(reanno, "list")
   }else{
     tp <- "S3"
   }
-  
+
   ## General setup ###############################
   stopifnot(any(do.call("c", lapply(reanno$Full_anno, function(x){
     do.call("c", lapply(x, function(y){
       identical(reanno$Overview$seq, y$seq)}))
-    }))))
+  }))))
   seq_nam <- reanno$Overview$seq
   cat(paste0("\nSequences in total: ", length(seq_nam)))
   fin_lst <- list(NA)
@@ -256,7 +255,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
          "\nPlease specify mismatches <= to mismatches used", 
          "\nwhen the reanno object was generated using map_reanno.") 
   }
-    
+  
   ## Extract genome ###############################
   if(type=="genome"){
     cat("\nExtracting genome(s) ...")
@@ -361,7 +360,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
                               return(
                                 ifelse(grepl(x, extracted[[1]]$ref_hits), 
                                        paste0(bio_nam[a]), "<NA>"))
-                              }))
+                            }))
         }
         if(length(bio_search[[a]])>1){
           bio_df <- do.call("cbind", 
@@ -369,11 +368,11 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
                               return(ifelse(grepl(x, extracted[[1]]$ref_hits), 
                                             paste0(bio_nam[a], "_", x, "|"), 
                                             "<NA>"))}
-                              ))
+                            ))
         }
         bio_vec <- gsub("<NA>", "", apply(bio_df, 1, function(x){
           return(paste(x, collapse=""))}
-          ))
+        ))
         bio_hits <- as.numeric(grepl(".", bio_vec))
         
         `%>%` <- dplyr::`%>%`
@@ -450,7 +449,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
     logi_strand <- apply(do.call("cbind", lapply(fin_strand_lst, function(x){
       do.call("cbind", x)})), 1 , function(z){
         paste(z, collapse="")}
-      )
+    )
     fin_strand <- paste(ifelse(grepl("s", logi_strand), "+",""), 
                         ifelse(grepl("a", logi_strand), "-",""), sep="|")
     fin <- cbind(data.frame(strand=fin_strand, stringsAsFactors =FALSE), fin)
@@ -495,17 +494,17 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
       }else{
         col_fix <- paste0(col_fix, num+1)}
     }
-  
-  colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
-  colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
-  colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
-  
-  merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
-  PAC_check(merge_pac)
-  if(tp=="S4"){
-       return(as.PAC(merge_pac))
+    
+    colnames(reanno) <- paste0(colnames(reanno), "_", col_fix)
+    colnames(reanno) <- gsub("genome_genome", "genome", colnames(reanno))
+    colnames(reanno) <- gsub("bio_bio", "bio", colnames(reanno))
+    
+    merge_pac$Anno <- cbind(merge_pac$Anno, reanno, stringsAsFactors = FALSE)
+    PAC_check(merge_pac)
+    if(tp=="S4"){
+      return(as.PAC(merge_pac))
     }else{
-       return(merge_pac)
+      return(merge_pac)
     }
   }else{
     return(tibble::as_tibble(reanno))

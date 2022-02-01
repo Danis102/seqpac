@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_sizedist.R
 \name{PAC_sizedist}
 \alias{PAC_sizedist}
-\title{Generates size distribution plots from sequences and counts in a PAC object}
+\title{Generates size distribution plots from a PAC object}
 \usage{
 PAC_sizedist(
   PAC,
@@ -68,9 +68,9 @@ A list of objects:
 visualization of sequence classes and summaries.
 }
 \details{
-Given a PAC object the function will attempt to order sequences by their size
-(number of nucleotides) and visualize the contribution of specific classes of
-sequences (e.g. sRNA classes) at each size point.
+Given a PAC object the function will attempt to order sequences by their 
+size (number of nucleotides) and visualize the contribution of specific 
+classes of sequences (e.g. sRNA classes) at each size point.
 }
 \examples{
 

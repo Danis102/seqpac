@@ -125,7 +125,8 @@ ss_file <- system.file("extdata/trna2", "tRNA2.ss",
 
 ##--------------------------------------##
 ## Create a map object using PAC_mapper ##
-map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN", 
+map_object <- PAC_mapper(pac_trna, ref=trna_ref, 
+                        N_up = "NNN", N_down = "NNN",
                         mismatches=0, threads=2, 
                         report_string=TRUE, override = TRUE)
 # Warning: override = TRUE, will remove everything in temporary output path.
@@ -136,7 +137,7 @@ map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN",
 ## Coverage plots of tRNA using PAC_covplot ##
 
 # Single tRNA targeting a summary dataframe 
-PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"), 
+PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"),
            map_target="tRNA-Ala-AGC-1-1")
 
 # Find tRNAs with many fragments and then plot
@@ -193,7 +194,7 @@ pac_trna <- tRNA_class(pac_trna, map_object_ss, terminal=5)
 # Here is one example using our PAC_trna function: 
 trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
                        join = TRUE, top = 15, log2fc = TRUE,
-                       pheno_target = list("stage", c("Stage1", "Stage5")), 
+                       pheno_target = list("stage", c("Stage1", "Stage5")),
                        anno_target_1 = list("type"),
                        anno_target_2 = list("class"))
 
@@ -206,7 +207,7 @@ cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
 # By setting join = FALSE you will get group means instead of grand means:
 trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
                        join = FALSE, top = 15, log2fc = TRUE,
-                       pheno_target = list("stage", c("Stage1", "Stage3")), 
+                       pheno_target = list("stage", c("Stage1", "Stage3")),
                        anno_target_1 = list("type"),
                        anno_target_2 = list("class"))
 
@@ -227,7 +228,6 @@ fls_temp  <- list.files(fls_temp, recursive=TRUE,
                        full.names = TRUE)
 suppressWarnings(file.remove(fls_temp)) 
 
- 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current

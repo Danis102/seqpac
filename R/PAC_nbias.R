@@ -1,4 +1,4 @@
-#' Generates a nucleotide bias analysis from sequences and counts in a PAC object
+#' Generates a nucleotide bias analysis from a PAC object
 #'
 #' \code{PAC_nbias} analyses nucleotide bias.
 #'
@@ -35,7 +35,7 @@
 #'                          column(s) in Pheno, 2nd object being a character
 #'                          vector of the target group(s) in the target column
 #'                          (1st object). (default=NULL)
-#'                          
+#' 
 #' @param summary_target List with: 
 #'                          1st object being character vector of target object
 #'                          in PAC$summary, 2nd object being a character vector
@@ -147,8 +147,10 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL,
     return(anno[,c(colmn2, colmn1)])
   }else{
    cat(paste0("\nCounting nucleotides"))
-   combin <- c(paste0(range[1]:range[2], "_A"), paste0(range[1]:range[2], "_T"), 
-               paste0(range[1]:range[2], "_C"), paste0(range[1]:range[2], "_G"), 
+   combin <- c(paste0(range[1]:range[2], "_A"),
+               paste0(range[1]:range[2], "_T"),
+               paste0(range[1]:range[2], "_C"),
+               paste0(range[1]:range[2], "_G"),
                paste0(range[1]:range[2], "_N"))
    nuc_lst <- lapply(as.list(dat), function(x){
      nuc_agg <- stats::aggregate(x, list(factor(paste(anno$Size, 

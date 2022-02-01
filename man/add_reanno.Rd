@@ -91,7 +91,7 @@ the same order of sequences as in the original PAC master file.
                           package = "seqpac", mustWork = TRUE)
  trna_dir<- gsub("tRNA.fa", "", trna_file)
  
- if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+ if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){     
      Rbowtie::bowtie_build(trna_file, 
                            outdir=trna_dir, 
                            prefix="tRNA", force=TRUE)
@@ -101,17 +101,17 @@ the same order of sequences as in the original PAC master file.
                           package = "seqpac", mustWork = TRUE)
  rrna_dir<- gsub("rRNA.fa", "", rrna_file)
  
- if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){                               
+ if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){
      Rbowtie::bowtie_build(rrna_file, 
                            outdir=rrna_dir, 
                            prefix="rRNA", force=TRUE)
                            }
  ## Genome:
- mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+ mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa",
                                 package = "seqpac", mustWork = TRUE)
  mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
  
- if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){                               
+ if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){
      Rbowtie::bowtie_build(mycoplasma_file, 
                            outdir=mycoplasma_dir, 
                            prefix="mycoplasma", force=TRUE)
@@ -140,8 +140,8 @@ the same order of sequences as in the original PAC master file.
                threads=2, keep_temp=FALSE, override=TRUE)
  
     
-##  Then import and generate a reanno-object of the temporary bowtie-files                                    
-reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+##  Then import and generate a reanno-object of the temporary bowtie-files
+reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
  
                                     
 ## Now make some search terms against reference names to create shorter names
@@ -181,7 +181,7 @@ pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means",
 
 pac_s4 
 head(norm(pac_s4)$cpm)
-head(pac_s4@summary$cpmMeans_stage)
+head(summary(pac_s4)$cpmMeans_stage)
 
 
 

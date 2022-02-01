@@ -69,7 +69,7 @@
 #'                          package = "seqpac", mustWork = TRUE)
 #' trna_dir<- gsub("tRNA.fa", "", trna_file)
 #' 
-#' if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+#' if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){
 #'   Rbowtie::bowtie_build(trna_file, 
 #'                         outdir=trna_dir, 
 #'                         prefix="tRNA", force=TRUE)
@@ -84,8 +84,9 @@
 #' output <- paste0(tempdir(),"/seqpac/test")
 #' 
 #' ##  Then map the PAC-object against the fasta references. Warning: if you use
-#' # your own data, you may want override=FALSE, to avoid deleting previous mapping
-#' # by mistake. keep_temp=TRUE can be used to run import_reanno independently.
+#' # your own data, you may want override=FALSE, to avoid deleting previous
+#' # mapping by mistake. keep_temp=TRUE can be used to run import_reanno
+#' # independently.
 #' 
 #' map_reanno(pac, ref_paths=ref_paths, output_path=output,
 #'            type="internal", mismatches=2,  import="biotype", 
@@ -105,31 +106,31 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
   ## Check bowtie format (8 columns; "IIIIIII" present in column 6; 
   ## column 4 is an integer)
   row1 <- lapply(as.list(files), function(f){
-          x <- try(utils::read.delim(f, nrows=1, header=FALSE), silent = TRUE)
-          if(inherits(x, "try-error"))
-            return(data.frame(V1="No_hits"))
-          else
-            return(x)
-        })
+    x <- try(utils::read.delim(f, nrows=1, header=FALSE), silent = TRUE)
+    if(inherits(x, "try-error"))
+      return(data.frame(V1="No_hits"))
+    else
+      return(x)
+  })
   form_logi <- lapply(row1, function(x){
-          if(!ncol(x) == 8){
-            return(FALSE)
-          }else{
-            form_logi[[x]] <- return(sum(c(grepl("IIIIIII", 
-                                                 as.character(x[,6])), 
-                                           is.integer(x[,4]))) == 2)
-          }
-        })
+    if(!ncol(x) == 8){
+      return(FALSE)
+    }else{
+      form_logi[[x]] <- return(sum(c(grepl("IIIIIII", 
+                                           as.character(x[,6])), 
+                                     is.integer(x[,4]))) == 2)
+    }
+  })
   form_logi <-  do.call("c", form_logi)
   no_hit <- do.call("c", lapply(row1, function(x){
     as.character(x[1,1]) == "No_hits"
-    }))
+  }))
   
   ## Give some feedback
   cat("\n|--- Found", sum(form_logi), 
       "bowtie file(s) with hits and", sum(no_hit), 
       "without.")
-
+  
   ## Entering import loop
   data.table::setDTthreads(threads)
   bowtie_out_lst <- list(NA)
@@ -142,7 +143,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
       bowtie_out_lst[[k]] <- tibble::tibble(.id="No_hits", mis_n=NA, 
                                             mis_where=NA, ref_hits=NA)
       names(bowtie_out_lst)[k] <- nam 
-      }
+    }
     
     ## Import selected bowtie data
     if(form_logi[k]){
@@ -186,55 +187,57 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
         bow_splt <- split(bow_out, bow_out$V1)
         rm(bow_out)
         gc(reset=TRUE)
-  
+        
         # foreach combine every 100 instances
         chk_size <- ceiling(length(bow_splt)/100) 
         chnks1 <-as.integer(seq(from=1, to=length(bow_splt), by=chk_size))
         chnks2 <-as.integer(seq(from=0, to=length(bow_splt), by=chk_size))
         chnks2 <- c(chnks2[-1], length(bow_splt))
         chnks_rng <- list(chnks1, chnks2)
-  
+        
         # Do not use parallel::makeClusters!!!
         doParallel::registerDoParallel(threads) 
         `%dopar%` <- foreach::`%dopar%`
         bowtie_out_lst[[k]] <- foreach::foreach(s=1:length(chnks_rng[[1]]), 
-                                                .inorder = FALSE, 
-                                                .combine = "rbind") %dopar% {
-              compile_lst <- lapply(
-                bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
-                  # Fix neg strand mismatch   
-                  new <- gsub("A", "t", x$V8[x$V2 == "-"])
-                  new <- gsub("C", "g", new)
-                  new <- gsub("G", "c", new)
-                  new <- gsub("T", "a", new)
-                  x$V8[x$V2 == "-"] <- toupper(new)
-                  # Only report where mismatches occurs uniquely
-                  uni_mis <- unique(x$V8)
-                  uni_mis <- unique(do.call("c", 
-                                            stringr::str_split(uni_mis, ",")))
-                  uni_mis <- uni_mis[order(as.integer(gsub( ":.*$", "", 
-                                                            uni_mis )))]
-                  if(any(is.na(uni_mis))){uni_mis <- "mis0"}
-                  uni_mis <- paste(uni_mis, collapse="|")
-                  if(coord==TRUE){
-                              x$V4 <- x$V4+1 # Fix bowtie coordinate shift
-                              hits <- paste(unique(paste(x$V3, 
-                                                         paste0("start=", 
-                                                                x$V4), 
-                                                         x$V2, sep=";")), 
-                                            collapse="|")}
-                  if(coord==FALSE){
-                              strnd <- ifelse(x$V2=="+", "sense", "antisense")
-                              hits <- paste(unique(paste(x$V3, strnd, sep=":")), 
-                                            collapse="|")}
-                  fin <- data.table::data.table(mis_n=n_mis, mis_where=uni_mis, 
-                                                ref_hits=hits)
-                  return(fin)
-                  })
-              bow_fin <- tibble::as_tibble(data.table::rbindlist(compile_lst, 
-                                                                 idcol=TRUE))
-              return(bow_fin)
-            }
+                .inorder = FALSE, 
+                .combine = "rbind") %dopar% {
+                  compile_lst <- lapply(
+                    bow_splt[chnks_rng[[1]][s]:chnks_rng[[2]][s]], function(x){
+                      # Fix neg strand mismatch   
+                      new <- gsub("A", "t", x$V8[x$V2 == "-"])
+                      new <- gsub("C", "g", new)
+                      new <- gsub("G", "c", new)
+                      new <- gsub("T", "a", new)
+                      x$V8[x$V2 == "-"] <- toupper(new)
+                      # Only report where mismatches occurs uniquely
+                      uni_mis <- unique(x$V8)
+                      uni_mis <- unique(
+                        do.call("c", 
+                                stringr::str_split(uni_mis, ",")))
+                      uni_mis <- uni_mis[order(as.integer(gsub( ":.*$", "", 
+                                                                uni_mis )))]
+                      if(any(is.na(uni_mis))){uni_mis <- "mis0"}
+                      uni_mis <- paste(uni_mis, collapse="|")
+                      if(coord==TRUE){
+                        x$V4 <- x$V4+1 # Fix bowtie coordinate shift
+                        hits <- paste(unique(paste(x$V3, 
+                                                   paste0("start=", 
+                                                          x$V4), 
+                                                   x$V2, sep=";")), 
+                                      collapse="|")}
+                      if(coord==FALSE){
+                        strnd <- ifelse(x$V2=="+", "sense", "antisense")
+                        hits <- paste(unique(paste(x$V3, strnd, sep=":")), 
+                                      collapse="|")}
+                      fin <- data.table::data.table(mis_n=n_mis, 
+                                                    mis_where=uni_mis, 
+                                                    ref_hits=hits)
+                      return(fin)
+                    })
+                  bow_fin <- tibble::as_tibble(
+                    data.table::rbindlist(compile_lst,idcol=TRUE))
+                  return(bow_fin)
+                }
         doParallel::stopImplicitCluster()
         names(bowtie_out_lst)[k] <- nam
       }

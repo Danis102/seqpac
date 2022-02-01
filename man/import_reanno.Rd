@@ -80,7 +80,7 @@ trna_file <- system.file("extdata/trna", "tRNA.fa",
                          package = "seqpac", mustWork = TRUE)
 trna_dir<- gsub("tRNA.fa", "", trna_file)
 
-if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){
   Rbowtie::bowtie_build(trna_file, 
                         outdir=trna_dir, 
                         prefix="tRNA", force=TRUE)
@@ -95,8 +95,9 @@ ref_paths <- list(trna= trna_file)
 output <- paste0(tempdir(),"/seqpac/test")
 
 ##  Then map the PAC-object against the fasta references. Warning: if you use
-# your own data, you may want override=FALSE, to avoid deleting previous mapping
-# by mistake. keep_temp=TRUE can be used to run import_reanno independently.
+# your own data, you may want override=FALSE, to avoid deleting previous
+# mapping by mistake. keep_temp=TRUE can be used to run import_reanno
+# independently.
 
 map_reanno(pac, ref_paths=ref_paths, output_path=output,
            type="internal", mismatches=2,  import="biotype", 

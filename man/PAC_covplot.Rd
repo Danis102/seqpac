@@ -82,7 +82,7 @@ function will attempt to plot the sequence coverage over long references.
 
 pac <- PAC_summary(pac, norm = "cpm", type = "means", 
                    pheno_target=list("stage", unique(pac$Pheno$stage)))
-                   
+
 pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
 pac_tRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "tRNA"))
 
@@ -94,37 +94,37 @@ ref_rRNA <- system.file("extdata/rrna", "rRNA.fa",
                          package = "seqpac", mustWork = TRUE)
                          
 ref_tRNA <- system.file("extdata/trna", "tRNA.fa", 
-                         package = "seqpac", mustWork = TRUE)                         
+                         package = "seqpac", mustWork = TRUE)
 
-                                                                                                                                 
-## Map using PAC-mapper                          
+
+## Map using PAC-mapper
 map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
                         threads=1, ref=ref_rRNA, override=TRUE)
-                                                                                                   
+      
 map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
-                        threads=1, ref=ref_tRNA, override=TRUE)                        
-                                                
-## Plot rRNA according to embryonic stage using PAC_covplot                       
+                        threads=1, ref=ref_tRNA, override=TRUE)
+
+## Plot rRNA according to embryonic stage using PAC_covplot
 cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
                         summary_target = list("cpmMeans_stage"), 
                         xseq=FALSE, style="line", 
                         color=c("red", "black", "blue"))
-                        
+
 cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
                     cov_rRNA[[4]], nrow=2, ncol=2)
 
 
 
 ## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
-# (OBS! Long reference will not )                     
+# (OBS! Long reference will not )
 cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
                         summary_target = list("cpmMeans_stage"), 
                         xseq=TRUE, style="line", 
                         color=c("red", "black", "blue"))
 
 cov_tRNA[[1]]
-                    
-## Explore the map-object                    
+
+## Explore the map-object 
 head(map_tRNA[[1]])
 names(map_tRNA)
 map_tRNA[[1]]
@@ -146,8 +146,8 @@ cov_tRNA_sub <- PAC_covplot(pac_tRNA, map_tRNA,
                         summary_target = list("cpmMeans_stage"),
                         map_target = targets,
                         xseq=TRUE, style="line", 
-                        color=c("red", "black", "blue"))                  
-                                                      
+                        color=c("red", "black", "blue"))
+
 cowplot::plot_grid(plotlist= cov_tRNA_sub) 
 
 }

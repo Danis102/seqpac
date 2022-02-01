@@ -1,3 +1,4 @@
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to seqpac. \nPlease, cite 'Skog et al. 2021, bioRxiv'")
+  packageStartupMessage("Welcome to seqpac.", 
+                        "\nPlease, cite 'Skog et al. 2021, bioRxiv'")
 }

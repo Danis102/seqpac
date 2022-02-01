@@ -19,7 +19,7 @@
 #'
 #' @param counts Data.frame object with the same column names as in
 #'   Sample_ID column of the pheno.
-#'
+#'   
 #' @param progress_report Data.frame object with progress report.
 #'
 #' @return A Pheno data.frame compatible with \code{\link{make_PAC}}
@@ -92,7 +92,7 @@
 #'                        Treatment=c(rep("heat", times=3), 
 #'                                    rep("control", times=3)),
 #'                        Batch=rep(c("1", "2", "3"), times=2)) 
-#'                                                
+#'    
 #' pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
 #'                      counts=counts$counts)
 #'
@@ -129,33 +129,33 @@
 make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
   
   ### Read using pheno.txt or data.frame 
-    if(is.data.frame(pheno)){
-      header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", 
-                            colnames(pheno)))
-      if(!length(header) == 1){
-        stop(
-          "\nCannot find column named 'Sample_ID'",
-          "\nor you have >1 columns named 'Sample_ID'")
-      }
-      colnames(pheno)[header] <- "Sample_ID"
-      
-    }else{
-      lines <- readLines(pheno, n=20)
-      header <- which(grepl("Sample_ID|sample_ID|Sample_id|sample_id", lines))
-      if(!length(header) == 1){
-        stop("\nCannot find comma seperated header with first column", 
-             "\nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
-      }
-      head_1 <- stringr::str_count (lines[header], ",")
-      row_1 <- stringr::str_count (lines[header+1], ",")
-      if(row_1-head_1>=0){
-        pheno <- utils::read.delim(pheno,  header=TRUE, sep=",")
-      }else{
-        pheno <- utils::read.delim(pheno,  header=TRUE, sep="\t")
-      }
+  if(is.data.frame(pheno)){
+    header <- which(grepl("^Sample_ID|^sample_ID|^Sample_id|^sample_id", 
+                          colnames(pheno)))
+    if(!length(header) == 1){
+      stop(
+        "\nCannot find column named 'Sample_ID'",
+        "\nor you have >1 columns named 'Sample_ID'")
     }
-    pheno$Sample_ID <- as.character(gsub("-", "_", 
-                                         as.character(pheno$Sample_ID)))
+    colnames(pheno)[header] <- "Sample_ID"
+    
+  }else{
+    lines <- readLines(pheno, n=20)
+    header <- which(grepl("Sample_ID|sample_ID|Sample_id|sample_id", lines))
+    if(!length(header) == 1){
+      stop("\nCannot find comma seperated header with first column", 
+           "\nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
+    }
+    head_1 <- stringr::str_count (lines[header], ",")
+    row_1 <- stringr::str_count (lines[header+1], ",")
+    if(row_1-head_1>=0){
+      pheno <- utils::read.delim(pheno,  header=TRUE, sep=",")
+    }else{
+      pheno <- utils::read.delim(pheno,  header=TRUE, sep="\t")
+    }
+  }
+  pheno$Sample_ID <- as.character(gsub("-", "_", 
+                                       as.character(pheno$Sample_ID)))
   
   
   
@@ -193,8 +193,8 @@ make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
     }
     if(!length(ord[!ord==0])==nrow(pheno)){
       stop(
-      "\nNot all Sample_ID in pheno were available in counts column names.",
-      "\nDouble check your Sample_ID column in pheno input.") 
+        "\nNot all Sample_ID in pheno were available in counts column names.",
+        "\nDouble check your Sample_ID column in pheno input.") 
     }
     
     # Reorder pheno according to counts sample names
@@ -221,7 +221,7 @@ make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
     stopifnot(identical(rownames(pheno), colnames(counts)))
     logi_miss <- ord %in% 0
     print_df <- data.frame(pheno=as.character(pheno$Sample_ID), 
-               counts=colnames(counts))
+                           counts=colnames(counts))
     if(any(logi_miss)){
       warning(" Not all samples in counts were represented in pheno input.",
               "\n These will have 'NA' in pheno.")

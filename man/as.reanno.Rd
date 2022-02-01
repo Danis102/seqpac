@@ -44,7 +44,7 @@ an S3. See examples below.
  ref_paths <- list(trna= trna_path, rrna= rrna_path)
                                     
 ##  Add output path of your choice.
-# Here we use the R temporary folder depending on platform                                     
+# Here we use the R temporary folder depending on platform
 if(grepl("windows", .Platform$OS.type)){
  output <- paste0(tempdir(), "\\\\seqpac\\\\test")
 }else{
@@ -54,14 +54,14 @@ if(grepl("windows", .Platform$OS.type)){
 out_fls  <- list.files(output, recursive=TRUE)
 suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 
-##  Then map your PAC-object against the fasta references                                  
+##  Then map your PAC-object against the fasta references
  map_reanno(pac, ref_paths=ref_paths, output_path=output,
                type="internal", mismatches=2,  import="biotype", 
                threads=2, keep_temp=FALSE)
     
-##  Then import and generate a reanno-object of the temporary bowtie-files                                    
-reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
-                                    
+##  Then import and generate a reanno-object of the temporary bowtie-files
+reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
+
 ## Now make some search terms against reference names to create shorter names
 # Theses can be used to create factors in downstream analysis
 # One search hit (regular expressions) gives one new short name 
@@ -86,7 +86,7 @@ reanno_s3 <- as(reanno_biotype, "list")
 class(reanno_s3)
 isS4(reanno_s3)   
 
-# Turns S3 reanno object into a S4                                    
+# Turns S3 reanno object into a S4
 reanno_s4 <- as.reanno(reanno_s3)
 class(reanno_s4)
 isS4(reanno_s4) 
@@ -94,7 +94,7 @@ isS4(reanno_s4)
 # Similar, turns S3 PAC object into a S4
 class(pac)
 isS4(pac)  
-                                                                        
+
 pac_s4 <- as.PAC(pac)
 class(pac_s4)
 isS4(pac_s4)   
@@ -108,8 +108,8 @@ pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means",
                    pheno_target=list("stage"), merge_pac=TRUE)
 
 pac_s4 
-head(pac_s4@norm$cpm)
-head(pac_s4@summary$cpmMeans_stage)
+head(norm(pac_s4)$cpm)
+head(summary(pac_s4)$cpmMeans_stage)
 
 }
 \seealso{

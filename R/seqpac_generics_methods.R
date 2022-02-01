@@ -1,5 +1,5 @@
-################################################################################
-################################################################################
+##############################################################################
+##############################################################################
 ##  General rules that works: 
 #  For non-standard generics: 1st comes export, then setGeneric, setGeneric with
 #  <-, empty lines, then comes export again, then generic function (here
@@ -9,8 +9,8 @@
 #  functions, standard generics (e.g. nrow, rownames) need to have "x" in
 #  functions.
 #
-################################################################################
-################################################################################
+##############################################################################
+##############################################################################
 #  Non-standard generics PAC
 #
 #------------------------------------------------------------------------------
@@ -52,7 +52,7 @@
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #'
@@ -74,8 +74,8 @@ setReplaceMethod("pheno", methods::signature(object="PAC", value="data.frame"),
                    methods::validObject(object)
                    object
                  }) 
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #' anno(PAC)
 #'  
 #' Access the annotation table in S4 PAC
@@ -178,7 +178,7 @@ setReplaceMethod("anno", methods::signature(object="PAC", value="data.frame"),
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #'
 #'
@@ -238,7 +238,7 @@ setReplaceMethod("counts", methods::signature(object="PAC", value="data.frame"),
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -357,7 +357,7 @@ setReplaceMethod("summary", methods::signature(object="PAC", value="list"),
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -415,7 +415,7 @@ names.PAC <- function(x){ names(as(x, "list")) }
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -450,7 +450,7 @@ rownames.PAC <- function(x){ rownames(x@Counts) }
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -486,7 +486,7 @@ colnames.PAC <- function(x){colnames(x@Counts)}
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -520,7 +520,7 @@ length.PAC <- function(x){ length(as(x, "list")) }
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -554,7 +554,7 @@ ncol.PAC <- function(x){ ncol(x@Counts) }
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4 
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
@@ -588,15 +588,15 @@ nrow.PAC <- function(x){ nrow(x@Counts) }
 #' 
 #' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
 #'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
+#' pac_s4 
 #' head(summary(pac_s4)$cpmMeans_stage)
 #' 
 #' @export
 setMethod("nrow", "PAC", nrow.PAC)
 
 
-################################################################################
-################################################################################
+###############################################################################
+###############################################################################
 #  Non-standard generics reanno
 
 #------------------------------------------------------------------------------
@@ -636,9 +636,9 @@ setMethod("nrow", "PAC", nrow.PAC)
 #'                           package = "seqpac", mustWork = TRUE)
 #'  
 #'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
-#'                                     
+#'  
 #' ##  Add output path of your choice.
-#' # Here we use the R temporary folder depending on platform                                     
+#' # Here we use the R temporary folder depending on platform 
 #'if(grepl("windows", .Platform$OS.type)){
 #'  output <- paste0(tempdir(), "\\seqpac\\test")
 #'}else{
@@ -649,7 +649,7 @@ setMethod("nrow", "PAC", nrow.PAC)
 #' closeAllConnections()
 #' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 #'
-#' ##  Then map your PAC-object against the fasta references                                  
+#' ##  Then map your PAC-object against the fasta references 
 #'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
 #'                type="internal", mismatches=2,  import="biotype", 
 #'                threads=2, keep_temp=FALSE)
@@ -678,13 +678,14 @@ setMethod("overview", "reanno", overview.reanno)
 
 #' @rdname overview
 #' @export
-setReplaceMethod("overview", methods::signature(object="reanno", value="data.frame"),
+setReplaceMethod("overview", methods::signature(object="reanno", 
+                                                value="data.frame"),
                  function( object, value ) {
                    object@Overview <- value
                    methods::validObject(object)
                    object
                  })
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #' full(reanno)
 #' 
 #' Access the multilevel list of imported data.frames in a S4 reanno object 
@@ -721,9 +722,9 @@ setReplaceMethod("overview", methods::signature(object="reanno", value="data.fra
 #'                           package = "seqpac", mustWork = TRUE)
 #'  
 #'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
-#'                                     
+#'  
 #' ##  Add output path of your choice.
-#' # Here we use the R temporary folder depending on platform                                     
+#' # Here we use the R temporary folder depending on platform  
 #'if(grepl("windows", .Platform$OS.type)){
 #'  output <- paste0(tempdir(), "\\seqpac\\test")
 #'}else{
@@ -734,7 +735,7 @@ setReplaceMethod("overview", methods::signature(object="reanno", value="data.fra
 #' closeAllConnections()
 #' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 #'
-#' ##  Then map your PAC-object against the fasta references                                  
+#' ##  Then map your PAC-object against the fasta references 
 #'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
 #'                type="internal", mismatches=2,  import="biotype", 
 #'                threads=2, keep_temp=FALSE)
@@ -771,11 +772,11 @@ setReplaceMethod("full", methods::signature(object="reanno", value="list"),
                    object
                  })
 
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Standard methods reanno  
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Important!!!, standard method definitions must have "x" and not "object"
 # Object works well with non-standard.
 #
@@ -805,7 +806,7 @@ names.reanno <- function(x){ names(as(x, "list"))}
 #'  ref_paths <- list(trna= trna_path, rrna= rrna_path)
 #'                                     
 #' ##  Add output path of your choice.
-#' # Here we use the R temporary folder depending on platform                                     
+#' # Here we use the R temporary folder depending on platform
 #'if(grepl("windows", .Platform$OS.type)){
 #'  output <- paste0(tempdir(), "\\seqpac\\test")
 #'}else{
@@ -816,7 +817,7 @@ names.reanno <- function(x){ names(as(x, "list"))}
 #' closeAllConnections()
 #' suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 #'
-#' ##  Then map your PAC-object against the fasta references                                  
+#' ##  Then map your PAC-object against the fasta references
 #'  map_reanno(pac, ref_paths=ref_paths, output_path=output,
 #'                type="internal", mismatches=2,  import="biotype", 
 #'                threads=2, keep_temp=FALSE)

@@ -22,8 +22,9 @@
 #'   identical sequence names in PAC. A simple character vector can also be
 #'   provided.
 #' 
-#' @return If PAC format is correct will return logical TRUE, else it will throw an error. 
-#'
+#' @return If PAC format is correct will return logical TRUE, else it will throw
+#'   an error.
+#'   
 #' @examples
 #' 
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
@@ -32,12 +33,12 @@
 #' PAC_check(pac)  # TRUE
 #' 
 #' # Remove first row in Anno and check compatibility
-#' new_Anno <- pac$Anno[-1,]               
-#' #PAC_check(pac, seq_check=new_Anno) # Error   
+#' new_Anno <- pac$Anno[-1,]
+#' #PAC_check(pac, seq_check=new_Anno) # Error
 #' 
 #' # Add to pac an check
-#' pac$Anno <- new_Anno                    
-#' #PAC_check(pac) # Error                      
+#' pac$Anno <- new_Anno
+#' #PAC_check(pac) # Error
 #' 
 #' @export
 
@@ -51,7 +52,7 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
   }
   
   sampl <- paste0("Please make sure that all samples are represented, ",
-           "\nnamed and ordered the correct way in both tables.") 
+                  "\nnamed and ordered the correct way in both tables.") 
   seqs <-  paste0("Please make sure that all sequences are represented, ",
                   "\nnamed and ordered the correct way in both tables.")
   if(!identical(rownames(PAC$Pheno), colnames(PAC$Counts))){
@@ -82,14 +83,14 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
     sum_logi_row  <- any(!unlist(
       lapply(lapply(PAC$summary, rownames), function(x){
         identical(rownames(PAC$Counts), x)
-    })))
+      })))
     if(sum_logi_row){
       stop("\nRow names in summary tables of PAC$summary are not identical",
            "\nwith row names in Counts.")
     }
   } 
   res <- NULL
-  ### sample_check #############################################################          
+  ### sample_check #############################################################
   if(!is.null(sample_check)){
     ## Provided table
     #if(class(sample_check) %in% c("data.frame", "matrix")){#Remove class() Bioc
@@ -98,19 +99,19 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
         if(!identical(rownames(PAC$Pheno), rownames(sample_check))){
           stop("\nSample (row) names in new table are not identical",
                "\nwith sample names in the main PAC.\n", sampl)
-          }
+        }
       } 
       if(any(colnames(sample_check)[1] %in% rownames(PAC$Pheno))){
         if(!identical(rownames(PAC$Pheno), colnames(sample_check))){
           stop("\nSample (column) names in new table are not identical",
                "\nwith sample names in the main PAC.\n", sampl)
-          }
+        }
       }
     }else{
       ## Provided name of table in PAC
       if(is.character(sample_check)){
         if(length(sample_check)==1){
-          whr  <- which(unlist(lapply(PAC, function(x){  
+          whr  <- which(unlist(lapply(PAC, function(x){
             if(!methods::is(x, "list")){return(FALSE)}
             if(methods::is(x, "list")){any(grepl(sample_check, names(x)))}})))
           if(length(whr)==1){
@@ -121,7 +122,7 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
                 stop(
                   "\nSample (row) names in new table are not identical",
                   "\nwith sample names in the main PAC.\n", sampl)
-                }
+              }
             }else{
               if(sum(grepl(paste(rownames(PAC$Pheno)[1:2], collapse="|"), 
                            colnames(PAC[[whr]][[sample_check]])))==2){
@@ -130,15 +131,15 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
                   stop(
                     "\nSample (column) names in new table are not identical",
                     "\nwith sample names in the main PAC.\n", sampl)
-                  }
+                }
               }else{   
                 stop(
                   "\nPAC_check did find a matching object name, but could not",
-                  "\nfind the samples.\nIf you meant to check sequences and not",
-                  "\nsamples, provide a seq_check object instead.")
+                  "\nfind the samples. If you meant to check sequences ",
+                  "\nand not samples, provide a seq_check object instead.")
               }
-             }
             }
+          }
           
         }else{
           
@@ -146,8 +147,8 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
           if(length(sample_check)>1){ 
             if(!identical(rownames(PAC$Pheno), sample_check)){
               stop(
-                  "\nSample names are not identical with sample names in",
-                  "\nthe main PAC.\n", sampl)
+                "\nSample names are not identical with sample names in",
+                "\nthe main PAC.\n", sampl)
             }
           }
         }
@@ -157,18 +158,18 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
           "\nPAC_check did not recognize the sample_check input.",
           "\nDid you provide a data.frame, character vector or the",
           "\nname of a PAC object?")
-        }  
+      }  
     }}
-  ### seq_check #############################################################          
+  ### seq_check #############################################################
   if(!is.null(seq_check)){
     ## Provided table
     #if(class(seq_check) %in% c("data.frame", "matrix")){ #Remove class() Bioc 
     if(methods::is(seq_check, c("data.frame", "matrix"))) {
       if(!identical(rownames(PAC$Anno), rownames(seq_check))){
         stop(
-            "\nSequence (row) names in new table are not identical with",
-            "\nsequence names in the main PAC.\n", sampl)
-        }
+          "\nSequence (row) names in new table are not identical with",
+          "\nsequence names in the main PAC.\n", sampl)
+      }
     }else{
       ## Provided name of table in PAC
       if(is.character(seq_check)){
@@ -180,25 +181,25 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
             if(!identical(rownames(PAC$Anno), 
                           rownames(PAC[[whr]][[seq_check]]))){
               stop(
-                  "\nSequence (row) names in new table are not identical",
-                  "\nwith sequence names in the main PAC.\n", sampl)
-              }
+                "\nSequence (row) names in new table are not identical",
+                "\nwith sequence names in the main PAC.\n", sampl)
+            }
           }
         }else{
-          ## Provided names only        
+          ## Provided names only
           if(length(seq_check)>1){ 
             if(!identical(rownames(PAC$Anno), seq_check)){
               stop(
                 "\nSequence names are not identical with sequence names",
                 "\nin the main PAC.\n", sampl)
-              }
-          }}                   
+            }
+          }}
       }else{
         stop(
           "\nThe PAC_check did not recognize the sample_check input.",
           "\nDid you provide a data.frame, character vector or the",
           "\nname of a PAC object?")
-        }  
+      }  
     }}
   return(TRUE)
 }

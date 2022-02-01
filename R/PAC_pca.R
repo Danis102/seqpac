@@ -3,8 +3,8 @@
 #'\code{PAC_pca} PAC principle component analysis.
 #'
 #'Given a PAC object the function will perform a principle component analysis by
-#'calling the PCA function in the FactoMineR package, and then plot scatter plots 
-#'with the fviz_pca functions of the factoextra package.
+#'calling the PCA function in the FactoMineR package, and then plot scatter
+#'plots with the fviz_pca functions of the factoextra package.
 #'
 #'@family PAC analysis
 #'
@@ -186,7 +186,7 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
       pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
       axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
     grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
-      pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE, 
+      pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE,
       axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
     grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
       pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 

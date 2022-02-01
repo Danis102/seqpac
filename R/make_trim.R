@@ -67,7 +67,7 @@
 #' @param adapt_5_set Currently not supported, but will be in future updates.
 #'   Same as \code{adapt_3_set} but controls the behavior of 5' trimming when a
 #'   sequence is provided in \code{adapt_5}.
-#'                     
+#' 
 #' @param polyG Character vector with three inputs named 'type', 'min' and
 #'   'mismatch' that controls poly G trimming. This trimming might be necessary
 #'   for fastq files from two channel illumina sequencers (e.g. NextSeq and
@@ -432,12 +432,13 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
           seqs_long <-  seqs[logi_long] #Apply trimming only on long (untrimmed)
           trim_seqs_indel <- Biostrings::end(
             Biostrings::trimLRPatterns(
-              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
-              Rpattern=adapt_shrt, max.Rmismatch=0))
+              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
+              with.Rindels = TRUE, Rpattern=adapt_shrt, max.Rmismatch=0))
           trim_seqs_indel_2 <- Biostrings::end(
             Biostrings::trimLRPatterns(
-              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
-              Rpattern=adapt_ns, max.Rmismatch=2/nchar(adapt_ns)))
+              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
+              with.Rindels = TRUE, Rpattern=adapt_ns, 
+              max.Rmismatch=2/nchar(adapt_ns)))
           trim[logi_long] <- ifelse(
             (trim_seqs_indel - trim_seqs_indel_2) > 5, 
             trim_seqs_indel_2, 
@@ -705,7 +706,9 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       shrt <- as.numeric(as.character(rprt$too_short))
       lng <- as.numeric(as.character(rprt$too_long))
       tot_size <- shrt+lng
-      perc <- paste0("(", round(tot_size/report_fin$input_reads, digits=4)*100, "%)")
+      perc <- paste0("(", 
+                     round(tot_size/report_fin$input_reads, 
+                           digits=4)*100, "%)")
       set <- paste0("min", rprt$min, "|max", rprt$max)
       report_fin <-  cbind(report_fin,
                            data.frame(size_set=set, 

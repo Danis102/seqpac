@@ -52,9 +52,9 @@ Access the multilevel list of imported data.frames in a S4 reanno object
                           package = "seqpac", mustWork = TRUE)
  
  ref_paths <- list(trna= trna_path, rrna= rrna_path)
-                                    
+ 
 ##  Add output path of your choice.
-# Here we use the R temporary folder depending on platform                                     
+# Here we use the R temporary folder depending on platform  
 if(grepl("windows", .Platform$OS.type)){
  output <- paste0(tempdir(), "\\\\seqpac\\\\test")
 }else{
@@ -65,7 +65,7 @@ out_fls  <- list.files(output, recursive=TRUE)
 closeAllConnections()
 suppressWarnings(file.remove(paste(output, out_fls, sep="/")))
 
-##  Then map your PAC-object against the fasta references                                  
+##  Then map your PAC-object against the fasta references 
  map_reanno(pac, ref_paths=ref_paths, output_path=output,
                type="internal", mismatches=2,  import="biotype", 
                threads=2, keep_temp=FALSE)

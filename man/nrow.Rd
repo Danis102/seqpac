@@ -43,7 +43,7 @@ head(norm(pac_s4)$cpm)
 
 pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
                    type = "means", pheno_target=list("stage")) 
-pac_s4                   
+pac_s4 
 head(summary(pac_s4)$cpmMeans_stage)
 
 }

@@ -26,7 +26,8 @@
 #'   "cpm" or another normalized data table in PAC$norm (default="counts").
 #' 
 #' @param stat (optional) Logical specifying if a coverage graph should be
-#'   generated and if users should be promted prior to proceeding. (default=FALSE).
+#'   generated and if users should be promted prior to proceeding.
+#'   (default=FALSE).
 #'
 #' @param subset_only Logical whether only subsetting using pheno_target and/or
 #'   anno_target should be done. If subset=FALSE (default) both subsetting and
@@ -37,7 +38,7 @@
 #'          2nd object being a character vector of the target group(s) in 
 #'          the target Pheno column (1st object).
 #'          (default=NULL)
-#'          
+#'
 #' @param anno_target (optional) List with: 
 #'          1st object being a character vector of target column in Anno, 2nd
 #'          object being a character vector of the target type/biotypes(s) in
@@ -52,10 +53,10 @@
 #'                  package = "seqpac", mustWork = TRUE))
 #' 
 #'###--------------------------------------------------------------------- 
-#'## Extracts all sequences between 10-80 nt in length with at least 5 counts in
-#'## 20% of all samples.
-#'pac_lowfilt <- PAC_filter(pac, size=c(10,80), threshold=5, 
-#'                          coverage=20, norm = "counts",  
+#'## Extracts all sequences between 10-80 nt in length with at 
+#'## least 5 counts in 20% of all samples.
+#'pac_lowfilt <- PAC_filter(pac, size=c(10,80), threshold=5,
+#'                          coverage=20, norm = "counts",
 #'                          pheno_target=NULL, anno_target=NULL)
 #'
 #'###--------------------------------------------------------------------- 
@@ -94,7 +95,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
   nsamp <- ncol(PAC$Counts)
   x_graph <- n_features <- NULL
   
-  ### Subset samples by Pheno                                                
+  ### Subset samples by Pheno 
   if(!is.null(pheno_target)){
     if(length(pheno_target)==1){
       pheno_target[[2]] <- unique(PAC$Pheno[, pheno_target[[1]]])
@@ -110,8 +111,8 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
       if(!any(sub_pheno)){
         warning(
           "\nTable(s) were found in PAC$summary that may have been generated",
-          "\nwith samples that now are removed. Summary table names now",
-          "\ncontain a warning.")
+          "\nwith samples that now are removed. Summary table names has ",
+          "\ntherefore been marked.")
         names(PAC$summary) <- paste0(names(PAC$summary), 
                                      "_WARNING_pheno_filter")
       }}
@@ -127,7 +128,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     tab_pheno <- as.data.frame(table(sub_pheno))
     passed <- tab_pheno[tab_pheno[,1]==TRUE, 2]
     if(passed==0){
-      stop("Pheno filter resulted in 0 samples.") 
+      stop("Pheno filter resulted in 0 samples.")
     }else{
       cat(paste0("\n-- Pheno target was specified, will retain: ", 
                  passed, " of ", length(sub_pheno), " samples."))
@@ -264,7 +265,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
           ggplot2::geom_hline(yintercept=0)+
           ggplot2::scale_x_discrete(limit=filt_plot$x_graph, 
                                     labels= as.character(filt_plot$filter))+
-          ggplot2::ggtitle("User filter:")+					
+          ggplot2::ggtitle("User filter:")+
           ggplot2::xlab(NULL)+
           ggplot2::theme_classic()+
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
@@ -276,13 +277,14 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
                          "\nn analyzed sequences: ", nrow(df), 
                          "\nn sequences after filter: ",
                          idx_tab[idx_tab[,1]==TRUE, 2]), show.legend = FALSE)+
-          ggplot2::theme(plot.margin=ggplot2::margin(t = 1, r = 1, b = 1, l = 1, 
-                                                     unit="cm"), 
+          ggplot2::theme(plot.margin=ggplot2::margin(t = 1, r = 1,
+                                                     b = 1, l = 1,
+                                                     unit="cm"),
                          plot.title = ggplot2::element_text(color="red", 
                                                             size=10)))
       Sys.sleep(0.01)
       print(p)
-      ### Promt for user input					
+      ### Promt for user input
       cat("\n!!           !!\nUser input needed:\n") 
       answer <- readline(prompt="Continute with this filter? [Y/n]")
       #if(answer=="N" | answer=="n"){stop("Script was terminated by user.")}

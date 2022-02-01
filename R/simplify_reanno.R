@@ -57,13 +57,13 @@
 #' ### First, if you haven't already generated Bowtie indexes for the included
 #' # fasta references you need to do so. If you are having problem see the small
 #' # RNA guide (vignette) for more info.
-#'                                                              
+#' 
 #'  ## tRNA:
 #'  trna_file <- system.file("extdata/trna", "tRNA.fa", 
 #'                           package = "seqpac", mustWork = TRUE)
 #'  trna_dir<- gsub("tRNA.fa", "", trna_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){
 #'      Rbowtie::bowtie_build(trna_file, 
 #'                            outdir=trna_dir, 
 #'                            prefix="tRNA", force=TRUE)
@@ -73,24 +73,23 @@
 #'                           package = "seqpac", mustWork = TRUE)
 #'  rrna_dir<- gsub("rRNA.fa", "", rrna_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){
 #'      Rbowtie::bowtie_build(rrna_file, 
 #'                            outdir=rrna_dir, 
 #'                            prefix="rRNA", force=TRUE)
 #'                            }
 #'  ## Genome:
-#'  mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
+#'  mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa",
 #'                                 package = "seqpac", mustWork = TRUE)
 #'  mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
 #'  
-#'  if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){                               
+#'  if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){
 #'      Rbowtie::bowtie_build(mycoplasma_file, 
 #'                            outdir=mycoplasma_dir, 
 #'                            prefix="mycoplasma", force=TRUE)
-#'                            }                           
-#'                            
-#'                            
-#'                                                            
+#'                            } 
+#' 
+#'  
 #' ##  Then load a PAC-object and remove previous mapping from anno:
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
@@ -98,7 +97,7 @@
 #'  
 #'  ref_paths <- list(trna= trna_file, rrna= rrna_file)
 #' 
-#'                                     
+#'
 #' ##  You may add an output path of your choice, but here we use a temp folder:
 #'  output <- paste0(tempdir(),"/seqpac/test")
 #' 
@@ -112,12 +111,12 @@
 #'                threads=2, keep_temp=FALSE, override=TRUE)
 #'  
 #'     
-#' ##  Then import and generate a reanno-object of the temporary bowtie-files                                    
-#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)                                                                                  
+#' ##  Then import and generate a reanno-object of the temporary bowtie-files
+#' reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
 #'  
-#'                                     
-#' ## Now make some search terms against reference names to create shorter names
-#' # Theses can be used to create factors in downstream analysis
+#' 
+#' ## Now make some search terms against reference names to create shorter 
+#' # names. Theses can be used to create factors in downstream analysis
 #' # One search hit (regular expressions) gives one new short name 
 #' bio_search <- list(
 #'               rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
@@ -129,7 +128,7 @@
 #'  pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
 #'                        type="biotype", bio_perfect=FALSE, 
 #'                        mismatches = 2, merge_pac=pac)
-#'                        
+#'  
 #' ## Hierarchical classification with simplify_reanno
 #' table(pac$Anno$mis0_bio)
 #' table(pac$Anno$mis2_bio)
@@ -138,13 +137,13 @@
 #' hierarchy_1 <- list(rRNA="rrna_",
 #'                   tRNA="trna_")
 #' 
-#' # Setup hierarchy(specifies the hierarchy among rRNA)                  
+#' # Setup hierarchy(specifies the hierarchy among rRNA)
 #' hierarchy_2 <- list(r18S="rrna_18S",
 #'                     r28S="rrna_28S",
 #'                     r5.8S="rrna_5.8S",
 #'                     r5S="rrna_5S",
 #'                     pre45S="pre_S45",
-#'                     other_rrna="rrna_other")                 
+#'                     other_rrna="rrna_other") 
 #' 
 #' # No mistmach for hierarchy_1:
 #' test1 <- simplify_reanno(input=pac, hierarchy=hierarchy_1, mismatches=0, 
@@ -152,44 +151,45 @@
 #'                       
 #' # Up to 2 mistmaches for rRNA hierarchy_2                      
 #' test2 <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=2, 
-#'                       bio_name="rRNA_biotypes_mis2", merge_pac=FALSE)                   
-#'                       
-#'                       
+#'                       bio_name="rRNA_biotypes_mis2", merge_pac=FALSE)
+#' 
+#' 
 #' table(test1$Biotypes_mis0) 
 #' table(test2$rRNA_biotypes_mis2)
 #'                      
 #' # You can add the new column to your PAC-object using merge_pac=TRUE:
 #' pac <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=2, 
 #'                       bio_name="rRNA_biotypes_mis2", merge_pac=TRUE)
-#'                       
-#' head(pac$Anno)                                             
-#'                        
+#' 
+#' head(pac$Anno)
+#'
 #' ## Turn your S3 list to an S4 reanno-object
 #' class(reanno_biotype)
 #' isS4(reanno_biotype)
-#' names(reanno_biotype)   
+#' names(reanno_biotype)
 #'
 #' reanno_s3 <- as(reanno_biotype, "list")
 #' class(reanno_s3)
-#' isS4(reanno_s3)   
+#' isS4(reanno_s3) 
 #'
-#' # Turns S3 reanno object into a S4                                    
+#' # Turns S3 reanno object into a S4  
 #' reanno_s4 <- as.reanno(reanno_s3)
 #' class(reanno_s4)
-#' isS4(reanno_s4) 
+#' isS4(reanno_s4)
 #'  
 #' # Similar, turns S3 PAC object into a S4
 #' class(pac)
 #' isS4(pac)  
-#'                                                                         
+#' 
 #' pac_s4 <- as.PAC(pac)
 #' class(pac_s4)
 #' isS4(pac_s4)   
 #' 
 #' @export
 
-simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes", 
-                            merge_pac=FALSE, target_columns=NULL){
+simplify_reanno <- function(input, hierarchy, mismatches=2, 
+                            bio_name="Biotypes", merge_pac=FALSE, 
+                            target_columns=NULL){
   
   ### Prepare:
   if(isS4(input)){
@@ -284,7 +284,8 @@ simplify_reanno <- function(input, hierarchy, mismatches=2, bio_name="Biotypes",
       df_hits[,i]  <- "no_hit"
     }else{
       df_hits[,i]  <- ifelse(grepl(search_terms[i], anno_vect), 
-                             as.character(catg$Simplified_biotype[i]), "no_hit")
+                             as.character(catg$Simplified_biotype[i]), 
+                             "no_hit")
     }
   }
   vect_hits <- apply(df_hits, 1, function(x){

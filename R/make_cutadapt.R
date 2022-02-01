@@ -40,41 +40,10 @@
 #' 
 #' @examples
 #'  
-#' \dontrun{  
-#' ############################################################      
-#' ### Seqpac trimming using the make_cutadapt function
-#' ### (Important: Needs an external installations of cutadapt 
-#' ###  and fastq_quality_filter) 
-#' #  
-#'    input = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#'    output =  "/some/path/to/temp/folder"
-#'  
-#'    output = "/home/danis31/Desktop/Temp"
-#'  
-#'  # Parse for make_cutadapt is a list of 2 character string expressions.
-#'  # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#'  # For parallel processes '-j 1' is recommended since seqpac will   
-#'  # parallelize across samples and not within.
-#'  # Run system("cutadapt -h") and system("fastq_quality_filter -h") 
-#'  # for more options.
-#'  
-#'  # String to parse to cutadapt:
-#'  cut_prs <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT",
-#'                    " --discard-untrimmed --nextseq-trim=20",
-#'                    " -O 10 -m 7 -M 70")
-#'  
-#'  # Add string to parse to fastq_quality_filter:
-#'  parse = list(
-#'            cutadapt=cut_prs,
-#'            fastq_quality_filter="-q 20 -p 80")
-#'               
-#'  logs  <-  make_cutadapt(input, output, threads=1, parse=parse)
-#'  
-#'  }
 #'  
 #' ############################################################ 
 #' ### Seqpac fastq trimming with the make_trim function 
-#' ### (for more streamline options see the make_counts function) 
+#' ### 
 #' 
 #' # First generate some smallRNA fastq.
 #' # Only one untrimmed fastq comes with seqpac
@@ -98,9 +67,6 @@
 #' # Now generate temp a folder for the untrimmed fastq files
 #' 
 #' input <- paste0(tempdir(), "/seqpac_temp/")
-#' if(grepl("windows", .Platform$OS.type)){
-#'  input <- gsub( "\\\\", "/", input)
-#' }
 #' 
 #' # Only for autonomous example we must empty the folder bofore creating:
 #' unlink(input, recursive = TRUE)
@@ -131,6 +97,34 @@
 #'  
 #' # How did it go? Check progress report:  
 #' prog_report
+#'
+#'
+#' ############################################################      
+#' ### Principle of trimming using the make_cutadapt function
+#' ### (Important: Need external installations of cutadapt 
+#' ###  and fastq_quality_filter to work)
+#' #  
+#' #   input = "/some/path/to/input/folder"
+#' #   output =  "/some/path/to/output/folder"
+#' # 
+#' ## Parse for make_cutadapt is a list of 2 character string expressions.
+#' ## The first is parsed to cutadapt and the other to fastq_quality_filter 
+#' ## For parallel processes '-j 1' is recommended since seqpac will   
+#' ## parallelize across samples and not within.
+#' ## Run system("cutadapt -h") and system("fastq_quality_filter -h") 
+#' ## for more options.
+#' #   
+#' ## String to parse to cutadapt:
+#' # cut_prs <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT",
+#' #                    " --discard-untrimmed --nextseq-trim=20",
+#' #                    " -O 10 -m 7 -M 70")
+#' # 
+#' ## Add string to parse to fastq_quality_filter:
+#' #  parse = list(
+#' #            cutadapt=cut_prs,
+#' #            fastq_quality_filter="-q 20 -p 80")
+#' #               
+#' #  logs  <-  make_cutadapt(input, output, threads=8, parse=parse)
 #'      
 #' @export
 
@@ -177,7 +171,7 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   doParallel::registerDoParallel(threads) #Do not use parallel::makeClusters!!!
   `%dopar%` <- foreach::`%dopar%`
   prog_report <- foreach::foreach(i=1:length(fls), 
-                                  .export= c("fls", "parse", "out_file", "nam"), 
+                                  .export= c("fls", "parse", "out_file", "nam"),
                                   .packages=c("ShortRead"), 
                                   .final = function(x){
                                     names(x) <- nam; return(x)}) %dopar% {
@@ -213,18 +207,18 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
                                      log_lst[[1]][log_shrt]),
                      too_long= gsub(" |Reads that were too long:|,", "", 
                                     log_lst[[1]][log_lgn]),
-                     out_adapt= gsub(" |Reads written \\(passing filters\\):|,", 
+                     out_adapt= gsub(" |Reads written \\(passing filters\\):|,",
                                      "", log_lst[[1]][log_out_trim]),
                      in_quality= gsub(" reads.|Input: |,", "", 
                                       log_lst[[2]][log_in_q]),
-                     removed_quality= gsub("discarded | low-quality reads.", "", 
+                     removed_quality= gsub("discarded | low-quality reads.", "",
                                            log_lst[[2]][log_rm_q]),
                      out_quality= gsub("Output: | reads.", "", 
                                        log_lst[[2]][log_out_q]),
                      stringsAsFactors=FALSE
     )
-    df[1,] <-  gsub("\\(", " \\(", as.character(unlist(df[1,])))   
-    df[1,] <-  gsub("  ", " ", as.character(unlist(df[1,])))           
+    df[1,] <-  gsub("\\(", " \\(", as.character(unlist(df[1,])))
+    df[1,] <-  gsub("  ", " ", as.character(unlist(df[1,])))
     
     if(!is.null(parse[[1]])){  
       file.remove(temp_out)

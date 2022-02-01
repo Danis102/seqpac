@@ -101,9 +101,9 @@ output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio),
                         summary="all")
 cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2), nrow=2, 
                    scale = 1.0)
-                   
-#  Shortcut to remove no annotations ("no_anno") in the anno_target column            
-PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=TRUE)                  
+
+#  Shortcut to remove no annotations ("no_anno") in the anno_target column
+PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=TRUE)
 PAC_pie(pac, anno_target=list("Biotypes_mis3"), summary="all", no_anno=FALSE)
 
 }

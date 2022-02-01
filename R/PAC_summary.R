@@ -147,7 +147,7 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
     c(x[2], x[1]) })
   }
   
-  ### Apply log2FC to all pairwise combinations ###        
+  ### Apply log2FC to all pairwise combinations ###
   if(type %in% c("log2FC", "Log2FC", "Log2Fc")){
     group_means <- lapply(sub_data_lst, function(x){ 
       mns <- rowMeans(x)

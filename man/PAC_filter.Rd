@@ -37,7 +37,8 @@ anno_target should be done. If subset=FALSE (default) both subsetting and
 other filtering will be done.}
 
 \item{stat}{(optional) Logical specifying if a coverage graph should be
-generated and if users should be promted prior to proceeding. (default=FALSE).}
+generated and if users should be promted prior to proceeding.
+(default=FALSE).}
 
 \item{pheno_target}{(optional) List with: 
 1st object being a character vector of target column in Pheno, 
@@ -68,10 +69,10 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 ###--------------------------------------------------------------------- 
-## Extracts all sequences between 10-80 nt in length with at least 5 counts in
-## 20\% of all samples.
-pac_lowfilt <- PAC_filter(pac, size=c(10,80), threshold=5, 
-                         coverage=20, norm = "counts",  
+## Extracts all sequences between 10-80 nt in length with at 
+## least 5 counts in 20\% of all samples.
+pac_lowfilt <- PAC_filter(pac, size=c(10,80), threshold=5,
+                         coverage=20, norm = "counts",
                          pheno_target=NULL, anno_target=NULL)
 
 ###--------------------------------------------------------------------- 

@@ -77,8 +77,8 @@ analysis using DESeq2.
 
 
 # Note, these examples will generate some warnings since data is based on
-# heavily down-sampled fastq files, where many sequences receives low counts in
-# specific groups.
+# heavily down-sampled fastq files, where many sequences receives low counts
+# in specific groups.
 
 ## Load test data
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
@@ -88,7 +88,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 table(pac$Pheno$stage)
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage, threads=1))
 
-## Batch corrected, graphs are generated for 'stage' (=first in the model)  
+## Batch corrected, graphs are generated for 'stage' (=first in the model)
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch))
 
 ## Using pheno_target we can change focus
@@ -98,15 +98,15 @@ output_deseq <- suppressWarnings(PAC_deseq(pac,
 ## With pheno_target we can change the direction fo the comparision
 # Stage1 vs Stage3:
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
-                         pheno_target = list("stage", c("Stage1", "Stage3")),  
+                         pheno_target = list("stage", c("Stage1", "Stage3")),
                          threads=1))   
 # Stage3 vs Stage5:
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
-                         pheno_target = list("stage", c("Stage3", "Stage5")),  
+                         pheno_target = list("stage", c("Stage3", "Stage5")),
                          threads=1))  
 # Stage5 vs Stage3 (reverse order):
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
-                         pheno_target = list("stage", c("Stage5", "Stage3")),  
+                         pheno_target = list("stage", c("Stage5", "Stage3")),
                          threads=1))  
 
 ## In the output you find PAC merged results, target plots and output_deseq   

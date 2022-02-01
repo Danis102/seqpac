@@ -545,8 +545,10 @@ make_counts <- function(input, trimming=NULL, threads=1,
   
   stat_dt <- cbind(data.frame(uni_seqs=n_uniseq, stringsAsFactors =FALSE), 
                    do.call("rbind", lapply(reads_lst, function(x){x$stat})))
-  stat_dt$reads_not_pass_evidence <- stat_dt$tot_reads - stat_dt$reads_pass_evidence
-  stat_dt$uniseqs_not_pass_evidence <- stat_dt$uni_seqs - stat_dt$uniseqs_pass_evidence
+  stat_dt$reads_not_pass_evidence <- stat_dt$tot_reads - 
+                                     stat_dt$reads_pass_evidence
+  stat_dt$uniseqs_not_pass_evidence <- stat_dt$uni_seqs - 
+                                       stat_dt$uniseqs_pass_evidence
   rownames(stat_dt) <- colnames(ordCount_df)
   stat_dt$sample <- colnames(ordCount_df) 
   if(max(nchar(stat_dt$sample))>15){

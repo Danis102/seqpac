@@ -66,7 +66,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                         
  # Filter by unique sequences passing filtsep  
  filtsep <- unique(do.call("c", as.list(filtsep)))
- pac_filt <- PAC_filter(pac, subset_only = TRUE, anno_target= filtsep)                       
+ pac_filt <- PAC_filter(pac, subset_only = TRUE, anno_target= filtsep)
  
  # Find overlap
  olap <- reshape2::melt(filtsep, 

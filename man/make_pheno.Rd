@@ -96,7 +96,7 @@ pheno <- data.frame(Sample_ID=Sample_ID,
                        Treatment=c(rep("heat", times=3), 
                                    rep("control", times=3)),
                        Batch=rep(c("1", "2", "3"), times=2)) 
-                                               
+   
 pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
                      counts=counts$counts)
 

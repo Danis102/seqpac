@@ -90,37 +90,37 @@
 #'                          package = "seqpac", mustWork = TRUE)
 #'                          
 #' ref_tRNA <- system.file("extdata/trna", "tRNA.fa", 
-#'                          package = "seqpac", mustWork = TRUE)                         
+#'                          package = "seqpac", mustWork = TRUE)
+#' 
 #'
-#'                                                                                                                                  
-#' ## Map using PAC-mapper                          
+#' ## Map using PAC-mapper
 #' map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
 #'                         threads=1, ref=ref_rRNA, override=TRUE)
-#'                                                                                                    
+#'
 #' map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
-#'                         threads=1, ref=ref_tRNA, override=TRUE)                        
-#'                                                 
-#' ## Plot rRNA according to embryonic stage using PAC_covplot                       
+#'                         threads=1, ref=ref_tRNA, override=TRUE)
+#' 
+#' ## Plot rRNA according to embryonic stage using PAC_covplot 
 #' cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
 #'                         summary_target = list("cpmMeans_stage"), 
 #'                         xseq=FALSE, style="line", 
 #'                         color=c("red", "black", "blue"))
-#'                         
+#' 
 #' cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
 #'                     cov_rRNA[[4]], nrow=2, ncol=2)
 #'
 #'
 #'
 #' ## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
-#' # (OBS! Long reference will not )                     
+#' # (OBS! Long reference will not )
 #' cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
 #'                         summary_target = list("cpmMeans_stage"), 
 #'                         xseq=TRUE, style="line", 
 #'                         color=c("red", "black", "blue"))
 #'
 #' cov_tRNA[[1]]
-#'                     
-#' ## Explore the map-object                    
+#'  
+#' ## Explore the map-object 
 #' head(map_tRNA[[1]])
 #' names(map_tRNA)
 #' map_tRNA[[1]]
@@ -142,8 +142,8 @@
 #'                         summary_target = list("cpmMeans_stage"),
 #'                         map_target = targets,
 #'                         xseq=TRUE, style="line", 
-#'                         color=c("red", "black", "blue"))                  
-#'                                                       
+#'                         color=c("red", "black", "blue")) 
+#' 
 #' cowplot::plot_grid(plotlist= cov_tRNA_sub) 
 #' 
 #' 
@@ -333,7 +333,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
   
   if(report_string==TRUE){
     if(multi=="keep"){
-      warning("\nOption multi='keep', is not compatible with report_string=TRUE",
+      warning("\nOption multi='keep' is not compatible with report_string=TRUE",
               "\nAlignment string will not be returned.")
     }else{
       ref_lgn <- lapply(fin_lst, function(x){Biostrings::width(x$Ref_seq)})
@@ -365,9 +365,10 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
               if(algn_lst[[j]]$Strand == "-"){
                  sq <- intToUtf8(rev(utf8ToInt(sq)))
               }
-              algn_str <- paste(strrep("-", times=(algn_lst[[j]]$Align_start)-1), 
-                                sq, 
-                                strrep("-", times= n_ref-(algn_lst[[j]]$Align_end)), 
+              algn_str <- paste(strrep("-", 
+                                       times=(algn_lst[[j]]$Align_start)-1),sq,
+                                strrep("-", 
+                                       times= n_ref-(algn_lst[[j]]$Align_end)),
                                 sep="")
             return(algn_str)
           }
@@ -387,4 +388,3 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
   #Have not implemented the the map object as a class in other functions yet
   return(fin_lst)
 }
-                          

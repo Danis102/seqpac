@@ -1,11 +1,11 @@
-#' Generates size distribution plots from sequences and counts in a PAC object
+#' Generates size distribution plots from a PAC object
 #'
 #' \code{PAC_sizedist} plotting size distribution with bar charts, allowing for
 #' visualization of sequence classes and summaries.
 #'
-#' Given a PAC object the function will attempt to order sequences by their size
-#' (number of nucleotides) and visualize the contribution of specific classes of
-#' sequences (e.g. sRNA classes) at each size point.
+#' Given a PAC object the function will attempt to order sequences by their 
+#' size (number of nucleotides) and visualize the contribution of specific 
+#' classes of sequences (e.g. sRNA classes) at each size point.
 #'
 #' @family PAC analysis
 #'
@@ -25,7 +25,7 @@
 #'  analysis will be done on cpm values returned from \code{PAC_norm} function
 #'  and stored in the norm folder of the PAC-list object. The name of any other
 #'  table in the PAC$norm folder can also be used.  
-#'         
+#' 
 #' @param ymax Integer that sets the maximum y for all plots (all plots gets the
 #'   same y-axes). If ymax=NULL, then ggplot2 will automatically set ymax for
 #'   each plot individually (different y-axes).
@@ -41,13 +41,13 @@
 #'                          column(s) in Pheno, 2nd object being a character
 #'                          vector of the target group(s) in the target column
 #'                          (1st object). (default=NULL)
-#'                          
+#' 
 #' @param summary_target List with: 
 #'                          1st object being character target object in
 #'                          PAC$summary, 2nd object being a character vector of
 #'                          the target columns(s) in the target object (1st
 #'                          object). (default=NULL)
-#'                          
+#' 
 #'
 #' @return A list of objects: 
 #'               1st object (Histograms::Samples): Individual histograms showing
@@ -150,7 +150,8 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
       if(any(!seq_range %in% y$size )){
         y <- rbind(y, 
                    data.frame(biotype=as.character(unique(y$biotype)), 
-                              size=seq_range[!seq_range %in% as.character(y$size)], 
+                              size=seq_range[
+                                !seq_range %in% as.character(y$size)], 
                               data=0))
       }
       fin <- y[order(y$size),]  
@@ -195,7 +196,9 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
   }
   for(i in 1:length(size_lst)){
     histo_lst[[i]] <- ggplot2::ggplot(size_lst[[i]], 
-                                      ggplot2::aes(x=size, y=data, fill=biotype))+
+                                      ggplot2::aes(x=size, 
+                                                   y=data, 
+                                                   fill=biotype))+
       ggplot2::geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
       ggplot2::geom_hline(yintercept=0, col="azure4")+
       

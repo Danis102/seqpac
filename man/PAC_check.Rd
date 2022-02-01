@@ -20,7 +20,8 @@ identical sequence names in PAC. A simple character vector can also be
 provided.}
 }
 \value{
-If PAC format is correct will return logical TRUE, else it will throw an error.
+If PAC format is correct will return logical TRUE, else it will throw
+  an error.
 }
 \description{
 \code{PAC_check} Quickly checks rownames in PAC.
@@ -37,12 +38,12 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 PAC_check(pac)  # TRUE
 
 # Remove first row in Anno and check compatibility
-new_Anno <- pac$Anno[-1,]               
-#PAC_check(pac, seq_check=new_Anno) # Error   
+new_Anno <- pac$Anno[-1,]
+#PAC_check(pac, seq_check=new_Anno) # Error
 
 # Add to pac an check
-pac$Anno <- new_Anno                    
-#PAC_check(pac) # Error                      
+pac$Anno <- new_Anno
+#PAC_check(pac) # Error
 
 }
 \seealso{

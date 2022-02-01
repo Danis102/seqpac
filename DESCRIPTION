@@ -1,6 +1,6 @@
 Package: seqpac
 Type: Package
-Title: Seqpac: A New Framework for smallRNA analysis in R using Sequence-Based Counts
+Title: Seqpac: A Framework for smallRNA analysis in R using Sequence-Based Counts
 Version: 0.99.3
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
@@ -9,23 +9,28 @@ Authors@R: c(
     person("Anita", "Öst", email="anita.ost@liu.se", role= c("aut", "fnd"))
     )
 Maintainer: Daniel Natt <daniel.natt@liu.se>
-Description: Seqpac provides functions and a workflow for analysis of short sequenced reads. 
-    It was originally developed for small RNA analysis, but can be implemented on 
-    any sequencing raw data (provided as a fastq-file), where the unit of measurement 
-    is counts of unique sequences. The core of the seqpac workflow is the generation and 
-    subsequence analysis/visualization of a standardized object called PAC. Using an 
-    innovative target system, Seqpac process, analyze and visualize group differences 
-    using the PAC object.
-    A PAC object in its most basic form is a list containing three types of data frames: 
-    - Phenotype table (P): Sample names (rows) with associated metadata (columns) e.g. groups. 
-    - Annotation table (A): Unique sequences (rows) with annotation (columns), eg. reference alignment.     
-    - Counts table (C): Counts of unique sequences (rows) for each sample (columns).
-    The PAC list-objects follow the rule:
+Description: Seqpac provides functions and workflows for analysis of short 
+    sequenced reads. It was originally developed for small RNA analysis, but 
+    can be implemented on any sequencing raw data (provided as a fastq-file), 
+    where the unit of measurement is counts of unique sequences. The core of 
+    the seqpac workflow is the generation and subsequence analysis/visualization 
+    of a standardized object called PAC. Using an innovative targeting system, 
+    Seqpac process, analyze and visualize sample or sequence group differences 
+    using the PAC object. A PAC object in its most basic form is a list 
+    containing three types of data frames.
+    - Phenotype table (P):
+    Sample names (rows) with associated metadata (columns) e.g. treatment.
+    - Annotation table (A): 
+    Unique sequences (rows) with annotation (columns), eg. reference alignments.    
+    - Counts table (C): 
+    Counts of unique sequences (rows) for each sample (columns).
+    The PAC-object follows the rule:
     - Row names in P must be identical with column names in C.
     - Row names in A must be identical with row names in C.
-    Thus P and A describes the columns and rows in C, respectively. The targeting system, will either 
-    target specific samples in P (pheno_target) or sequences in A (anno_target) and group them according 
-    to a target column in P and A, respectively (see vignettes for more details).
+    Thus P and A describes the columns and rows in C, respectively. The 
+    targeting system, will either target specific samples in P (pheno_target) 
+    or sequences in A (anno_target) and group them according to a target column 
+    in P and A, respectively (see vignettes for more details).
 License: GPL-3
 Encoding: UTF-8
 LazyData: false
