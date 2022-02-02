@@ -1,14 +1,13 @@
 Package: seqpac
 Type: Package
 Title: Seqpac: A Framework for smallRNA analysis in R using Sequence-Based Counts
-Version: 0.99.3
+Version: 0.99.4
 Authors@R: c(
     person("Daniel", "Natt", email="daniel.natt@liu.se", role= c("aut", "cre", "fnd")),
     person("Lovisa", "Örkenby", email="lovisa.orkenby@liu.se", role= "ctb"),
     person("Signe", "Skog", email="signe.skog@liu.se", role= "ctb"),
     person("Anita", "Öst", email="anita.ost@liu.se", role= c("aut", "fnd"))
     )
-Maintainer: Daniel Natt <daniel.natt@liu.se>
 Description: Seqpac provides functions and workflows for analysis of short 
     sequenced reads. It was originally developed for small RNA analysis, but 
     can be implemented on any sequencing raw data (provided as a fastq-file), 
