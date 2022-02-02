@@ -61,23 +61,17 @@ sampler <- ShortRead::FastqSampler(fq, 20000)
 set.seed(123)
 fqs <- list(fq1=ShortRead::yield(sampler),
            fq2=ShortRead::yield(sampler),
-           fq3=ShortRead::yield(sampler),
-           fq4=ShortRead::yield(sampler),
-           fq5=ShortRead::yield(sampler),
-           fq6=ShortRead::yield(sampler))
+           fq3=ShortRead::yield(sampler))
 
-# Now generate temp a folder for the untrimmed fastq files
+# Now generate a temp folder where we can store the fastq files
+# (for autonomous example, make sure it is empty and correct platform)
 
-input <- paste0(tempdir(), "/seqpac_temp/")
-
-# Only for autonomous example we must empty the folder bofore creating:
-unlink(input, recursive = TRUE)
-dir.create(input, showWarnings=FALSE, recursive=TRUE)
-
+input <- paste0(tempdir(), "/seqpac_temp")
+dir.create(input, showWarnings=FALSE)
 
 # And then write the random fastq to the temp folder
 for (i in 1:length(fqs)){
- input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
+ input_file <- file.path(input, paste0(names(fqs)[i], ".fastq.gz"))
  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
                        full=FALSE, compress=TRUE)
 }
@@ -127,7 +121,12 @@ prog_report
 #            fastq_quality_filter="-q 20 -p 80")
 #               
 #  logs  <-  make_cutadapt(input, output, threads=8, parse=parse)
-     
+
+#' # Clean up temp
+closeAllConnections()
+fls_temp  <- list.files(tempdir(), recursive=TRUE, full.names = TRUE)
+file.remove(fls_temp, showWarnings=FALSE)   
+ 
 }
 \seealso{
 \url{https://cutadapt.readthedocs.io/en/stable/} for download and

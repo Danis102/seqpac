@@ -39,7 +39,7 @@ generate a simple PAC list-object.
 }
 \examples{
 
-### First make counts 
+### Make some counts 
 
 # First generate some smallRNA fastq.
 # Only one untrimmed fastq comes with seqpac
@@ -55,22 +55,16 @@ sampler <- ShortRead::FastqSampler(fq, 20000)
 set.seed(123)
 fqs <- list(fq1=ShortRead::yield(sampler),
            fq2=ShortRead::yield(sampler),
-           fq3=ShortRead::yield(sampler),
-           fq4=ShortRead::yield(sampler),
-           fq5=ShortRead::yield(sampler),
-           fq6=ShortRead::yield(sampler))
+           fq3=ShortRead::yield(sampler))
+           
+# Now generate a temp folder where we can store the fastq files
 
-# Now generate a temp folder were we can store the fastq files
-
-input <- paste0(tempdir(), "/seqpac_temp/")
-if(grepl("windows", .Platform$OS.type)){
- input <- gsub( "\\\\\\\\", "/", input)
-}  
+input <- paste0(tempdir(), "/seqpac_temp")
 dir.create(input, showWarnings=FALSE)
 
 # And then write the random fastq to the temp folder
 for (i in 1:length(fqs)){
- input_file <- paste0(input, names(fqs)[i], ".fastq.qz")
+ input_file <- file.path(input, paste0(names(fqs)[i], ".fastq.gz"))
  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
                        full=FALSE, compress=TRUE)
 }
@@ -78,9 +72,9 @@ for (i in 1:length(fqs)){
 # Now we can run make_counts
 # Notice that make_counts will generate another temp folder, that will 
 # be emptied on finalization. By setting save_temp=TRUE you may save the 
-# content.  
+# content.
  
-counts  <- make_counts(input, threads=1, parse="default_neb",
+counts  <- make_counts(input, threads=2, parse="default_neb",
                        trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))
 
@@ -97,23 +91,20 @@ colnames(counts$counts)
 Sample_ID <- colnames(counts$counts)
 
 pheno <- data.frame(Sample_ID=Sample_ID,
-                       Treatment=c(rep("heat", times=3), 
-                                   rep("control", times=3)),
-                       Batch=rep(c("1", "2", "3"), times=2)) 
+                       Treatment=c(rep("heat", times=1), 
+                                   rep("control", times=2)),
+                       Batch=rep(c("1", "2", "3"), times=1)) 
 
 pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
                      counts=counts$counts)
 
 
 # make_pheno matches partial names 
+pheno <- data.frame(Sample_ID=gsub("fq","", colnames(counts$counts)),
+                       Treatment=c(rep("heat", times=1), 
+                                   rep("control", times=2)),
+                       Batch=rep(c("1", "2", "3"), times=1))
  
-Sample_ID <- gsub(".fastq.qz","", colnames(counts$counts))
- 
-pheno <- data.frame(Sample_ID=Sample_ID,
-                       Treatment=c(rep("heat", times=3), 
-                                   rep("control", times=3)),
-                       Batch=rep(c("1", "2", "3"), times=2))
-
 pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
                      counts=counts$counts)
  
@@ -131,6 +122,11 @@ names(pac)
 
 # Note: a simple annotation table is added automatically.
 head(anno(pac))
+
+# Clean up temp
+closeAllConnections()
+fls_temp  <- list.files(tempdir(), recursive=TRUE, full.names = TRUE)
+file.remove(fls_temp, showWarnings=FALSE)
 
 }
 \seealso{

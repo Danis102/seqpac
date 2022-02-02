@@ -105,22 +105,17 @@
 #' set.seed(123)
 #' fqs <- list(fq1=ShortRead::yield(sampler),
 #'            fq2=ShortRead::yield(sampler),
-#'            fq3=ShortRead::yield(sampler),
-#'            fq4=ShortRead::yield(sampler),
-#'            fq5=ShortRead::yield(sampler),
-#'            fq6=ShortRead::yield(sampler))
+#'            fq3=ShortRead::yield(sampler))
+#'            
 #'
-#' # Now generate a temp folder were we can store the fastq files
+#' # Now generate a temp folder where we can store the fastq files
 #' 
 #' input <- paste0(tempdir(), "/seqpac_temp")
-#' if(grepl("windows", .Platform$OS.type)){
-#'  input <- gsub( "\\\\", "/", input)
-#' }  
 #' dir.create(input, showWarnings=FALSE)
 #'
 #' # And then write the random fastq to the temp folder
 #' for (i in 1:length(fqs)){
-#'  input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
+#'  input_file <- file.path(input, paste0(names(fqs)[i], ".fastq.gz"))
 #'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
 #'                        full=FALSE, compress=TRUE)
 #' }
@@ -128,9 +123,9 @@
 #' # Now we can run make_counts
 #' # Notice that make_counts will generate another temp folder, that will 
 #' # be emptied on finalization. By setting save_temp=TRUE you may save the 
-#' # content.  
+#' # content.
 #'  
-#' counts  <- make_counts(input, threads=1, parse="default_neb",
+#' counts  <- make_counts(input, threads=2, parse="default_neb",
 #'                        trimming="seqpac", plot=TRUE,
 #'                        evidence=c(experiment=2, sample=1))
 #'
@@ -147,8 +142,7 @@
 #' ############################################################      
 #' ### Parse your own trimming setting to make_trim using the
 #' ### make_counts function
-#' 
-#' # How to make a parse list see ?make_trim:
+#' ### How to make a parse list see ?make_trim.
 #'   
 #' parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
 #'              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
@@ -166,43 +160,13 @@
 #'   
 #'   
 #' ############################################################      
-#' ### Seqpac trimming using the make_cutadapt function
-#' ### (Important: Needs an external installations of cutadapt 
-#' ###  and fastq_quality_filter) 
-#' #
-#' # Parse for make_cutadapt is a list of 2 character string expressions.
-#' # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#' # For parallel processes '-j 1' is recommended since seqpac will   
-#' # parallelize across samples and not within. Run system("cutadapt -h") and 
-#' # system("fastq_quality_filter -h") for more options.
-#' # 
-#' # cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
-#' #                    " --discard-untrimmed --nextseq-trim=20",
-#' #                    " -O 10 -m 14 -M 70")
-#' # 
-#' # parse = list(cutadapt = cut_prse,
-#' #              fastq_quality_filter = "-q 20 -p 80")
-#' # 
-#' # counts  <-  make_counts(input, threads=1,
-#' #                        trimming="cutadapt",
-#' #                        parse=parse, 
-#' #                        evidence=c(experiment=2, sample=1))
+#' ### You may also use the make_cutadapt function for trimming.
+#' ### (Important: This needs an external installations of cutadapt 
+#' ###  and fastq_quality_filter). See ?make_cutadapt for details. 
 #' 
-#'    
-#'          
-#'  
-#'  #############################################################
-#'  ### Lets change the evidence filter
-#'  ###
-#'  
-#'  # 2 evidence over two indepenent samples, saving single sample 
-#'  # sequences reaching 3 counts:
-#'  
-#'  test <- make_counts(input=input, trimming="seqpac", 
-#'                      parse="default_neb",  
-#'                      evidence=c(experiment=2, sample=3))
-#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,]  # 6 single sample sequences reached 3 counts
+#' #############################################################
+#' ### Lets change the evidence filter
+#' ###
 #'  
 #'  # 2 evidence over two independent samples, saving single sample 
 #'  # sequences reaching 2 counts
@@ -213,9 +177,12 @@
 #'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
 #'  test$counts[extras==1,] # 120 single sample sequences reached 2 counts
 #'  
+#' # Clean up temp
+#'closeAllConnections()
+#'fls_temp  <- list.files(tempdir(), recursive=TRUE, full.names = TRUE)
+#'file.remove(fls_temp, showWarnings=FALSE)
 #'
-#'  
-#'  
+#'
 #' @export
 
 make_counts <- function(input, trimming=NULL, threads=1, 

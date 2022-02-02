@@ -22,10 +22,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   set.seed(123)
   fqs <- list(fq1=ShortRead::yield(sampler),
               fq2=ShortRead::yield(sampler),
-              fq3=ShortRead::yield(sampler),
-              fq4=ShortRead::yield(sampler),
-              fq5=ShortRead::yield(sampler),
-              fq6=ShortRead::yield(sampler))
+              fq3=ShortRead::yield(sampler))
 
   # Now generate a temp folder were we can store the fastq files
   
@@ -123,9 +120,9 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   Sample_ID <- gsub(".fastq.qz","", colnames(counts_seq$counts))
   
   pheno <- data.frame(Sample_ID=Sample_ID,
-                      Treatment=c(rep("heat", times=3), 
-                                  rep("control", times=3)),
-                      Batch=rep(c("1", "2", "3"), times=2)) 
+                      Treatment=c(rep("heat", times=1), 
+                                  rep("control", times=2)),
+                      Batch=rep(c("1", "2", "3"), times=1))
   
   quiet(                                                  
   pheno_1 <- make_pheno(pheno=pheno, progress_report=counts_seq$progress_report, 
@@ -153,7 +150,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   expect_equal(names(pac_seq), c("Pheno","Anno","Counts"))
   expect_equal(length(pac_seq), length(pac_S3))
   expect_equal(nrow(pac_seq), nrow(pac_S3$Counts))
-  expect_equal(ncol(pac_seq), 6)
+  expect_equal(ncol(pac_seq), 3)
   expect_equal(rownames(pac_seq), rownames(pac_S3$Counts))
   as.PAC(pac_S3) -> pac_S4
   expect_equal(rownames(pac_seq), rownames(pac_S4))
@@ -178,4 +175,4 @@ closeAllConnections()
 fls_temp  <- tempdir()
 fls_temp  <- list.files(fls_temp, recursive=TRUE, 
                        full.names = TRUE)
-suppressWarnings(file.remove(fls_temp)) 
+suppressWarnings(file.remove(fls_temp))

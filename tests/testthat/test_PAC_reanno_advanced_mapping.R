@@ -97,7 +97,7 @@ test_that("Testing reanno workflow ...", {
 
   quiet(  
     map_reanno(pac, ref_paths=ref_paths, output_path=out_map,
-               type="internal", mismatches=2,  import="biotype", 
+               type="internal", mismatches=1,  import="biotype", 
                threads=2, keep_temp=FALSE, override = TRUE)
   )
   quiet(  
@@ -111,7 +111,7 @@ test_that("Testing reanno workflow ...", {
     quiet(  
     pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
                       type="biotype", bio_perfect=FALSE, 
-                      mismatches = 2, merge_pac=pac)
+                      mismatches = 1, merge_pac=pac)
     )
     hierarchy <- list(rrna="rrna_",
                       trna="trna_"
@@ -122,14 +122,13 @@ test_that("Testing reanno workflow ...", {
     )
     quiet(  
     pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=2, 
-                           bio_name="Biotypes_mis2", merge_pac=TRUE)
+                           bio_name="Biotypes_mis1", merge_pac=TRUE)
     )
     quiet(
     pac <- PAC_summary(pac, pheno_target=list("stage"), norm="cpm")
     )
     
     # Clean up temp folder
-   # closeAllConnections()
     out_fls  <- list.files(gsub("/map", "", out_map), recursive=TRUE, 
                            full.names = TRUE)
     suppressWarnings(file.remove(out_fls))
@@ -141,7 +140,7 @@ test_that("Testing reanno workflow ...", {
 
     expect_true(PAC_check(pac))
     test <- pac$Anno[!is.na(pac$Anno$mis0_genome1_genome),]
-    expect_equal(dim(test), c(3,19))
+    expect_equal(dim(test), c(3,18))
 
 
 # Test plotting after reannotation
@@ -179,7 +178,8 @@ test_that("Testing reanno workflow ...", {
 #----------------------------------------------
 ### Test PAC_mapper, cov_plots
 
-    quiet(pac  <- PAC_summary(pac, norm="cpm", pheno_target=list("stage"))
+    quiet(
+      pac  <- PAC_summary(pac, norm="cpm", pheno_target=list("stage"))
     )
 
     ref <- system.file("extdata/trna2", "tRNA2.fa",
@@ -191,7 +191,7 @@ test_that("Testing reanno workflow ...", {
     quiet(
       map_object <- PAC_mapper(pac, ref=ref, N_up = "NNN", N_down = "NNN",
                                mismatches=0, threads=2,
-                               report_string=TRUE)
+                               report_string=TRUE, override=TRUE)
     )
     quiet(
       plts <- PAC_covplot(pac, map=map_object,
@@ -300,16 +300,16 @@ test_that("Testing reanno workflow ...", {
   target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero") )
 
   quiet(
-    simple_3 <- PAC_gtf(pac_test_large, return="simplify",
+    simple_0 <- PAC_gtf(pac_test_large, mismatches=0, return="simplify",
                             gtf=gtf[1], target=target[1], threads=2)
     )
   quiet(
-    simple_0 <- PAC_gtf(pac_test_small, mismatches=0, return="simplify",
-                            gtf=gtf, target=target, threads=2)
+    simple_3 <- PAC_gtf(pac_test_small, mismatches=3, return="simplify",
+                            gtf=gtf[1], target=target[1], threads=2)
     )
   quiet(
     full_1 <- PAC_gtf(pac_test_small, mismatches=1, return="full",
-                      gtf=gtf, target=target, threads=2)
+                      gtf=gtf[1], target=target[1], threads=2)
   )
   quiet(
     all_2 <- PAC_gtf(pac_test_small, mismatches=2, return="all",
@@ -340,19 +340,16 @@ test_that("Testing reanno workflow ...", {
   # Tests for PAC_gtf output
   expect_true(sum(grepl("mis0|mis1|mis2|mis3", colnames(simple_3))) == 4)
   expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
-  expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
   expect_true(grepl("Your chromosome names in", test_err))
   expect_true(sum(grepl("mis0|mis1|mis2|mis3", names(full_1))) > 800)
   expect_true(
-    sum(colnames(full_1[[2]]) == c("seqid","start","end","strand","biotype",
-                             "bio_zero","biotype","bio_zero"))== 8)
+    sum(colnames(full_1[[1]]) == c("seqid","start","end","strand"
+                                   ,"biotype","bio_zero")) == 6)
   expect_true(sum(names(all_2) == c("simplify", "full")) == 2)
     
 })
 
 # Clean up temp
 closeAllConnections()
-fls_temp  <- tempdir()
-fls_temp  <- list.files(fls_temp, recursive=TRUE, 
-                        full.names = TRUE)
-suppressWarnings(file.remove(fls_temp))   
+fls_temp  <- list.files(tempdir(), recursive=TRUE, full.names = TRUE)
+suppressWarnings(file.remove(fls_temp)) 

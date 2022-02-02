@@ -153,17 +153,11 @@
 #' set.seed(123)
 #' fqs <- list(fq1=ShortRead::yield(sampler),
 #'            fq2=ShortRead::yield(sampler),
-#'            fq3=ShortRead::yield(sampler),
-#'            fq4=ShortRead::yield(sampler),
-#'            fq5=ShortRead::yield(sampler),
-#'            fq6=ShortRead::yield(sampler))
+#'            fq3=ShortRead::yield(sampler))
 #'
 #' # Now generate a temp folder were we can store the fastq files
 #' 
 #' input <- paste0(tempdir(), "/seqpac_temp/")
-#' if(grepl("windows", .Platform$OS.type)){
-#'  input <- gsub( "\\\\", "/", input)
-#' }  
 #' dir.create(input, showWarnings=FALSE)
 #'
 #' # And then write the random fastq to the temp folder
