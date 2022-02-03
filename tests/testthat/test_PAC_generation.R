@@ -60,15 +60,15 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
                quality=c(threshold=20, percent=0.8),
                check_mem = TRUE)
   
-  if(grepl("unix", .Platform$OS.type)) {
-    quiet(
-      counts_cut  <-  make_counts(input, threads=1,
-                            trimming="cutadapt",
-                            parse=parse_cut,
-                            evidence=c(experiment=2, sample=1),
-                            save_temp = FALSE)
-      )
-  }
+  # if(grepl("unix", .Platform$OS.type)) {
+  #   quiet(
+  #     counts_cut  <-  make_counts(input, threads=1,
+  #                           trimming="cutadapt",
+  #                           parse=parse_cut,
+  #                           evidence=c(experiment=2, sample=1),
+  #                           save_temp = FALSE)
+  #     )
+  # }
   
   quiet(
     counts_seq  <-  make_counts(input, threads=2,
@@ -160,22 +160,25 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
 
   
   ## Test cutadapt on Linux
-  if(grepl("unix", .Platform$OS.type)) {
-      cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
-      cut_n  <- c(nrow(counts_cut$counts)>1, 
-                  ncol(counts_cut$counts) == length(input),
-                  nrow(counts_cut$progress_report) == length(input))
-      expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
-      expect_true(sum(cut_n) ==3)
-      expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
-      pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
-      expect_true(PAC_check(pac_cut))
-  }
-})
+#   if(grepl("unix", .Platform$OS.type)) {
+#       cut_clss  <- unlist(lapply(lapply(counts_cut, function(x){x[[1]]}), class), use.names=FALSE)
+#       cut_n  <- c(nrow(counts_cut$counts)>1, 
+#                   ncol(counts_cut$counts) == length(input),
+#                   nrow(counts_cut$progress_report) == length(input))
+#       expect_identical(names(counts_cut), c("counts","progress_report", "evidence_plots"))
+#       expect_true(sum(cut_n) ==3)
+#       expect_equal(sum(cut_clss %in% c("numeric", "character", "gg", "ggplot")), 4)
+#       pac_cut <- make_PAC(pheno=pheno_1, counts=counts_cut$counts, anno=NULL)
+#       expect_true(PAC_check(pac_cut))
+#   }
+# })
 
 # Clean up temp
 closeAllConnections()
 fls_temp  <- tempdir()
-fls_temp  <- list.files(fls_temp, recursive=TRUE, 
-                       full.names = TRUE)
-suppressWarnings(file.remove(fls_temp))
+#fls_temp  <- list.files(fls_temp, recursive=TRUE, 
+#                       full.names = TRUE)
+# suppressWarnings(file.remove(fls_temp))
+unlink(fls_temp, recursive = TRUE)
+
+})
