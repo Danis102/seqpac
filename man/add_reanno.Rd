@@ -200,7 +200,7 @@ head(summary(pac_s4)$cpmMeans_stage)
 
 ### Run map_reanno 
 map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output, 
-           type="internal", mismatches=3, import="genome", 
+           type="internal", mismatches=0, import="genome", 
            threads=2, keep_temp=TRUE, override=TRUE)
 
 reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)

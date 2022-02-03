@@ -127,7 +127,7 @@ bio_search <- list(
 # PAC-object, that you used with map_reanno, to merge_pac option.
  pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
                        type="biotype", bio_perfect=FALSE, 
-                       mismatches = 2, merge_pac=pac)
+                       mismatches = 0, merge_pac=pac)
 
 
 ## Turn your S4 reanno-object to S3 list and back:
@@ -171,7 +171,7 @@ head(summary(pac_s4)$cpmMeans_stage)
 
 ### Run map_reanno 
 map_reanno(PAC=pac, ref_paths=ref_paths, output_path=output, 
-           type="internal", mismatches=3, import="genome", 
+           type="internal", mismatches=0, import="genome", 
            threads=2, keep_temp=TRUE, override=TRUE)
 
 reanno_genome <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
