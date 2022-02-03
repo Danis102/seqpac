@@ -16,7 +16,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
                    full.names = TRUE)
   
-
+  closeAllConnections()
   
   sampler <- ShortRead::FastqSampler(fq, 20000)
   set.seed(123)
@@ -27,13 +27,16 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   # Now generate a temp folder were we can store the fastq files
   
   input <- paste0(tempdir(), "/seqpac_temp/")
+  if(grepl("windows", .Platform$OS.type)){
+    input <- gsub( "\\\\", "/", input)
+  }  
   dir.create(input, showWarnings=FALSE)
   
   # Clean up temp folder
-  closeAllConnections()
-  out_fls  <- list.files(input, recursive=TRUE, 
-                         full.names = TRUE)
-  suppressWarnings(file.remove(out_fls))
+  # closeAllConnections()
+  # out_fls  <- list.files(input, recursive=TRUE, 
+  #                        full.names = TRUE)
+  # suppressWarnings(file.remove(out_fls))
   
   # And then write the random fastq to the temp folder
   for (i in 1:length(fqs)){
@@ -59,7 +62,7 @@ test_that("Testing make_counts, make_trim, make_cutadapt...", {
   
   if(grepl("unix", .Platform$OS.type)) {
     quiet(
-      counts_cut  <-  make_counts(input, threads=2,
+      counts_cut  <-  make_counts(input, threads=1,
                             trimming="cutadapt",
                             parse=parse_cut,
                             evidence=c(experiment=2, sample=1),

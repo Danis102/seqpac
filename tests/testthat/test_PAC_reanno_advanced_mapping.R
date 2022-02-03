@@ -45,7 +45,7 @@ test_that("Testing reanno workflow ...", {
   
   quiet(
     map_reanno(PAC=pac, ref_paths=ref_paths, output_path=out_map,
-                 type="internal", mismatches=3, import="genome", 
+                 type="internal", mismatches=1, import="genome", 
                  threads=2, keep_temp=TRUE, override = TRUE)
   )
   
@@ -121,7 +121,7 @@ test_that("Testing reanno workflow ...", {
                            bio_name="Biotypes_mis0", merge_pac=TRUE)
     )
     quiet(  
-    pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=2, 
+    pac <- simplify_reanno(input=pac, hierarchy=hierarchy, mismatches=1, 
                            bio_name="Biotypes_mis1", merge_pac=TRUE)
     )
     quiet(
@@ -304,15 +304,7 @@ test_that("Testing reanno workflow ...", {
                             gtf=gtf[1], target=target[1], threads=2)
     )
   quiet(
-    simple_3 <- PAC_gtf(pac_test_small, mismatches=3, return="simplify",
-                            gtf=gtf[1], target=target[1], threads=2)
-    )
-  quiet(
-    full_1 <- PAC_gtf(pac_test_small, mismatches=1, return="full",
-                      gtf=gtf[1], target=target[1], threads=2)
-  )
-  quiet(
-    all_2 <- PAC_gtf(pac_test_small, mismatches=2, return="all",
+    all_3 <- PAC_gtf(pac_test_small, mismatches=3, return="all",
                      gtf=gtf, target=target, threads=2)
   )
 
@@ -338,14 +330,13 @@ test_that("Testing reanno workflow ...", {
     )
 
   # Tests for PAC_gtf output
-  expect_true(sum(grepl("mis0|mis1|mis2|mis3", colnames(simple_3))) == 4)
   expect_true(sum(grepl("mis0", colnames(simple_0))) == 1)
   expect_true(grepl("Your chromosome names in", test_err))
-  expect_true(sum(grepl("mis0|mis1|mis2|mis3", names(full_1))) > 800)
+  expect_true(sum(grepl("mis0|mis1|mis2|mis3", names(all_3$full))) > 800)
   expect_true(
-    sum(colnames(full_1[[1]]) == c("seqid","start","end","strand"
-                                   ,"biotype","bio_zero")) == 6)
-  expect_true(sum(names(all_2) == c("simplify", "full")) == 2)
+    sum(colnames(all_3$full[[1]]) == c("seqid","start","end","strand"
+                                   ,"biotype","bio_zero","biotype","bio_zero")) == 8)
+  expect_true(sum(names(all_3) == c("simplify", "full")) == 2)
     
 })
 

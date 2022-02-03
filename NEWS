@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.4
+--------------------------
+	* Correcting notes from bioconductor reviewer
+	* Less time consuming examples and tests 
+
 CHANGES IN VERSION 0.99.3 
 --------------------------
 	* Correcting notes from bioconductor reviewer 

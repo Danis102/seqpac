@@ -73,28 +73,22 @@
 #'
 #'## Simple model with embryonic stages using Wald test with local fit (default)
 #'table(pac$Pheno$stage)
-#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage, threads=1))
+#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage, threads=2))
 #'
 #'## Batch corrected, graphs are generated for 'stage' (=first in the model)
-#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch))
+#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch,
+#'                                           threads=2))
 #'
 #'## Using pheno_target we can change focus
-#'output_deseq <- suppressWarnings(PAC_deseq(pac, 
-#'                          model= ~stage + batch, pheno_target=list("batch")))
+#'output_deseq <- suppressWarnings(PAC_deseq(pac,model= ~stage + batch, 
+#'                                           pheno_target=list("batch"),
+#'                                           threads=2))
 #'
-#'## With pheno_target we can change the direction fo the comparision
-#'# Stage1 vs Stage3:
-#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
-#'                          pheno_target = list("stage", c("Stage1", "Stage3")),
-#'                          threads=1))   
-#'# Stage3 vs Stage5:
-#'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
-#'                          pheno_target = list("stage", c("Stage3", "Stage5")),
-#'                          threads=1))  
+#'## With pheno_target we can change the direction for the comparison
 #'# Stage5 vs Stage3 (reverse order):
 #'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch, 
 #'                          pheno_target = list("stage", c("Stage5", "Stage3")),
-#'                          threads=1))  
+#'                          threads=2))  
 #'
 #'## In the output you find PAC merged results, target plots and output_deseq   
 #'names(output_deseq)

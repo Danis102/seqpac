@@ -101,7 +101,7 @@
 #'
 #' closeAllConnections()
 #'
-#' sampler <- ShortRead::FastqSampler(fq, 20000)
+#' sampler <- ShortRead::FastqSampler(fq, 10000)
 #' set.seed(123)
 #' fqs <- list(fq1=ShortRead::yield(sampler),
 #'            fq2=ShortRead::yield(sampler),
@@ -152,9 +152,9 @@
 #'              check_mem =FALSE)
 #'              
 #'
-#' counts  <-  make_counts(input, threads=1,
+#' counts  <-  make_counts(input, threads=2,
 #'                         trimming="seqpac",
-#'                         parse=parse, 
+#'                         parse=parse, plot=FALSE, 
 #'                         evidence=c(experiment=2, sample=1))
 #'   
 #'   
@@ -164,18 +164,6 @@
 #' ### (Important: This needs an external installations of cutadapt 
 #' ###  and fastq_quality_filter). See ?make_cutadapt for details. 
 #' 
-#' #############################################################
-#' ### Lets change the evidence filter
-#' ###
-#'  
-#'  # 2 evidence over two independent samples, saving single sample 
-#'  # sequences reaching 2 counts
-#'   
-#'  test <- make_counts(input=input,  trimming="seqpac", 
-#'                      parse="default_neb",  
-#'                      evidence=c(experiment=2, sample=2))
-#'  extras <- apply(test$counts, 1, function(x){sum(!x==0)})
-#'  test$counts[extras==1,] # 120 single sample sequences reached 2 counts
 #'  
 #' # Clean up temp
 #'closeAllConnections()

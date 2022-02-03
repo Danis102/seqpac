@@ -51,7 +51,7 @@ fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
 
 closeAllConnections()
 
-sampler <- ShortRead::FastqSampler(fq, 20000)
+sampler <- ShortRead::FastqSampler(fq, 10000)
 set.seed(123)
 fqs <- list(fq1=ShortRead::yield(sampler),
            fq2=ShortRead::yield(sampler),

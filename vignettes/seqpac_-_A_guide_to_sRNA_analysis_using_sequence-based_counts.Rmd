@@ -998,7 +998,7 @@ ref_paths <- list(myco=myco_path)
 
 # Run map_reanno
 map_reanno(PAC=pac, ref_paths=ref_paths, output_path=outpath_genome, 
-           type="internal", mismatches=3, import="genome", 
+           type="internal", mismatches=1, import="genome", 
            threads=8, keep_temp=TRUE)
 
 ```
@@ -1030,7 +1030,7 @@ ref_paths <- list(tRNA=trna_path,
                   rRNA=rrna_path)
 
 map_reanno(pac, ref_paths=ref_paths, output_path=outpath_biotype, 
-           type="internal", mismatches=3,  import="biotype", 
+           type="internal", mismatches=1,  import="biotype", 
            threads=6, keep_temp=TRUE)
 
 ```
@@ -1047,7 +1047,7 @@ reanno_genome <- make_reanno(outpath_genome, PAC=pac, mis_fasta_check = TRUE)
 reanno_biotype <- make_reanno(outpath_biotype, PAC=pac, mis_fasta_check = TRUE)
 
 # Note, setting mis_fasta_check=TRUE will double check that the number of
-# sequences that failed to recieve an alignment in the last mismatch cycle
+# sequences that failed to receive an alignment in the last mismatch cycle
 # agrees with the number sequences in the reanno object without an annotation.
 # (these sequences are stored in mis_fasta_x.txt where x is max mismatches+1)
 
@@ -1077,14 +1077,14 @@ will give you all alignments).
 
 # Output as separate table
 anno_genome <- add_reanno(reanno_genome, type="genome", 
-                          genome_max=10, mismatches=3)
+                          genome_max=10, mismatches=1)
 
 # Output merged with provided PAC object
 pac <- add_reanno(reanno_genome, type="genome", 
-                  genome_max=10, mismatches=3, merge_pac=pac)
+                  genome_max=10, mismatches=1, merge_pac=pac)
 
 # Example of original reference name annotations 
-head(full(reanno_genome)$mis3$myco)
+head(full(reanno_genome)$mis1$myco)
 
 # Finished genome annotation 
 head(anno_genome)
@@ -1156,27 +1156,27 @@ bio_search <- list(
  
 test <- add_reanno(reanno_biotype, bio_search=bio_search, 
                       type="biotype", bio_perfect=FALSE, 
-                      mismatches = 2, merge_pac=pac)                
+                      mismatches = 1, merge_pac=pac)                
 ```
 ```{r, eval=FALSE, results=FALSE, message=FALSE, warning=FALSE}
 # Throws an error because perfect matching was required:
 anno_temp <- add_reanno(reanno_biotype, bio_search=bio_search, 
-                        type="biotype", bio_perfect=TRUE, mismatches = 3)
+                        type="biotype", bio_perfect=TRUE, mismatches = 1)
 
 ```
 ```{r, eval=TRUE, results=FALSE, message=FALSE, warning=FALSE}
 # References with no search term hits are classified as "Other":
 anno_temp <- add_reanno(reanno_biotype, bio_search=bio_search, 
-                        type="biotype", bio_perfect=FALSE, mismatches = 3)
+                        type="biotype", bio_perfect=FALSE, mismatches = 1)
 
 # Increasing number of hits allowing mismatches  
 table(anno_temp$mis0) 
-table(anno_temp$mis3)
+table(anno_temp$mis1)
 
 # You may also add your new annotaion with a PAC object using the 'merge_pac' 
 # option. For even more options see ?add_reanno.
 pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
-                        type="biotype", bio_perfect=FALSE, mismatches = 3,
+                        type="biotype", bio_perfect=FALSE, mismatches = 1,
                         merge_pac=pac)
 head(pac$Anno)#S3
 head(anno(as.PAC(pac))) #S4
@@ -1237,13 +1237,13 @@ table(test)# Non-hits are classified as 'other'
 
 # Lets increase number of mismatches an merge it with the PAC
 # (How many mismatches depends on what you allowed previously in the workflow) 
-colnames(pac$Anno)  # mis0-3_bio = Upto 3 mismatches are available
+colnames(pac$Anno)  # mis0-1_bio = Upto 1 mismatches are available
 
-pac_test <- simplify_reanno(input=pac, hierarchy=hierarchy_1, mismatches=3, 
-                        bio_name="Biotypes_mis3", merge_pac=TRUE)
+pac_test <- simplify_reanno(input=pac, hierarchy=hierarchy_1, mismatches=1, 
+                        bio_name="Biotypes_mis1", merge_pac=TRUE)
 
 # Now we also have some mitochondrial tRNA 
-table(pac_test$Anno$Biotypes_mis3)
+table(pac_test$Anno$Biotypes_mis1)
 
 
 ``` 
@@ -1371,10 +1371,6 @@ output_deseq <- PAC_deseq(pac, model= ~stage + batch,
                           pheno_target=list("batch")) 
 
 # With pheno_target we can also change the direction of the comparison 
-# (zygotic transcription has not started)
-output_deseq <- PAC_deseq(pac, model= ~stage, 
-                          pheno_target=list("stage", c("Stage3", "Stage1")))
-# (start of zygotic transcription)
 output_deseq <- PAC_deseq(pac, model= ~stage, 
                           pheno_target=list("stage", c("Stage5", "Stage3")))
 
@@ -1651,7 +1647,7 @@ ref <- system.file("extdata/trna2", "tRNA2.fa",
                           package = "seqpac", mustWork = TRUE)          
 
 map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-                         mismatches=0, threads=8, report_string=TRUE)
+                         mismatches=0, threads=6, report_string=TRUE)
 
 # Hint: By adding N_up ad N_down you can make sure that modified fragments (like
 # 3' -CAA in mature tRNA are included).

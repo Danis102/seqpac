@@ -109,13 +109,14 @@
 #' test <- apply(test, 1, function(x){paste(x, collapse = "")})
 #' new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
 #' pac$Anno <- new_anno
-#' pac <- PAC_filter(pac, subset_only=TRUE, anno_target=list("temp", "keep"))
+#' pac_small <- PAC_filter(pac, subset_only=TRUE, size = c(20,22),
+#'                   anno_target=list("temp", "keep"))
 #'
 #' #  Run PAC_gtf
 #' gtf <- list(gtf1=out1, gtf2=out2)
 #' target <- list(gtf1=c("biotype","bio_zero"), gtf2=c("biotype","bio_zero"))
 #' 
-#' pac_merge <- PAC_gtf(pac, mismatches=0, return="merge", 
+#' pac_merge <- PAC_gtf(pac_small, mismatches=0, return="merge", 
 #'                     gtf=gtf, target=target, threads=2)
 #' 
 #' 
