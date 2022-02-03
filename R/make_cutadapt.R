@@ -55,7 +55,7 @@
 #'
 #' closeAllConnections()
 #'
-#' sampler <- ShortRead::FastqSampler(fq, 20000)
+#' sampler <- ShortRead::FastqSampler(fq, 10000)
 #' set.seed(123)
 #' fqs <- list(fq1=ShortRead::yield(sampler),
 #'            fq2=ShortRead::yield(sampler),
@@ -143,8 +143,8 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   
   # Make dir
   if(!dir.exists(output)){
-    #suppressWarnings(dir.create(output))
-    dir.create(output, showWarnings=FALSE, recursive = TRUE)
+    suppressWarnings(dir.create(output))
+    #dir.create(output, showWarnings=FALSE, recursive = TRUE)
   }
   
   # Make output names and check output folder
