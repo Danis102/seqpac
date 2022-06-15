@@ -24,11 +24,14 @@
 #'  \code{\link{simplify_reanno}} function.
 #'
 #'@param type Character indicating what type of classification. If
-#'  type="genome", the reanno object is expected to have genome coordinates as
-#'  controlled by  \code{\link{map_reanno}} and the  \code{\link{import_reanno}}
-#'  functions. Here all hits will be reported. If type="biotype", then
-#'  coordinates are not expected. Reference hits will instead be classified
-#'  according to the biotype search terms in \code{bio_search}.
+#'  type="genome", the reanno object is expected to have been mapped against a
+#'  genome or larger fasta references like chromosomes. This may include
+#'  coordinates as controlled by \code{\link{map_reanno}} and the
+#'  \code{\link{import_reanno}} functions. See \code{genome_max} on how to
+#'  control how coordinates are reported. If coordinates are missing only hit or
+#'  no hit will be reported. If type="biotype", then coordinates are not
+#'  expected. Reference hits will instead be classified according to the biotype
+#'  search terms in \code{bio_search}.
 #'
 #'@param bio_search List of character vectors indicating search terms targeting
 #'  feature names in the original reference fasta files. These search terms will
@@ -41,14 +44,14 @@
 #'  (default) all references hits that was not caught by a search term will be
 #'  annotated as reference + other (e.g. "Ensembl_other"). In case perfect=TRUE,
 #'  if the search terms do not catch all reference hits the function will
-#'  through an error. Can be used to ensure that all hits receive a
+#'  throw an error. Can be used to ensure that all hits receive a
 #'  classification.
 #'
 #'@param genome_max Integer or character indicating the number of maximum
 #'  coordinates to be reported when type="genome". If the number of hits
-#'  exceedes \code{genome_max} it will be indicated in the classification and
+#'  exceeds \code{genome_max} it will be indicated in the classification and
 #'  only the first hits up to \code{max_hits} will be reported. Useful to
-#'  handling seaquences that multimap. If genome_max="all", all coordinates will
+#'  handling sequences that multimap. If genome_max="all", all coordinates will
 #'  be reported which may dramatically affect performance. (default=10)
 #'
 #'@param merge_pac PAC object. If a PAC object is provided in merge_pac, then
