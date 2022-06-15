@@ -4,14 +4,16 @@
 #'
 #'Given an file path to sequence files in fastq format (extension .fastq.gz or
 #'.fastq) this function will first trim the sequences from adaptor sequence, and
-#'then apply sequence size and phred score quality filters.
+#'then apply sequence size and phred score quality filters. On systems with low
+#'memory or very large fastq files, users may choose to handle each file in
+#'chunks.
 #'
 #'@family PAC generation
 #'
 #'@seealso \url{https://github.com/Danis102} for updates on the current package.
 #'
 #'@param input Character indicating the path to a directory containing fastq
-#'  formated sequence files either compressed (.fastq.gz) or text (.fastq).
+#'  formatted sequence files either compressed (.fastq.gz) or text (.fastq).
 #'
 #'@param output Character indicating the path to a directory where the
 #'  compressed trimmed fastq files should be saved (as basename trim.fastq.gz).
@@ -112,20 +114,30 @@
 #'   nucleotides after trimming. If \code{quality=c(threshold=NULL,
 #'   percent=NULL)} then all sequences will be retained (not default!).
 #'
-#' @param threads  Integer stating the number of parallell jobs. Note, that
+#' @param threads  Integer stating the number of parallel jobs. Note, that
 #'   reading multiple fastq files drains memory, using up to 10Gb per fastq
 #'   file. To avoid crashing the system due to memory shortage, make sure that
-#'   each thread on the machine have at least 10 Gb of memory availabe, unless
+#'   each thread on the machine have at least 10 Gb of memory available, unless
 #'   your fastq files are very small or very large. Use
 #'   \code{parallel::detectcores()} to see available threads on the machine.
-#'   Never ever use all threads!
-#'
+#'   Never use all threads! To run large fastq on low end computer use
+#'   'chunk_size'.
+#'   
 #' @param check_mem Logical whether a memory check should be performed. A memory
 #'   check estimates the approximate memory usage given the fastq file sizes and
 #'   number of threads. The check happens before entering the parallel trimming
 #'   loop, and will give an immediate warning given intermediary risky memory
 #'   estimates, and an error if the risk is very high. Note, this option depends
 #'   on the parallel and benchmarkme packages. (default=FALSE)
+#'
+#' @param chunk_size Integer indicating the number of reads to be read into
+#'   memory in each chunk. When chunk_size=NULL (default), the whole fastq will
+#'   be processed as one. Thus, running 5 threads will keep 5 full fastq files
+#'   in memory simultaneously (fast but demanding). Setting chunk_size to an
+#'   integer will instead read only a portion of each fastq at a time and then
+#'   append the trimmed results on disc (slow but less demanding). Try using
+#'   chunk_size=1000000 reads, less will be extremely slow. Rather decrease
+#'   threads if you encounter memory problems.
 #'   
 #' @return Exports a compressed trimmed fastq file to the output folder (file
 #'   name: basename+trim.fastq.gz). If any type="save" has been set, an
@@ -203,16 +215,399 @@
 #' 
 #' @export
 
-make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE, 
-                      threads=1,polyG=c(type=NULL, min=NULL, mismatch=NULL),
-                      adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
-                      adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
-                      adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), 
-                      adapt_5=NULL, seq_range=c(min=NULL, max=NULL),
-                      quality=c(threshold=20, percent=0.8)){
+##### getTrim_coord function ####
+# This function runs from within make_trim to obtain trimming coordinates
+# and to save fastq to output, appending to existing fastq for chunks
+# and not appending for chunk_size=NULL 
+getTrim <- function(fstq, fstq_sav=NULL, par_parse){      
   
-  ############################   
-  #### General setup #########
+  # Unfold par_parse
+  output <- par_parse$output
+  indels <- par_parse$indels
+  concat <- par_parse$concat
+  chunk_size <- par_parse$chunk_size
+  polyG <- par_parse$polyG
+  adapt_3_set <- par_parse$adapt_3_set
+  adapt_3 <- par_parse$adapt_3
+  
+  
+  # Save lists
+  sav_lst <- list(NA)
+  coord_lst <- list(NA)
+  trim_filt <- list(NA)
+  
+  # num_fact can be used to apply new trimming coordinates later 
+  num_fact <- as.factor(fstq)
+  
+  rm(fstq)   
+  gc(reset=TRUE)
+  
+  sav_lst$tot_reads <- length(num_fact)
+  
+  seqs <- Biostrings::DNAStringSet(levels(num_fact)) 
+  num_fact <- as.numeric(num_fact)
+  lgn <- nchar(paste0(seqs))
+  mxlgn <- max(lgn)
+  
+  if(!length(unique(lgn)) == 1){
+    warning("\nDiffering read lengths prior to adapter trimming.",
+            "\nHave you already performed 3-prim trimming?")
+  }
+  
+  #########################################################     
+  ##### Make NextSeq/NovaSeq poly-G trimming/filter ####### 
+  if(!is.null(polyG)){
+    mn <- as.numeric(polyG[names(polyG)=="min"])
+    mis <- as.numeric(polyG[names(polyG)=="mismatch"])
+    tp <- polyG[names(polyG)=="type"]
+    ns <- mxlgn-mn
+    shrt_ns <- paste0(paste(rep("G", mn), collapse=""), 
+                      paste(rep("N", ns), collapse=""))
+    adapt_mis_corr <- mis*(mn/mxlgn)  # Correction for N length extension
+    trim_seqs <- Biostrings::trimLRPatterns(
+      subject=seqs, ranges=TRUE, Rfixed=FALSE,  
+      Rpattern=shrt_ns, max.Rmismatch=adapt_mis_corr)
+    coord_lst$polyG <- tibble::tibble(Biostrings::end(trim_seqs))
+    sav_lst$polyG <-  c(trimmed=sum(!coord_lst$polyG==lgn), polyG)
+    rm(trim_seqs)
+    # Type
+    if(grepl("soft", tp)){
+      end_vect <- mn*0.5-1
+      end_vect <- lgn - end_vect
+      logi_update <- coord_lst$polyG[[1]] >= end_vect
+      coord_lst$polyG[[1]][logi_update] <- lgn[logi_update]
+      rm(logi_update, end_vect)
+    }
+    if(grepl("rm|save|hard", tp)){
+      trim_filt$polyG  <- coord_lst$polyG[[1]] == lgn # Not polyG
+    }
+  }
+  gc(reset=TRUE)
+  
+  #####################################
+  ##### Make adaptor trimming 3' ######
+  if(!is.null(adapt_3)){
+    ## setup
+    mn <- as.numeric(adapt_3_set[names(adapt_3_set)=="min"])
+    mis <- as.numeric(adapt_3_set[names(adapt_3_set)=="mismatch"])
+    tp <- adapt_3_set[names(adapt_3_set)=="type"]
+    
+    ## Setup adapter sequences
+    adapt_lgn <- nchar(adapt_3)
+    ns <- mxlgn-adapt_lgn
+    adapt_ns <- paste0(adapt_3, paste(rep("N", ns), collapse=""))
+    adapt_shrt <- paste(c(substr(adapt_3, 1, mn), 
+                          rep("N", mxlgn-mn)), collapse="")
+    
+    ## Trim perfect
+    trim <- Biostrings::end(
+      Biostrings::trimLRPatterns(subject=seqs, ranges=TRUE, Rfixed=FALSE, 
+                                 with.Rindels = FALSE, Rpattern=adapt_ns, 
+                                 max.Rmismatch=0))
+    
+    ## Trim mis
+    trim_mis <- Biostrings::end(
+      Biostrings::trimLRPatterns(subject=seqs, ranges=TRUE, Rfixed=FALSE, 
+                                 with.Rindels = FALSE, Rpattern=adapt_ns, 
+                                 max.Rmismatch=mis))
+    # Only update larger differences will prevent nugging
+    logi_diff <- (trim - trim_mis) >=5 
+    trim[logi_diff] <- trim_mis[logi_diff]
+    rm(logi_diff, trim_mis)
+    
+    ## Trimming wobbling starts 
+    if(mis>=0.1){
+      if(nchar(adapt_3)< 25){
+        warning("Your trimming sequence was shorter than 25 nt.",
+                "\nFor best trimming results in the terminals using",
+                "\nmismatches, please provide a longer adaptor sequence.")
+      }
+    }
+    shrtst_lgn <- 15
+    sb <- nchar(adapt_3)-1
+    adapt_lgn <- nchar(adapt_3)
+    start_gone <- list(NULL)
+    while(sb >= shrtst_lgn){
+      strt <- adapt_lgn-sb+1
+      start_gone[[sb]] <- paste0(
+        c(substr(adapt_3, strt, nchar(adapt_3)), 
+          rep("N", mxlgn-(adapt_lgn-strt+1))), collapse="")
+      sb <- sb-1
+    }
+    start_gone <- unlist(start_gone[!unlist(lapply(start_gone, is.null))])
+    trim_mt <- list(NULL)
+    for(z in 1:length(start_gone)){
+      shrt_ns <- start_gone[z]
+      n_Ns <- stringr::str_count(shrt_ns, "N")
+      adapt_mis_corr <- (mis*(nchar(shrt_ns)-n_Ns))/nchar(shrt_ns)
+      trim_seqs <- Biostrings::trimLRPatterns(
+        subject=seqs, ranges=TRUE, Rfixed=FALSE, with.Rindels = FALSE, 
+        Rpattern=start_gone[z], max.Rmismatch=adapt_mis_corr)
+      trim_mt[[z]] <- tibble::tibble(Biostrings::end(trim_seqs))
+    }
+    trim_mt <- do.call("cbind", trim_mt)
+    trim_mt <- unlist(apply(trim_mt, 1, function(x){min(unique(x))<=1}))
+    trim[trim_mt] <- 0
+    rm(start_gone, trim_mt)
+    
+    ## Trimming indels
+    if(indels==TRUE){
+      logi_long <- trim >= lgn-5
+      seqs_long <-  seqs[logi_long] #Apply trimming only on long (untrimmed)
+      trim_seqs_indel <- Biostrings::end(
+        Biostrings::trimLRPatterns(
+          subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
+          with.Rindels = TRUE, Rpattern=adapt_shrt, max.Rmismatch=0))
+      trim_seqs_indel_2 <- Biostrings::end(
+        Biostrings::trimLRPatterns(
+          subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
+          with.Rindels = TRUE, Rpattern=adapt_ns, 
+          max.Rmismatch=2/nchar(adapt_ns)))
+      trim[logi_long] <- ifelse(
+        (trim_seqs_indel - trim_seqs_indel_2) > 5, 
+        trim_seqs_indel_2, 
+        trim_seqs_indel)
+      rm(trim_seqs_indel, trim_seqs_indel_2, logi_long, seqs_long) 
+      
+    }
+    
+    ## Trim concatemer-like adaptors
+    if(!is.na(concat)){
+      n_Ns <- stringr::str_count(adapt_shrt, "N")
+      adapt_mis_corr <- (mis*(nchar(adapt_shrt)-n_Ns))/nchar(adapt_shrt)
+      trim_shrt <- Biostrings::end(Biostrings::trimLRPatterns(
+        subject=seqs, ranges=TRUE, Rfixed=FALSE, with.Rindels = FALSE, 
+        Rpattern=adapt_shrt, max.Rmismatch=adapt_mis_corr))
+      # Only update if more/equal to concat
+      logi_dim <- (trim - trim_shrt) >= concat 
+      # Check that adaptor is present inbetween
+      chck <- substr(seqs[logi_dim], trim_shrt[logi_dim]+1, trim[logi_dim]) 
+      n_Ns <- stringr::str_count(adapt_ns, "N")
+      adapt_mis_corr <- (mis*(nchar(adapt_ns)-n_Ns))/nchar(adapt_ns)
+      chck <- agrepl(gsub("N", "", adapt_shrt), 
+                     chck, max.distance = 0.1, 
+                     fixed=TRUE)
+      
+      logi_dim[logi_dim] <- chck # Update only where check was confirmed
+      trim[logi_dim] <- trim_shrt[logi_dim]  # Update trim
+      rm(logi_dim, trim_shrt, chck) 
+    }
+    
+    ## Subdivide short adaptor
+    logi_long <- trim >= lgn-5
+    seqs_long <-  seqs[logi_long]
+    adapt_shrt1 <- paste(c(substr(adapt_3, 1, 10), 
+                           rep("N", mxlgn-nchar(substr(adapt_3, 1, 10)))), 
+                         collapse="")
+    trim_catch1 <- Biostrings::end(Biostrings::trimLRPatterns(
+      subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
+      Rpattern=adapt_shrt, max.Rmismatch=2/nchar(adapt_shrt)))
+    
+    adapt_shrt2 <- paste(c(
+      substr(adapt_3, 11, 20), 
+      rep("N", mxlgn-nchar(substr(adapt_3, 11, 20)))), 
+      collapse="")
+    trim_catch2 <- Biostrings::end(
+      Biostrings::trimLRPatterns(
+        subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
+        Rpattern=adapt_shrt2, max.Rmismatch=2/nchar(adapt_shrt2)))
+    
+    adapt_shrt3 <- paste(c(substr(adapt_3, 21, 30), 
+                           rep("N", mxlgn-nchar(substr(adapt_3, 21, 30)))), 
+                         collapse="")
+    trim_catch3 <- Biostrings::end(
+      Biostrings::trimLRPatterns(subject=seqs_long, ranges=TRUE, 
+                                 Rfixed=FALSE, with.Rindels = TRUE, 
+                                 Rpattern=adapt_shrt3, 
+                                 max.Rmismatch=2/nchar(adapt_shrt3)))
+    
+    logi_1 <- (trim_catch2-trim_catch1) %in% (10-3):(10+1)
+    logi_2 <- (trim_catch3-trim_catch1) %in% (20-3):(20+1)
+    logi_3 <- (trim_catch3-trim_catch2) %in% (10-3):(10+1)
+    
+    trim_catch <- rep(75, times=length(seqs_long)) 
+    trim_catch[logi_1] <- trim_catch1[logi_1]
+    trim_catch[logi_2] <- trim_catch1[logi_2]
+    trim_catch[logi_3] <- (trim_catch2-9)[logi_3]
+    
+    trim[logi_long] <-  trim_catch
+    rm(logi_long, seqs_long, trim_catch, trim_catch1, 
+       trim_catch2, trim_catch3, logi_1, logi_2, logi_3)
+    
+    ## Correct for biostring mis-start
+    sb_read  <- substr(seqs, trim-2, trim+6) 
+    corrct <- stringr::str_locate(sb_read, substr(adapt_3, 1, 5))[,"start"]
+    corrct2 <- stringr::str_locate(sb_read, substr(adapt_3, 1, 3))[,"start"]
+    corrct <- corrct-4
+    corrct2 <- corrct2-4
+    corrct[is.na(corrct)] <- corrct2[is.na(corrct)] # Only update NA
+    corrct[is.na(corrct)] <- 0 # Remaining NAs becomes 0
+    trim <- (trim + corrct) # Add adjusted tims sites
+    rm(corrct, corrct2)
+    
+    ## Add to coordinate list  
+    coord_lst$trim_3 <- tibble::tibble(trim) 
+    rm(trim)
+    gc(reset=TRUE)
+    
+    ## Correct for type
+    if(grepl("soft", tp)){
+      end_vect <- mn*0.5
+      end_vect <- lgn - end_vect
+      logi_update <- coord_lst$trim_3[[1]] >= end_vect
+      coord_lst$trim_3[[1]][logi_update] <- lgn[logi_update]
+      rm(logi_update, end_vect)
+    }
+    if(grepl("rm|save|hard", tp)){
+      trim_filt$trim_3  <- coord_lst$trim_3[[1]] == lgn # Not trim 3
+    }
+  }
+  sav_lst$trim_3 <-  c(trimmed=sum(!trim_filt$trim_3), 
+                       adapt_3_set, adapt=adapt_3)
+  
+  rm(lgn)
+  gc(reset=TRUE)
+  
+  ################################################
+  ##### Apply trimming coordinates on fastq ######
+  ## Apply on sequences
+  coord_lst <- coord_lst[!is.na(coord_lst)]
+  sav_lst <- sav_lst[!is.na(sav_lst)]
+  coord_lst <- apply(tibble::as_tibble(
+    do.call("cbind", coord_lst)), 1, min)
+  trim_fastq <- substring(seqs, 1, coord_lst)
+  trim_fastq <- trim_fastq[num_fact]  # Order as original fastq
+  
+  ##### Read and then update fastq to obtain original seq names ######
+  # contains index etc
+  # chunk fastq will be kept in memory the whole time
+  
+  if(is.null(chunk_size)){
+    fstq <- ShortRead::readFastq(fls[[i]])
+  }else{
+    fstq <- fstq_sav
+  }
+  fstq@sread <- Biostrings::DNAStringSet(trim_fastq) #test this
+  
+  
+  ## Apply on quality
+  if(!is.null(quality)){
+    qual <- paste(Biostrings::quality(fstq@quality)) 
+    qual <- substr(qual, start=1, stop=coord_lst[num_fact])
+    fstq@quality <-  ShortRead::FastqQuality(Biostrings::BStringSet(qual)) 
+  }
+  rm(trim_fastq, coord_lst)
+  gc(reset=TRUE)
+  
+  ########################################################  
+  ##### Filter non-trimmed depending type           ######
+  trim_filt <- trim_filt[!is.na(trim_filt)]
+  trim_filt <- lapply(trim_filt, function(x){x[num_fact]})
+  
+  if(length(trim_filt)>0){
+    save_logi <- unlist(lapply(sav_lst, function(x){
+      grepl("save", x["type"])
+    }))
+    rm_logi <- unlist(lapply(sav_lst, function(x){
+      grepl("rm", x["type"])
+    }))
+    sav_nam <- names(save_logi)[save_logi]
+    rm_nam <- names(rm_logi)[rm_logi]
+    if(length(sav_nam)>0){
+      save_logi <- rowSums(do.call("cbind", trim_filt[sav_nam])) > 0
+      sav_nam <- paste0(sav_nam, collapse="_")
+      fil_nam_un <-  gsub("\\.trim.fastq.gz$", 
+                          paste0(".REMOVED_", sav_nam, ".fastq.gz"),  
+                          out_file[i])
+      # append for chunks
+      if(is.null(chunk_size)){
+        ShortRead::writeFastq(fstq[save_logi], fil_nam_un, 
+                              mode="w", full=FALSE, compress=TRUE)
+      }else{
+        ShortRead::writeFastq(fstq[save_logi], fil_nam_un, 
+                              mode="a", full=FALSE, compress=TRUE)
+      }
+    }
+    if(length(rm_nam)>0){
+      rm_logi <- rowSums(do.call("cbind", trim_filt[rm_nam])) > 0
+      if(length(sav_nam)>0){
+        fstq <- fstq[!rowSums(cbind(rm_logi, save_logi)) > 0]
+      }else{
+        fstq <- fstq[!rm_logi]
+      }
+    }else{
+      fstq <- fstq[!save_logi]
+    }
+  }
+  rm(trim_filt, save_logi, rm_logi, num_fact) 
+  gc(reset=TRUE)
+  
+  ########################
+  ##### Size filter ######
+  if(!is.null(seq_range)){
+    logi_min <- Biostrings::width(fstq@sread) >= seq_range["min"]
+    logi_max <- Biostrings::width(fstq@sread) <= seq_range["max"]
+    sav_lst$size <- c(too_short=sum(!logi_min), 
+                      too_long=sum(!logi_max), 
+                      seq_range)
+    fstq <- fstq[logi_min+logi_max==2]
+    rm(logi_min, logi_max)
+    gc(reset=TRUE)
+  }
+  
+  ##########################################
+  ##### Phred score quality filtering ######
+  # First extract trimmed qualities
+  if(!is.null(quality)){
+    enc <- Biostrings::encoding(fstq@quality) # Phred score translations
+    enc_srch <- as.factor(
+      names(enc))[paste0(enc) %in% as.character(1:quality["threshold"]-1)]
+    enc_srch <- paste0("[", paste(enc_srch, collapse="") , "]")
+    # Apply filter if specified
+    qual_logi <- stringr::str_count(
+      paste0(Biostrings::quality(
+        fstq@quality)), enc_srch)
+    qual_logi <-  1-(qual_logi/Biostrings::width(
+      fstq@quality)) >= quality["percent"]
+    qual_logi[is.na(qual_logi)] <- FALSE
+    sav_lst$quality <-  c(removed=sum(!qual_logi), quality)
+    fstq <- fstq[qual_logi]
+    rm(qual_logi)
+    gc(reset=TRUE)
+  }
+  
+  
+  ##### Save fastq/chunks and return sav_lst for progress report #####
+  # Note, chunks should append to existing fq
+  sav_lst$out_reads <- length(fstq)
+  
+  if(is.null(chunk_size)){
+    ShortRead::writeFastq(fstq, out_file[i], mode="w", 
+                          full=FALSE, compress=TRUE)
+  }else{
+    ShortRead::writeFastq(fstq, out_file[i], mode="a", 
+                          full=FALSE, compress=TRUE)  
+  }
+  
+  return(sav_lst)
+}
+
+### make_trim ###
+# This function applies getTrim over parallel fastq (foreach)
+# It also manage chunks by appending trimmed fastq in a while loop
+# Updates progress report for each progressive chunk across all fastq
+make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE, 
+                           threads=1, chunk_size=NULL,
+                           polyG=c(type=NULL, min=NULL, mismatch=NULL),
+                           adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+                           adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+                           adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), 
+                           adapt_5=NULL, seq_range=c(min=NULL, max=NULL),
+                           quality=c(threshold=20, percent=0.8)){
+  
+
+  
+  ##### General setup #######################################
   if(sum(!dir.exists(input))== length(input)){
     fls <- input
   }else{
@@ -245,17 +640,17 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
                " burden is estimated to ",
                worst, " GB of approx. ", mem," GB RAM available."))
     if(worst>0){
-        if(worst*1.1 > mem){ 
-          warning("\nIn worst scenario trimming may generate an impact",
-              " close to what the system can stand.",
-              "\nPlease free more memory per thread if function fails.", 
-              immediate. = TRUE)
-              }
-        if(worst*0.5 > mem){ 
-          stop("\nTrimming will generate an impact well above what the", 
-           " system can stand.",
-           "\nIf you still wish to try, please set check_mem=FALSE.")
-        }
+      if(worst*1.1 > mem){ 
+        warning("\nIn worst scenario trimming may generate an impact",
+                " close to what the system can stand.",
+                "\nPlease free more memory per thread if function fails.", 
+                immediate. = TRUE)
+      }
+      if(worst*0.5 > mem){ 
+        stop("\nTrimming will generate an impact well above what the", 
+             " system can stand.",
+             "\nIf you still wish to try, please set check_mem=FALSE.")
+      }
     }
     cat(paste0("\n--- Trimming check passed.\n"))
   }
@@ -270,8 +665,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   out_dir <- list.files(output, pattern=nam_trim, recursive = FALSE)
   if(length(out_dir)>0){
     stop("\n  There are files in the output folder:\n  ", 
-          out_dir, 
-          "\n  Please move or delete those file(s).")
+         out_dir, 
+         "\n  Please move or delete those file(s).")
   }
   
   # Make dir
@@ -280,8 +675,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
     dir.create(output, showWarnings=FALSE, recursive = TRUE)
   }
   
-  #####################################
-  ##### Make adaptor trimming 5' ######
+  ##### Make adaptor trimming 5' (moves to getTrim_coord in future upgrades ####
   if(!is.null(adapt_5)){
     stop("\n5' trimming is currently not supported, but will be included in",
          " future updates of seqpac.\nFor now you can use the 'make_cutadapt' ",
@@ -290,356 +684,125 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
          " versions of \ncutadapt and fastq_quality_filter.")   
   }
   
-  #########################################################     
-  ##### Enter parallel loops and reading fastq      #######
+  ##### Enter parallel loops and reading fastq #########################     
   cat("\nNow entering the parallel trimming loop (R may stop respond) ...")
   cat(paste0("\n(progress may be followed in: ", output, ")"))
-  doParallel::registerDoParallel(threads)  #Do not use parallel::makeClusters!!!
+  
+  # save the input for getTrim_coord function
+  par_parse <- list(output=output, indels=indels, concat=concat, 
+                    polyG=polyG, adapt_3_set=adapt_3_set, adapt_3=adapt_3,
+                    adapt_5_set=adapt_5_set, adapt_5=adapt_5, quality=quality, 
+                    chunk_size=chunk_size)
+  
+  
+  doParallel::registerDoParallel(threads)
   `%dopar%` <- foreach::`%dopar%`
+  
   prog_report <- foreach::foreach(
     i=1:length(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
     .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
-      # Save lists
-      sav_lst <- list(NA)
-      coord_lst <- list(NA)
-      trim_filt <- list(NA)
       
-      fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls[[i]], 
-                                                           withIds=FALSE))) 
-      num_fact <- as.factor(fstq)
+      ##### Make a while loop that works for both full size fastq and chunks #########
+      max_chu <- FALSE
+      current_chu <- 1
       
-      rm(fstq)
-      gc(reset=TRUE)
-      
-      sav_lst$tot_reads <- length(num_fact)
-      # num_fact can be used to apply new trimming coordinates later 
-      seqs <- Biostrings::DNAStringSet(levels(num_fact)) 
-      num_fact <- as.numeric(num_fact)
-      lgn <- nchar(paste0(seqs))
-      mxlgn <- max(lgn)
-      
-      if(!length(unique(lgn)) == 1){
-        warning("\nDiffering read lengths prior to adapter trimming.",
-                "\nHave you already performed 3-prim trimming?")
-      }
-      
-      
-      #########################################################     
-      ##### Make NextSeq/NovaSeq poly-G trimming/filter ####### 
-      if(!is.null(polyG)){
-        mn <- as.numeric(polyG[names(polyG)=="min"])
-        mis <- as.numeric(polyG[names(polyG)=="mismatch"])
-        tp <- polyG[names(polyG)=="type"]
-        ns <- mxlgn-mn
-        shrt_ns <- paste0(paste(rep("G", mn), collapse=""), 
-                          paste(rep("N", ns), collapse=""))
-        adapt_mis_corr <- mis*(mn/mxlgn)  # Correction for N length extension
-        trim_seqs <- Biostrings::trimLRPatterns(
-          subject=seqs, ranges=TRUE, Rfixed=FALSE,  
-          Rpattern=shrt_ns, max.Rmismatch=adapt_mis_corr)
-        coord_lst$polyG <- tibble::tibble(Biostrings::end(trim_seqs))
-        sav_lst$polyG <-  c(trimmed=sum(!coord_lst$polyG==lgn), polyG)
-        rm(trim_seqs)
-        # Type
-        if(grepl("soft", tp)){
-          end_vect <- mn*0.5-1
-          end_vect <- lgn - end_vect
-          logi_update <- coord_lst$polyG[[1]] >= end_vect
-          coord_lst$polyG[[1]][logi_update] <- lgn[logi_update]
-          rm(logi_update, end_vect)
+      while(!max_chu){
+        ### Without chunks
+        if(is.null(chunk_size)){
+          # immediately update max_chu for full size fastq
+          # while-loop should run only once
+          max_chu <- TRUE
+          fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls[[i]], 
+                                                               withIds=FALSE)))
+          fstq_sav <- NULL
         }
-        if(grepl("rm|save|hard", tp)){
-          trim_filt$polyG  <- coord_lst$polyG[[1]] == lgn # Not polyG
-        }
-      }
-      gc(reset=TRUE)
-      
-      #####################################
-      ##### Make adaptor trimming 3' ######
-      if(!is.null(adapt_3)){
-        ## setup
-        mn <- as.numeric(adapt_3_set[names(adapt_3_set)=="min"])
-        mis <- as.numeric(adapt_3_set[names(adapt_3_set)=="mismatch"])
-        tp <- adapt_3_set[names(adapt_3_set)=="type"]
-        
-        ## Setup adapter sequences
-        adapt_lgn <- nchar(adapt_3)
-        ns <- mxlgn-adapt_lgn
-        adapt_ns <- paste0(adapt_3, paste(rep("N", ns), collapse=""))
-        adapt_shrt <- paste(c(substr(adapt_3, 1, mn), 
-                              rep("N", mxlgn-mn)), collapse="")
-        
-        ## Trim perfect
-        trim <- Biostrings::end(
-          Biostrings::trimLRPatterns(subject=seqs, ranges=TRUE, Rfixed=FALSE, 
-                                     with.Rindels = FALSE, Rpattern=adapt_ns, 
-                                     max.Rmismatch=0))
-        
-        ## Trim mis
-        trim_mis <- Biostrings::end(
-          Biostrings::trimLRPatterns(subject=seqs, ranges=TRUE, Rfixed=FALSE, 
-                                     with.Rindels = FALSE, Rpattern=adapt_ns, 
-                                     max.Rmismatch=mis))
-        # Only update larger differences will prevent nugging
-        logi_diff <- (trim - trim_mis) >=5 
-        trim[logi_diff] <- trim_mis[logi_diff]
-        rm(logi_diff, trim_mis)
-        
-        ## Trimming wobbling starts 
-        if(mis>=0.1){
-          if(nchar(adapt_3)< 25){
-            warning("Your trimming sequence was shorter than 25 nt.",
-            "\nFor best trimming results in the terminals using",
-            "\nmismatches, please provide a longer adaptor sequence.")
-          }
-        }
-        shrtst_lgn <- 15
-        sb <- nchar(adapt_3)-1
-        adapt_lgn <- nchar(adapt_3)
-        start_gone <- list(NULL)
-        while(sb >= shrtst_lgn){
-          strt <- adapt_lgn-sb+1
-          start_gone[[sb]] <- paste0(
-            c(substr(adapt_3, strt, nchar(adapt_3)), 
-              rep("N", mxlgn-(adapt_lgn-strt+1))), collapse="")
-          sb <- sb-1
-        }
-        start_gone <- unlist(start_gone[!unlist(lapply(start_gone, is.null))])
-        trim_mt <- list(NULL)
-        for(z in 1:length(start_gone)){
-          shrt_ns <- start_gone[z]
-          n_Ns <- stringr::str_count(shrt_ns, "N")
-          adapt_mis_corr <- (mis*(nchar(shrt_ns)-n_Ns))/nchar(shrt_ns)
-          trim_seqs <- Biostrings::trimLRPatterns(
-            subject=seqs, ranges=TRUE, Rfixed=FALSE, with.Rindels = FALSE, 
-            Rpattern=start_gone[z], max.Rmismatch=adapt_mis_corr)
-          trim_mt[[z]] <- tibble::tibble(Biostrings::end(trim_seqs))
-        }
-        trim_mt <- do.call("cbind", trim_mt)
-        trim_mt <- unlist(apply(trim_mt, 1, function(x){min(unique(x))<=1}))
-        trim[trim_mt] <- 0
-        rm(start_gone, trim_mt)
-        
-        ## Trimming indels
-        if(indels==TRUE){
-          logi_long <- trim >= lgn-5
-          seqs_long <-  seqs[logi_long] #Apply trimming only on long (untrimmed)
-          trim_seqs_indel <- Biostrings::end(
-            Biostrings::trimLRPatterns(
-              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
-              with.Rindels = TRUE, Rpattern=adapt_shrt, max.Rmismatch=0))
-          trim_seqs_indel_2 <- Biostrings::end(
-            Biostrings::trimLRPatterns(
-              subject=seqs_long, ranges=TRUE, Rfixed=FALSE, 
-              with.Rindels = TRUE, Rpattern=adapt_ns, 
-              max.Rmismatch=2/nchar(adapt_ns)))
-          trim[logi_long] <- ifelse(
-            (trim_seqs_indel - trim_seqs_indel_2) > 5, 
-            trim_seqs_indel_2, 
-            trim_seqs_indel)
-          rm(trim_seqs_indel, trim_seqs_indel_2, logi_long, seqs_long) 
+        ### With chunks (loop should run until all chunks is completed)  
+        if(!is.null(chunk_size)){
           
-        }
-        
-        ## Trim concatemer-like adaptors
-        if(!is.na(concat)){
-          n_Ns <- stringr::str_count(adapt_shrt, "N")
-          adapt_mis_corr <- (mis*(nchar(adapt_shrt)-n_Ns))/nchar(adapt_shrt)
-          trim_shrt <- Biostrings::end(Biostrings::trimLRPatterns(
-            subject=seqs, ranges=TRUE, Rfixed=FALSE, with.Rindels = FALSE, 
-            Rpattern=adapt_shrt, max.Rmismatch=adapt_mis_corr))
-        # Only update if more/equal to concat
-          logi_dim <- (trim - trim_shrt) >= concat 
-        # Check that adaptor is present inbetween
-          chck <- substr(seqs[logi_dim], trim_shrt[logi_dim]+1, trim[logi_dim]) 
-          n_Ns <- stringr::str_count(adapt_ns, "N")
-          adapt_mis_corr <- (mis*(nchar(adapt_ns)-n_Ns))/nchar(adapt_ns)
-          chck <- agrepl(gsub("N", "", adapt_shrt), 
-                         chck, max.distance = 0.1, 
-                         fixed=TRUE)
-          
-          logi_dim[logi_dim] <- chck # Update only where check was confirmed
-          trim[logi_dim] <- trim_shrt[logi_dim]  # Update trim
-          rm(logi_dim, trim_shrt, chck) 
-        }
-        
-        ## Subdivide short adaptor
-        logi_long <- trim >= lgn-5
-        seqs_long <-  seqs[logi_long]
-        adapt_shrt1 <- paste(c(substr(adapt_3, 1, 10), 
-                               rep("N", mxlgn-nchar(substr(adapt_3, 1, 10)))), 
-                             collapse="")
-        trim_catch1 <- Biostrings::end(Biostrings::trimLRPatterns(
-          subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
-          Rpattern=adapt_shrt, max.Rmismatch=2/nchar(adapt_shrt)))
-        
-        adapt_shrt2 <- paste(c(
-          substr(adapt_3, 11, 20), 
-          rep("N", mxlgn-nchar(substr(adapt_3, 11, 20)))), 
-          collapse="")
-        trim_catch2 <- Biostrings::end(
-          Biostrings::trimLRPatterns(
-            subject=seqs_long, ranges=TRUE, Rfixed=FALSE, with.Rindels = TRUE, 
-            Rpattern=adapt_shrt2, max.Rmismatch=2/nchar(adapt_shrt2)))
-        
-        adapt_shrt3 <- paste(c(substr(adapt_3, 21, 30), 
-                               rep("N", mxlgn-nchar(substr(adapt_3, 21, 30)))), 
-                             collapse="")
-        trim_catch3 <- Biostrings::end(
-          Biostrings::trimLRPatterns(subject=seqs_long, ranges=TRUE, 
-                                     Rfixed=FALSE, with.Rindels = TRUE, 
-                                     Rpattern=adapt_shrt3, 
-                                     max.Rmismatch=2/nchar(adapt_shrt3)))
-        
-        logi_1 <- (trim_catch2-trim_catch1) %in% (10-3):(10+1)
-        logi_2 <- (trim_catch3-trim_catch1) %in% (20-3):(20+1)
-        logi_3 <- (trim_catch3-trim_catch2) %in% (10-3):(10+1)
-        
-        trim_catch <- rep(75, times=length(seqs_long)) 
-        trim_catch[logi_1] <- trim_catch1[logi_1]
-        trim_catch[logi_2] <- trim_catch1[logi_2]
-        trim_catch[logi_3] <- (trim_catch2-9)[logi_3]
-        
-        trim[logi_long] <-  trim_catch
-        rm(logi_long, seqs_long, trim_catch, trim_catch1, 
-           trim_catch2, trim_catch3, logi_1, logi_2, logi_3)
-        
-        ## Correct for biostring mis-start
-        sb_read  <- substr(seqs, trim-2, trim+6) 
-        corrct <- stringr::str_locate(sb_read, substr(adapt_3, 1, 5))[,"start"]
-        corrct2 <- stringr::str_locate(sb_read, substr(adapt_3, 1, 3))[,"start"]
-        corrct <- corrct-4
-        corrct2 <- corrct2-4
-        corrct[is.na(corrct)] <- corrct2[is.na(corrct)] # Only update NA
-        corrct[is.na(corrct)] <- 0 # Remaining NAs becomes 0
-        trim <- (trim + corrct) # Add adjusted tims sites
-        rm(corrct, corrct2)
-        
-        ## Add to coordinate list  
-        coord_lst$trim_3 <- tibble::tibble(trim) 
-        rm(trim)
-        gc(reset=TRUE)
-        
-        ## Correct for type
-        if(grepl("soft", tp)){
-          end_vect <- mn*0.5
-          end_vect <- lgn - end_vect
-          logi_update <- coord_lst$trim_3[[1]] >= end_vect
-          coord_lst$trim_3[[1]][logi_update] <- lgn[logi_update]
-          rm(logi_update, end_vect)
-        }
-        if(grepl("rm|save|hard", tp)){
-          trim_filt$trim_3  <- coord_lst$trim_3[[1]] == lgn # Not trim 3
-        }
-      }
-      sav_lst$trim_3 <-  c(trimmed=sum(!trim_filt$trim_3[[1]]), 
-                           adapt_3_set, adapt=adapt_3)
-      
-      rm(lgn)
-      gc(reset=TRUE)
-      
-      ################################################
-      ##### Apply trimming coordinates on fastq ######
-      ## Apply on sequences
-      coord_lst <- coord_lst[!is.na(coord_lst)]
-      sav_lst <- sav_lst[!is.na(sav_lst)]
-      coord_lst <- apply(tibble::as_tibble(
-        do.call("cbind", coord_lst)), 1, min)
-      trim_fastq <- substring(seqs, 1, coord_lst)
-      trim_fastq <- trim_fastq[num_fact]  # Order as original fastq
-      
-      fstq <- ShortRead::readFastq(fls[[i]]) 
-      fstq@sread <- Biostrings::DNAStringSet(trim_fastq)
-      
-      ## Apply on quality
-      if(!is.null(quality)){
-        qual <- paste(Biostrings::quality(fstq@quality)) 
-        qual <- substr(qual, start=1, stop=coord_lst[num_fact])
-        fstq@quality <-  ShortRead::FastqQuality(Biostrings::BStringSet(qual)) 
-      }
-      rm(trim_fastq, coord_lst)
-      gc(reset=TRUE)
-      
-      ########################################################  
-      ##### Filter non-trimmed depending type           ######
-      trim_filt <- trim_filt[!is.na(trim_filt)]
-      trim_filt <- lapply(trim_filt, function(x){x[num_fact]})
-      
-      if(length(trim_filt)>0){
-        save_logi <- unlist(lapply(sav_lst, function(x){
-          grepl("save", x["type"])
-          }))
-        rm_logi <- unlist(lapply(sav_lst, function(x){
-          grepl("rm", x["type"])
-          }))
-        sav_nam <- names(save_logi)[save_logi]
-        rm_nam <- names(rm_logi)[rm_logi]
-        if(length(sav_nam)>0){
-          save_logi <- rowSums(do.call("cbind", trim_filt[sav_nam])) > 0
-          sav_nam <- paste0(sav_nam, collapse="_")
-          fil_nam_un <-  gsub("\\.trim.fastq.gz$", 
-                              paste0(".REMOVED_", sav_nam, ".fastq.gz"),  
-                              out_file[i])
-          ShortRead::writeFastq(fstq[save_logi], fil_nam_un, 
-                                mode="w", full=FALSE, compress=TRUE)
-        }
-        if(length(rm_nam)>0){
-          rm_logi <- rowSums(do.call("cbind", trim_filt[rm_nam])) > 0
-          if(length(sav_nam)>0){
-            fstq <- fstq[!rowSums(cbind(rm_logi, save_logi)) > 0]
-          }else{
-            fstq <- fstq[!rm_logi]
+          # Setup n chunks (only in 1st loop)
+          if(current_chu==1){
+            fq_lng <- ShortRead::countLines(fls[[i]])
+            fq_lng <- fq_lng/4
+            n_chunks <- as.integer(ceiling(fq_lng/chunk_size))
+            sampl <- ShortRead::FastqStreamer (fls[[i]], chunk_size)
           }
+          
+          # Stream fastq 
+          # the stream object will automatically update with yield
+          # therefore, cannot be generated more than once per full fastq
+          # for chunks read withIds=TRUE to obtain seq names (needed later)
+          
+          fstq_sav <- ShortRead::yield(sampl, withIds=TRUE)
+          fstq <- paste0(ShortRead::sread(fstq_sav))
+          
+          
+        } #Reading fastq done, now run getTrim_coord function
+        
+        ##### Run getTrim_coord ##################################
+        # Progress report needs to be progressively built for chunks 
+        if(current_chu == 1|is.null(chunk_size)){
+          prog_report <- getTrim_coord(fstq, fstq_sav, par_parse)
         }else{
-          fstq <- fstq[!save_logi]
+          prog_report_temp <- getTrim_coord(fstq, fstq_sav, par_parse)
         }
-      }
-      rm(trim_filt, save_logi, rm_logi, num_fact) 
-      gc(reset=TRUE)
-      
-      ########################
-      ##### Size filter ######
-      if(!is.null(seq_range)){
-        logi_min <- Biostrings::width(fstq@sread) >= seq_range["min"]
-        logi_max <- Biostrings::width(fstq@sread) <= seq_range["max"]
-        sav_lst$size <- c(too_short=sum(!logi_min), 
-                          too_long=sum(!logi_max), 
-                          seq_range)
-        fstq <- fstq[logi_min+logi_max==2]
-        rm(logi_min, logi_max)
-        gc(reset=TRUE)
-      }
-      
-      ##########################################
-      ##### Phred score quality filtering ######
-      # First extract trimmed qualities
-      if(!is.null(quality)){
-        enc <- Biostrings::encoding(fstq@quality) # Phred score translations
-        enc_srch <- as.factor(
-          names(enc))[paste0(enc) %in% as.character(1:quality["threshold"]-1)]
-        enc_srch <- paste0("[", paste(enc_srch, collapse="") , "]")
-        # Apply filter if specified
-        qual_logi <- stringr::str_count(
-          paste0(Biostrings::quality(
-            fstq@quality)), enc_srch)
-        qual_logi <-  1-(qual_logi/Biostrings::width(
-          fstq@quality)) >= quality["percent"]
-        qual_logi[is.na(qual_logi)] <- FALSE
-        sav_lst$quality <-  c(removed=sum(!qual_logi), quality)
-        fstq <- fstq[qual_logi]
-        rm(qual_logi)
-        gc(reset=TRUE)
-      }
-      
-      ########################################################  
-      ##### Save fastq and create progress reportfile(s) #####
-      sav_lst$out_reads <- length(fstq)
-      ShortRead::writeFastq(fstq, out_file[i], mode="w", 
-                            full=FALSE, compress=TRUE)
-      return(sav_lst)
-    }
+        
+        # Update progress report for chunks appending 1st report     
+        if(!is.null(chunk_size)){
+          if(!current_chu == 1){
+            
+            prog_report$tot_reads <- 
+              sum(prog_report$tot_reads, 
+                  prog_report_temp$tot_reads)
+            
+            prog_report$out_reads <- 
+              sum(prog_report$out_reads, 
+                  prog_report_temp$out_reads)
+            
+            if(!is.null(polyG)){ 
+              prog_report$polyG["trimmed"] <- 
+                sum(as.numeric(prog_report$polyG["trimmed"]), 
+                    as.numeric(prog_report_temp$polyG["trimmed"]))
+            }
+            if(!is.null(adapt_3)){ 
+              prog_report$trim_3["trimmed"] <- 
+                sum(as.numeric(prog_report$trim_3["trimmed"]), 
+                    as.numeric(prog_report_temp$trim_3["trimmed"]))
+            }
+            
+            if(!is.null(adapt_5)){ 
+              prog_report$trim_5["trimmed"] <- 
+                sum(as.numeric(prog_report$trim_5["trimmed"]), 
+                    as.numeric(prog_report_temp$trim_5["trimmed"]))
+            }
+            
+            if(!is.null(quality)){ 
+              prog_report$quality["removed"] <- 
+                sum(prog_report$quality["removed"], 
+                    prog_report_temp$quality["removed"])
+            }
+            if(!is.null(seq_range)){ 
+              prog_report$size["removed"] <- 
+                sum(prog_report$size["removed"], 
+                    prog_report_temp$size["removed"])
+            }
+          }
+        }
+        # Update and check current chunk after yield()
+        # When the whole fastq has been streamed, change max_chu    
+        if(!is.null(chunk_size)){
+          current_chu <- current_chu+1
+          status <- sampl$.status["added"]
+          if(fq_lng - status  == 0){
+            max_chu <- TRUE
+          }
+        }
+      } # while loop end
+      return(prog_report) 
+    } # foreach loop end
   doParallel::stopImplicitCluster()
   gc(reset=TRUE)
+  
+  ##### Merge full progress report#############################
   
   nams_prog <- as.list(names(prog_report[[1]]))
   names(nams_prog) <- unlist(nams_prog)
@@ -667,7 +830,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       trim <- as.numeric(as.character(rprt$trimmed))
       perc <- paste0(
         "(", round(trim/report_fin$input_reads, digits=4)*100, "%)"
-        )
+      )
       set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
       report_fin <-  cbind(report_fin, 
                            data.frame(polyG_set=set, 
@@ -719,8 +882,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       set <- paste0("thresh", rprt$threshold, "|perc", rprt$percent)
       report_fin <-  cbind(report_fin, 
                            data.frame(quality_set=set, 
-                                    'quality_removed'= paste0(rmvd, " ", perc),
-                                    stringsAsFactors = FALSE))
+                                      'quality_removed'= paste0(rmvd, " ", perc),
+                                      stringsAsFactors = FALSE))
     }
     if(rprt_nam=="out_reads"){
       out <- as.numeric(as.character(rprt[,2]))
