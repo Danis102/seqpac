@@ -314,7 +314,7 @@ setMethod("summary", "PAC", summary.PAC)
 #' @export
 setReplaceMethod("summary", methods::signature(object="PAC", value="list"),
                  function( object, value ) {
-                   object@norm <- value
+                   object@summary <- value
                    methods::validObject(object)
                    object
                  }) 

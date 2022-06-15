@@ -174,10 +174,14 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
   if(length(sub_map)==0){
     sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]
   }
-  uni_map <- unique(do.call("c", lapply(sub_map, function(x){
-    rownames(x$Alignments)
-  })))
-  uni_map <- uni_map[!uni_map == "1"]
+  
+  
+  uni_map <- do.call("c",lapply(sub_map, function(x){
+    d_sub <- gsub("\\.\\d", "", rownames(x$Alignments))
+    d_sub <- gsub('[[:digit:]]+', '', d_sub)
+    return(d_sub)
+  }))
+  uni_map <- as.character(unique(uni_map[!uni_map == "1"]))
   PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
   if(!nrow(PAC$Anno) == length(uni_map)){
     warning("Only ", 
@@ -187,7 +191,7 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
             " mapped sequences were found in PAC.",
             "\n  Will proceed with the ones that were found.",
             "\n  (Hint: Did you subset the PAC object after you made the map?)")
-  }               
+  }            
   
   ## Remove empty references
   rm_filt <- !do.call("c", lapply(sub_map, function(x){
@@ -226,24 +230,31 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
       "\nmultimapping sequence(s) are listed above.\n")
     print(lst[do.call("c", lapply(multi_seq_lst, any))])
   }
+  # Fix seqs column in sub_mab for each ref? Remove "." and digits.
   sub_map <- lapply(sub_map, function(x){
-    x$Alignments$seqs <- gsub(".\\d", "", rownames(x$Alignments)); return(x)
-  }) 
+    d_sub <- gsub("\\.\\d", "", rownames(x$Alignments))
+    x$Alignments$seqs<- gsub('[[:digit:]]+', '', d_sub)
+    return(x)
+  })
+  # Extract data for each ref.
   ref_data_lst <- lapply(sub_map, function(x){
-    sub_data <- data[rownames(data) %in% x$Alignments$seqs,]
-    fin <- sub_data[match(x$Alignments$seqs, rownames(sub_data)),]
+    sub_data <- data[rownames(data) %in% x$Alignments$seqs,,drop=FALSE]
+    fin <- sub_data[match(x$Alignments$seqs, rownames(sub_data)),,drop=FALSE]
     return(fin)
   })
   if(check_overide==TRUE){
-    for(i in 1:length(ref_data_lst)){
+    for(i in seq_along(ref_data_lst)){
       rownames(ref_data_lst[[i]]) <- rownames(sub_map[[i]]$Alignments)
       ref_data_lst[[i]][is.na(ref_data_lst[[i]])] <- 0
     }}
-  stopifnot(identical(do.call("c", lapply(ref_data_lst, function(x){
-    gsub("\\.\\d", "", rownames(x))})), 
-    do.call("c", lapply(sub_map, function(x){
-      x$Alignments$seqs
-    }))))
+  test<- do.call("c", lapply(ref_data_lst, function(x){
+    d_sub <- gsub("\\.\\d", "", rownames(x))
+    gsub('[[:digit:]]+', '', d_sub)
+  }))
+  test2<-do.call("c", lapply(sub_map, function(x){
+    x$Alignments$seqs
+  }))
+  stopifnot(identical(test, test2))
   stopifnot(identical(length(ref_data_lst), length(sub_map)))
   
   ## Generate coverage files using granges
@@ -256,7 +267,6 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
       return(rep_vect)
     })
   })
-  
   
   cov_lst <- list(NA)
   for(i in 1:length(sub_map)){

@@ -102,13 +102,13 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
   }
   
   if(!is.null(pheno_target)){ 
-    if(length(pheno_target)==1){ 
+    if(length(pheno_target)==1){
       pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
      }
     }
   
   if(!is.null(anno_target)){ 
-    if(length(anno_target)==1){ 
+    if(length(anno_target)==1){
       anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
      }
     }

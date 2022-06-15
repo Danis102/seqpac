@@ -227,7 +227,7 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, output="S4"){
           ps <- length(reanno_lst_match[[j]]) + g
           reanno_lst_match[[j]][[ps]] <- empt
           names(reanno_lst_match[[j]])[ps] <- names(
-            reanno_lst_match[[1]])[NA_which[[j]]]
+            reanno_lst_match[[1]])[NA_which[[j]]][g]
         }
         reanno_lst_match[[j]] <- reanno_lst_match[[j]][match(
           names(reanno_lst_match[[1]]), names(reanno_lst_match[[j]]))]

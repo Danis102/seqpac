@@ -380,14 +380,25 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
       ## Internal bowtie
       if(type=="internal"){
         cat("\n\n")
-        
+        err_ms <- NULL
         bwt_exp <- paste0("Rbowtie::bowtie(sequences=input_file, 
                           index=ref_paths[[j]], ",
                           paste0(parse_internal, ", 
                                  v=", mis_lst[[i]], ", p=", threads),
                           ", type ='single', outfile='", output_file,
                           "', force = TRUE, strict = TRUE)")
-        eval(parse(text=bwt_exp)) 
+        #First try with all threads, if error reduce to 1.
+        err_ms<- try(eval(parse(text=bwt_exp)))
+        if(is(err_ms,"try-error")){
+          threads_red <- 1
+          bwt_exp <- paste0("Rbowtie::bowtie(sequences=input_file, 
+                          index=ref_paths[[j]], ",
+                            paste0(parse_internal, ", 
+                                 v=", mis_lst[[i]], ", p=", threads_red),
+                            ", type ='single', outfile='", output_file,
+                            "', force = TRUE, strict = TRUE)")
+          eval(parse(text=bwt_exp))
+        }
       }
       
       ## External bowtie
@@ -398,7 +409,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
                           ref_paths[[j]], " ", input_file, " ", output_file)
         system(bwt_exp, intern=FALSE, ignore.stderr=FALSE)
       }
-    }
+    }# for j loop ends (references)
     
     reanno <- import_reanno(bowtie_path=output_path, threads=threads, 
                             coord=import$coord, report=import$report, 
@@ -432,7 +443,8 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
                                    " generated hits"))
     }else{cat(paste0("\n|--- All reference generated hits"))}
     cat(paste0("\n|--- Mismatch ", mis_lst[[i]], " finished -----|"))
-  }
+  } # for i loop ends (mismatches)
+  
   cat(paste0("\n\n******************************************************"))
   cat(paste0("\nCleaning up ... "))
   if(keep_temp==FALSE){

@@ -107,20 +107,28 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL,
   ## Prepare targets
   if(!is.null(pheno_target)){ 
     if(length(pheno_target)==1){ 
-      pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+      if(is(PAC$Pheno[,pheno_target[[1]]], "factor")){
+        pheno_target[[2]] <- levels(PAC$Pheno[,pheno_target[[1]]])
+      }else{
+        pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
+      }
     }
   }else{
     PAC$Pheno$eXtra_Col <- rownames(PAC$Pheno)
     pheno_target <- list(NA)
     pheno_target[[1]] <-  "eXtra_Col"
     pheno_target[[2]] <-  PAC$Pheno$eXtra_Col
-    }
+  }
+    
   if(!is.null(anno_target)){ 
-    if(length(anno_target)==1){ 
-      anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
+    if(length(anno_target)==1){
+      if(is(PAC$Anno[,anno_target[[1]]], "factor")){
+        anno_target[[2]] <- levels(PAC$Anno[,anno_target[[1]]])
+      }else{
+        anno_target[[2]] <- as.character(unique(PAC$Anno[,anno_target[[1]]]))
+      }
     }
   }
-
   ## Subset
   PAC_sub <- PAC_filter(PAC, subset_only=TRUE, 
                         pheno_target=pheno_target, anno_target=anno_target)

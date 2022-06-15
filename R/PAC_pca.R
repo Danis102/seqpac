@@ -1,4 +1,4 @@
-#'Pie plot from PAC
+#'Principle component analysis with scatterplots from PAC
 #'
 #'\code{PAC_pca} PAC principle component analysis.
 #'
@@ -136,7 +136,7 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
     }
   
   if(type=="pheno"|type=="both"){
-    data <- t(data)
+    data <- t(as.matrix(data))
     }
   pca_res <- FactoMineR::PCA(data, graph=FALSE)
   
@@ -146,51 +146,139 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
 
     if(!is.null(pheno_target)|!is.null(anno_target)){
       if(type=="pheno"){
-        col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))
+        # Check likely type of data
+        n_sampl <- nrow(PAC$Pheno)
+        col <- PAC$Pheno[,pheno_target[[1]]]
+        if(is(col, "matrix")){
+          col <- col[,1]
         }
+        rtio <- length(unique(col))/n_sampl
+      if(is(col, "factor")|rtio<0.7){
+        col <- as.factor(as.character(col))
+      }
+      if(is(col, "numeric")|is(col, "integer")|rtio>0.7){
+        col <- as.numeric(col)
+      }
+    }
+      
       if(type=="anno"){
         col <- as.factor(as.character(PAC$Anno[,anno_target[[1]]]))
         }
-      if(type=="both"){if(!is.null(pheno_target)){
+      if(type=="both"){
+        if(!is.null(pheno_target)){
         col <- as.factor(as.character(PAC$Pheno[,pheno_target[[1]]]))
       }else{
-          col <- "none"}}
+        col <- "none"}}
     }else{
       col <- "none"}
   
   grphs <- list(PC1_PC2=NULL, PC1_PC3=NULL, PC2_PC3=NULL)
-  if(type=="pheno"){
-    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
-      pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
-      axes=c(1,2), invisible="quali", pointsize=2, labelsize=3, 
-      title="PC1_PC2 - Pheno")
-    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
-      pca_res, habillage = col, geom=geom, repel=TRUE,  addEllipses = FALSE, 
-      axes=c(1,3), invisible="quali", pointsize=2, labelsize=3, 
-      title="PC1_PC3 - Pheno",)
-    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
-      pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
-      axes=c(2,3), invisible="quali", pointsize=2, labelsize=3, 
-      title="PC2_PC3 - Pheno")
-    grphs <- lapply(grphs, function(x){
-      x <- gginnards::move_layers(x, match_type="GeomPoint",
-                                  position = "top")
-      x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
-                                  position = "top")
-      return(x)
-      })
-    
-  }
+# Build graphs depending on type
+    if(type=="pheno"){
+    # For gradient/numeric use ggplot2
+      if(is(col, "numeric")){
+        coord<- as.data.frame(pca_res$ind$coord)
+        con<- as.data.frame(pca_res$eig[,"percentage of variance"])
+        grphs$PC1_PC2 <- ggplot2::ggplot() +
+          geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_point(data=coord, aes(x=Dim.1, y=Dim.2, colour=col)) + 
+          theme(legend.position="none") +
+          scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+          theme_minimal() +
+          xlab(paste0("PC1 (", round(con["comp 1",], digits=2), "%)")) + 
+          ylab(paste0("PC2 (", round(con["comp 2",], digits=2), "%)"))
+
+        grphs$PC1_PC3 <- ggplot2::ggplot() +
+          geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_point(data=coord, aes(x=Dim.1, y=Dim.3, colour=col)) + 
+          theme(legend.position="none") +
+          scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+          theme_minimal() +
+          xlab(paste0("PC1 (", round(con["comp 1",], digits=2), "%)")) + 
+          ylab(paste0("PC3 (", round(con["comp 3",], digits=2), "%)"))
+
+        grphs$PC2_PC3 <- ggplot2::ggplot() +
+          geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+          geom_point(data=coord, aes(x=Dim.2, y=Dim.3, colour=col)) + 
+          theme(legend.position="none") +
+          scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+          theme_minimal() +
+          xlab(paste0("PC2 (", round(con["comp 2",], digits=2), "%)")) + 
+          ylab(paste0("PC3 (", round(con["comp 3",], digits=2), "%)"))
+
+    }else{
+      # For factor use factoextra
+      grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
+        pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
+        axes=c(1,2), invisible="quali", pointsize=2, labelsize=3, 
+        title="PC1_PC2 - Pheno")
+      grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
+        pca_res, habillage = col, geom=geom, repel=TRUE,  addEllipses = FALSE, 
+        axes=c(1,3), invisible="quali", pointsize=2, labelsize=3, 
+        title="PC1_PC3 - Pheno",)
+      grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
+        pca_res, habillage = col, geom=geom, repel=TRUE, addEllipses = FALSE, 
+        axes=c(2,3), invisible="quali", pointsize=2, labelsize=3, 
+        title="PC2_PC3 - Pheno")
+      grphs <- lapply(grphs, function(x){
+        x <- gginnards::move_layers(x, match_type="GeomPoint",
+                                    position = "top")
+        x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
+                                    position = "top")
+        return(x)
+        })
+      }
+    }
+  
   if(type=="anno"){
-    grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
-      pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
-      axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
-    grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
-      pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE,
-      axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
-    grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
-      pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
-      axes=c(2,3), invisible="quali", pointsize=1,  title="PC2_PC3 - Anno")  
+    # For gradient/numeric use ggplot2
+    if(is(col, "numeric")){
+      coord<- as.data.frame(pca_res$var$coord)
+      con<- as.data.frame(pca_res$eig[,"percentage of variance"])
+      grphs$PC1_PC2 <- ggplot2::ggplot() +
+        geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_point(data=coord, aes(x=Dim.1, y=Dim.2, colour=col)) + 
+        theme(legend.position="none") +
+        scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+        theme_minimal() +
+        xlab(paste0("PC1 (", round(con["comp 1",], digits=2), "%)")) + 
+        ylab(paste0("PC2 (", round(con["comp 2",], digits=2), "%)")) 
+
+      grphs$PC1_PC3 <- ggplot2::ggplot() +
+        geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_point(data=coord, aes(x=Dim.1, y=Dim.3, colour=col)) + 
+        theme(legend.position="none") +
+        scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+        theme_minimal() +
+        xlab(paste0("PC1 (", round(con["comp 1",], digits=2), "%)")) + 
+        ylab(paste0("PC3 (", round(con["comp 3",], digits=2), "%)")) 
+
+      grphs$PC2_PC3 <- ggplot2::ggplot() +
+        geom_hline(yintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_vline(xintercept=0, linetype="dashed", color="black", size=0.5)+
+        geom_point(data=coord, aes(x=Dim.2, y=Dim.3, colour=col)) + 
+        theme(legend.position="none") +
+        scale_colour_gradient(low="#00FFE6", high="#FF0000") +
+        theme_minimal() +
+        xlab(paste0("PCA2 (", round(con["comp 2",], digits=2), "%)")) + 
+        ylab(paste0("PCA3 (", round(con["comp 3",], digits=2), "%)")) 
+
+    }else{
+        grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
+          pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
+          axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
+        grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
+          pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE,
+          axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
+        grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
+          pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
+          axes=c(2,3), invisible="quali", pointsize=1,  title="PC2_PC3 - Anno")
+    }
   } 
   if(type=="both"){
     grphs$PC1_PC2 <- factoextra::fviz_pca_biplot(
@@ -220,6 +308,5 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
   }
   print(cowplot::plot_grid(plotlist=grphs, ncol=2, nrow=2))
   return(list(graphs=grphs, pca=pca_res))
- }
-
+  } #end graph=true
 }

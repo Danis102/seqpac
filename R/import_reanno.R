@@ -140,7 +140,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
     
     ## Handle no hits    
     if(no_hit[k]){
-      bowtie_out_lst[[k]] <- tibble::tibble(.id="No_hits", mis_n=NA, 
+      bowtie_out_lst[[k]] <- tibble::tibble(.id="No_hits", mis_n=NA,
                                             mis_where=NA, ref_hits=NA)
       names(bowtie_out_lst)[k] <- nam 
     }

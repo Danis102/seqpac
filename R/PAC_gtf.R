@@ -154,6 +154,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
         return("No gtf-formted file was found.")  
       }
     }
+    return(x)
   })
   
   
@@ -210,14 +211,14 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
         }
         err <- try(map_reanno(PAC, ref_paths=list(genome=genome),
                                  output_path=outpath, type="internal",
-                                 mismatches=mismatches,
+                                 mismatches=mismatches, override=TRUE,
                                  import ="genome", threads=threads),
                    silent = TRUE)
         if(!is.null(err)){
         outpath <- tempfile(pattern = "", fileext = ".out")
         err2 <- try(map_reanno(PAC, ref_paths=list(genome=genome), 
                               output_path=outpath, type="external", 
-                              mismatches=mismatches,
+                              mismatches=mismatches, override=TRUE,
                               import ="genome", threads=threads), silent = TRUE)
         if(!is.null(err2)){
             stop(
