@@ -215,17 +215,19 @@
 #' 
 #' @export
 
-##### getTrim_coord function ####
+##### getTrim function ####
 # This function runs from within make_trim to obtain trimming coordinates
 # and to save fastq to output, appending to existing fastq for chunks
 # and not appending for chunk_size=NULL 
-getTrim <- function(fstq, fstq_sav=NULL, par_parse){      
+getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){      
   
   # Unfold par_parse
   output <- par_parse$output
   indels <- par_parse$indels
   concat <- par_parse$concat
+  quality <- par_parse$quality
   chunk_size <- par_parse$chunk_size
+  seq_range <- par_parse$seq_range
   polyG <- par_parse$polyG
   adapt_3_set <- par_parse$adapt_3_set
   adapt_3 <- par_parse$adapt_3
@@ -483,7 +485,10 @@ getTrim <- function(fstq, fstq_sav=NULL, par_parse){
   # chunk fastq will be kept in memory the whole time
   
   if(is.null(chunk_size)){
-    fstq <- ShortRead::readFastq(fls[[i]])
+    
+    
+    
+    fstq <- ShortRead::readFastq(in_fl)
   }else{
     fstq <- fstq_sav
   }
@@ -518,7 +523,7 @@ getTrim <- function(fstq, fstq_sav=NULL, par_parse){
       sav_nam <- paste0(sav_nam, collapse="_")
       fil_nam_un <-  gsub("\\.trim.fastq.gz$", 
                           paste0(".REMOVED_", sav_nam, ".fastq.gz"),  
-                          out_file[i])
+                          out_fl)
       # append for chunks
       if(is.null(chunk_size)){
         ShortRead::writeFastq(fstq[save_logi], fil_nam_un, 
@@ -582,10 +587,10 @@ getTrim <- function(fstq, fstq_sav=NULL, par_parse){
   sav_lst$out_reads <- length(fstq)
   
   if(is.null(chunk_size)){
-    ShortRead::writeFastq(fstq, out_file[i], mode="w", 
+    ShortRead::writeFastq(fstq, out_fl, mode="w", 
                           full=FALSE, compress=TRUE)
   }else{
-    ShortRead::writeFastq(fstq, out_file[i], mode="a", 
+    ShortRead::writeFastq(fstq, out_fl, mode="a", 
                           full=FALSE, compress=TRUE)  
   }
   
@@ -602,19 +607,23 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
                            adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
                            adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
                            adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), 
-                           adapt_5=NULL, seq_range=c(min=NULL, max=NULL),
+                           adapt_5=NULL, 
+                           seq_range=c(min=NULL, max=NULL),
                            quality=c(threshold=20, percent=0.8)){
-  
 
-  
   ##### General setup #######################################
-  if(sum(!dir.exists(input))== length(input)){
-    fls <- input
-  }else{
+  # Check if files or dir is given as input
+  
+    nam_trim <- nam <- fls <- NULL
+  
     fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
                       full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
-  }
-  
+    if(length(fls) == 0){
+    fls <- input
+    }
+    if(any(!file.exists(fls))){
+      stop("Something is wrong with input file(s)/path!")
+    }
   # Memory check
   if(check_mem==TRUE){
     cat("\nChecking trimming memory usage with benchmarkme...")
@@ -662,10 +671,10 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   nam_trim <- paste0(nam, ".trim.fastq.gz")
   # Check for output folder
   out_file <- file.path(output, nam_trim)
-  out_dir <- list.files(output, pattern=nam_trim, recursive = FALSE)
-  if(length(out_dir)>0){
+  out_exist <- file.exists(out_file)
+  if(any(out_exist)){
     stop("\n  There are files in the output folder:\n  ", 
-         out_dir, 
+         output, 
          "\n  Please move or delete those file(s).")
   }
   
@@ -675,7 +684,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
     dir.create(output, showWarnings=FALSE, recursive = TRUE)
   }
   
-  ##### Make adaptor trimming 5' (moves to getTrim_coord in future upgrades ####
+  ##### Make adaptor trimming 5' (moves to getTrim in future upgrades) ####
   if(!is.null(adapt_5)){
     stop("\n5' trimming is currently not supported, but will be included in",
          " future updates of seqpac.\nFor now you can use the 'make_cutadapt' ",
@@ -688,18 +697,18 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   cat("\nNow entering the parallel trimming loop (R may stop respond) ...")
   cat(paste0("\n(progress may be followed in: ", output, ")"))
   
-  # save the input for getTrim_coord function
+  # save the input for getTrim function
   par_parse <- list(output=output, indels=indels, concat=concat, 
                     polyG=polyG, adapt_3_set=adapt_3_set, adapt_3=adapt_3,
                     adapt_5_set=adapt_5_set, adapt_5=adapt_5, quality=quality, 
-                    chunk_size=chunk_size)
+                    chunk_size=chunk_size, seq_range=seq_range)
   
-  
+  closeAllConnections()
   doParallel::registerDoParallel(threads)
   `%dopar%` <- foreach::`%dopar%`
   
   prog_report <- foreach::foreach(
-    i=1:length(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
+    i=seq_along(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
     .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
       
       ##### Make a while loop that works for both full size fastq and chunks #########
@@ -735,15 +744,17 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
           fstq_sav <- ShortRead::yield(sampl, withIds=TRUE)
           fstq <- paste0(ShortRead::sread(fstq_sav))
           
-          
-        } #Reading fastq done, now run getTrim_coord function
+        } #Reading fastq done, now run getTrim function
         
-        ##### Run getTrim_coord ##################################
+        ##### Run getTrim ##################################
         # Progress report needs to be progressively built for chunks 
+        in_fl <- fls[[i]]
+        out_fl <- out_file[[i]]
+        
         if(current_chu == 1|is.null(chunk_size)){
-          prog_report <- getTrim_coord(fstq, fstq_sav, par_parse)
+             prog_report <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
         }else{
-          prog_report_temp <- getTrim_coord(fstq, fstq_sav, par_parse)
+          prog_report_temp <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
         }
         
         # Update progress report for chunks appending 1st report     
@@ -799,11 +810,11 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       } # while loop end
       return(prog_report) 
     } # foreach loop end
+  cat("\nDone trimming")
   doParallel::stopImplicitCluster()
   gc(reset=TRUE)
   
   ##### Merge full progress report#############################
-  
   nams_prog <- as.list(names(prog_report[[1]]))
   names(nams_prog) <- unlist(nams_prog)
   

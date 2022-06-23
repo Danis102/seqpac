@@ -273,12 +273,15 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   closeAllConnections()
   gc(reset=TRUE)
   
+  
   ## Read file system
-  if(sum(!dir.exists(input))== length(input)){
+  count_files <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
+                    full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
+  if(length(count_files) == 0){
     count_files <- input
-  }else{
-    count_files <- list.files(input, pattern ="fastq.gz\\>|fastq\\>", 
-                              full.names=TRUE, recursive=TRUE)
+  }
+  if(any(!file.exists(count_files))){
+    stop("Something is wrong with input file(s)/path!")
   }
   count_files <- count_files[!grepl("Undetermined_", count_files)]
   count_files_nams <- basename(count_files)
@@ -1035,7 +1038,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       stat_mat <- as.data.frame(matrix(NA, nrow=1, ncol=4))
       colnames(stat_mat) <- c("tot_reads", "reads_pass_evidence", 
                               "uniseqs_pass_evidence", "panic_type")
-      fl <- fls[i]
+      fl <- fls[[i]]
       filt_err<-filt_err2<-reads_keep <- NULL
       # If on disk, extract seqs prior to reading the fastq using filterFastq
       # This will save some ram but will temporally add lot to temp folder
