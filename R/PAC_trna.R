@@ -75,6 +75,11 @@
 #' @param ymax_1 Integer that sets the maximum y for all mean plots (all plots
 #'   gets the same y-axes). If ymax_1=NULL (default), then ggplot2 will
 #'   automatically set ymax for each plot individually (different y-axes).
+#'
+#' @param Order Character string indicating what order to present data in. 
+#'  Possible orders are "mean", where the descending mean value dictates
+#'  the order of data, and "log2FC", where the log2FC value dictates the
+#'  order of data. Default="mean".
 #'   
 #' @return List of ggplot2 plots and the data used for generating the plots. Use
 #'   ls.str() to explore each level.
@@ -215,7 +220,7 @@
 PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15, 
                      log2fc=FALSE, pheno_target = NULL, anno_target_1 = NULL, 
                      ymax_1=NULL, anno_target_2 = NULL, paired=FALSE, 
-                     paired_IDs=NULL) {
+                     paired_IDs=NULL, Order="mean") {
   
   
   Group.1 <- means <- SE <- value <- ann1 <- perc <- ann2 <- NULL
@@ -352,17 +357,39 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
     return(ann12_lst)
   })
   
+   if(join==TRUE){
+    Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
+                          factor(do.call("rbind",  
+                                         strsplit(
+                                           rownames(Ann1_agg_lst[[1]]),
+                                           "\\."))[,1], 
+                                 levels=pheno_target[[2]]))
+  }
+  data_lst <- lapply(Ann1_agg_lst, function(x){
+    #Remove suppressWarning for Bioconductor: 
+    #suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, 
+    #                                   levels=lvls)), mean))
+    agg <- stats::aggregate(x$value, 
+                            list(factor(x$Group.1, levels=lvls)), mean)
+    colnames(agg)[colnames(agg)=="x"] <- "value"
+    return(agg)
+  })
+  stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
+  logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, 
+                      value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
+  logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
   
-  ## Ordered according to sums of anno_target_1 in first object  
+  
+  
+ if(Order=="mean"){
   ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){
-    sum(x$values)})), decreasing=TRUE)
+    sum(x$values)})), decreasing=TRUE)                                                                                                                                                                                         
   ordr <- ordr[1:top] # Extract the top 
   lvls <- names(Ann12_perc[[1]])[ordr]
   if(join==FALSE){
     stopifnot(identical(lapply(Ann12_perc, names)[[1]],  
                         lapply(Ann12_perc, names)[[2]]))
-    }
-  
+  }
   Ann12_perc_ord <- lapply(Ann12_perc, function(x){
     ord_df <- do.call("rbind", x[ordr])
     facts <- as.data.frame(do.call("rbind", 
@@ -370,6 +397,25 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
                                             "____")))
     return(cbind(ord_df, data.frame(ann1=facts[,1], ann2=facts[,2])))
   })
+  }
+  
+  
+  if(Order=="log2FC"){
+    ordr <- order(logfc$value, decreasing=TRUE)                                                                                                                                                                                         
+    ordr <- ordr[1:top] # Extract the top 
+    lvls <- names(Ann12_perc[[1]])[ordr]
+    if(join==FALSE){
+      stopifnot(identical(lapply(Ann12_perc, names)[[1]],  
+                          lapply(Ann12_perc, names)[[2]]))
+    }
+    Ann12_perc_ord <- lapply(Ann12_perc, function(x){
+      ord_df <- do.call("rbind", x[ordr])
+      facts <- as.data.frame(do.call("rbind", 
+                                     strsplit(as.character(ord_df$Group.1), 
+                                              "____")))
+      return(cbind(ord_df, data.frame(ann1=facts[,1], ann2=facts[,2])))
+    })
+  }
   
   ## Generate colors
   colfunc_ann1 <- grDevices::colorRampPalette(c("white", "black"))
@@ -483,28 +529,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
   }
   #Independent###############################################################
   if(paired==FALSE && log2fc==TRUE){
-    ## Error bars for log2_FC types - independent
-    if(join==TRUE){
-      Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
-                            factor(do.call("rbind",  
-                                           strsplit(
-                                             rownames(Ann1_agg_lst[[1]]),
-                                                    "\\."))[,1], 
-                                   levels=pheno_target[[2]]))
-    }
-    data_lst <- lapply(Ann1_agg_lst, function(x){
-        #Remove suppressWarning for Bioconductor: 
-        #suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, 
-        #                                   levels=lvls)), mean))
-        agg <- stats::aggregate(x$value, 
-                                list(factor(x$Group.1, levels=lvls)), mean)
-        colnames(agg)[colnames(agg)=="x"] <- "value"
-        return(agg)
-        })
-    stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-    logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, 
-                        value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
-    logfc$Group.1 <- factor(logfc$Group.1, levels= rev(logfc$Group.1))
+    
     lim <- max(sqrt(logfc$value^2))
     plot_lst$Log2FC_Anno_1 <- ggplot2::ggplot(logfc, 
                                               ggplot2::aes(x=Group.1, 
