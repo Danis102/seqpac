@@ -253,15 +253,20 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
     PAC$summary$new <- list(NULL)
     PAC$summary[[which(names(PAC$summary)=="new")]] <- as.data.frame(fin)
     
-    if(df_nam %in% names(PAC$summary)){
+     if(df_nam %in% names(PAC$summary)){
       if(rev==TRUE){
-        df_nam<-stringr::str_c(df_nam,"_rev")
-       }else{
-      numb<-(names(PAC$summary) %in% df_nam)
-      numb2<-length(numb[numb==TRUE])
-      df_nam<-stringr::str_c(df_nam,"_",numb2)
-      }
-    }
+        if(paste0(df_nam,"_rev") %in% names(PAC$summary)){
+          numb<-length(grep(df_nam,names(PAC$summary)))
+          df_nam<-paste0(df_nam,"_rev_",numb)
+        }
+        else{        
+          df_nam<-stringr::str_c(df_nam,"_rev")
+        }
+        }
+        else{
+          numb<-length(grep(df_nam,names(PAC$summary)))
+          df_nam<-stringr::str_c(df_nam,"_",numb2)
+        }
     
     names(PAC$summary)[which(names(PAC$summary)=="new")] <- df_nam
     stopifnot(PAC_check(PAC))
