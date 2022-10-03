@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_pca.R
 \name{PAC_pca}
 \alias{PAC_pca}
-\title{Pie plot from PAC}
+\title{Principle component analysis with scatterplots from PAC}
 \usage{
 PAC_pca(
   PAC,
