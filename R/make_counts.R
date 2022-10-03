@@ -125,39 +125,10 @@
 #' ### Seqpac fastq trimming with the make_counts function 
 #' ### using default settings for NEBNext small RNA adaptor 
 #' 
-#' # First generate some smallRNA fastq.
-#' # Only one untrimmed fastq comes with seqpac
-#' # Thus, we need to randomly sample that one using the ShortRead-package
-#'  
+#' # Seqpac includes strongly down-sampled smallRNA fastq.
 #' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+#' input <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
 #'                 full.names = TRUE)
-#'
-#' closeAllConnections()
-#'
-#' sampler <- ShortRead::FastqSampler(fq, 20000)
-#' set.seed(123)
-#' fqs <- list(fq1=ShortRead::yield(sampler),
-#'            fq2=ShortRead::yield(sampler),
-#'            fq3=ShortRead::yield(sampler),
-#'            fq4=ShortRead::yield(sampler),
-#'            fq5=ShortRead::yield(sampler),
-#'            fq6=ShortRead::yield(sampler))
-#'
-#' # Now generate a temp folder were we can store the fastq files
-#' 
-#' input <- paste0(tempdir(), "/seqpac_temp")
-#' if(grepl("windows", .Platform$OS.type)){
-#'  input <- gsub( "\\\\", "/", input)
-#' }  
-#' dir.create(input, showWarnings=FALSE)
-#'
-#' # And then write the random fastq to the temp folder
-#' for (i in 1:length(fqs)){
-#'  input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
-#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-#'                        full=FALSE, compress=TRUE)
-#' }
 #'
 #' # Now we can run make_counts
 #' # Notice that make_counts will generate another temp folder, that will 
@@ -1105,7 +1076,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
           close(sampler)
           n_reads <- as.data.frame(reads_keep)
           return(n_reads)
-        }
+        } # chunk_func ends
         
         # Start error handling  
         filt_out <- NULL
@@ -1189,7 +1160,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
           reads_keep$temp <- rownames(reads_keep)
           colnames(reads_keep) <- c("Freq", "reads_keep")
           rownames(reads_keep) <- NULL
-          n_reads <- reads_keep[,c(2,1)]
+          n_reads <- as.data.frame(reads_keep[,c(2,1)])
         }
         if(panic=="chunks"){
           stat_mat$panic_type <- "chunks"
@@ -1225,7 +1196,11 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       } #not on_disk ends
       
       # To all, add stat prior to match; match introduces NA rows (0 counts)
-      stat_mat$uniseqs_pass_evidence <- nrow(n_reads)
+      seqs_pass <- try(nrow(n_reads))
+      if(is(seqs_pass, "try-error")){
+        seqs_pass <-  length(n_reads) 
+      }
+      stat_mat$uniseqs_pass_evidence <- seqs_pass
       stat_mat$reads_pass_evidence <- sum(n_reads$Freq)
       n_reads <- n_reads[match(seqs_keep, n_reads$reads_keep),]
       n_reads$Freq[is.na(n_reads$Freq)] <- 0

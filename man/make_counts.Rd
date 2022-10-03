@@ -8,10 +8,11 @@ make_counts(
   input,
   trimming = NULL,
   threads = 1,
+  save_temp = FALSE,
   plot = TRUE,
   parse = "default_illumina",
   evidence = c(experiment = 2, sample = 1),
-  save_temp = FALSE
+  optimize = list(on_disk = FALSE, chunk_size = NULL, rm_wild = FALSE, seq_min = NULL)
 )
 }
 \arguments{
@@ -32,12 +33,16 @@ set \code{save_temp=TRUE} to avoid that \code{make_counts} will delete all
 temporary files.  As default trimming=NULL, which indicates that input
 fastq files has already been trimmed.}
 
-\item{threads}{Integer stating the number of parallell jobs. Note, that
+\item{threads}{Integer stating the number of parallel jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 file. To avoid crashing the system due to memory shortage, make sure that
 each thread on the machine have at least 10 Gb of memory availabe, unless
 your fastq files are very small. Use \code{parallel::detectcores()} to see
 available threads on the machine.}
+
+\item{save_temp}{Logical whether temporary files (including trimmed fastq
+files) should be saved or not. Note, the function will print the path to
+the temprorary folder in the console.}
 
 \item{plot}{Logical whether evidence plots should be printed and saved in the
 returned list (default=TRUE).}
@@ -74,9 +79,39 @@ should be included despite not reaching the 'experiment' threshold. Thus if
 in a single sample will also be included. If evidence=NULL all unique
 sequences will be saved. See 'examples' below for more examples.}
 
-\item{save_temp}{Logical whether temporary files (including trimmed fastq
-files) should be saved or not. Note, the function will print the path to
-the temprorary folder in the console.}
+\item{optimize}{List that controls the behavior of make_counts,
+possibly enabling analysis on low-end computers on the expense of
+processing time. Has four items named: 
+list(on_disk=, chunk_size=, rm_wild=, seq_min=).
+1. on_disk: Logical whether or not some processes should be handled on-disk
+instead of in-memory. Important, this option will generate large temporary
+files. For a max fastq size of 1 GB (.gz compressed), keep at least 20 GB
+of free disk space. (default=FALSE).
+2. chunk_size: Integer, if set, determines whether reading and processing
+should be handled in chunks and how big those should be. If NULL sample are
+not handled in chunks. If handling a challenging dataset on low-end
+computers, a chunk_size of 50000000 is a good starting point.
+(default=NULL).
+3. rm_wild. Logical (panic filter). If evidence filter fails while
+on_disk=TRUE then rm_wild=TRUE will remove all sequences containing
+wild-card characters (N), either across the experiment or for individual
+samples. (default=FALSE).
+4. seq_min. Integer (panic filter).If evidence filter fails while
+on_disk=TRUE then seq_min will remove sequences shorter than seq_min,
+either across the experiment or for individual samples.(default=NULL)
+
+Note, Panic filters (2. and 3.) are applied at two places in the script as
+last resort if on_disk processing fails. First this may happen when unique
+sequences (UNI) fulfilling the evidence filter are extracted across the
+whole experiment. Here panic filters will be applied to all samples. The
+second place is when read sequences fulfilling the evidence filter are
+extracted from the trimmed fastq. Thus, the panic filter is applied to
+individual samples. To alert users, warnings are given in addition to notes
+in the panic_type column of the progress report. Here, "none" means no
+panic, "filt" means that panic filters were applied, and "chunk" means that
+loading of filtered fastq was forced into chunks. The last does not involve
+panic filters but helps loading very large fastqs on the expense of loading
+time.}
 }
 \value{
 A list containing three objects:
@@ -102,41 +137,17 @@ statistics.
 ### Seqpac fastq trimming with the make_counts function 
 ### using default settings for NEBNext small RNA adaptor 
 
-# First generate some smallRNA fastq.
-# Only one untrimmed fastq comes with seqpac
-# Thus, we need to randomly sample that one using the ShortRead-package
- 
+# Seqpac includes strongly down-sampled smallRNA fastq.
 sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
-fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+input <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
                 full.names = TRUE)
-
-closeAllConnections()
-
-sampler <- ShortRead::FastqSampler(fq, 10000)
-set.seed(123)
-fqs <- list(fq1=ShortRead::yield(sampler),
-           fq2=ShortRead::yield(sampler),
-           fq3=ShortRead::yield(sampler))
-           
-
-# Now generate a temp folder where we can store the fastq files
-
-input <- paste0(tempdir(), "/seqpac_temp")
-dir.create(input, showWarnings=FALSE)
-
-# And then write the random fastq to the temp folder
-for (i in 1:length(fqs)){
- input_file <- file.path(input, paste0(names(fqs)[i], ".fastq.gz"))
- ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-                       full=FALSE, compress=TRUE)
-}
 
 # Now we can run make_counts
 # Notice that make_counts will generate another temp folder, that will 
 # be emptied on finalization. By setting save_temp=TRUE you may save the 
-# content.
+# content.  
  
-counts  <- make_counts(input, threads=2, parse="default_neb",
+counts  <- make_counts(input, threads=1, parse="default_neb",
                        trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))
 
@@ -153,7 +164,8 @@ cowplot::plot_grid(plotlist=counts$evidence_plots, ncol=1, nrow=2)
 ############################################################      
 ### Parse your own trimming setting to make_trim using the
 ### make_counts function
-### How to make a parse list see ?make_trim.
+
+# How to make a parse list see ?make_trim:
   
 parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
@@ -163,25 +175,64 @@ parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
              check_mem =FALSE)
              
 
-counts  <-  make_counts(input, threads=2,
+counts  <-  make_counts(input, threads=1,
                         trimming="seqpac",
-                        parse=parse, plot=FALSE, 
+                        parse=parse, 
                         evidence=c(experiment=2, sample=1))
   
   
   
 ############################################################      
-### You may also use the make_cutadapt function for trimming.
-### (Important: This needs an external installations of cutadapt 
-###  and fastq_quality_filter). See ?make_cutadapt for details. 
+### Seqpac trimming using the make_cutadapt function
+### (Important: Needs an external installations of cutadapt 
+###  and fastq_quality_filter) 
+#
+# Parse for make_cutadapt is a list of 2 character string expressions.
+# The first is parsed to cutadapt and the other to fastq_quality_filter 
+# For parallel processes '-j 1' is recommended since seqpac will   
+# parallelize across samples and not within. Run system("cutadapt -h") and 
+# system("fastq_quality_filter -h") for more options.
+# 
+# cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
+#                    " --discard-untrimmed --nextseq-trim=20",
+#                    " -O 10 -m 14 -M 70")
+# 
+# parse = list(cutadapt = cut_prse,
+#              fastq_quality_filter = "-q 20 -p 80")
+# 
+# counts  <-  make_counts(input, threads=1,
+#                        trimming="cutadapt",
+#                        parse=parse, 
+#                        evidence=c(experiment=2, sample=1))
+
+   
+         
+ 
+ #############################################################
+ ### Lets change the evidence filter
+ ###
+ 
+ # 2 evidence over two indepenent samples, saving single sample 
+ # sequences reaching 3 counts:
+ 
+ test <- make_counts(input=input, trimming="seqpac", 
+                     parse="default_neb",  
+                     evidence=c(experiment=2, sample=3))
+ extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+ test$counts[extras==1,]  # 6 single sample sequences reached 3 counts
+ 
+ # 2 evidence over two independent samples, saving single sample 
+ # sequences reaching 2 counts
+  
+ test <- make_counts(input=input,  trimming="seqpac", 
+                     parse="default_neb",  
+                     evidence=c(experiment=2, sample=2))
+ extras <- apply(test$counts, 1, function(x){sum(!x==0)})
+ test$counts[extras==1,] # 120 single sample sequences reached 2 counts
+ 
 
  
-# Clean up temp
-closeAllConnections()
-fls_temp  <- list.files(tempdir(), recursive=TRUE, full.names = TRUE)
-file.remove(fls_temp, showWarnings=FALSE)
-
-
+ 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current
@@ -189,10 +240,10 @@ file.remove(fls_temp, showWarnings=FALSE)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
-\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}
