@@ -129,6 +129,26 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
   indx <- pheno[, pheno_target[[1]]] %in% pheno_target[[2]]
   pheno <- pheno[indx,]
   data <- data[,indx]
+
+  ### If a group has only one entrance double ###
+  ph <- pheno[, pheno_target[[1]]]
+  ph <- ph[ph %in% pheno_target[[2]]]
+  o_one<- table(ph) ==1
+  if(any(o_one)) {
+  one_nam  <- names(o_one[o_one==T])
+  warning(paste0("Only found one sample in at least one group",
+          "\nSummery is based on this sample only!"))
+  dup_dat <- data[,ph %in% one_nam, drop=F]
+  samp_one <- colnames(data)[ph %in% one_nam]
+  new_nam <-  paste0(samp_one, "(dup)")
+  colnames(dup_dat) <- new_nam
+  data <- cbind(data, dup_dat)
+  dup_ph<- pheno[pheno$Sample_ID %in%  samp_one,, drop=F]
+  rownames(dup_ph) <- new_nam
+  dup_ph$Sample_ID <- new_nam
+  pheno<- rbind(pheno, dup_ph)
+  }
+  #Fix list with goup data
   stopifnot(identical(rownames(pheno), colnames(data)))
   start_lst <- as.list(pheno_target[[2]])
   names(start_lst) <- pheno_target[[2]]
@@ -136,10 +156,8 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
                          function(x){ 
                            y <- data[, pheno[, pheno_target[[1]]] == x]
                            return(y)
-                           })
-  
+                         })
   ### Create pairwise combinations of pheno_target###
-  
   if (length(sub_data_lst) > 1) { 
     combn_lst <- as.list(data.frame(utils::combn(1:length(sub_data_lst),m = 2)))
     }
