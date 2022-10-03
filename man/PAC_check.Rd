@@ -51,11 +51,11 @@ pac$Anno <- new_Anno
   package.
 
 Other PAC generation: 
+\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
-\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}

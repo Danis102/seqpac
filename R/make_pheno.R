@@ -146,10 +146,16 @@ make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
       pheno <- utils::read.delim(pheno,  header=TRUE, sep="\t")
     }
   }
+  
+  #Fixes bug in read.delim that messing up 1st ID_column
+  id_col <- grepl("Sample_ID|sample_ID|Sample_id|sample_id", colnames(pheno))
+  if(sum(id_col) >1){
+    warning("There where multiple Sample_ID columns, will use the first one.")
+  }
+  colnames(pheno)[id_col] <- paste0("Sample_ID",seq_along(id_col[id_col]))
+  colnames(pheno) <- gsub("Sample_ID1","Sample_ID", colnames(pheno))
   pheno$Sample_ID <- as.character(gsub("-", "_", 
                                        as.character(pheno$Sample_ID)))
-  
-  
   
   ## Order as counts using grepl
   if(!is.null(counts)){

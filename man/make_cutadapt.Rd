@@ -137,10 +137,10 @@ for updates on seqpac.
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_pheno}()},
-\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}

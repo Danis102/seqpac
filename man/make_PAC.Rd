@@ -135,10 +135,10 @@ file.remove(fls_temp, showWarnings=FALSE)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{getTrim}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
-\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}
