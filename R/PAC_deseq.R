@@ -123,7 +123,19 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   cols <- attr(terms.formula(model), "term.labels")
   cols <- unique(unlist(strsplit(cols, ":")))
   for (i in 1:length(cols)){
-    pheno[,cols[i]]  <- as.factor(pheno[,cols[i]])
+    #Sometime model terms ar complex
+    # search for best pheno columns
+    trm <- cols[i]
+    colnam <- colnames(pheno)
+    logi <- NULL
+    for(k in 1:length(colnam)){
+    logi <- c(logi, grepl(colnam[k], trm))
+    }
+    # Refactor best hit
+    colnam_hits <- colnam[logi]
+    bst <- nchar(trm) - nchar(colnam_hits)
+    log_bst <- bst == min(bst)
+    pheno[,colnam_hits[log_bst]]  <- as.factor(pheno[,colnam_hits[log_bst]])
   }
   
   # Prepare pheno target and order factor
@@ -173,7 +185,7 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   }
   
   res_DESeq2_df <- as.data.frame(res_DESeq2)
-  anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),]
+  anno_filt <- anno[match(rownames(res_DESeq2), rownames(anno)),,drop=FALSE]
 
   if(!identical(rownames(dds), rownames(res_DESeq2))){
       stop("\nNot identical ids in result and dds.",
