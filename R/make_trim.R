@@ -2,11 +2,11 @@
 #'
 #'\code{make_trim} uses parallel processing to generate trimmed reads.
 #'
-#'Given an file path to sequence files in fastq format (extension .fastq.gz or
+#'Given a file path to sequence files in fastq format (extension .fastq.gz or
 #'.fastq) this function will first trim the sequences from adaptor sequence, and
 #'then apply sequence size and phred score quality filters. On systems with low
 #'memory or very large fastq files, users may choose to handle each file in
-#'chunks.
+#'chunks on the expense of time performance.
 #'
 #'@family PAC generation
 #'
@@ -150,56 +150,40 @@
 #' ############################################################ 
 #' ### Seqpac fastq trimming with the make_trim function 
 #' ### (for more streamline options see the make_counts function) 
+#'  ############################################################ 
+#' ### Seqpac fastq trimming with the make_counts function 
+#' ### using default settings for NEBNext small RNA adaptor 
 #' 
-#' # First generate some smallRNA fastq.
-#' # Only one untrimmed fastq comes with seqpac
-#' # Thus, we need to randomly sample that one using the ShortRead-package
-#'  
+#' # Seqpac includes strongly down-sampled smallRNA fastq.
 #' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
-#' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+#' input <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
 #'                 full.names = TRUE)
 #'
-#' closeAllConnections()
-#'
-#' sampler <- ShortRead::FastqSampler(fq, 20000)
-#' set.seed(123)
-#' fqs <- list(fq1=ShortRead::yield(sampler),
-#'            fq2=ShortRead::yield(sampler),
-#'            fq3=ShortRead::yield(sampler))
-#'
-#' # Now generate a temp folder were we can store the fastq files
-#' 
-#' input <- paste0(tempdir(), "/seqpac_temp/")
-#' dir.create(input, showWarnings=FALSE)
-#'
-#' # And then write the random fastq to the temp folder
-#' for (i in 1:length(fqs)){
-#'  input_file <- paste0(input, names(fqs)[i], ".fastq.gz")
-#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-#'                        full=FALSE, compress=TRUE)
-#' }
-#' 
 #' # Run make_trim using NEB-next adaptor
 #' # (Here we store the trimmed files in the input folder)
 #' # (but you may choose where to store them using the output option)
 #' 
-#' list.files(input) #before
+#' input <- unique(dirname(input))  # mak_trim searches for fastq in input dir
+#' output <- tempdir()              # save in tempdir
+#' 
+#' 
+#' list.files(input, pattern = "fastq") #before
 #' 
 #' prog_report  <-  make_trim(
-#'        input=input, output=input, threads=1, 
+#'        input=input, output=output, threads=1, 
 #'        adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
 #'        adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
 #'        polyG=c(type="hard_trim", min=20, mismatch=0.1),
 #'        seq_range=c(min=14, max=70),
 #'        quality=c(threshold=20, percent=0.8))
 #'        
-#' list.files(input) #after 
-#'  
+#' list.files(path = output, pattern = "fastq") #after
+#' 
 #' # How did it go? Check progress report:  
 #' prog_report     
 #'        
 #' 
-#' ## Principle:
+#' ## The principle:
 #' # input <- "/some/path/to/untrimmed_fastq_folder"
 #' # output <- "/some/path/to/output_folder_for_trimmed_fastq"
 #' # 
@@ -212,10 +196,320 @@
 #' #      polyG=<Illumina_Nextseq_type_poly_G_trimming>,
 #' #      seq_range=<what_sequence_range_to_save>,
 #' #      quality=<quality_filtering_options>))
-#' 
 #' @export
+### make_trim ###
+# This function applies getTrim over parallel fastq (foreach)
+# It also manage chunks by appending trimmed fastq in a while loop
+# Updates progress report for each progressive chunk across all fastq
+make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE, 
+                           threads=1, chunk_size=NULL,
+                           polyG=c(type=NULL, min=NULL, mismatch=NULL),
+                           adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
+                           adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
+                           adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), 
+                           adapt_5=NULL, 
+                           seq_range=c(min=NULL, max=NULL),
+                           quality=c(threshold=20, percent=0.8)){
 
-##### getTrim function ####
+  ##### General setup #######################################
+  # Check if files or dir is given as input
+  
+    nam_trim <- nam <- fls <- NULL
+  
+    fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
+                      full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
+    if(length(fls) == 0){
+    fls <- input
+    }
+    if(any(!file.exists(fls))){
+      stop("Something is wrong with input file(s)/path!")
+    }
+  # Memory check
+  if(check_mem==TRUE){
+    cat("\nChecking trimming memory usage with benchmarkme...")
+    mem <- as.numeric(benchmarkme::get_ram()/1000000000)
+    mem <- round(mem*0.931, digits=1)
+    cor <- parallel::detectCores()
+    if(threads > cor*0.8){
+      cat(paste0(
+        "\n--- Input will use >80% of availble cores",
+        "(", threads, "/", cor, ")."))
+    }
+    cat("\n--- Heavy trimming processes needs approx.",
+        "x10 the fastq file size available in RAM memory.")
+    if(threads>length(fls)){
+      par_ns <- length(fls)
+    }else{
+      par_ns <- threads
+    }
+    worst <- sum(sort(file.info(fls)$size, 
+                      decreasing = TRUE)[1:par_ns])/1000000000
+    worst <- round(worst*12, digits=1)
+    cat(paste0("\n--- Worst scenario maximum system", 
+               " burden is estimated to ",
+               worst, " GB of approx. ", mem," GB RAM available."))
+    if(worst>0){
+      if(worst*1.1 > mem){ 
+        warning("\nIn worst scenario trimming may generate an impact",
+                " close to what the system can stand.",
+                "\nPlease free more memory per thread if function fails.", 
+                immediate. = TRUE)
+      }
+      if(worst*0.5 > mem){ 
+        stop("\nTrimming will generate an impact well above what the", 
+             " system can stand.",
+             "\nIf you still wish to try, please set check_mem=FALSE.")
+      }
+    }
+    cat(paste0("\n--- Trimming check passed.\n"))
+  }
+  
+  # Make new output file name
+  nam <- gsub("\\.gz$", "", basename(fls))
+  nam <- gsub("\\.fastq$|\\.fq$|fastq$", "", nam)
+  nam <- gsub("\\.$|\\.tar$", "", nam)
+  nam_trim <- paste0(nam, ".trim.fastq.gz")
+  # Check for output folder
+  out_file <- file.path(output, nam_trim)
+  out_exist <- file.exists(out_file)
+  if(any(out_exist)){
+    stop("\n  There are files in the output folder:\n  ", 
+         output, 
+         "\n  Please move or delete those file(s).")
+  }
+  
+  # Make dir
+  if(!dir.exists(output)){
+    #suppressWarnings(dir.create(output, recursive = TRUE))
+    dir.create(output, showWarnings=FALSE, recursive = TRUE)
+  }
+  
+  ##### Make adaptor trimming 5' (moves to getTrim in future upgrades) ####
+  if(!is.null(adapt_5)){
+    stop("\n5' trimming is currently not supported, but will be included in",
+         " future updates of seqpac.\nFor now you can use the 'make_cutadapt' ",
+         " function to parse a 5' argument to cutadapt.",
+         "\nNote, that 'make_cutadapt' depends on externally installed ",
+         " versions of \ncutadapt and fastq_quality_filter.")   
+  }
+  
+  ##### Enter parallel loops and reading fastq #########################     
+  cat("\nNow entering the parallel trimming loop (R may stop respond) ...")
+  cat(paste0("\n(progress may be followed in: ", output, ")"))
+  
+  # save the input for getTrim function
+  par_parse <- list(output=output, indels=indels, concat=concat, 
+                    polyG=polyG, adapt_3_set=adapt_3_set, adapt_3=adapt_3,
+                    adapt_5_set=adapt_5_set, adapt_5=adapt_5, quality=quality, 
+                    chunk_size=chunk_size, seq_range=seq_range)
+  
+  doParallel::registerDoParallel(threads)
+  `%dopar%` <- foreach::`%dopar%`
+  
+  prog_report <- foreach::foreach(
+    i=seq_along(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
+    .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
+      
+      ##### Make a while loop that works for both full size fastq and chunks #########
+      max_chu <- FALSE
+      current_chu <- 1
+      
+      while(!max_chu){
+        ### Without chunks
+        if(is.null(chunk_size)){
+          # immediately update max_chu for full size fastq
+          # while-loop should run only once
+          max_chu <- TRUE
+          fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls[[i]], 
+                                                               withIds=FALSE)))
+          fstq_sav <- NULL
+        }
+        ### With chunks (loop should run until all chunks is completed)  
+        if(!is.null(chunk_size)){
+          
+          # Setup n chunks (only in 1st loop)
+          if(current_chu==1){
+            fq_lng <- ShortRead::countLines(fls[[i]])
+            fq_lng <- fq_lng/4
+            n_chunks <- as.integer(ceiling(fq_lng/chunk_size))
+            sampl <- ShortRead::FastqStreamer (fls[[i]], chunk_size)
+          }
+          
+          # Stream fastq 
+          # the stream object will automatically update with yield
+          # therefore, cannot be generated more than once per full fastq
+          # for chunks read withIds=TRUE to obtain seq names (needed later)
+          
+          fstq_sav <- ShortRead::yield(sampl, withIds=TRUE)
+          fstq <- paste0(ShortRead::sread(fstq_sav))
+          
+        } #Reading fastq done, now run getTrim function
+        
+        ##### Run getTrim ##################################
+        # Progress report needs to be progressively built for chunks 
+        in_fl <- fls[[i]]
+        out_fl <- out_file[[i]]
+        
+        if(current_chu == 1|is.null(chunk_size)){
+             prog_report <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
+        }else{
+          prog_report_temp <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
+        }
+        
+        # Update progress report for chunks appending 1st report     
+        if(!is.null(chunk_size)){
+          if(!current_chu == 1){
+            
+            prog_report$tot_reads <- 
+              sum(prog_report$tot_reads, 
+                  prog_report_temp$tot_reads)
+            
+            prog_report$out_reads <- 
+              sum(prog_report$out_reads, 
+                  prog_report_temp$out_reads)
+            
+            if(!is.null(polyG)){ 
+              prog_report$polyG["trimmed"] <- 
+                sum(as.numeric(prog_report$polyG["trimmed"]), 
+                    as.numeric(prog_report_temp$polyG["trimmed"]))
+            }
+            if(!is.null(adapt_3)){ 
+              prog_report$trim_3["trimmed"] <- 
+                sum(as.numeric(prog_report$trim_3["trimmed"]), 
+                    as.numeric(prog_report_temp$trim_3["trimmed"]))
+            }
+            
+            if(!is.null(adapt_5)){ 
+              prog_report$trim_5["trimmed"] <- 
+                sum(as.numeric(prog_report$trim_5["trimmed"]), 
+                    as.numeric(prog_report_temp$trim_5["trimmed"]))
+            }
+            
+            if(!is.null(quality)){ 
+              prog_report$quality["removed"] <- 
+                sum(prog_report$quality["removed"], 
+                    prog_report_temp$quality["removed"])
+            }
+            if(!is.null(seq_range)){ 
+              prog_report$size["removed"] <- 
+                sum(prog_report$size["removed"], 
+                    prog_report_temp$size["removed"])
+            }
+          }
+        }
+        # Update and check current chunk after yield()
+        # When the whole fastq has been streamed, change max_chu    
+        if(!is.null(chunk_size)){
+          current_chu <- current_chu+1
+          status <- sampl$.status["added"]
+          if(fq_lng - status  == 0){
+            max_chu <- TRUE
+          }
+        }
+      } # while loop end
+      return(prog_report) 
+    } # foreach loop end
+  cat("\nDone trimming")
+  doParallel::stopImplicitCluster()
+  gc(reset=TRUE)
+  
+  ##### Merge full progress report#############################
+  nams_prog <- as.list(names(prog_report[[1]]))
+  names(nams_prog) <- unlist(nams_prog)
+  
+  prog_report <-  lapply(nams_prog, function(x){
+    lst_type <- list(NULL)
+    for(i in 1:length(prog_report)){
+      lst_type[[i]] <- cbind(data.frame(file=names(prog_report)[i], 
+                                        stringsAsFactors = FALSE), 
+                             t(data.frame(prog_report[[i]][x],
+                                          stringsAsFactors = FALSE)))
+    }
+    do.call("rbind", lst_type)
+  })
+  
+  report_fin <- prog_report$tot_reads
+  rownames(report_fin) <- NULL
+  colnames(report_fin)[2] <- "input_reads"
+  
+  for(i in 1:length(prog_report)){
+    rprt <- prog_report[[i]]
+    rprt_nam <- names(prog_report)[i]
+    
+    if(rprt_nam=="polyG"){
+      trim <- as.numeric(as.character(rprt$trimmed))
+      perc <- paste0(
+        "(", round(trim/report_fin$input_reads, digits=4)*100, "%)"
+      )
+      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
+      report_fin <-  cbind(report_fin, 
+                           data.frame(polyG_set=set, 
+                                      polyG= paste(trim, perc), 
+                                      stringsAsFactors = FALSE))
+    }
+    if(rprt_nam=="trim_3"){
+      trim <- as.numeric(as.character(rprt$trimmed))
+      perc <- paste0("(", 
+                     round(trim/report_fin$input_reads, digits=4)*100, 
+                     "%)")
+      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
+      report_fin <-  cbind(report_fin, 
+                           data.frame(trim3_set=set, 
+                                      trim3= paste(trim, perc), 
+                                      stringsAsFactors = FALSE))
+    }
+    if(rprt_nam=="trim_5"){
+      trim <- as.numeric(as.character(rprt$trimmed))
+      perc <- paste0("(", 
+                     round(trim/report_fin$input_reads, digits=4)*100, 
+                     "%)")
+      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
+      report_fin <-  cbind(report_fin, 
+                           data.frame(trim5_set=set, 
+                                      trim5= paste(trim, perc), 
+                                      stringsAsFactors = FALSE))
+    }
+    if(rprt_nam=="size"){
+      shrt <- as.numeric(as.character(rprt$too_short))
+      lng <- as.numeric(as.character(rprt$too_long))
+      tot_size <- shrt+lng
+      perc <- paste0("(", 
+                     round(tot_size/report_fin$input_reads, 
+                           digits=4)*100, "%)")
+      set <- paste0("min", rprt$min, "|max", rprt$max)
+      report_fin <-  cbind(report_fin,
+                           data.frame(size_set=set, 
+                                      'size_short_long'= paste0(shrt, "/", 
+                                                                lng, " ", 
+                                                                perc), 
+                                      stringsAsFactors = FALSE))
+    }
+    if(rprt_nam=="quality"){
+      rmvd <- as.numeric(as.character(rprt$removed))
+      perc <- paste0("(", 
+                     round(rmvd/report_fin$input_reads, digits=4)*100, 
+                     "%)")
+      set <- paste0("thresh", rprt$threshold, "|perc", rprt$percent)
+      report_fin <-  cbind(report_fin, 
+                           data.frame(quality_set=set, 
+                                      'quality_removed'= paste0(rmvd, " ", perc),
+                                      stringsAsFactors = FALSE))
+    }
+    if(rprt_nam=="out_reads"){
+      out <- as.numeric(as.character(rprt[,2]))
+      perc <- paste0("(", round(out/report_fin$input_reads, digits=4)*100, "%)")
+      report_fin <-  cbind(report_fin, 
+                           data.frame(output_reads= paste(out, perc), 
+                                      stringsAsFactors = FALSE))
+    }
+  }
+  
+  return(report_fin)         
+}
+
+
+
+##### getTrim function #### (Unexported)
 # This function runs from within make_trim to obtain trimming coordinates
 # and to save fastq to output, appending to existing fastq for chunks
 # and not appending for chunk_size=NULL 
@@ -374,7 +668,7 @@ getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){
     }
     
     ## Trim concatemer-like adaptors
-    if(!is.na(concat)){
+    if(!is.null(concat)){
       n_Ns <- stringr::str_count(adapt_shrt, "N")
       adapt_mis_corr <- (mis*(nchar(adapt_shrt)-n_Ns))/nchar(adapt_shrt)
       trim_shrt <- Biostrings::end(Biostrings::trimLRPatterns(
@@ -595,315 +889,4 @@ getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){
   }
   
   return(sav_lst)
-}
-
-### make_trim ###
-# This function applies getTrim over parallel fastq (foreach)
-# It also manage chunks by appending trimmed fastq in a while loop
-# Updates progress report for each progressive chunk across all fastq
-make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE, 
-                           threads=1, chunk_size=NULL,
-                           polyG=c(type=NULL, min=NULL, mismatch=NULL),
-                           adapt_3_set=c(type="hard_rm", min=10, mismatch=0.1), 
-                           adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA", 
-                           adapt_5_set=c(type=NULL, min=NULL, mismatch=NULL), 
-                           adapt_5=NULL, 
-                           seq_range=c(min=NULL, max=NULL),
-                           quality=c(threshold=20, percent=0.8)){
-
-  ##### General setup #######################################
-  # Check if files or dir is given as input
-  
-    nam_trim <- nam <- fls <- NULL
-  
-    fls <- list.files(input, pattern ="fastq.gz\\>|\\.fastq\\>", 
-                      full.names=TRUE, recursive=TRUE, include.dirs = TRUE)
-    if(length(fls) == 0){
-    fls <- input
-    }
-    if(any(!file.exists(fls))){
-      stop("Something is wrong with input file(s)/path!")
-    }
-  # Memory check
-  if(check_mem==TRUE){
-    cat("\nChecking trimming memory usage with benchmarkme...")
-    mem <- as.numeric(benchmarkme::get_ram()/1000000000)
-    mem <- round(mem*0.931, digits=1)
-    cor <- parallel::detectCores()
-    if(threads > cor*0.8){
-      cat(paste0(
-        "\n--- Input will use >80% of availble cores",
-        "(", threads, "/", cor, ")."))
-    }
-    cat("\n--- Heavy trimming processes needs approx.",
-        "x10 the fastq file size available in RAM memory.")
-    if(threads>length(fls)){
-      par_ns <- length(fls)
-    }else{
-      par_ns <- threads
-    }
-    worst <- sum(sort(file.info(fls)$size, 
-                      decreasing = TRUE)[1:par_ns])/1000000000
-    worst <- round(worst*12, digits=1)
-    cat(paste0("\n--- Worst scenario maximum system", 
-               " burden is estimated to ",
-               worst, " GB of approx. ", mem," GB RAM available."))
-    if(worst>0){
-      if(worst*1.1 > mem){ 
-        warning("\nIn worst scenario trimming may generate an impact",
-                " close to what the system can stand.",
-                "\nPlease free more memory per thread if function fails.", 
-                immediate. = TRUE)
-      }
-      if(worst*0.5 > mem){ 
-        stop("\nTrimming will generate an impact well above what the", 
-             " system can stand.",
-             "\nIf you still wish to try, please set check_mem=FALSE.")
-      }
-    }
-    cat(paste0("\n--- Trimming check passed.\n"))
-  }
-  
-  # Make new output file name
-  nam <- gsub("\\.gz$", "", basename(fls))
-  nam <- gsub("\\.fastq$|\\.fq$|fastq$", "", nam)
-  nam <- gsub("\\.$|\\.tar$", "", nam)
-  nam_trim <- paste0(nam, ".trim.fastq.gz")
-  # Check for output folder
-  out_file <- file.path(output, nam_trim)
-  out_exist <- file.exists(out_file)
-  if(any(out_exist)){
-    stop("\n  There are files in the output folder:\n  ", 
-         output, 
-         "\n  Please move or delete those file(s).")
-  }
-  
-  # Make dir
-  if(!dir.exists(output)){
-    #suppressWarnings(dir.create(output, recursive = TRUE))
-    dir.create(output, showWarnings=FALSE, recursive = TRUE)
-  }
-  
-  ##### Make adaptor trimming 5' (moves to getTrim in future upgrades) ####
-  if(!is.null(adapt_5)){
-    stop("\n5' trimming is currently not supported, but will be included in",
-         " future updates of seqpac.\nFor now you can use the 'make_cutadapt' ",
-         " function to parse a 5' argument to cutadapt.",
-         "\nNote, that 'make_cutadapt' depends on externally installed ",
-         " versions of \ncutadapt and fastq_quality_filter.")   
-  }
-  
-  ##### Enter parallel loops and reading fastq #########################     
-  cat("\nNow entering the parallel trimming loop (R may stop respond) ...")
-  cat(paste0("\n(progress may be followed in: ", output, ")"))
-  
-  # save the input for getTrim function
-  par_parse <- list(output=output, indels=indels, concat=concat, 
-                    polyG=polyG, adapt_3_set=adapt_3_set, adapt_3=adapt_3,
-                    adapt_5_set=adapt_5_set, adapt_5=adapt_5, quality=quality, 
-                    chunk_size=chunk_size, seq_range=seq_range)
-  
-  closeAllConnections()
-  doParallel::registerDoParallel(threads)
-  `%dopar%` <- foreach::`%dopar%`
-  
-  prog_report <- foreach::foreach(
-    i=seq_along(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
-    .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
-      
-      ##### Make a while loop that works for both full size fastq and chunks #########
-      max_chu <- FALSE
-      current_chu <- 1
-      
-      while(!max_chu){
-        ### Without chunks
-        if(is.null(chunk_size)){
-          # immediately update max_chu for full size fastq
-          # while-loop should run only once
-          max_chu <- TRUE
-          fstq <- paste0(ShortRead::sread(ShortRead::readFastq(fls[[i]], 
-                                                               withIds=FALSE)))
-          fstq_sav <- NULL
-        }
-        ### With chunks (loop should run until all chunks is completed)  
-        if(!is.null(chunk_size)){
-          
-          # Setup n chunks (only in 1st loop)
-          if(current_chu==1){
-            fq_lng <- ShortRead::countLines(fls[[i]])
-            fq_lng <- fq_lng/4
-            n_chunks <- as.integer(ceiling(fq_lng/chunk_size))
-            sampl <- ShortRead::FastqStreamer (fls[[i]], chunk_size)
-          }
-          
-          # Stream fastq 
-          # the stream object will automatically update with yield
-          # therefore, cannot be generated more than once per full fastq
-          # for chunks read withIds=TRUE to obtain seq names (needed later)
-          
-          fstq_sav <- ShortRead::yield(sampl, withIds=TRUE)
-          fstq <- paste0(ShortRead::sread(fstq_sav))
-          
-        } #Reading fastq done, now run getTrim function
-        
-        ##### Run getTrim ##################################
-        # Progress report needs to be progressively built for chunks 
-        in_fl <- fls[[i]]
-        out_fl <- out_file[[i]]
-        
-        if(current_chu == 1|is.null(chunk_size)){
-             prog_report <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
-        }else{
-          prog_report_temp <- getTrim(fstq, fstq_sav, in_fl, out_fl, par_parse)
-        }
-        
-        # Update progress report for chunks appending 1st report     
-        if(!is.null(chunk_size)){
-          if(!current_chu == 1){
-            
-            prog_report$tot_reads <- 
-              sum(prog_report$tot_reads, 
-                  prog_report_temp$tot_reads)
-            
-            prog_report$out_reads <- 
-              sum(prog_report$out_reads, 
-                  prog_report_temp$out_reads)
-            
-            if(!is.null(polyG)){ 
-              prog_report$polyG["trimmed"] <- 
-                sum(as.numeric(prog_report$polyG["trimmed"]), 
-                    as.numeric(prog_report_temp$polyG["trimmed"]))
-            }
-            if(!is.null(adapt_3)){ 
-              prog_report$trim_3["trimmed"] <- 
-                sum(as.numeric(prog_report$trim_3["trimmed"]), 
-                    as.numeric(prog_report_temp$trim_3["trimmed"]))
-            }
-            
-            if(!is.null(adapt_5)){ 
-              prog_report$trim_5["trimmed"] <- 
-                sum(as.numeric(prog_report$trim_5["trimmed"]), 
-                    as.numeric(prog_report_temp$trim_5["trimmed"]))
-            }
-            
-            if(!is.null(quality)){ 
-              prog_report$quality["removed"] <- 
-                sum(prog_report$quality["removed"], 
-                    prog_report_temp$quality["removed"])
-            }
-            if(!is.null(seq_range)){ 
-              prog_report$size["removed"] <- 
-                sum(prog_report$size["removed"], 
-                    prog_report_temp$size["removed"])
-            }
-          }
-        }
-        # Update and check current chunk after yield()
-        # When the whole fastq has been streamed, change max_chu    
-        if(!is.null(chunk_size)){
-          current_chu <- current_chu+1
-          status <- sampl$.status["added"]
-          if(fq_lng - status  == 0){
-            max_chu <- TRUE
-          }
-        }
-      } # while loop end
-      return(prog_report) 
-    } # foreach loop end
-  cat("\nDone trimming")
-  doParallel::stopImplicitCluster()
-  gc(reset=TRUE)
-  
-  ##### Merge full progress report#############################
-  nams_prog <- as.list(names(prog_report[[1]]))
-  names(nams_prog) <- unlist(nams_prog)
-  
-  prog_report <-  lapply(nams_prog, function(x){
-    lst_type <- list(NULL)
-    for(i in 1:length(prog_report)){
-      lst_type[[i]] <- cbind(data.frame(file=names(prog_report)[i], 
-                                        stringsAsFactors = FALSE), 
-                             t(data.frame(prog_report[[i]][x],
-                                          stringsAsFactors = FALSE)))
-    }
-    do.call("rbind", lst_type)
-  })
-  
-  report_fin <- prog_report$tot_reads
-  rownames(report_fin) <- NULL
-  colnames(report_fin)[2] <- "input_reads"
-  
-  for(i in 1:length(prog_report)){
-    rprt <- prog_report[[i]]
-    rprt_nam <- names(prog_report)[i]
-    
-    if(rprt_nam=="polyG"){
-      trim <- as.numeric(as.character(rprt$trimmed))
-      perc <- paste0(
-        "(", round(trim/report_fin$input_reads, digits=4)*100, "%)"
-      )
-      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-      report_fin <-  cbind(report_fin, 
-                           data.frame(polyG_set=set, 
-                                      polyG= paste(trim, perc), 
-                                      stringsAsFactors = FALSE))
-    }
-    if(rprt_nam=="trim_3"){
-      trim <- as.numeric(as.character(rprt$trimmed))
-      perc <- paste0("(", 
-                     round(trim/report_fin$input_reads, digits=4)*100, 
-                     "%)")
-      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-      report_fin <-  cbind(report_fin, 
-                           data.frame(trim3_set=set, 
-                                      trim3= paste(trim, perc), 
-                                      stringsAsFactors = FALSE))
-    }
-    if(rprt_nam=="trim_5"){
-      trim <- as.numeric(as.character(rprt$trimmed))
-      perc <- paste0("(", 
-                     round(trim/report_fin$input_reads, digits=4)*100, 
-                     "%)")
-      set <- paste0(rprt$type,"|min", rprt$min,"|mis", rprt$mismatch)
-      report_fin <-  cbind(report_fin, 
-                           data.frame(trim5_set=set, 
-                                      trim5= paste(trim, perc), 
-                                      stringsAsFactors = FALSE))
-    }
-    if(rprt_nam=="size"){
-      shrt <- as.numeric(as.character(rprt$too_short))
-      lng <- as.numeric(as.character(rprt$too_long))
-      tot_size <- shrt+lng
-      perc <- paste0("(", 
-                     round(tot_size/report_fin$input_reads, 
-                           digits=4)*100, "%)")
-      set <- paste0("min", rprt$min, "|max", rprt$max)
-      report_fin <-  cbind(report_fin,
-                           data.frame(size_set=set, 
-                                      'size_short_long'= paste0(shrt, "/", 
-                                                                lng, " ", 
-                                                                perc), 
-                                      stringsAsFactors = FALSE))
-    }
-    if(rprt_nam=="quality"){
-      rmvd <- as.numeric(as.character(rprt$removed))
-      perc <- paste0("(", 
-                     round(rmvd/report_fin$input_reads, digits=4)*100, 
-                     "%)")
-      set <- paste0("thresh", rprt$threshold, "|perc", rprt$percent)
-      report_fin <-  cbind(report_fin, 
-                           data.frame(quality_set=set, 
-                                      'quality_removed'= paste0(rmvd, " ", perc),
-                                      stringsAsFactors = FALSE))
-    }
-    if(rprt_nam=="out_reads"){
-      out <- as.numeric(as.character(rprt[,2]))
-      perc <- paste0("(", round(out/report_fin$input_reads, digits=4)*100, "%)")
-      report_fin <-  cbind(report_fin, 
-                           data.frame(output_reads= paste(out, perc), 
-                                      stringsAsFactors = FALSE))
-    }
-  }
-  
-  return(report_fin)         
 }
