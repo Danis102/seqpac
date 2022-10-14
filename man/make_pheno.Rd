@@ -33,36 +33,11 @@ the counts table.
 
 ### First make counts 
 
-# First generate some smallRNA fastq.
-# Only one untrimmed fastq comes with seqpac
-# Thus, we need to randomly sample that one using the ShortRead-package
- 
+# Seqpac includes strongly down-sampled smallRNA fastq.
 sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
-fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+input <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
                 full.names = TRUE)
 
-closeAllConnections()
-
-sampler <- ShortRead::FastqSampler(fq, 10000)
-set.seed(123)
-fqs <- list(fq1=ShortRead::yield(sampler),
-           fq2=ShortRead::yield(sampler),
-           fq3=ShortRead::yield(sampler))
-
-# Now generate a temp folder where we can store the fastq files
-# (for autonomous example, make sure it is empty and correct platform)
-
-input <- paste0(tempdir(), "/seqpac_temp")
-dir.create(input, showWarnings=FALSE)
-
-# And then write the random fastq to the temp folder
-for (i in 1:length(fqs)){
- input_file <- file.path(input, paste0(names(fqs)[i], ".fastq.gz"))
- ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-                       full=FALSE, compress=TRUE)
-}
-
-# Now we can run make_counts
 # Notice that make_counts will generate another temp folder, that will 
 # be emptied on finalization. By setting save_temp=TRUE you may save the 
 # content.  
@@ -71,9 +46,7 @@ counts  <- make_counts(input, threads=2, parse="default_neb",
                        trimming="seqpac", plot=TRUE,
                        evidence=c(experiment=2, sample=1))
 
-
 colnames(counts$counts)
-
 
 ### Then generate a phenotype table with make_pheno
 
@@ -92,15 +65,6 @@ pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report,
                      counts=counts$counts)
 
 
-# make_pheno matches partial names 
-pheno <- data.frame(Sample_ID=gsub("fq","", colnames(counts$counts)),
-                       Treatment=c(rep("heat", times=1), 
-                                   rep("control", times=2)),
-                       Batch=rep(c("1", "2", "3"), times=1))
- 
-pheno <- make_pheno(pheno=pheno, progress_report=counts$progress_report, 
-                     counts=counts$counts)
- 
 pheno 
 
 # Note that progress report from make_counts is added if you specify it  
@@ -128,10 +92,10 @@ file.remove(fls_temp, showWarnings=FALSE)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
-\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
+\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}

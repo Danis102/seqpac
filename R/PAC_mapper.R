@@ -67,21 +67,19 @@
 #' @examples
 #' 
 #'###########################################################
-#'### Simple example of how to use PAC_mapper and PAC_covplot
+#'### Simple example of how to use PAC_mapper 
 #' # Note: More details, see vignette and manuals.)
-#' # Also see: ?map_rangetype, ?tRNA_class or ?PAC_trna for more examples
-#' # on how to use PAC_mapper.
+#' # Also see: ?map_rangetype, ?tRNA_class or ?PAC_trna, ?PAC_covplot 
+#' # for more examples on how to use PAC_mapper.
 #' 
 #' ## Load PAC-object, make summaries and extract rRNA and tRNA
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
 #' 
 #' pac <- PAC_summary(pac, norm = "cpm", type = "means", 
-#'                    pheno_target=list("stage", unique(pac$Pheno$stage)))
+#'                    pheno_target=list("stage", unique(pheno(pac)$stage)))
 #'                    
 #' pac_rRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "rRNA"))
-#' pac_tRNA <- PAC_filter(pac, anno_target = list("Biotypes_mis0", "tRNA"))
-#'
 #'
 #' ## Give paths to a fasta reference (with or without bowtie index)
 #' #  (Here we use an rRNA/tRNA fasta included in seqpac) 
@@ -89,64 +87,11 @@
 #' ref_rRNA <- system.file("extdata/rrna", "rRNA.fa", 
 #'                          package = "seqpac", mustWork = TRUE)
 #'                          
-#' ref_tRNA <- system.file("extdata/trna", "tRNA.fa", 
-#'                          package = "seqpac", mustWork = TRUE)
-#' 
 #'
 #' ## Map using PAC-mapper
 #' map_rRNA <- PAC_mapper(pac_rRNA, mismatches=0, 
 #'                         threads=1, ref=ref_rRNA, override=TRUE)
 #'
-#' map_tRNA <- PAC_mapper(pac_tRNA, mismatches=0, 
-#'                         threads=1, ref=ref_tRNA, override=TRUE)
-#' 
-#' ## Plot rRNA according to embryonic stage using PAC_covplot 
-#' cov_rRNA<- PAC_covplot(pac_rRNA, map_rRNA, 
-#'                         summary_target = list("cpmMeans_stage"), 
-#'                         xseq=FALSE, style="line", 
-#'                         color=c("red", "black", "blue"))
-#' 
-#' cowplot::plot_grid(cov_rRNA[[1]], cov_rRNA[[2]], cov_rRNA[[3]], 
-#'                     cov_rRNA[[4]], nrow=2, ncol=2)
-#'
-#'
-#'
-#' ## Plot tRNA using xseq=TRUE gives you reference sequence as X-axis:
-#' # (OBS! Long reference will not )
-#' cov_tRNA <- PAC_covplot(pac_tRNA, map_tRNA, 
-#'                         summary_target = list("cpmMeans_stage"), 
-#'                         xseq=TRUE, style="line", 
-#'                         color=c("red", "black", "blue"))
-#'
-#' cov_tRNA[[1]]
-#'  
-#' ## Explore the map-object 
-#' head(map_tRNA[[1]])
-#' names(map_tRNA)
-#' map_tRNA[[1]]
-#'
-#' ## Check which tRNA reached decent number number of fragments 
-#' # (OBS! This is a very down sampled dataset)
-#' logi_hi <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 10 }))
-#' logi_lo <- unlist(lapply(map_tRNA, function(x){nrow(x$Alignments) > 2 }))
-#' 
-#' table(logi_hi)  
-#' names(map_tRNA[logi_hi])
-#' 
-#' table(logi_lo)  
-#' names(map_tRNA[logi_lo])
-#'     
-#' targets <- c("Ala-AGC-1-1", "Lys-CTT-1-13","Ser-AGA-2-2")
-#' 
-#' cov_tRNA_sub <- PAC_covplot(pac_tRNA, map_tRNA, 
-#'                         summary_target = list("cpmMeans_stage"),
-#'                         map_target = targets,
-#'                         xseq=TRUE, style="line", 
-#'                         color=c("red", "black", "blue")) 
-#' 
-#' cowplot::plot_grid(plotlist= cov_tRNA_sub) 
-#' 
-#' 
 #' @export
 
 PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove", 

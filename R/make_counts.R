@@ -133,7 +133,8 @@
 #' # Now we can run make_counts
 #' # Notice that make_counts will generate another temp folder, that will 
 #' # be emptied on finalization. By setting save_temp=TRUE you may save the 
-#' # content.  
+#' # content. You may also use your own trimming settings by using the parse 
+#' # option. See ?make_trim for more details. 
 #'  
 #' counts  <- make_counts(input, threads=1, parse="default_neb",
 #'                        trimming="seqpac", plot=TRUE,
@@ -141,7 +142,6 @@
 #'
 #' head(counts$counts)
 #' head(counts$progress_report)
-#' cowplot::plot_grid(plotlist=counts$evidence_plots, ncol=1, nrow=2)
 #' 
 #' # Notice that that there are fewer unique sequences than number of reads 
 #' # passing the filter. In normal, large, fastq we keep 95-99% of all reads 
@@ -149,52 +149,6 @@
 #' # Thus, the evidence filter may gain you performance in later analysis by 
 #' # avoiding nonsense sequences. 
 #'      
-#' ############################################################      
-#' ### Parse your own trimming setting to make_trim using the
-#' ### make_counts function
-#' 
-#' # How to make a parse list see ?make_trim:
-#'   
-#' parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
-#'              adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
-#'              polyG=c(type="hard_trim", min=10, mismatch=0.1),
-#'              seq_range=c(min=14, max=70),
-#'              quality=c(threshold=20, percent=0.8),
-#'              check_mem =FALSE)
-#'              
-#'
-#' counts  <-  make_counts(input, threads=1,
-#'                         trimming="seqpac",
-#'                         parse=parse, 
-#'                         evidence=c(experiment=2, sample=1))
-#'   
-#'   
-#'   
-#' ############################################################      
-#' ### Seqpac trimming using the make_cutadapt function
-#' ### (Important: Needs an external installations of cutadapt 
-#' ###  and fastq_quality_filter) 
-#' #
-#' # Parse for make_cutadapt is a list of 2 character string expressions.
-#' # The first is parsed to cutadapt and the other to fastq_quality_filter 
-#' # For parallel processes '-j 1' is recommended since seqpac will   
-#' # parallelize across samples and not within. Run system("cutadapt -h") and 
-#' # system("fastq_quality_filter -h") for more options.
-#' # 
-#' # cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
-#' #                    " --discard-untrimmed --nextseq-trim=20",
-#' #                    " -O 10 -m 14 -M 70")
-#' # 
-#' # parse = list(cutadapt = cut_prse,
-#' #              fastq_quality_filter = "-q 20 -p 80")
-#' # 
-#' # counts  <-  make_counts(input, threads=1,
-#' #                        trimming="cutadapt",
-#' #                        parse=parse, 
-#' #                        evidence=c(experiment=2, sample=1))
-#' 
-#'    
-#'          
 #'  
 #'  #############################################################
 #'  ### Lets change the evidence filter
@@ -241,7 +195,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   ###### Input fastq #######
   cat("Started at ", paste0(Sys.time()), "\n")
   Sys.sleep(1)
-  closeAllConnections()
+  
   gc(reset=TRUE)
   
   
@@ -669,7 +623,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     # Vroom uses lazy reading, file remove is only possible when 
     # the whole file has been read (may take time).
     rm(uni)
-    closeAllConnections()
     gc()
     temp_fls <- list.files(tempdir(), full.names = TRUE, recursive=TRUE)
     vroom_fls <- temp_fls[grepl("vroom-",temp_fls)]
@@ -682,7 +635,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   })   # -> end for lapply
   #}   # -> used for doeach
   Sys.sleep(1)
-  closeAllConnections()
+  
   gc(reset=TRUE)
   
   ###################################################################
@@ -729,7 +682,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         best_chk_size <- floor(n_all_uni/2)
       }
       Sys.sleep(1)
-      closeAllConnections()
+      
       gc()
       
       # Round 1: While-loop to convert UNI to fastq over chunks
@@ -769,7 +722,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       if(!save_temp){
         unlink(fl_all_uni)
       }
-      closeAllConnections()
+      
       gc()
       
       # Round 2 Apply evidence[1] on disk using ShortRead::filterFastq
@@ -858,7 +811,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         } # Panic ends
         
         # Round 4 Make good seqs and append extras to good seqs 
-        closeAllConnections()
+        
         Sys.sleep(5)
         gc(reset=TRUE)
         filt_uni <- paste0(unique(ShortRead::sread(filt_uni)))
@@ -877,7 +830,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
                            quote="none")
       
         rm(filt_uni)
-        closeAllConnections()
         Sys.sleep(5)
         gc(reset=TRUE)
       
@@ -888,7 +840,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         seqs_keep <- seqs_keep[order(seqs_keep, decreasing=FALSE)]
 
       Sys.sleep(10)
-      closeAllConnections()
       gc(reset=TRUE)
       }#Evidence[1] done
     }#With chunks done
@@ -983,7 +934,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   # Before and after instead!
   rm(seq_lst)
   Sys.sleep(10)
-  closeAllConnections() 
   gc(reset=TRUE)
   ## Prepare
   # If chunk_size or on_disk, user indicate low-end computer.
@@ -1210,7 +1160,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       gc()
     }# foreach loop ends
   doParallel::stopImplicitCluster()
-  closeAllConnections()
   gc(reset=TRUE)
   
   ## Finalize 

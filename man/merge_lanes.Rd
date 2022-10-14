@@ -45,43 +45,23 @@ experiment).
 
 
 ## Real example
-# First generate some smallRNA fastq.
-# Only one untrimmed fastq comes with seqpac
-# Thus, we need to randomly sample that one using the ShortRead-package
- 
+# First generate some correct file names (see above).
 sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
 fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
                 full.names = TRUE)
-
-closeAllConnections()
-
-sampler <- ShortRead::FastqSampler(fq, 20000)
-set.seed(123)
-fqs <- list(fq1_lane1=ShortRead::yield(sampler),
-           fq1_lane2=ShortRead::yield(sampler),
-           fq1_lane3=ShortRead::yield(sampler),
-           fq2_lane1=ShortRead::yield(sampler),
-           fq2_lane2=ShortRead::yield(sampler),
-           fq2_lane3=ShortRead::yield(sampler))
-
-# Now generate a temp folder were we can store the fastq files
-# (for autonomous example, make sure it is empty and correct platform)
-
-input <- paste0(tempdir(), "/seqpac_temp")
-fls  <- list.files(input, recursive=TRUE)
-if(length(fls)>0){unlink(input, recursive=TRUE)}
-dir.create(input, showWarnings=FALSE)
-
-# And then write the random fastq to the temp folder
-for (i in 1:length(fqs)){
- input_file <- paste0(input, "/", names(fqs)[i], ".fastq.gz")
- ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-                       full=FALSE, compress=TRUE)
-}
-
+ 
 # Create an output folder
-output <- paste0(input, "/merged")
+input <- paste0(tempdir(), "/lanes/")
+output <- paste0(tempdir(), "/merged/")
+dir.create(input, showWarnings=FALSE)
 dir.create(output, showWarnings=FALSE)
+# Fix compatible file names
+file.copy(from = fq, to = input)
+old_fls <- list.files(input, full.names=TRUE)
+new_sample <- c(rep("sample1_", times=3), rep("sample2_", times=3))
+new_lane <- rep(c("lane1","lane2","lane3"), times=2)
+new_fls <- paste0(input,new_sample, new_lane, ".fastq.gz")                           
+file.rename(from = old_fls, to = new_fls)
 
 # Then merge the fastq files
 merge_lanes(input, output, threads=2)
@@ -107,10 +87,10 @@ suppressWarnings(file.remove(fls_temp))
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
-\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
-\code{\link{make_pheno}()}
+\code{\link{make_pheno}()},
+\code{\link{make_trim}()}
 }
 \concept{PAC generation}

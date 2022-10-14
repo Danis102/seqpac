@@ -145,7 +145,8 @@ input <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
 # Now we can run make_counts
 # Notice that make_counts will generate another temp folder, that will 
 # be emptied on finalization. By setting save_temp=TRUE you may save the 
-# content.  
+# content. You may also use your own trimming settings by using the parse 
+# option. See ?make_trim for more details. 
  
 counts  <- make_counts(input, threads=1, parse="default_neb",
                        trimming="seqpac", plot=TRUE,
@@ -153,7 +154,6 @@ counts  <- make_counts(input, threads=1, parse="default_neb",
 
 head(counts$counts)
 head(counts$progress_report)
-cowplot::plot_grid(plotlist=counts$evidence_plots, ncol=1, nrow=2)
 
 # Notice that that there are fewer unique sequences than number of reads 
 # passing the filter. In normal, large, fastq we keep 95-99\% of all reads 
@@ -161,52 +161,6 @@ cowplot::plot_grid(plotlist=counts$evidence_plots, ncol=1, nrow=2)
 # Thus, the evidence filter may gain you performance in later analysis by 
 # avoiding nonsense sequences. 
      
-############################################################      
-### Parse your own trimming setting to make_trim using the
-### make_counts function
-
-# How to make a parse list see ?make_trim:
-  
-parse = list(adapt_3_set=c(type="hard_save", min=10, mismatch=0.1),
-             adapt_3="AGATCGGAAGAGCACACGTCTGAACTCCAGTCACTA",
-             polyG=c(type="hard_trim", min=10, mismatch=0.1),
-             seq_range=c(min=14, max=70),
-             quality=c(threshold=20, percent=0.8),
-             check_mem =FALSE)
-             
-
-counts  <-  make_counts(input, threads=1,
-                        trimming="seqpac",
-                        parse=parse, 
-                        evidence=c(experiment=2, sample=1))
-  
-  
-  
-############################################################      
-### Seqpac trimming using the make_cutadapt function
-### (Important: Needs an external installations of cutadapt 
-###  and fastq_quality_filter) 
-#
-# Parse for make_cutadapt is a list of 2 character string expressions.
-# The first is parsed to cutadapt and the other to fastq_quality_filter 
-# For parallel processes '-j 1' is recommended since seqpac will   
-# parallelize across samples and not within. Run system("cutadapt -h") and 
-# system("fastq_quality_filter -h") for more options.
-# 
-# cut_prse <- paste0("-j 1 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAT", 
-#                    " --discard-untrimmed --nextseq-trim=20",
-#                    " -O 10 -m 14 -M 70")
-# 
-# parse = list(cutadapt = cut_prse,
-#              fastq_quality_filter = "-q 20 -p 80")
-# 
-# counts  <-  make_counts(input, threads=1,
-#                        trimming="cutadapt",
-#                        parse=parse, 
-#                        evidence=c(experiment=2, sample=1))
-
-   
-         
  
  #############################################################
  ### Lets change the evidence filter
@@ -240,10 +194,10 @@ counts  <-  make_counts(input, threads=1,
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
-\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
+\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}
