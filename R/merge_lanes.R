@@ -40,43 +40,24 @@
 #' 
 #' 
 #' ## Real example
-#' # First generate some smallRNA fastq.
-#' # Only one untrimmed fastq comes with seqpac
-#' # Thus, we need to randomly sample that one using the ShortRead-package
-#'  
+#' # First generate some correct file names (see above).
 #' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
 #' fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
 #'                 full.names = TRUE)
-#'
-#' closeAllConnections()
-#'
-#' sampler <- ShortRead::FastqSampler(fq, 20000)
-#' set.seed(123)
-#' fqs <- list(fq1_lane1=ShortRead::yield(sampler),
-#'            fq1_lane2=ShortRead::yield(sampler),
-#'            fq1_lane3=ShortRead::yield(sampler),
-#'            fq2_lane1=ShortRead::yield(sampler),
-#'            fq2_lane2=ShortRead::yield(sampler),
-#'            fq2_lane3=ShortRead::yield(sampler))
-#'
-#' # Now generate a temp folder were we can store the fastq files
-#' # (for autonomous example, make sure it is empty and correct platform)
-#' 
-#' input <- paste0(tempdir(), "/seqpac_temp")
-#' fls  <- list.files(input, recursive=TRUE)
-#' if(length(fls)>0){unlink(input, recursive=TRUE)}
-#' dir.create(input, showWarnings=FALSE)
-#' 
-#' # And then write the random fastq to the temp folder
-#' for (i in 1:length(fqs)){
-#'  input_file <- paste0(input, "/", names(fqs)[i], ".fastq.gz")
-#'  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-#'                        full=FALSE, compress=TRUE)
-#' }
-#' 
+#'  
 #' # Create an output folder
-#' output <- paste0(input, "/merged")
+#' input <- paste0(tempdir(), "/lanes/")
+#' output <- paste0(tempdir(), "/merged/")
+#' dir.create(input, showWarnings=FALSE)
 #' dir.create(output, showWarnings=FALSE)
+
+#' # Fix compatible file names
+#' file.copy(from = fq, to = input)
+#' old_fls <- list.files(input, full.names=TRUE)
+#' new_sample <- c(rep("sample1_", times=3), rep("sample2_", times=3))
+#' new_lane <- rep(c("lane1","lane2","lane3"), times=2)
+#' new_fls <- paste0(input,new_sample, new_lane, ".fastq.gz")                           
+#' file.rename(from = old_fls, to = new_fls)
 #' 
 #' # Then merge the fastq files
 #' merge_lanes(input, output, threads=2)
@@ -131,7 +112,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   }
 
   # trim further and test if still valid
-  test <- unique(gsub("_L00$|_L0$|_L$|_$", "", fls_nam))
+  test <- unique(gsub("_L00$|_L0$|_L$|_$|_lane|_Lane", "", fls_nam))
   if(length(test) == length(fls_nam)){
     fls_nam <- test
   }
@@ -143,7 +124,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
     fl_base<- fls_nam[j]
     lns  <- which(grepl(fl_base, fls_full))
     #out_nam  <- paste0(out_path, "/", fl_base, ".fastq.gz")
-    out_nam  <- file.path(out_path, "/", fl_base, ".fastq.gz")
+    out_nam  <- file.path(out_path, paste0(fl_base, ".fastq.gz"))
     # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
     #     out_nam <- gsub("\\", "/", out_nam, fixed=TRUE)
     #     }
@@ -155,6 +136,6 @@ merge_lanes <- function(in_path, out_path, threads=1){
         }
     }
   }
-  return("TRUE")
+  out_path <-return("TRUE")
   doParallel::stopImplicitCluster()
 }
