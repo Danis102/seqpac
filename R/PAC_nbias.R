@@ -22,7 +22,7 @@
 #'  type="counts" the plots will be based on the raw Counts. If type="cpm" the
 #'  analysis will be done on cpm values returned from \code{PAC_norm} function
 #'  and stored in the norm folder of the PAC-list object. The name of any other
-#'  table in the PAC$norm folder can also be used.    
+#'  table in the norm(PAC) folder can also be used.    
 #' 
 #' @param anno_target List with: 
 #'                          1st object being character vector of target
@@ -38,7 +38,7 @@
 #' 
 #' @param summary_target List with: 
 #'                          1st object being character vector of target object
-#'                          in PAC$summary, 2nd object being a character vector
+#'                          in sumary(PAC), 2nd object being a character vector
 #'                          of the target column(s) in the target summary object
 #'                          (1st object). (default=NULL)
 #'
@@ -67,7 +67,7 @@
 #' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 
 #' # Only miRNA (Oops, heavy T-bias on 1st nt; are they piRNA?)  
-#' table(pac$Anno$Biotypes_mis0)
+#' table(anno(pac)$Biotypes_mis0)
 #' output_nbias <- PAC_nbias(pac, anno_target = list("Biotypes_mis0", "miRNA") )
 #' cowplot::plot_grid(plotlist=output_nbias$Histograms)
 #' 

@@ -23,7 +23,7 @@ row names and a count table with raw counts.}
 type="counts" the plots will be based on the raw Counts. If type="cpm" the
 analysis will be done on cpm values returned from \code{PAC_norm} function
 and stored in the norm folder of the PAC-list object. The name of any other
-table in the PAC$norm folder can also be used.}
+table in the norm(PAC) folder can also be used.}
 
 \item{range}{Integer vector giving the range  in sequence lengths
 (default=c(min, max)).}
@@ -42,7 +42,7 @@ vector of the target group(s) in the target column
 
 \item{summary_target}{List with: 
 1st object being character target object in
-PAC$summary, 2nd object being a character vector of
+summary(PAC), 2nd object being a character vector of
 the target columns(s) in the target object (1st
 object). (default=NULL)}
 

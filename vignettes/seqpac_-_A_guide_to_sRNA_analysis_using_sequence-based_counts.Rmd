@@ -1,6 +1,6 @@
 ---
-title: "A guide to small RNA analysis using seqpac"
-shorttitle: "sRNA analysis using seqpac"
+title: "A guide to small RNA analysis using Seqpac"
+shorttitle: "sRNA analysis using Seqpac"
 author: "Daniel Nätt, Signe Skog, Lovisa Örkenby"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
@@ -8,9 +8,9 @@ abstract: >
     reads. It was originally developed for small RNA (sRNA) analysis, but can 
     be implemented on any sequencing raw data (provided as a fastq-file), where 
     the unit of measurement is counts of unique sequences. The core of the 
-    seqpac strategy is the generation and subsequence annotation/analysis/
+    Seqpac strategy is the generation and subsequence annotation/analysis/
     visualization of a standardized object called PAC. Using an innovative 
-    target system, seqpac process, analyze and visualize group differences 
+    target system, Seqpac process, analyze and visualize group differences 
     using the PAC object. Seqpac is particularly useful in generating sequence 
     coverage profiles across reference sequences (such as tRNA or gene coverage)
     without loosing the integrity of the original fastq sequences. Thus, 
@@ -20,13 +20,13 @@ abstract: >
     adapter trimming and generating sequence counts) and post-fastq analysis 
     (e.g filtering, genome and sRNA alignment, differential expression 
     and visualization).
-    seqpac package version: `r packageVersion("seqpac")`
+    Seqpac package version: `r packageVersion("seqpac")`
 output:
   BiocStyle::html_document:
     number_sections: yes
     toc: true
 vignette: >
-  %\VignetteIndexEntry{A guide to small RNA analysis using seqpac}
+  %\VignetteIndexEntry{A guide to small RNA analysis using Seqpac}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
 ---
@@ -39,7 +39,7 @@ vignette: >
 <br>
 <br>
 
-Stable versions of seqpac is available on Bioconductor, and development branches
+Stable versions of Seqpac is available on Bioconductor, and development branches
 can be obtained at github:
 
 ```{r BiocManager, eval=FALSE}
@@ -51,6 +51,8 @@ BiocManager::install("seqpac")
 ## Installation github:
 devtools::install_github("Danis102/seqpac", 
                          dependencies=TRUE, ref="development")
+
+
 
 ```
 
@@ -73,16 +75,16 @@ analysis. This involves, for example, regular RNA-seq with long RNA. But note,
 however, that it currently does not automatically support paired-end sequencing.
 
 <br>
-To preserve sequence integrity, seqpac applies sequence-based counting. This can
-be contrasted against feature-based counting, where reads are counted over known
-genomic features, like protein coding genes or sRNA. Such strategy will result
-in a count table where each count is made per feature (e.g. number of read
-counts mapping to a gene). In seqpac, such annotations are initially
-disregarded, as a count table is generated solely by counting unique sequences
-in the raw sequence files (fastq). Annotations against known reference (such as
-databases containing sequences of full genomes, miRNA, tRNA, protein coding
-genes, or genomic coordinates of such features) are done after the count table
-has been generated.
+To preserve sequence integrity, and thereby guarantee a clean data linage,
+Seqpac applies sequence-based counting. This can be contrasted against
+feature-based counting, where reads are counted over known genomic features,
+like protein coding genes or sRNA. Such strategy will result in a count table
+where each count is made per feature (e.g. number of read counts mapping to a
+gene). In Seqpac, such annotations are initially disregarded, as a count table
+is generated solely by counting unique sequences in the raw sequence files
+(fastq). Annotations against known reference(s) (such as databases containing
+sequences of full genomes, miRNA, tRNA, protein coding genes, or genomic
+coordinates of such features) are done after the count table has been produced.
 
 <br>
 The advantage of using sequence-based counting, compared to feature-based
@@ -114,9 +116,9 @@ your favorite database, to verify and find out more about them.**
 
 <br>
 
-## The seqpac workflow
-The input file format for seqpac is fastq, which can be generated from most
-sequencing platforms. Two types of objects sustain the core of the seqpac
+## The Seqpac workflow
+The input file format for Seqpac is fastq, which can be generated from most
+sequencing platforms. Two types of objects sustain the core of the Seqpac
 workflow:
 
 - The PAC object 
@@ -146,15 +148,58 @@ The workflow is roughly divided into four steps:
 - Annotate the PAC object
 - Analyze the PAC object.
 
+
+<br>
+
+## Quick start
+Here is a quick simple workflow using Seqpac. Remember, however, that in Seqpac 
+you can create much more advanced workflows. Especially when applying the reanno
+workflow, as will be described below.   
+```{r, eval=TRUE, echo=TRUE, warning=FALSE, message=FALSE, results = "hide"}
+ 
+# Setup
+ library(seqpac)
+ 
+ sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
+ fastq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
+                 full.names = TRUE)
+ ref_tRNA <- system.file("extdata/trna", "tRNA.fa",
+                         package = "seqpac", mustWork = TRUE)
+ 
+ # Trim NEB adapter, generate counts and create PAC-object (pheno, anno, counts)
+ count_list  <- make_counts(fastq, plot = FALSE, 
+                             parse="default_neb", trimming="seqpac")
+ pac <- make_PAC(count_list$counts)
+ pheno(pac)$groups <- c(rep("gr1",3), rep("gr2",3)) #Add groups to pheno table
+ 
+ # Preprocess PAC-object and creat means
+ pac <- PAC_norm(pac)                        # Default normalization is cpm
+ pac <- PAC_filter(pac, size=c(15,60))       # Here, filter on sequence length
+ pac <- PAC_summary(pac, norm = "cpm", type = "means", 
+                    pheno_target=list("groups", unique(pheno(pac)$groups)))
+ 
+ # Quickly align (annotate) and plot PAC-object
+ map_tRNA <- PAC_mapper(pac, ref=ref_tRNA, override=TRUE)
+ plts <- PAC_covplot(pac, map_tRNA, summary_target=list("cpmMeans_groups"))
+ plts[[13]]
+
+ 
+```
+<br>
+<br>
+
+---  
+
+
 <br>
 
 ## Example data
-Contained within this package is one example fastq file. This file was
-originally generated by extracting sRNA from a single fruit fly embryo. The
-original fastq file was aquired by Illumina NextSeq 500 sequencer using a High
-Output 75 cycles flow cell (product no: 20024906) and NEBNext® Small RNA 
-Library Prep Set for Illumina (E7330). Due to package size restriction, this 
-fastq was randomly down-sampled to a fraction of its original size.
+Contained within this package are 6 sRNA fastq file. These files were originally
+generated by extracting sRNA from a single fruit fly embryo. The original fastq
+file was acquired by Illumina NextSeq 500 sequencer using a High Output 75 cycles
+flow cell (product no: 20024906) and NEBNext® Small RNA Library Prep Set for
+Illumina (E7330). Due to package size restriction, this fastq was randomly
+down-sampled to a fraction of its original size into 6 much much smaller files.
 
 <br> 
 There is also a prepared example PAC-object that were similarly generated
@@ -162,42 +207,6 @@ from randomly down-sampled fastq files (but here we used 9 unique embryos). In
 addition, there are a few fasta reference file. These files are used in
 examples of this vignette and in the function manuals.
 
-<br>
-Now, lets start by randomly sample the included fastq file to obtain some
-multi-sample test data:
-```{r, eval=TRUE, echo=TRUE, warning=FALSE, message=FALSE, results = "hide"}
-
-library(seqpac)
-
- # Use the ShortRead-package to randomly sample a fastq file
- sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
- fq <- list.files(path = sys_path, pattern = "fastq", all.files = FALSE,
-                 full.names = TRUE)
-
- sampler <- ShortRead::FastqSampler(fq, 10000)
- set.seed(123)
- fqs <- list(fq1=ShortRead::yield(sampler),
-            fq2=ShortRead::yield(sampler),
-            fq3=ShortRead::yield(sampler))
-
- # Now generate a temp folder were we can store the fastq files
- # (you may of course use your own destination folder) 
- # (path style depends on platform; autonomous example need empty folder)
- path_to_fastq <- paste0(tempdir(), "/seqpac_temp")
- if(grepl("windows", .Platform$OS.type)){
-  path_to_fastq <- gsub( "\\\\", "/", path_to_fastq)
- }
- unlink(path_to_fastq, recursive = TRUE)
- dir.create(path_to_fastq, showWarnings=FALSE)
-
- # And then write the random fastq to the folder
- for (i in 1:length(fqs)){
-  input_file <- paste0(path_to_fastq, "/", names(fqs)[i], ".fastq.gz")
-  ShortRead::writeFastq(fqs[[i]], input_file, mode="w", 
-                        full=FALSE, compress=TRUE)
- }
- 
-```
 <br>
 <br>
 
@@ -213,7 +222,7 @@ separate lanes on the flow cell, where the same sample was present in all
 lanes, lane files must be merged for each unique sample.
 
 <br>
-Conveniently, seqpac contains a function that can be used to merge lane files:
+Conveniently, Seqpac contains a function that can be used to merge lane files:
 `merge_lanes`. Please see, `?merge_lanes` for examples on how to merge
 fastq-files. Specifically, this function searches the input folder for similar
 file names and append files with similar names. As long as the user uses unique
@@ -229,9 +238,9 @@ sequence-based counts (see 1.1 Overview). Thus, we need to generate a count
 table with the number of unique sequences in each sample. 
 
 <br>
-There are three ways of generating a count table in seqpac.
+There are three ways of generating a count table in Seqpac.
 
-- Trim raw fastq files using internal functions in seqpac/R.
+- Trim raw fastq files using internal functions in Seqpac/R.
 - Trim raw fastq files using external functions outside R.
 - Import reads from already trimmed fastq files.
 
@@ -250,7 +259,7 @@ series of trimming cycles using the `trimLRPatterns` function in the
 as generated by popular fastq trimming software, such as cutadapt.
 
 <br>
-Seqpac trimming is efficient, particularly when trimming many fastq files at the
+Seqpac trimming is praticularly efficient when trimming many fastq files at the
 same time. It parallelizes trimming on multiple processor cores/threads by
 applying functions in the `r CRANpkg("foreach")` package. Thus, if `threads=12`
 and you input 12 fastq files, all files will be trimmed simultaneously in
@@ -260,7 +269,7 @@ use fewer number of threads.
 
 <br>
 When `make_trim` is used on its own it results in trimmed fastq files stored at
-a user defined location. When `trimming="seqpac"` is set in the `make_counts`
+a user defined location. When `trimming="Seqpac"` is set in the `make_counts`
 function, this function parses settings to `make_trim` to generate a count table
 from temporary stored trimmed fastq files.
 
@@ -269,44 +278,23 @@ from temporary stored trimmed fastq files.
 ## Using default settings for NEB type adapter 
 # NEB= NEBNext® Small RNA Library Prep Set for Illumina (E7300/E7330)
 # For illumina type adapters, 'parse="default_illumina"' may be used
+# To speed things up we use 4 threads.
 
-count_list <- make_counts(input=path_to_fastq, trimming="seqpac", 
+count_list <- make_counts(input=fastq, trimming="seqpac", threads=4,
                           parse="default_neb")
 
 ```
-```{r, eval=TRUE, fig.show=FALSE, results="hide", fig.keep='none'} 
-# That was quite slow, lets speed it up a bit by increasing threads
-# You may check how many threads you can run with "parallel::detectCores()"
-count_list <- make_counts(input=path_to_fastq, trimming="seqpac", 
-                          parse="default_neb", threads=3)
 
-
-```
 
 <br>
 
 ### External trimming
-As an alternative to seqpac internal trimming, two external software:
+As an alternative to  internal trimming, two external software:
 [cutadapt](https://cutadapt.readthedocs.io/en/stable/installation.html) and
 [fastq_quality_filter](http://hannonlab.cshl.edu/fastx_toolkit/commandline.html)
- can be used to trim the adapter sequence and remove low quality reads prior of
-making a count table.
-
-<br>
-Importantly, cutadapt and fastq_quality_filter are not available on windows. For
-users on other platform with all dependencies installed:
-```{r, eval=FALSE, echo=TRUE, warning=FALSE, message=FALSE, results = "hide"}
-###--------------------------------------------------------------------- 
-# Generate counts by parsing commands to cutadapt
-# and fastq_quality_filter.
-# (Note, the 'default_neb' parse argument is designed for sRNA trimming)
-
-count_list <- make_counts(input=path_to_fastq, 
-                          trimming="cutadapt", parse="default_neb")
-
-```
-See the manuals for 'make_counts', 'make_trim',
-'make_cutadapt' for more details.
+can be used to trim the adapter sequence and remove low quality reads prior of
+making a count table. Importantly, cutadapt and fastq_quality_filter are not
+readily available for all platforms.
 
 <br>
 
@@ -315,6 +303,21 @@ Setting `trimming=NULL` in the `make_counts` function will pass
 the adapter trimming and a count table will be generated directly from the fastq
 files. Thus, this option can be used if you already have trimmed your fastq
 files.
+
+<br>
+
+### Optimizing for low-end systems and challenging data
+In the `make_counts`function users may choose to process data on-disk and in
+chunks instead of processing data in-memory. Thus, users on low-end computers
+with little RAM may choose to process smaller chunks and save data to disk
+from time to time on the expense of performance. This is controlled by the
+`optimize`option. Here, two panic filters are also available. These filters will
+only be applied if the unfiltered data fails to complete due to memory
+shortage. If such filter is applied to a fastq file this is clearly stated in
+the progress report, which give you the choice of what to do with such a sample.
+
+<br>
+See the manuals for `make_counts` for more details.
 
 <br>
 
@@ -333,20 +336,12 @@ by the `evidence` argument. As default, `evidence=c(experiment=2,
 sample=1)` will include all sequences that have >=1 counts in at least 2
 independent fastq files.
 
-```{r, eval=TRUE, echo=TRUE, warning=FALSE, message=FALSE, results = "markup"}
-## Lets plot the graphs from the default output  
-cowplot::plot_grid(plotlist=count_list$evidence_plot, nrow=2, ncol=1)
-
-```
-
-Importantly, since the test data is heavily down-sampled compared to the
-fastq file they originated from, the default evidence filter results in a rather
-dramatic loss of total number of reads. This will not be the case when running
-good quality fastq files with saturated sequence depths. We routinely observe
-that 95-99% of all reads are maintained when applying the default evidence
-filter, while >50% of the unique sequences will be dropped because they can not
-be replicated across two independent samples. For an example of how a saturated
-experiment may look like, see the original seqpac paper, Skog et al. from 2021.
+<br>
+Importantly, we routinely observe that 95-99% of all reads are maintained when
+applying the default evidence filter, while >50% of the unique sequences will be
+dropped because they can not be replicated across two independent samples. For
+an example of how a saturated experiment may look like, see the original paper,
+Skog et al. from 2021.
 
 <br>
 As you may have guessed, the 'experiment' argument controls the number of
@@ -362,7 +357,7 @@ Here is an example on how to use the 'sample' argument:
 ###--------------------------------------------------------------------- 
 ## Evidence over two independent samples, saving single sample sequences 
 ## reaching 3 counts
-test <- make_counts(input=path_to_fastq, trimming="seqpac", 
+test <- make_counts(input=fastq, trimming="seqpac", 
                     parse="default_neb", threads=3,   
                     evidence=c(experiment=2, sample=3))
 extras <- apply(test$counts, 1, function(x){sum(!x==0)})
@@ -374,7 +369,7 @@ test$counts[extras==1,] # A few still have 3 alone
 Lastly, if `evidence=NULL` all unique sequences will be saved. Remember,
 however, that the count table will become larger in well saturated experiments
 that may lead to performance issues on some systems, since each unique sequence
-occupies a row in `PAC$Counts` and `PAC$Anno`. Apply other filters prior to
+occupies a row in `counts(PAC)` and `anno(PAC)`. Apply other filters prior to
 annotating your sequences may solve such problems.
 
 <br>
@@ -385,6 +380,7 @@ was stored from the `make_counts` output. The Pheno table contains
 sample specific information such as sample name and possible interventions, with
 each sample as a row. 
 
+<br>
 The `make_pheno` function can import a Pheno table both externally by providing
 a path to a .cvs file, as well as internally by just passing a data.frame. In
 common for both options, is that a unique column named "Sample_ID" needs to be
@@ -392,6 +388,7 @@ present, and must contain the sample names (column names) present in the counts
 table generated by `make_counts`. Now, `make_pheno` will attempt to match
 similar names, but to avoid problems use identical names.
 
+<br>
 In addition, `make_pheno` may add the progress report generated by
 `make_counts`. Lets have a look at how this works:
 
@@ -421,10 +418,6 @@ very simple annotation table to the PAC-object that can be filled later.
 ## Generate PAC object (default S4)
 pac_master <- make_PAC(pheno=pheno, counts=count_list$counts)
 pac_master
-names(pac_master)
-isS4(pac_master)
-
-lapply(as(pac_master, "list"), head)
 
 ## If TRUE the PAC object is ok 
 PAC_check(pac_master)
@@ -445,8 +438,8 @@ item list, where the first object is naming a column in a specific table in the
 PAC and the second object tells the function which categories in that column
 that should be targeted.
 
-- `pheno_target`: extracts samples from a column in PAC$Pheno (S4: `pheno(PAC)`)
-- `anno_target`:  extracts sequences from a column in PAC$Anno (S4: `anno(PAC)`)
+- `pheno_target`: extracts samples from a column in `pheno(PAC)`
+- `anno_target`:  extracts sequences from a column in `anno(PAC)`
 
 While `pheno_target` and `anno_target` are the most common targeting objects,
 there are other targeting object. Common for all is that they target a specific
@@ -464,17 +457,17 @@ library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                  package = "seqpac", mustWork = TRUE))
 
-pac$Pheno[,1:5]
-pac$Anno[1:5,1:5]
+pheno(pac)[,1:5]
+anno(pac)[1:5,1:5]
+counts(pac)[1:5,1:5]
 
-## This PAC is an S3 object (a list with data.frames), but you can turn it to S4
-## using as.PAC(), which gives you some additional functionality:
+## This PAC is an S4 object, but you can easily turn it to an S3 list with as().
+## using as.PAC() will turn it back into S4:
 isS4(pac)
-pac_s4 <- as.PAC(pac)
-isS4(pac_s4)
-pheno(pac_s4)
-colnames(pac_s4)
-head(anno(pac_s4))
+pac_s3 <- as(pac, "list")
+lapply(pac_s3[1:3], head) 
+isS4(pac_s3)
+pac <- as.PAC(pac_s3)
 
 methods(class="PAC") #all S4 methods
 
@@ -606,12 +599,12 @@ The *norm* folder will be used to store counts that have been normalized in
 different ways, while the *summary* folder will contain the data that has been
 summarized across groups of samples. In both cases, applying a filter using
 `PAC_filter` will automatically subset not only P, A, and C, but also all tables
-stored in `PAC$norm` and `PAC$summary`.
+stored in `norm(PAC)` and `summary(PAC)`.
 
 <br>
 
 ## Normalization
-The built in normalization methods in seqpac are handled by the `PAC_norm`
+The built in normalization methods in Seqpac are handled by the `PAC_norm`
 function. In the current version  three methods are available: 
 
 - Counts per million reads (cpm) 
@@ -633,19 +626,15 @@ original Counts table. Use `PAC_check` to verify.
 Lets generate two normalized count tables with cpm and vst:
 ```{r, eval=TRUE, results=FALSE, message=FALSE, warning=FALSE, error=FALSE}
 ###--------------------------------------------------------------------- 
-## Example normalization in seqpac
+## Example normalization in Seqpac
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                  package = "seqpac", mustWork = TRUE))
 
-pac <- pac[1:3] # remove norm 'folder' in S3 PAC
-
-# A reminder on how to convert between S3 and S4:
-pac_s4 <- as.PAC(pac)
-pac_s3 <- as(pac, "list")
-
 # PAC_norm works on both
-pac_cpm <- PAC_norm(pac_s4, norm="cpm")
-pac_vst <- PAC_norm(pac_s3, norm="vst")
+pac <- PAC_norm(pac, norm="cpm")
+pac <- PAC_norm(pac, norm="vst")
+
+pac
 
 ``` 
 
@@ -657,9 +646,9 @@ reads with high cpm values.
 ###---------------------------------------------------------------------
 ## Filtering using cpm instead of raw counts
 ## filter >=100 cpm in 100% of samples in >= 1 full group
-filtsep <- PAC_filtsep(pac_cpm, norm="cpm", threshold=100, coverage=100, 
+filtsep <- PAC_filtsep(pac, norm="cpm", threshold=100, coverage=100, 
                        pheno_target= list("stage")) 
-pac_cpm_filt <- PAC_filter(pac_cpm, subset_only = TRUE,
+pac_cpm_filt <- PAC_filter(pac, subset_only = TRUE,
                        anno_target= unique(do.call("c", as.list(filtsep))))
 
 
@@ -677,17 +666,17 @@ From the start a PAC object contains a very limited Anno table such as this:
 
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                  package = "seqpac", mustWork = TRUE))
-pac$Anno <- pac$Anno[,1, drop = FALSE]
-head(pac$Anno)
+anno(pac) <- anno(pac)[,1, drop = FALSE]
+head(anno(pac))
 
 ``` 
 
-To facilitate easy adoption of seqpac to any species, we provide a fast and
+To facilitate easy adoption of Seqpac to any species, we provide a fast and
 flexible workflow for mapping PAC sequences against user defined reference
 databases. We call this reannotation, since we map the sequences in Anno object
 sequentially over one or multiple references.
 
-Important, seqpac relies on the popular bowtie aligner `r Biocpkg("Rbowtie")`
+Important, Seqpac relies on the popular bowtie aligner `r Biocpkg("Rbowtie")`
 for mapping: http://bowtie-bio.sourceforge.net/manual.shtml. This means that
 references must be indexed using the `bowtie_build` function before they are
 compatible with the reannotation workflow (but see the `PAC_mapper` function for
@@ -824,7 +813,7 @@ your preferred table info. Finally you may save it using rtracklayer again
 <br>
 
 ## The reannotation workflow
-The procedure to annotate sequences in seqpac is called reannotation.
+The procedure to annotate sequences in Seqpac is called reannotation.
 
 <br>
 The PAC reannotation family of functions carries out the following tasks:
@@ -846,10 +835,10 @@ The PAC reannotation family of functions carries out the following tasks:
 <br>
 
 **map_reanno**<br>
-To accommodate most users on most platforms, seqpac provides two alternatives
+To accommodate most users on most platforms, Seqpac provides two alternatives
 for calling bowtie using the `map_reanno` function: internally from within R
 (`type="internal"`) or externally from outside R (`type="external"`). In the
-internal mode, seqpac uses the `bowtie` function in the `r Biocpkg("Rbowtie")`
+internal mode, Seqpac uses the `bowtie` function in the `r Biocpkg("Rbowtie")`
 package, while in the external mode bowtie is called by a system command to a
 locally installed version of bowtie. Both options gives identical results, but
 since the internal Rbowtie package is rarely updated, we provide the external
@@ -862,7 +851,7 @@ slightly, `map_reanno` has two parse options: `parse_internal` and
 as if they were run from the console or command line, respectively.
 
 <br>
-While bowtie has its own way to handle mismatches in the alignments, seqpac
+While bowtie has its own way to handle mismatches in the alignments, Seqpac
 disregards this and instead runs bowtie sequentially, increasing the number of
 mismatches for each cycle. After each cycle all sequences that received a match
 in any of the provided references will be subtracted. Therefore, in the next
@@ -924,7 +913,7 @@ classification for each sequence. By doing so, an hierarchy must be set, where
 priority of some classifications over others is done (e.g. miRNA over piRNA).
 While this is a controversial topic, using such hierarchies is still the only
 way to provide overview statistics in experiments targeting highly multimapping
-sequences, such as small RNA. Nonetheless, the seqpac workflow with its sequence
+sequences, such as small RNA. Nonetheless, the Seqpac workflow with its sequence
 based counts, where hierarchical classification is done in the very end of the
 annotation process, makes it easy to generate classifications using alternative
 hierarchies and observe the consequences of your choices in for example a pie
@@ -942,7 +931,7 @@ In summary:
 
 <br>
 
-Already at this point it is good to know that seqpac provides a 'backdoor'
+Already at this point it is good to know that Seqpac provides a 'backdoor'
 function, `PAC_mapper`, that carries out many of the steps in the reanno
 workflow using smaller references and pac objects. Please see '6.1 Advanced
 alignment analysis' or ?PAC_mapper for more details.
@@ -965,7 +954,7 @@ fasta must have bowtie indexes (see 4.2).
 library(seqpac)
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                  package = "seqpac", mustWork = TRUE))
-pac$Anno <- pac$Anno[,1, drop = FALSE] # Remove previous Anno
+anno(pac) <- anno(pac)[,1, drop = FALSE] # Remove previous Anno
 
 ###---------------------------------------------------------------------
 ## Genome mapping
@@ -978,7 +967,7 @@ outpath_genome <- paste0(tempdir(), "/seqpac_reanno/reanno_genome")
 # Look up the your own Bowtie indexed reference genomes (fasta)
 ref_paths <- list(myco="<some/path/to/your/genome.fa>")
 
-# For testing, you can use a small mycoplasma genome provided with seqpac
+# For testing, you can use a small mycoplasma genome provided with Seqpac
 # But remember to provide single genomes as a named list anyway.
 # The name will be used to keep track of your genome.
 myco_path <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa", 
@@ -1008,7 +997,7 @@ outpath_biotype <- "/some/path/to/reanno_biotype"
 outpath_biotype <- paste0(tempdir(), "/seqpac_reanno/reanno_biotype")
 
 
-# seqpac contains two fasta for tRNA and rRNA we can use for testing
+# Seqpac contains two fasta for tRNA and rRNA we can use for testing
 trna_path <- system.file("extdata/trna", "tRNA.fa", 
                          package = "seqpac", mustWork = TRUE)  
 rrna_path <- system.file("extdata/rrna", "rRNA.fa", 
@@ -1044,14 +1033,9 @@ reanno_biotype <- make_reanno(outpath_biotype, PAC=pac, mis_fasta_check = TRUE)
 str(reanno_genome, max.level = 3, give.attr = FALSE)
 str(reanno_biotype, max.level = 3, give.attr = FALSE)
 
-# Sometimes its more convenient to using S3 than S4
-# (or you may use @ or slot() to obtain s4 elements)
-reanno_bio_s3 <- as(reanno_biotype, "list")
-
 # Simple pie charts using the Overview table
 pie(table(overview(reanno_genome)$myco)) # Very few mycoplasma with 0 mismatch 
-pie(table(reanno_bio_s3$Overview$Any)) # Many hits for either rRNA or tRNA
-pie(table(overview(reanno_biotype)$Any)) # Same but for S4
+pie(table(overview(reanno_biotype)$Any))  # Many hits for either rRNA or tRNA
 
 ```
 
@@ -1077,7 +1061,7 @@ head(full(reanno_genome)$mis1$myco)
 
 # Finished genome annotation 
 head(anno_genome)
-head(pac$Anno)
+head(anno(pac))
 
 ```
 
@@ -1104,7 +1088,7 @@ Hint: See `?add_reanno` for a trick on how to succeed with `bio_perfect=TRUE`.
 
 # Lets start by exploring the names in the original fasta reference: 
 ref_path <- "/some/path/to/fasta_reference" 
-# For testing use the the fasta reference for tRNA provided with seqpac:
+# For testing use the the fasta reference for tRNA provided with Seqpac:
 trna_path <- system.file("extdata/trna", "tRNA.fa", 
                          package = "seqpac", mustWork = TRUE)  
 
@@ -1167,9 +1151,7 @@ table(anno_temp$mis1)
 pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
                         type="biotype", bio_perfect=FALSE, mismatches = 1,
                         merge_pac=pac)
-head(pac$Anno)#S3
-head(anno(as.PAC(pac))) #S4
-
+head(anno(pac))
 
 ```
 
@@ -1195,7 +1177,7 @@ prioritized over the hierarchy.
 ## Hierarchical classification with simplify_reanno
 
 #  Currently classification does not discriminate
-table(pac$Anno$mis3_bio)
+table(anno(pac)$mis3_bio)
 
 # Set the hierarchy and remember that it is order sensitive.
 # Here: S5_rRNA >> Other_rRNA >> mt:tRNA >> tRNA
@@ -1226,13 +1208,13 @@ table(test)# Non-hits are classified as 'other'
 
 # Lets increase number of mismatches an merge it with the PAC
 # (How many mismatches depends on what you allowed previously in the workflow) 
-colnames(pac$Anno)  # mis0-1_bio = Upto 1 mismatches are available
+colnames(anno(pac))  # mis0-1_bio = Upto 1 mismatches are available
 
 pac_test <- simplify_reanno(input=pac, hierarchy=hierarchy_1, mismatches=1, 
                         bio_name="Biotypes_mis1", merge_pac=TRUE)
 
 # Now we also have some mitochondrial tRNA 
-table(pac_test$Anno$Biotypes_mis1)
+table(anno(pac_test)$Biotypes_mis1)
 
 
 ``` 
@@ -1244,9 +1226,9 @@ table(pac_test$Anno$Biotypes_mis1)
 ---
 
 # Analysis and visualization
-There are several functions in seqpac that handle statistical analysis and
+There are several functions in Seqpac that handle statistical analysis and
 visualization. We will only present a few of them here, so please refer to
-seqpac's reference manual for a complete list. Just like many of the
+Seqpac's reference manual for a complete list. Just like many of the
 preprocessing functions, these functions are named PAC_xxx to clearly show that
 they are applied on a PAC object. 
 
@@ -1255,16 +1237,16 @@ compatible, you can always run `PAC_check`.
 
 
 ## Summarize data over groups
-To make simple summaries over column categories/groups in the `PAC$Pheno` table
+To make simple summaries over column categories/groups in the `pheno(PAC)` table
 such as means, standard deviation (SD), standard error (SE), and log2 fold
-changes (log2FC) etc, seqpac has a convenient function called `PAC_summary`.
+changes (log2FC) etc, Seqpac has a convenient function called `PAC_summary`.
 This function uses a target_pheno object  to generate a summary over raw
 counts or normalized counts across sample groups. Processed data will be stored
-in the `PAC$summary` folder.
+in the `summary(PAC)` folder.
 
-Important, summarized data in the `PAC$summary` folder will always have the
-same rownames (unique sequences) as `PAC$Counts` and `PAC$Anno`, while the
-column names will be derived from the `PAC$Pheno` table. Summarize using an
+Important, summarized data in the `summary(PAC)` folder will always have the
+same rownames (unique sequences) as `counts(PAC)` and `anno(PAC)`, while the
+column names will be derived from the `pheno(PAC)` table. Summarize using an
 anno_target object is not allowed, because that would disrupt sequence names
 (loss of sequence integrity). Summaries over sequences (such as generating means
 over sRNA classes) is instead handled by each plot/statistical function, and
@@ -1279,20 +1261,20 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 ###---------------------------------------------------------------------
-## PAC_summary in seqpac 
+## PAC_summary in Seqpac 
 
 # Make means of counts over stages and return a data.frame
 tab <- PAC_summary(pac, norm = "counts", type = "means", 
                    pheno_target=list("stage"), merge_pac=FALSE)
 
-# When merge_pac=TRUE the table is added to the PAC$summary 'folder'  
+# When merge_pac=TRUE the table is added to the summary(PAC) 'folder'  
 pac_test <- PAC_summary(pac, norm = "counts", type = "means", 
                         pheno_target=list("stage"), merge_pac=TRUE)
 
-as.PAC(pac)       # Structure of PAC before PAC_summary (S4)
-as.PAC(pac_test)  # Structure of PAC after PAC_summary  (S4)
-names(pac_test$summary)
-head(pac_test$summary$countsMeans_stage)
+pac       # Structure of PAC before PAC_summary (S4)
+pac_test  # Structure of PAC after PAC_summary  (S4)
+names(summary(pac_test))
+head(summary(pac_test)$countsMeans_stage)
 ```
 ```{r, eval=TRUE, results=FALSE, message=FALSE, warning=FALSE}
 # You may want to use normalized counts   
@@ -1317,11 +1299,11 @@ pac_test <- PAC_summary(pac_test, norm = "cpm", type = "log2FCgrand",
                         pheno_target=list("stage"), merge_pac=TRUE)
 
 # All summarized tables have identical row names that can be merged
-names(pac_test$summary)
-lapply(pac_test$summary, function(x){
-  identical(rownames(x), rownames(pac_test$summary[[1]]))
+names(summary(pac_test))
+lapply(summary(pac_test), function(x){
+  identical(rownames(x), rownames(summary(pac_test)[[1]]))
   })
-head(do.call("cbind", pac_test$summary))
+head(do.call("cbind", summary(pac_test)))
 
 ```
 
@@ -1342,10 +1324,10 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 ###---------------------------------------------------------------------
-## Differential expression in seqpac 
+## Differential expression in Seqpac 
 
 # Simple model testing stages against using Wald test with local fit (default)
-table(pac$Pheno$stage)
+table(pheno(pac)$stage)
 output_deseq <- PAC_deseq(pac, model= ~stage, threads=6)
 ```
 ```{r, eval=TRUE,fig.show=FALSE,results="hide",message=FALSE,fig.keep='none'} 
@@ -1378,7 +1360,7 @@ principle component analysis, from which scatter plots are plotted using the
 
 ```{r, eval=TRUE, fig.show=FALSE, results="hide", fig.keep='none'} 
 ###---------------------------------------------------------------------
-## PCA analysis in seqpac 
+## PCA analysis in Seqpac 
 
 # As simple as possible 
 output_pca <- PAC_pca(pac)
@@ -1392,7 +1374,7 @@ output_pca <- PAC_pca(pac, pheno_target =list("stage"))
 
 # Using pheno_target with sample labels
 output_pca <- PAC_pca(pac, pheno_target =list("stage"), 
-                      label=pac$Pheno$sample)
+                      label=pheno(pac)$sample)
 ```
 ```{r, eval=TRUE, fig.show=FALSE, results="hide", fig.keep='none'} 
 # Plotting sequences instead
@@ -1410,11 +1392,11 @@ CRANpkg("ggplot2")` package:
 
 **PAC_nbias**<br>
 Note, first nucleotide bias can be visualized without any advanced annotations
-added to the `PAC$Anno` table
+added to the `anno(pac)` table
 
 ```{r, eval=TRUE, fig.show=FALSE, results="hide", fig.keep='none'} 
 ###---------------------------------------------------------------------
-## Nucleotide bias in seqpac 
+## Nucleotide bias in Seqpac 
 
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                  package = "seqpac", mustWork = TRUE))
@@ -1422,14 +1404,14 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 # Test without annotations
 # (note, is equivalent to an unfiltered master PAC)
 pac_test <- pac
-pac_test$Anno <- pac_test$Anno[,1, drop = FALSE]
+anno(pac_test) <- anno(pac_test)[,1, drop = FALSE]
 
 output_nbias <- PAC_nbias(pac_test)
 cowplot::plot_grid(plotlist=output_nbias$Histograms)
 
 # Now lets use an anno_target in an annotated PAC targetting miRNA 
 # (Oops, heavy T-bias on 1st nt; are they piRNA?)  
-table(pac$Anno$Biotypes_mis0)
+table(anno(pac)$Biotypes_mis0)
 output_nbias <- PAC_nbias(pac, anno_target = list("Biotypes_mis0", "miRNA") )
 cowplot::plot_grid(plotlist=output_nbias$Histograms)
 
@@ -1467,7 +1449,7 @@ output_sizedist_2 <- PAC_sizedist(pac, anno_target = list("Biotypes_mis3"))
 cowplot::plot_grid(plotlist=c(output_sizedist_2$Histograms), ncol=3, nrow=3)
 
 # anno_target is order sensitive, thus can take care of color order issues:
-ord_bio <- as.character(unique(pac$Anno$Biotypes_mis3))
+ord_bio <- as.character(unique(anno(pac)$Biotypes_mis3))
 ord_bio <- ord_bio[c(1,5,2,4,3,6,7)] 
 output_sizedist_2 <- PAC_sizedist(pac, 
                                   anno_target = list("Biotypes_mis3", ord_bio))
@@ -1490,7 +1472,7 @@ cowplot::plot_grid(plotlist=output_sizedist_sum$Histograms)
 
 ## Simple stacked bars and pie charts
 The `PAC_stackbar` and `PAC_pie` have the same arguments as input but with
-slightly different outputs. Summaries over groups in `PAC$Pheno` are controlled
+slightly different outputs. Summaries over groups in `pheno(PAC)` are controlled
 på the 'summary' argument.
 
     summary= "all"    | % are generate over a mean of all samples
@@ -1502,7 +1484,7 @@ på the 'summary' argument.
 **PAC_stackbar**<br>
 ```{r, message=FALSE, include = TRUE, eval=TRUE}
 ###---------------------------------------------------------------------
-## Stacked bars in seqpac 
+## Stacked bars in Seqpac 
 
 # Choose an anno_target and plot samples (summary="samples")
 PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
@@ -1510,7 +1492,7 @@ PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
 ```{r, eval=TRUE,fig.show=FALSE,results="hide",message=FALSE,fig.keep='none'}
 
 # 'no_anno' and 'other' will always end on top not matter the order
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)))
+ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis3)))
 p1 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", ord_bio))
 p2 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", rev(ord_bio)))
 cowplot::plot_grid(plotlist=list(p1, p2))
@@ -1532,14 +1514,14 @@ PAC_stackbar(pac, anno_target=list("Biotypes_mis0"), summary="pheno",
 ```{r, eval=TRUE,fig.show=FALSE,results="hide",warning=FALSE,fig.keep='none'}
 
 ###---------------------------------------------------------------------
-## Pie charts in seqpac 
+## Pie charts in Seqpac 
 
 # Choose an anno_target and plot samples (summary="samples"; default)
 PAC_pie(pac, anno_target=list("Biotypes_mis0"))
 
 # Ordered pie charts of grand mean percent of all samples labeled with percent
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), 
-                        unique(pac$Anno$Biotypes_mis0))
+ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis3)), 
+                        unique(anno(pac)$Biotypes_mis0))
 
 output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), 
                         summary="all", labels="percent")
@@ -1554,8 +1536,8 @@ cowplot::plot_grid(plotlist=c(output_pie_1, output_pie_2),
 PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
 PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=40)
 
-# Compare biotype mapping with or without mismatches and group by PAC$Pheno
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis0)))  
+# Compare biotype mapping with or without mismatches and group by pheno(PAC)
+ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis0)))  
 output_mis0 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", 
                        anno_target=list("Biotypes_mis0", ord_bio))
 output_mis3 <- PAC_pie(pac, pheno_target=list("stage"), summary="pheno", 
@@ -1573,7 +1555,7 @@ cowplot::plot_grid(plotlist=c(output_mis0, output_mis3),
 
 ---
 
-# Specilized analysis in seqpac
+# Specilized analysis in Seqpac
 Seqpac functions may be used for more advanced analysis than simple
 classification. For example, we can dwell deeper into the details between the
 alignments of reads and references, by classifying reads depending on where it
@@ -1585,7 +1567,7 @@ transposable elements and genes.
 In the current version of this guide we have only included a section on how to
 do advanced alignment analysis for the purpose of tRNA classification, but
 please see the `PAC_gtf` function to find out how to use coordinate overlap
-annotations in seqpac.
+annotations in Seqpac.
 
 <br>
 
@@ -1599,7 +1581,7 @@ reference allows us to plot coverage plots showing the coverage of sRNA across
 the reference.
 
 <br>
-Conveniently, seqpac contains a 'backdoor' to the reanno workflow, which allows
+Conveniently, Seqpac contains a 'backdoor' to the reanno workflow, which allows
 the user to quickly obtain mapping coordinates of sequences in a PAC object that
 align to a reference fasta file. This is done by the `PAC_mapper` function.
 This function uses temporary output files from bowtie to generate a map object,
@@ -1613,7 +1595,7 @@ may be possible to use, they are discouraged with this function.
 <br>
 After a map object has been generated, the `PAC_covplot` function can make
 coverage plots of reads mapping to each reference. Lets have a look on how it
-works in seqpac for advanced tRNA analysis using the test dataset:
+works in Seqpac for advanced tRNA analysis using the test dataset:
 
 <br>
 ```{r, eval=TRUE,fig.show=FALSE,results="hide",message=FALSE,fig.keep='none'} 
@@ -1622,10 +1604,10 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 ###---------------------------------------------------------------------
-## tRNA analysis in seqpac 
+## tRNA analysis in Seqpac 
 
 # First create an annotation blank PAC with group means
-pac$Anno <- pac$Anno[,1, drop=FALSE]
+anno(pac) <- anno(pac)[,1, drop=FALSE]
 pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
                         pheno_target=list("stage"), merge_pac = TRUE)
 
@@ -1636,7 +1618,8 @@ ref <- system.file("extdata/trna2", "tRNA2.fa",
                           package = "seqpac", mustWork = TRUE)          
 
 map_object <- PAC_mapper(pac_trna, ref=ref, N_up = "NNN", N_down = "NNN", 
-                         mismatches=0, threads=6, report_string=TRUE)
+                         mismatches=0, threads=6, report_string=TRUE,
+                         override=TRUE)
 
 # Hint: By adding N_up ad N_down you can make sure that modified fragments (like
 # 3' -CAA in mature tRNA are included).
@@ -1700,7 +1683,7 @@ tRNA. Ss-files for most common genomes are readily available for download at
 http://gtrnadb.ucsc.edu/.
 
 <br>
-In seqpac, the `map_rangetype` function is used to further annotate the
+In Seqpac, the `map_rangetype` function is used to further annotate the
 resulting map object obtained using the `PAC_mapper` function. First, if tRNA
 reference names were provided in the correct format (eg.
 "tRNA-Pro-CGG-2-1_chrX:18565764-18565835_(+): format: name -> genome coordinates
@@ -1758,8 +1741,8 @@ tolerance <- 5  # 2 nucleotides from start or end of full-length tRNA)
 ## tRNA classifying function 
 # Apply the tRNA_class function and make a tRNA type column
 pac_trna <- tRNA_class(pac_trna, map=map_object_ss, terminal=tolerance)
-pac_trna$Anno$type <- paste0(pac_trna$Anno$decoder, pac_trna$Anno$acceptor)
-pac_trna$Anno[1:5, 1:4]
+anno(pac_trna)$type <- paste0(anno(pac_trna)$decoder, anno(pac_trna)$acceptor)
+anno(pac_trna)[1:5, 1:4]
 
 ```
 

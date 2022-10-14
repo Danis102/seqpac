@@ -45,8 +45,10 @@
 #'  
 #' @examples
 #' 
-#'###########################################################
-#'### tRNA analysis in seqpac 
+#' # Important: See ?PAC_trna on how to do tRNA analysis using Seqpac 
+#' 
+#' #'###########################################################
+#'### tRNA classification in seqpac 
 #'# (More details see vignette and manuals.)
 #'
 #'##-------------------------------##
@@ -55,7 +57,6 @@
 #'# First create an annotation blanc PAC with group means
 #'load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                 package = "seqpac", mustWork = TRUE))
-#'pac <- as.PAC(pac) # S4 coversion
 #'anno(pac) <- anno(pac)[,1, drop=FALSE]
 #'pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
 #'                        pheno_target=list("stage"), merge_pac = TRUE)
@@ -71,27 +72,12 @@
 #'
 #'##--------------------------------------##
 #'## Create a map object using PAC_mapper ##
-#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, N_up = "NNN", N_down = "NNN",
+#'map_object <- PAC_mapper(pac_trna, ref=trna_ref, 
+#'                         N_up = "NNN", N_down = "NNN",
 #'                         mismatches=0, threads=2, 
 #'                         report_string=TRUE, override = TRUE)
 #'# Warning: override = TRUE, will remove everything in temporary output path.
 #'# Note: bowtie indexes are not nedded for PAC_mapper.
-#'
-#'
-#'##------------------------------------------##
-#'## Coverage plots of tRNA using PAC_covplot ##
-#'
-#'# Single tRNA targeting a summary dataframe 
-#'PAC_covplot(pac_trna, map=map_object, summary_target= list("cpmMeans_stage"),
-#'            map_target="tRNA-Ala-AGC-1-1")
-#'
-#'# Find tRNAs with many fragments and then plot
-#'n_tRFs <- unlist(lapply(map_object, function(x){nrow(x[[2]])}))
-#'selct <- (names(map_object)[n_tRFs>1])[c(1, 16, 25, 43)]
-#'cov_plt <- PAC_covplot(pac_trna, map=map_object, 
-#'                       summary_target= list("cpmMeans_stage"), 
-#'                       map_target=selct)
-#'cowplot::plot_grid(plotlist=cov_plt, nrow=2, ncol=2)
 #'
 #'
 #'##-------------------------------------------##
@@ -99,79 +85,11 @@
 #'
 #'# Classify according to loop structure using ss file provided with seqpac
 #'map_object_ss <- map_rangetype(map_object, type="ss", ss=ss_file, 
-#'                               min_loop_width=4)
+#'                               min_loop_width=4)          
 #'# Note 1: You may download your own ss file at for example GtRNAdb
 #'# Note 2: The ss file must match the reference used in creating the map_object
 #'
-#'# Classify instead according to nucleotide position or percent intervals 
-#'map_object_rng <- map_rangetype(map_object, type="nucleotides",
-#'                                intervals=list(start=1:5, end=95:100))
-#'
-#'map_object_prc <- map_rangetype(map_object, type="percent",
-#'                                intervals=list(start=1:5, mid=45:50,
-#'                                               end=95:100))
-#'
-#'# Compare the output (same fragment different classifications)
-#'map_object_ss[[2]]
-#'map_object_prc[[2]]
-#'map_object_rng[[2]]
-#'
-#'
-#'##-------------------------------##
-#'## Classify tRFs with tRNA_class ##
-#'# Warning: this function currently only works using map objects 
-#'# created using ss files with specific names for loop1/2/3 columns: 
-#'colnames(map_object_ss[[2]][[2]])  
-#'
-#'# Important: We added three "Ns" in PAC_mapper (above). If, terminal
-#'# classification should correspond to the original tRNA sequences we need to
-#'# account for these Ns when defining what is a terminal fragment. Here, we set
-#'# "terminal=5", which means that PAC sequences will receive 5'/3'
-#'# classification if they map to the first two or last two nucleotides of the
-#'# original full-length tRNAs (2+NNN =5).
-#'
-#'pac_trna <- tRNA_class(pac_trna, map_object_ss, terminal=5)
-#'
-#'##---------------------------------##
-#'## Plot some results with PAC_trna ##
-#'
-#'# Now, there are thousands of ways to visualize and analyze tRNA classes. 
-#'# Here is one example using our PAC_trna function: 
-#'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#'                        join = TRUE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage5")),
-#'                        anno_target_1 = list("type"),
-#'                        anno_target_2 = list("class"))
-#'
-#'cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Grand_means,
-#'                   trna_result$plots$Log2FC_Anno_1,
-#'                   trna_result$plots$Percent_bars$Grand_means,
-#'                   nrow=1, ncol=3)
-#'# Note: There are no 3´ fragments in our test data.  
-#'
-#'# By setting join = FALSE you will get group means instead of grand means:
-#'trna_result <- PAC_trna(pac_trna, norm="cpm", filter = NULL,
-#'                        join = FALSE, top = 15, log2fc = TRUE,
-#'                        pheno_target = list("stage", c("Stage1", "Stage3")),
-#'                        anno_target_1 = list("type"),
-#'                        anno_target_2 = list("class"))
-#'
-#'cowplot::plot_grid(trna_result$plots$Expression_Anno_1$Stage1,
-#'                   trna_result$plots$Expression_Anno_1$Stage3,
-#'                   trna_result$plots$Log2FC_Anno_1,
-#'                   trna_result$plots$Percent_bars$Stage1,
-#'                   trna_result$plots$Percent_bars$Stage3,
-#'                   nrow=1, ncol=5)
-#'
-#'##-----------------------------------------##
-#'## Clean up temp folder                    ##
-#'# (Sometimes needed for automated examples) 
-#'
-#'closeAllConnections()
-#'fls_temp  <- tempdir()
-#'fls_temp  <- list.files(fls_temp, recursive=TRUE, 
-#'                        full.names = TRUE)
-#'suppressWarnings(file.remove(fls_temp)) 
+#' map_object_ss[[1]]
 #' 
 #' @export
 

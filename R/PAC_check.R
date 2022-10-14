@@ -33,12 +33,12 @@
 #' PAC_check(pac)  # TRUE
 #' 
 #' # Remove first row in Anno and check compatibility
-#' new_Anno <- pac$Anno[-1,]
+#' new_Anno <- anno(pac)[-1,]
 #' #PAC_check(pac, seq_check=new_Anno) # Error
 #' 
 #' # Add to pac an check
-#' pac$Anno <- new_Anno
-#' #PAC_check(pac) # Error
+#' # anno(pac) <- new_Anno #error
+
 #' 
 #' @export
 

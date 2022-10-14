@@ -47,7 +47,7 @@ of log dispersions), "mean" (mean of gene-wise dispersion). See
 
   Important: In \code{PAC_deseq}, pheno_target controls the main comparative
   factor category from which a summarized table and plots will be generated.
-  If, for instance, a target column named "groups" in PAC$Pheno contains
+  If, for instance, a target column named "groups" in pheno(PAC) contains
   "control" and "treatment" categories, setting pheno_target=list("groups",
   c("treatment", "controls") ensures that "treatment" is presented 1st in the
   factor levels, making for example log2FC appear as "treatment vs control".
@@ -60,7 +60,7 @@ of log dispersions), "mean" (mean of gene-wise dispersion). See
 \value{
 A list of objects: 
 
-   1st object - Summarized result table merged with PAC$Anno 
+   1st object - Summarized result table merged with anno(PAC) 
    
    2nd object - Target graphs (p-val distribution and volcano) 
    
@@ -85,7 +85,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                 package = "seqpac", mustWork = TRUE))
 
 ## Simple model with embryonic stages using Wald test with local fit (default)
-table(pac$Pheno$stage)
+table(pheno(pac)$stage)
 output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage, threads=2))
 
 ## Batch corrected, graphs are generated for 'stage' (=first in the model)

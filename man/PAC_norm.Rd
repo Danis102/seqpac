@@ -11,23 +11,23 @@ PAC_norm(PAC, norm = "cpm", merge_pac = TRUE)
 row names and a Count table with raw counts.}
 
 \item{norm}{Character indicating what type of normalization method that
-should be applied to the PAC$Counts. If norm="cpm", counts per million
+should be applied to the counts(PAC). If norm="cpm", counts per million
 reads) is returned. Each sequence is then divided against the total number
-of counts in a given sample. If norm="vst", PAC$Counts will be imported
+of counts in a given sample. If norm="vst", counts(PAC) will be imported
 into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
 in the DESeq2-package with the options blind=TRUE and fitType="mean". If
-norm="rlog", PAC$Counts will instead be imported into the
+norm="rlog", counts(PAC) will instead be imported into the
 \code{\link[DESeq2]{rlog}} function also available in
 DESeq2-package (options blind=TRUE and fitType="mean") for a log2
 transformed version of vst, and is more robust to varying library sizes.}
 
 \item{merge_pac}{logical whether the normalized table should be returned and
-stored in the PAC$norm 'folder' of the provided PAC object (TRUE) or be
+stored in the norm(PAC) 'folder' of the provided PAC object (TRUE) or be
 returned as a data frame.}
 }
 \value{
 A normalized count table, or if pac_merge=TRUE, a PAC object with
-  normalized counts table added to the norm folder (PAC$norm).
+  normalized counts table added to the norm folder (norm(PAC)).
 }
 \description{
 \code{PAC_norm} generates normalized values from a PAC object

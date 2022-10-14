@@ -37,23 +37,16 @@
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #'
 #' @export
@@ -98,23 +91,16 @@ setReplaceMethod("pheno", methods::signature(object="PAC", value="data.frame"),
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 #' 
@@ -163,23 +149,16 @@ setReplaceMethod("anno", methods::signature(object="PAC", value="data.frame"),
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #'
 #'
 #' @export
@@ -223,23 +202,16 @@ setReplaceMethod("counts", methods::signature(object="PAC", value="data.frame"),
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setGeneric("norm", function(object){standardGeneric("norm")})
@@ -281,23 +253,16 @@ setReplaceMethod("norm", methods::signature(object="PAC", value="list"),
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4                   
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #'  
 #' @export
 setGeneric("summary", function(object){standardGeneric("summary")})
@@ -342,23 +307,16 @@ setReplaceMethod("summary", methods::signature(object="PAC", value="list"),
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 show.PAC <- function(object) {
@@ -400,23 +358,16 @@ names.PAC <- function(x){ names(as(x, "list")) }
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("names", "PAC", names.PAC)
@@ -435,23 +386,16 @@ rownames.PAC <- function(x){ rownames(x@Counts) }
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("rownames", "PAC", rownames.PAC)
@@ -471,23 +415,16 @@ colnames.PAC <- function(x){colnames(x@Counts)}
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("colnames", "PAC", colnames.PAC)
@@ -505,23 +442,16 @@ length.PAC <- function(x){ length(as(x, "list")) }
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra functionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("length", "PAC", length.PAC)
@@ -539,23 +469,16 @@ ncol.PAC <- function(x){ ncol(x@Counts) }
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4 
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("ncol", "PAC", ncol.PAC)
@@ -573,23 +496,16 @@ nrow.PAC <- function(x){ nrow(x@Counts) }
 #'                   package = "seqpac", mustWork = TRUE))
 #'
 #' # extra fuctionality with s4 PAC-object:
-#' pac_s4 <- as.PAC(pac)
-#' pac_s4
-#' names(pac_s4)
-#' length(pac_s4)
-#' nrow(pac_s4)
-#' ncol(pac_s4)
-#' rownames(pac_s4)
-#' colnames(pac_s4)
-#' pheno(pac_s4) 
-#' head(anno(pac_s4))
-#' head(counts(pac_s4))
-#' head(norm(pac_s4)$cpm)
-#' 
-#' pac_s4 <- PAC_summary(pac_s4, norm = "cpm", 
-#'                    type = "means", pheno_target=list("stage")) 
-#' pac_s4 
-#' head(summary(pac_s4)$cpmMeans_stage)
+#' names(pac)
+#' length(pac)
+#' nrow(pac)
+#' ncol(pac)
+#' rownames(pac)
+#' colnames(pac)
+#' pheno(pac) 
+#' head(anno(pac))
+#' head(counts(pac))
+#' head(norm(pac)$cpm)
 #' 
 #' @export
 setMethod("nrow", "PAC", nrow.PAC)
@@ -624,7 +540,7 @@ setMethod("nrow", "PAC", nrow.PAC)
 #' 
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
-#'  pac$Anno <- pac$Anno[,1, drop = FALSE]
+#'  anno(pac) <- anno(pac)[,1, drop = FALSE]
 #'  
 #'  
 #' ##  Then specify paths to fasta references
@@ -710,7 +626,7 @@ setReplaceMethod("overview", methods::signature(object="reanno",
 #' 
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
-#'  pac$Anno <- pac$Anno[,1, drop = FALSE]
+#'  anno(pac) <- anno(pac)[,1, drop = FALSE]
 #'  
 #'  
 #' ##  Then specify paths to fasta references
@@ -792,7 +708,7 @@ names.reanno <- function(x){ names(as(x, "list"))}
 #' 
 #'  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                    package = "seqpac", mustWork = TRUE))
-#'  pac$Anno <- pac$Anno[,1, drop = FALSE]
+#'  anno(pac) <- anno(pac)[,1, drop = FALSE]
 #'  
 #'  
 #' ##  Then specify paths to fasta references

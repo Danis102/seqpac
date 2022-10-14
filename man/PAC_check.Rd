@@ -38,12 +38,11 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 PAC_check(pac)  # TRUE
 
 # Remove first row in Anno and check compatibility
-new_Anno <- pac$Anno[-1,]
+new_Anno <- anno(pac)[-1,]
 #PAC_check(pac, seq_check=new_Anno) # Error
 
 # Add to pac an check
-pac$Anno <- new_Anno
-#PAC_check(pac) # Error
+# anno(pac) <- new_Anno #error
 
 }
 \seealso{
@@ -51,11 +50,11 @@ pac$Anno <- new_Anno
   package.
 
 Other PAC generation: 
-\code{\link{getTrim}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},
+\code{\link{make_trim}()},
 \code{\link{merge_lanes}()}
 }
 \concept{PAC generation}

@@ -99,6 +99,7 @@ using two tsRNA classifications (anno_target_1, annot_target_2).
 }
 \examples{
 
+
 ###########################################################
 ### tRNA analysis in seqpac 
 # (More details see vignette and manuals.)
@@ -109,7 +110,6 @@ using two tsRNA classifications (anno_target_1, annot_target_2).
 # First create an annotation blanc PAC with group means
 load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                 package = "seqpac", mustWork = TRUE))
-pac <- as.PAC(pac) # S4 coversion
 anno(pac) <- anno(pac)[,1, drop=FALSE]
 pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
                        pheno_target=list("stage"), merge_pac = TRUE)

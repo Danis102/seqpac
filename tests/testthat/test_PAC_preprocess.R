@@ -46,8 +46,8 @@ invisible(capture.output(
       df_sum  <- PAC_summary(pac, norm="cpm", pheno_target=list("batch", c("Batch1", "Batch2")), merge_pac = FALSE)
      
       expect_true(PAC_check(pac))
-      expect_equal(pac$norm$cpm, df_norm)
-      expect_equal(pac$summary$cpmMeans_batch, df_sum[[1]])
+      expect_equal(norm(pac)$cpm, df_norm)
+      expect_equal(summary(pac)$cpmMeans_batch, df_sum[[1]])
       
     })))
   

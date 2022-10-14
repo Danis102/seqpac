@@ -22,7 +22,7 @@ PAC_pca(
 type="counts" the PCA will be conducted on the raw Counts. If type="cpm" the
 analysis will be done on cpm values returned from \code{PAC_norm} function
 and stored in the norm folder of the PAC-list object. The name of any other
-table in the PAC$norm folder can also be used.}
+table in the norm(PAC) folder can also be used.}
 
 \item{type}{Character indicating what type of pca and plot to be drawn. When
 type="pheno" then results will be drawned from a sample perspective, while
@@ -46,7 +46,7 @@ features(s) in the target column (1st object). The 1st object also control
 sequence feature colors when type="anno". (default=NULL)}
 
 \item{labels}{If labels="sample", then points will be labeled with the names
-rownames in PAC$Pheno or PAC$Anno depending on type="pheno" or type="anno",
+rownames in pheno(PAC) or anno(PAC) depending on type="pheno" or type="anno",
 respectively. Point labels can also be manually provided as a character
 vector in the same length as the intended target. As default, labels=NULL
 where only point are plotted.}
@@ -75,7 +75,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 pca_cnt <- PAC_pca(pac, norm="counts")
 
 # Sample cpm pca and scatterplots with color groupings from 
-# PAC$Pheno$type column:    
+# pheno(PAC)$type column:    
 pca_cpm <- PAC_pca(pac, norm="cpm", type="pheno", 
                    pheno_target=list("stage"))
 
@@ -84,9 +84,9 @@ pca_cpm_lab <- PAC_pca(pac, norm="cpm", type="pheno",
                        pheno_target=list("stage"), labels="samples")
 pca_cpm_lab2 <- PAC_pca(pac, norm="cpm", type="pheno", 
                         pheno_target=list("stage"), 
-                        labels=pac$Pheno$batch)
+                        labels=pheno(pac)$batch)
 
-# Cpm pca with PAC$Anno sequence features instead of Pheno samples and 
+# Cpm pca with anno(PAC) sequence features instead of Pheno samples and 
 # restricted to read size 20-22:
 pca_cpm_anno <- PAC_pca(pac, norm="cpm", type="anno", 
                         anno_target=list("Size", 20:22))

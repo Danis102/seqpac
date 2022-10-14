@@ -40,7 +40,7 @@ Access the multilevel list of imported data.frames in a S4 reanno object
 
  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                    package = "seqpac", mustWork = TRUE))
- pac$Anno <- pac$Anno[,1, drop = FALSE]
+ anno(pac) <- anno(pac)[,1, drop = FALSE]
  
  
 ##  Then specify paths to fasta references

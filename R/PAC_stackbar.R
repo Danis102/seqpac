@@ -68,7 +68,7 @@
 #' PAC_stackbar(pac, anno_target=list("Biotypes_mis0"))
 #' 
 #' # 'no_anno' and 'other' will always end on top not matter the order
-#' ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)))
+#' ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis3)))
 #' p1 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", ord_bio))
 #' p2 <- PAC_stackbar(pac, anno_target=list("Biotypes_mis0", rev(ord_bio)))
 #' cowplot::plot_grid(plotlist=list(p1, p2))

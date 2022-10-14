@@ -54,8 +54,8 @@ A PAC object with a pheno_summary folder containing the summarized
 \code{PAC_summary} summarizes data stored in a PAC object.
 }
 \details{
-Given a PAC object this function summarize data in PAC$Counts or in the norm
-'folder' according to a grouping columns in PAC$Pheno.
+Given a PAC object this function summarize data in counts(PAC) or in the norm
+'folder' according to a grouping columns in pheno(PAC).
 }
 \examples{
 
@@ -72,10 +72,10 @@ pac <- PAC_summary(pac, norm = "cpm",
 pac <- PAC_summary(pac, norm = "cpm", 
                    type = "log2FC", pheno_target=list("stage"))
 
-names(pac$summary)               # Names of individual summaries
-head(pac$summary$cpmMeans_stage) # View individual individual summaries
-tibble::as_tibble(pac$summary)  # View merge summaries
-df <- as.data.frame(tibble::as_tibble(pac$summary)) # Merge multi summaries
+names(summary(pac))               # Names of individual summaries
+head(summary(pac)$cpmMeans_stage) # View individual individual summaries
+summary(pac)  # View merge summaries
+df <- as.data.frame(tibble::as_tibble(summary(pac))) # Merge multi summaries
 head(df)
 
 
@@ -84,8 +84,8 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 pac <- PAC_summary(pac, norm = "cpm", type = "mean")  
 pac <- PAC_summary(pac, norm = "cpm", type = "percentgrand")
-names(pac$summary)
-tibble::as_tibble(pac$summary)   
+names(summary(pac))
+summary(pac)   
 
 }
 \seealso{

@@ -93,7 +93,7 @@
 #' # First create an annotation blank PAC with group means
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                  package = "seqpac", mustWork = TRUE))
-#' pac$Anno <- pac$Anno[,1, drop=FALSE]
+#' anno(pac) <- anno(pac)[,1, drop=FALSE]
 #' pac_trna <- PAC_summary(pac, norm = "cpm", type = "means", 
 #'                         pheno_target=list("stage"), merge_pac = TRUE)
 #' 

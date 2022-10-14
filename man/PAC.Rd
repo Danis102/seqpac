@@ -44,7 +44,7 @@ S4 version of the PAC object.
 \details{
 Just like the S3 version, all sub-tables must have identical sequence (row)
 names. To extract tables from S4 objects, use the getter commands or use @
-(e.g. PAC@Pheno) just like $ for the S3 version (e.g. PAC$Pheno). You may
+(e.g. PAC@Pheno) just like $ for the S3 version (e.g. pheno(PAC)). You may
 also use a coercion method, e.g. \code{PAC_S3 <- as(PAC_S4, "list")}
 
 Holds up to 5 slots: \describe{
@@ -61,29 +61,15 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                   package = "seqpac", mustWork = TRUE))
                   
 # check type
-
 class(pac)
 isS4(pac)
  
-# Turns S3 PAC object into a S4
-pac_s4 <- as.PAC(pac)
  
-class(pac_s4)
-isS4(pac_s4)   
-
 # Turns S4 PAC object into a S3
-pac_s3 <- as(pac_s4, "list")
+pac_s3 <- as(pac, "list")
 
-# Don't forget that in the summary and norm slots of the S4 PAC lies regular
-# S3 lists. Thus, to receive these tables from an S4 PAC you need to combine
-# both S4 and S3 receivers:
+# Turns S3 PAC object into a S4
+pac_s4 <- as.PAC(pac_s3)
 
-pac_s4 <- PAC_norm(pac_s4, norm = "cpm")
-pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means", 
-                   pheno_target=list("stage"), merge_pac=TRUE)
-
-pac_s4 
-head(norm(pac_s4)$cpm)
-head(summary(pac_s4)$cpmMeans_stage)
 
 }

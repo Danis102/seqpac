@@ -86,7 +86,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
 # Create a gtf file from PAC coordinates
-anno <- pac$Anno
+anno <- anno(pac)
 anno <- anno[!grepl("Warning", anno$mis0_chromosomes_genome),]
 anno <- anno[!is.na(anno$mis0_chromosomes_genome),]
 coord <- anno$mis0_chromosomes_genome
@@ -116,13 +116,13 @@ rtracklayer::export(gr2, out2, format="gtf")
 # (If there are more, a 'Warning' will be added to the annotation)
 # (Here we remove those to avoid problems)
 
-new_anno <-  pac$Anno [, grepl("chromosomes_genome|Size", 
-                               colnames(pac$Anno))]
+new_anno <-  anno(pac) [, grepl("chromosomes_genome|Size", 
+                               colnames(anno(pac)))]
 test <- new_anno[, 3:ncol(new_anno)]
 test <- apply(test, 2, function(x){substr(x, 1, 7)})
 test <- apply(test, 1, function(x){paste(x, collapse = "")})
 new_anno$temp <- ifelse(grepl("Warning",  test), "rm", "keep")
-pac$Anno <- new_anno
+anno(pac) <- new_anno
 pac_small <- PAC_filter(pac, subset_only=TRUE, size = c(20,22),
                   anno_target=list("temp", "keep"))
 

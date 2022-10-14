@@ -30,30 +30,16 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                   package = "seqpac", mustWork = TRUE))
                   
 # check type
-
 class(pac)
-isS4(pac)                        
+isS4(pac)
  
-# Turns S3 PAC object into a S4
-pac_s4 <- as.PAC(pac)
  
-class(pac_s4)
-isS4(pac_s4)   
+# Turns S4 PAC object into a S3
+pac_s3 <- as(pac, "list")
 
 # Turns S3 PAC object into a S4
-pac_s3 <- as(pac_s4, "list")
+pac_s4 <- as.PAC(pac_s3)
 
-# Don't forget that in the summary and norm slots of the S4 PAC lies regular
-# S3 lists. Thus, to receive these tables from an S4 PAC you need to combine
-# both S4 and S3 receivers:
-
-pac_s4 <- PAC_norm(pac_s4, norm = "cpm")
-pac_s4 <- PAC_summary(pac_s4, norm = "cpm", type = "means", 
-                   pheno_target=list("stage"), merge_pac=TRUE)
-
-pac_s4 
-head(norm(pac_s4)$cpm)
-head(summary(pac_s4)$cpmMeans_stage)
 
 }
 \seealso{

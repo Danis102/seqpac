@@ -77,7 +77,7 @@
 #'
 #'
 #' ## Violin with changed biotype order
-#' new_order  <- as.character(unique(pac$Anno$Biotypes_mis0))[c(2,4,3,6,7,5,1)]
+#' new_order  <- as.character(unique(anno(pac)$Biotypes_mis0))[c(2,4,3,6,7,5,1)]
 #' plots_FC <- PAC_jitter(pac, type="violin", 
 #'                        summary_target=list("Log2FC_stage"), 
 #'                        anno_target=list("Biotypes_mis0", new_order))

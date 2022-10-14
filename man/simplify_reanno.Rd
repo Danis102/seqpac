@@ -44,7 +44,7 @@ input (default=FALSE).}
 \item{target_columns}{Character vector naming the target columns for the
 reannotation matrix. When \code{target_columns=NULL}(default), then the
 function assumes that one (and only one) reannotation matrix for biotypes
-generatated by \code{\link{add_reanno}} is present in PAC$Anno (colnames =
+generatated by \code{\link{add_reanno}} is present in anno(PAC) (colnames =
 mis0_bio, mis1_bio, mis2_bio etc). With \code{target_columns} two
 alternative reannotation matrixes can be discriminated.}
 }
@@ -64,17 +64,20 @@ biotype vector according to a user-defined biotype hierarchy.
 \examples{
 #' ######################################################### 
 ##### hierarchical classification using simplify_reanno
+closeAllConnections()
+######################################################### 
+##### Create an reanno object
 
 ### First, if you haven't already generated Bowtie indexes for the included
 # fasta references you need to do so. If you are having problem see the small
 # RNA guide (vignette) for more info.
-
+                                                             
  ## tRNA:
  trna_file <- system.file("extdata/trna", "tRNA.fa", 
                           package = "seqpac", mustWork = TRUE)
- trna_dir<- gsub("tRNA.fa", "", trna_file)
+ trna_dir <- dirname(trna_file)
  
- if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){
+ if(!sum(stringr::str_count(list.files(trna_dir), ".ebwt")) ==6){     
      Rbowtie::bowtie_build(trna_file, 
                            outdir=trna_dir, 
                            prefix="tRNA", force=TRUE)
@@ -82,53 +85,41 @@ biotype vector according to a user-defined biotype hierarchy.
  ## rRNA:
  rrna_file <- system.file("extdata/rrna", "rRNA.fa", 
                           package = "seqpac", mustWork = TRUE)
- rrna_dir<- gsub("rRNA.fa", "", rrna_file)
+ rrna_dir <- dirname(rrna_file)
  
  if(!sum(stringr::str_count(list.files(rrna_dir), ".ebwt")) ==6){
      Rbowtie::bowtie_build(rrna_file, 
                            outdir=rrna_dir, 
                            prefix="rRNA", force=TRUE)
                            }
- ## Genome:
- mycoplasma_file <- system.file("extdata/mycoplasma_genome", "mycoplasma.fa",
-                                package = "seqpac", mustWork = TRUE)
- mycoplasma_dir<- gsub("mycoplasma.fa", "", mycoplasma_file)
- 
- if(!sum(stringr::str_count(list.files(mycoplasma_dir), ".ebwt")) ==6){
-     Rbowtie::bowtie_build(mycoplasma_file, 
-                           outdir=mycoplasma_dir, 
-                           prefix="mycoplasma", force=TRUE)
-                           } 
-
- 
+                           
+                           
 ##  Then load a PAC-object and remove previous mapping from anno:
  load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
                    package = "seqpac", mustWork = TRUE))
- pac$Anno <- pac$Anno[,1, drop = FALSE]
- 
- ref_paths <- list(trna= trna_file, rrna= rrna_file)
+ anno(pac) <- anno(pac)[,1, drop = FALSE]
 
-
+                                    
 ##  You may add an output path of your choice, but here we use a temp folder:
  output <- paste0(tempdir(),"/seqpac/test")
-
-
+ ref_paths <- list(trna= trna_file, rrna= rrna_file)
+ 
 ##  Then map the PAC-object against the fasta references. 
 # Warning: if you use your own data, you may want override=FALSE, to avoid
 # deleting previous mapping by mistake.
 
- map_reanno(pac, ref_paths=ref_paths, output_path=output,
-               type="internal", mismatches=2,  import="biotype", 
+map_reanno(pac, ref_paths=ref_paths, output_path=output,
+               type="internal", mismatches=1,  import="biotype", 
                threads=2, keep_temp=FALSE, override=TRUE)
  
-    
 ##  Then import and generate a reanno-object of the temporary bowtie-files
 reanno_biotype <- make_reanno(output, PAC=pac, mis_fasta_check = TRUE)
  
-
-## Now make some search terms against reference names to create shorter 
-# names. Theses can be used to create factors in downstream analysis
+                                    
+## Now make some search terms against reference names to create shorter names
+# Theses can be used to create factors in downstream analysis
 # One search hit (regular expressions) gives one new short name 
+
 bio_search <- list(
               rrna=c("5S", "5.8S", "12S", "16S", "18S", "28S", "pre_S45"),
               trna =c("_tRNA", "mt:tRNA"))
@@ -136,13 +127,14 @@ bio_search <- list(
  
 ## You can merge directly with your PAC-object by adding your original 
 # PAC-object, that you used with map_reanno, to merge_pac option.
- pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
+
+pac <- add_reanno(reanno_biotype, bio_search=bio_search, 
                        type="biotype", bio_perfect=FALSE, 
-                       mismatches = 2, merge_pac=pac)
- 
+                       mismatches = 1, merge_pac=pac)
+
 ## Hierarchical classification with simplify_reanno
-table(pac$Anno$mis0_bio)
-table(pac$Anno$mis2_bio)
+table(anno(pac)$mis0_bio)
+table(anno(pac)$mis1_bio)
 
 # Setup hierarchy(rRNA prioritized before tRNA) 
 hierarchy_1 <- list(rRNA="rrna_",
@@ -161,7 +153,7 @@ test1 <- simplify_reanno(input=pac, hierarchy=hierarchy_1, mismatches=0,
                       bio_name="Biotypes_mis0", merge_pac=FALSE)
                       
 # Up to 2 mistmaches for rRNA hierarchy_2                      
-test2 <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=2, 
+test2 <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=1, 
                       bio_name="rRNA_biotypes_mis2", merge_pac=FALSE)
 
 
@@ -169,32 +161,10 @@ table(test1$Biotypes_mis0)
 table(test2$rRNA_biotypes_mis2)
                      
 # You can add the new column to your PAC-object using merge_pac=TRUE:
-pac <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=2, 
-                      bio_name="rRNA_biotypes_mis2", merge_pac=TRUE)
+pac <- simplify_reanno(input=pac, hierarchy=hierarchy_2, mismatches=1, 
+                      bio_name="rRNA_biotypes_mis1", merge_pac=TRUE)
 
-head(pac$Anno)
-
-## Turn your S3 list to an S4 reanno-object
-class(reanno_biotype)
-isS4(reanno_biotype)
-names(reanno_biotype)
-
-reanno_s3 <- as(reanno_biotype, "list")
-class(reanno_s3)
-isS4(reanno_s3) 
-
-# Turns S3 reanno object into a S4  
-reanno_s4 <- as.reanno(reanno_s3)
-class(reanno_s4)
-isS4(reanno_s4)
- 
-# Similar, turns S3 PAC object into a S4
-class(pac)
-isS4(pac)  
-
-pac_s4 <- as.PAC(pac)
-class(pac_s4)
-isS4(pac_s4)   
+table(anno(pac)$rRNA_biotypes_mis1)
 
 }
 \seealso{

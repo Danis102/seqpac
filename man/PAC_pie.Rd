@@ -93,8 +93,8 @@ PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
 
 
 #  Make ordered pie charts of grand mean percent of all samples
-ord_bio <- as.character(sort(unique(pac$Anno$Biotypes_mis3)), 
-                                    unique(pac$Anno$Biotypes_mis0))
+ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis3)), 
+                                    unique(anno(pac)$Biotypes_mis0))
 output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), 
                         summary="all")
 output_pie_2 <- PAC_pie(pac, anno_target=list("Biotypes_mis3", ord_bio), 
