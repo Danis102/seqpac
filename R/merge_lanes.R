@@ -56,7 +56,7 @@
 #' old_fls <- list.files(input, full.names=TRUE)
 #' new_sample <- c(rep("sample1_", times=3), rep("sample2_", times=3))
 #' new_lane <- rep(c("lane1","lane2","lane3"), times=2)
-#' new_fls <- paste0(input,new_sample, new_lane, ".fastq.gz")                           
+#' new_fls <- paste0(input,new_sample, new_lane, ".fastq.gz")
 #' file.rename(from = old_fls, to = new_fls)
 #' 
 #' # Then merge the fastq files

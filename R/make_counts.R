@@ -180,7 +180,7 @@
 make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
                         plot=TRUE, parse="default_illumina", 
                         evidence=c(experiment=2, sample=1),
-                        optimize=list(on_disk=FALSE, chunk_size=NULL,  
+                        optimize=list(on_disk=FALSE, chunk_size=NULL,
                                       rm_wild=FALSE, seq_min=NULL)){
   
   anno <- value <- variable <- i <- NULL
@@ -752,7 +752,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
           panic <- FALSE #Needed later if individual samples fail
         }
         if(panic){
-          warning("\nApplying evidence filter or loading filtered file failed.", 
+          warning("\nApplying evidence filter or loading filtered file failed.",
                   "\nThis may indicate a corrupt fastq or that many unique", 
                   "\nsequences are present even after evidence filter has", 
                   "\nbeen applied, which may exhaust memory. Will apply",
@@ -1047,7 +1047,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
                   "\nsample with the rest of the experiment by filtering the",
                   "\nother samples.")
           panic <- "filt"
-          filt_out <- try(pfilt_fun(seqs_in=seqs_keep, fl_in=fl, fl_out=fl_temp, 
+          filt_out <- try(pfilt_fun(seqs_in=seqs_keep, fl_in=fl, fl_out=fl_temp,
                                     extract_fun=extract_fun, threads=threads,
                                     seq_min=seq_min, rm_wild=rm_wild), 
                           silent=TRUE)

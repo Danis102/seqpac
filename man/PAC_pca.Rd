@@ -46,10 +46,10 @@ features(s) in the target column (1st object). The 1st object also control
 sequence feature colors when type="anno". (default=NULL)}
 
 \item{labels}{If labels="sample", then points will be labeled with the names
-rownames in pheno(PAC) or anno(PAC) depending on type="pheno" or type="anno",
-respectively. Point labels can also be manually provided as a character
-vector in the same length as the intended target. As default, labels=NULL
-where only point are plotted.}
+rownames in pheno(PAC) or anno(PAC) depending on type="pheno" or
+type="anno", respectively. Point labels can also be manually provided as a
+character vector in the same length as the intended target. As default,
+labels=NULL where only point are plotted.}
 
 \item{...}{parsing to the fviz_pca functions of the factoextra package.}
 }

@@ -40,10 +40,10 @@
 #'  group colors when type="pheno" or "both". (default=NULL)
 #'  
 #'@param labels  If labels="sample", then points will be labeled with the names
-#'  rownames in pheno(PAC) or anno(PAC) depending on type="pheno" or type="anno",
-#'  respectively. Point labels can also be manually provided as a character
-#'  vector in the same length as the intended target. As default, labels=NULL
-#'  where only point are plotted.
+#'  rownames in pheno(PAC) or anno(PAC) depending on type="pheno" or
+#'  type="anno", respectively. Point labels can also be manually provided as a
+#'  character vector in the same length as the intended target. As default,
+#'  labels=NULL where only point are plotted.
 
 #'@param ... parsing to the fviz_pca functions of the factoextra package. 
   
@@ -272,14 +272,17 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
 
     }else{
         grphs$PC1_PC2 <- factoextra::fviz_pca_ind(
-          pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
-          axes=c(1,2), invisible="quali", pointsize=1,  title="PC1_PC2 - Anno")
+          pca_res, geom="point", habillage = col, repel=TRUE, 
+          addEllipses = FALSE, axes=c(1,2), invisible="quali", 
+          pointsize=1,  title="PC1_PC2 - Anno")
         grphs$PC1_PC3  <- factoextra::fviz_pca_ind(
-          pca_res, geom="point", habillage = col, repel=TRUE,  addEllipses = FALSE,
-          axes=c(1,3), invisible="quali", pointsize=1,  title="PC1_PC3 - Anno")
+          pca_res, geom="point", habillage = col, repel=TRUE,  
+          addEllipses = FALSE, axes=c(1,3), invisible="quali", 
+          pointsize=1,  title="PC1_PC3 - Anno")
         grphs$PC2_PC3  <- factoextra::fviz_pca_ind(
-          pca_res, geom="point", habillage = col, repel=TRUE, addEllipses = FALSE, 
-          axes=c(2,3), invisible="quali", pointsize=1,  title="PC2_PC3 - Anno")
+          pca_res, geom="point", habillage = col, repel=TRUE, 
+          addEllipses = FALSE, axes=c(2,3), invisible="quali", 
+          pointsize=1,  title="PC2_PC3 - Anno")
     }
   } 
   if(type=="both"){

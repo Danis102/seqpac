@@ -310,7 +310,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
     i=seq_along(fls), .inorder = TRUE, .export= c("nam_trim", "nam"),
     .final = function(x){names(x) <- basename(fls); return(x)}) %dopar% {
       
-      ##### Make a while loop that works for both full size fastq and chunks #########
+      ##### Make a while loop that works for both full size fastq and chunks ###
       max_chu <- FALSE
       current_chu <- 1
       
@@ -492,7 +492,8 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       set <- paste0("thresh", rprt$threshold, "|perc", rprt$percent)
       report_fin <-  cbind(report_fin, 
                            data.frame(quality_set=set, 
-                                      'quality_removed'= paste0(rmvd, " ", perc),
+                                      'quality_removed'= paste0(rmvd, " ", 
+                                                                perc),
                                       stringsAsFactors = FALSE))
     }
     if(rprt_nam=="out_reads"){
@@ -513,7 +514,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
 # This function runs from within make_trim to obtain trimming coordinates
 # and to save fastq to output, appending to existing fastq for chunks
 # and not appending for chunk_size=NULL 
-getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){      
+getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){
   
   # Unfold par_parse
   output <- par_parse$output
