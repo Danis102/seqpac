@@ -135,15 +135,15 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
   ph <- ph[ph %in% pheno_target[[2]]]
   o_one<- table(ph) ==1
   if(any(o_one)) {
-  one_nam  <- names(o_one[o_one==T])
+  one_nam  <- names(o_one[o_one==TRUE])
   warning(paste0("Only found one sample in at least one group",
           "\nSummery is based on this sample only!"))
-  dup_dat <- data[,ph %in% one_nam, drop=F]
+  dup_dat <- data[,ph %in% one_nam, drop=FALSE]
   samp_one <- colnames(data)[ph %in% one_nam]
   new_nam <-  paste0(samp_one, "(dup)")
   colnames(dup_dat) <- new_nam
   data <- cbind(data, dup_dat)
-  dup_ph<- pheno[pheno$Sample_ID %in%  samp_one,, drop=F]
+  dup_ph<- pheno[pheno$Sample_ID %in%  samp_one,, drop=FALSE]
   rownames(dup_ph) <- new_nam
   dup_ph$Sample_ID <- new_nam
   pheno<- rbind(pheno, dup_ph)

@@ -304,8 +304,8 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
                                               .final=function(y){
                                                 names(y) <- names(algn_lst)
                                                 return(y)})  %dopar% {
-              ref=ref
-              n_ref=n_ref
+              ref <- ref
+              n_ref <- n_ref
               sq <- rownames(algn_lst[[j]])
               if(algn_lst[[j]]$Strand == "-"){
                  sq <- intToUtf8(rev(utf8ToInt(sq)))

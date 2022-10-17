@@ -208,6 +208,7 @@
 #'  
 #' ############################################################################
 #' 
+#' @importFrom methods is
 #' @export
 # 
 map_reanno <- function(PAC, type="internal", output_path, ref_paths, 

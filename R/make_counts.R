@@ -174,7 +174,7 @@
 #'  
 #'
 #'  
-#'  
+#' @importFrom methods is
 #' @export
 
 make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
@@ -299,7 +299,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
                       indels=TRUE, concat=12, check_mem=FALSE)
       }
       if(parse[[1]][1]=="default_illumina"){
-        parse = list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
+        parse <- list(polyG=c(type="hard_trim", min=20, mismatch=0.1),
                      adapt_3_set=c(type="soft_rm", min=10, mismatch=0.1), 
                      adapt_3="TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC",
                      seq_range=c(min=14, max=70), chunk_size=chunk_size,
@@ -666,8 +666,8 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     
     # Then read  merged UNI/EXTRA and reduce UNI over chunk while loop
     # Set vroom to maximum lines
-    Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
-    Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072*10000)
+    # Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
+    # Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072*10000)
     n_all_uni <- ShortRead::countLines(fl_all_uni)
     cat("\nOn_disk UNI file with fastq uniques had", n_all_uni, "sequences.")
     
@@ -1014,7 +1014,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
           gc()
           reads_keep <- NULL
           fq <- 1
-          set.seed(123)
+          #set.seed(123)
           sampler <- ShortRead::FastqStreamer(fl_temp, chunk_size)
           while(length(fq)) {
             fq <- ShortRead::yield(sampler)
@@ -1180,8 +1180,8 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   }
   # restore vroom env settings and clean up after vroom
   if(on_disk){
-    Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
-    Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072)
+    # Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
+    # Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072)
     gc(reset=TRUE)
     temp_fls <- list.files(tempdir(), full.names = TRUE)
     vroom_fls <- temp_fls[grepl("vroom-",temp_fls)]
@@ -1223,7 +1223,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   main_title <- "Reads passed that evidence"
   
   if(is.null(evidence)){
-    evidence=c(experiment=1, sample=1)
+    evidence <- c(experiment=1, sample=1)
   }
   
   p_func <- function(df, y_lab, main_title, sub_title){

@@ -88,11 +88,13 @@
 #' # Extract pca output
 #' pca_cpm_anno$pca
 #' 
+#' @importFrom ggplot2 geom_hline geom_vline geom_point aes 
+#' theme scale_colour_gradient theme_minimal xlab ylab
 #' @export
 
 PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE, 
                     pheno_target=NULL, anno_target=NULL, labels=NULL, ...){
-  
+  Dim.1 <- Dim.2 <- Dim.3 <- NULL
   ## Check S4
   if(isS4(PAC)){
     tp <- "S4"
