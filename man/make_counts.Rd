@@ -186,7 +186,6 @@ head(counts$progress_report)
  
 
  
- 
 }
 \seealso{
 \url{https://github.com/Danis102} for updates on the current
