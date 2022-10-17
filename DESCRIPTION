@@ -40,7 +40,7 @@ biocViews:
   Workflow, BasicWorkflow, GeneExpressionWorkflow, EpigeneticsWorkflow, 
   AnnotationWorkflow
 Depends:
-  R (>= 4.1.0)
+  R (>= 4.2.0)
 Imports:
   Biostrings (>= 2.46.0),
   foreach (>= 1.5.1),
