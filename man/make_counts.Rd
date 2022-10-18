@@ -12,8 +12,7 @@ make_counts(
   plot = TRUE,
   parse = "default_illumina",
   evidence = c(experiment = 2, sample = 1),
-  optimize = list(on_disk = FALSE, chunk_size = NULL, rm_wild = FALSE, 
-  seq_min = NULL)
+  optimize = list(on_disk = FALSE, chunk_size = NULL, rm_wild = FALSE, seq_min = NULL)
 )
 }
 \arguments{
