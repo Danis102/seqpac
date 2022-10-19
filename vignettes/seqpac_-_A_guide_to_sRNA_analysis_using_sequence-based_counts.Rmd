@@ -59,7 +59,6 @@ devtools::install_github("Danis102/seqpac",
 <br>
 <br>
 
----
 
 # Introduction 
 
@@ -188,7 +187,7 @@ workflow, as will be described below.
 <br>
 <br>
 
----  
+  
 
 
 <br>
@@ -210,7 +209,7 @@ examples of this vignette and in the function manuals.
 <br>
 <br>
 
----
+
 
 # Making a PAC object
 
@@ -293,8 +292,8 @@ As an alternative to  internal trimming, two external software:
 [cutadapt](https://cutadapt.readthedocs.io/en/stable/installation.html) and
 [fastq_quality_filter](http://hannonlab.cshl.edu/fastx_toolkit/commandline.html)
 can be used to trim the adapter sequence and remove low quality reads prior of
-making a count table. Importantly, cutadapt and fastq_quality_filter are not
-readily available for all platforms.
+making a count table. By setting `trimming="cutadapt" make_counts will check if
+these software is installed on your system.
 
 <br>
 
@@ -426,7 +425,7 @@ PAC_check(pac_master)
 <br>
 <br>
 
----
+
 
 # Preprocessing the PAC object
 
@@ -657,7 +656,7 @@ pac_cpm_filt <- PAC_filter(pac, subset_only = TRUE,
 <br>
 <br>
 
----
+
 
 # Generate annotations
 From the start a PAC object contains a very limited Anno table such as this:
@@ -1223,7 +1222,6 @@ table(anno(pac_test)$Biotypes_mis1)
 <br>
 <br>
 
----
 
 # Analysis and visualization
 There are several functions in Seqpac that handle statistical analysis and
@@ -1553,7 +1551,6 @@ cowplot::plot_grid(plotlist=c(output_mis0, output_mis3),
 <br>
 <br>
 
----
 
 # Specilized analysis in Seqpac
 Seqpac functions may be used for more advanced analysis than simple
