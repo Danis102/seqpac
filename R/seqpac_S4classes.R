@@ -224,7 +224,7 @@ as.PAC <- function(from){
 #'                                     
 #' ##  Add output path of your choice.
 #' # Here we use the R temporary folder depending on platform
-#'  output <- paste0(tempdir(), "\\seqpac\\test")
+#'  output <- paste0(tempdir(),"/seqpac/test")
 #' 
 #' ## Make sure it is empty (otherwise you will be prompted for a question)
 #' out_fls  <- list.files(output, recursive=TRUE)
@@ -375,7 +375,7 @@ setAs("reanno", "list",
 #'                                     
 #' ##  Add output path of your choice.
 #' # Here we use the R temporary folder depending on platform
-#'  output <- paste0(tempdir(), "\\seqpac\\test")
+#'  output <- paste0(tempdir(),"/seqpac/test")
 #' 
 #' ## Make sure it is empty (otherwise you will be prompted for a question)
 #' out_fls  <- list.files(output, recursive=TRUE)

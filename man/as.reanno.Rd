@@ -49,7 +49,7 @@ load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                                     
 ##  Add output path of your choice.
 # Here we use the R temporary folder depending on platform
- output <- paste0(tempdir(), "\\\\seqpac\\\\test")
+ output <- paste0(tempdir(),"/seqpac/test")
 
 ## Make sure it is empty (otherwise you will be prompted for a question)
 out_fls  <- list.files(output, recursive=TRUE)
