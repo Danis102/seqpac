@@ -336,7 +336,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
                          value= 0,
                          ann1= as.character(unique(y$ann1)),
                          ann2= missing)
-        df <- df[rep( 1:length(missing), times=length(unique(y$variable))),]
+        df <- df[rep( seq.int(length(missing)), times=length(unique(y$variable))),]
         df$variable <- rep( unique(y$variable), each=length(missing))
       }else{
         df <- NULL
@@ -356,7 +356,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
   ## Ordered according to sums of anno_target_1 in first object  
   ordr <- order(unlist(lapply(Ann12_perc[[1]], function(x){
     sum(x$values)})), decreasing=TRUE)
-  ordr <- ordr[1:top] # Extract the top 
+  ordr <- ordr[seq.int(top)] # Extract the top 
   lvls <- names(Ann12_perc[[1]])[ordr]
   if(join==FALSE){
     stopifnot(identical(lapply(Ann12_perc, names)[[1]],  
@@ -407,8 +407,6 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       breaks <- c(1,10,100,1000,10000,100000,1000000)
       }
     plot <- ggplot2::ggplot(dat, ggplot2::aes(x=Group.1, y=means, fill=Group.1 ,
-                            #ymax = means + (means > 0)*SE,
-                            #ymin = means - (means < 0)*SE)) +
                             ymax = means + SE,
                             ymin = means - SE)) +
       ggplot2:: geom_errorbar(width=0.5, size=1.0, colour="black", 
@@ -433,7 +431,6 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       ggplot2::coord_flip()
     if(!is.null(ymax_1)){
       plot <- plot + ggplot2::scale_y_continuous(limits=c(0,ymax_1))
-      #plot <- plot + ggplot2::coord_cartesian(ylim=c(0, ymax_1))
       }
     return(plot)
   })               
@@ -442,45 +439,7 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
   if(paired==TRUE && log2fc==TRUE){
     return(cat("\nPaired samples are not yet implemented in the function,",
                "\nbut will be in the near future."))
-    # if(join==TRUE){Ann1_agg_lst <- split(Ann1_agg_lst[[1]],  
-    #    factor(do.call("rbind",  
-    #                   strsplit(rownames(Ann1_agg_lst[[1]]), 
-    #                    "\\."))[,1], levels=pheno_target[[2]]))}
-    # paried_samp <- as.character(PAC$Pheno[,paired_IDs])
-    # 
-    # Ann1_agg_lst[[1]]$variable
-    # stopifnot(identical(data_lst[[1]]$Group.1, data_lst[[2]]$Group.1))
-    # logfc <- data.frame(Group.1=data_lst[[1]]$Group.1, 
-    #                     value=log2(data_lst[[1]]$value/data_lst[[2]]$value))
-    # plot_df$variable <- factor(plot_df$variable , 
-    #                            levels=rev(levels(plot_df$variable)))
-    # plot_lst$Log2FC_Anno_1 <- ggplot(
-    #   plot_df, aes(x=variable, y=value, fill=variable)) +
-    #   geom_hline(yintercept = 0, size=1.5, color="azure4")+
-    #   geom_jitter(aes(color= "grey"), 
-    #                   position=position_jitter(0.1), cex=1.3) +
-    #   stat_summary(geom = "errorbar",  width=0.5, size=1.0, 
-    #                fun.data = mean_se, position = "identity") +
-    #   stat_summary(geom = "point", colour="black", stroke=1.5, 
-    #                shape=21, size = 3.5, 
-    #                fun.y = mean, position = "identity") +
-    #   labs(title="Log2 Fold change C vs B")+
-    #   ylab("Log2 Fold change +/- SE") +
-    #   scale_fill_manual(values=c(col_isotype))+
-    #   scale_color_manual(values="bisque3") +
-    #   scale_x_discrete(labels=gsub("log2FC_", "", 
-    #                                levels(plot_df$variable)))+
-    #   theme_classic()+
-    #   theme(legend.position="none", 
-    #         axis.title.y= element_blank(), 
-    #         panel.grid.major.y =  element_line(linetype="dashed", 
-    #                                            colour="grey", size=0.5), 
-    #         panel.grid.major.x = element_line(colour="grey", size=0.5), 
-    #         axis.text.x = element_text(angle = 0, hjust = 0), 
-    #         axis.text.y = element_blank(), axis.line.x =element_blank(), 
-    #         axis.line.y =element_blank())+
-    #   coord_flip(ylim=c(-1.3, 2.25))
-  }
+   }
   #Independent###############################################################
   if(paired==FALSE && log2fc==TRUE){
     ## Error bars for log2_FC types - independent
@@ -493,9 +452,6 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
                                    levels=pheno_target[[2]]))
     }
     data_lst <- lapply(Ann1_agg_lst, function(x){
-        #Remove suppressWarning for Bioconductor: 
-        #suppressWarnings(stats::aggregate(x, list(factor(x$Group.1, 
-        #                                   levels=lvls)), mean))
         agg <- stats::aggregate(x$value, 
                                 list(factor(x$Group.1, levels=lvls)), mean)
         colnames(agg)[colnames(agg)=="x"] <- "value"
@@ -536,37 +492,6 @@ PAC_trna <- function(PAC, norm="cpm", filter=100, join=FALSE, top=15,
       #coord_flip(ylim=c(-lim, lim))
       ggplot2::coord_flip(ylim = c((min(logfc$value)-1), (max(logfc$value)+1)))
   } 
-  # ## Error bars for differencs in RPM - independent
-  # if(join==FALSE){Ann1_agg_lst <- do.call("rbind", Ann1_agg_lst)}
-  # dat <- Ann1_agg_lst
-  # dat$pheno_target <- factor(do.call("rbind",  
-  #                                    strsplit(rownames(dat), "\\."))[,1], 
-  #                            levels=pheno_target[[2]])
-  # dat$Group.1 <- factor(dat$Group.1, levels=lvls)
-  # dat <- dat[!is.na(dat$Group.1),]
-  # ymax <- max(dat$value) - max(sd(dat$value))
-  # 
-  # plot_lst$Errorbar_Anno_1 <- ggplot(
-  #   dat, aes(x=Group.1, y=value, 
-  #            group=interaction(pheno_target, Group.1), 
-  #            fill=Group.1)) +
-  #   stat_summary(geom = "errorbar",  width=0.8, size=0.5, 
-  #                fun.data = mean_se, position = "dodge") +
-  #   stat_summary(geom = "point", stroke=0.5, shape=21, size = 5.0, 
-  #                fun.y = mean, position = position_dodge(width=0.8)) +
-  #   labs(title=paste0(levels(dat$pheno_target), collapse=" vs ")) +
-  #   ylab("Mean RPM +/- SE") +
-  #   scale_fill_manual(values=rgb_vec_ann1) +
-  #   scale_x_discrete(labels=levels(data$Group.1)) +
-  #   coord_cartesian(ylim = c(0, ymax)) +
-  #    #scale_y_continuous(limits=c(0, ymax)) +
-  #    theme(legend.position="none",
-  #           axis.title.y=element_text(size=16, face= "bold"),
-  #           axis.title.x= element_blank(),
-  #           axis.text=element_text(size=14),
-  #           axis.text.x = element_text(angle=45, hjust=1))+
-
-  
   ## Percent filled bar (All)
   plot_lst$Percent_bars <- lapply(Ann12_perc_ord, function(x){
     x$ann1 <- factor(x$ann1, levels=rev(unique(x$ann1)))

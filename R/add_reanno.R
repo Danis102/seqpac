@@ -226,12 +226,12 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
     cat("\nExtracting genome(s) ...")
     
     ## Loop mismatch
-    for (i in 1:(mismatches+1)){
+    for (i in seq.int(mismatches+1)){
       full_lst  <- reanno$Full_anno[[i]]
       gen_vec_lst <- list(NA)
       
       ## Loop biotype
-      for (a in 1:length(full_lst)){
+      for (a in seq.int(length(full_lst))){
         gen_nams <- names(full_lst)
         gen_len <- sum(!is.na(full_lst[[a]]$ref_hits))
         prc <- round(gen_len/length(seq_nam)*100, digits=2)
@@ -281,7 +281,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
       df <- data.frame(matrix(NA, nrow=length(seq_nam), 
                               ncol=length(names(fin_lst))))
       colnames(df) <- paste(names(fin_lst), x, sep="_")
-      for(z in 1:length(fin_lst)){
+      for(z in seq.int(length(fin_lst))){
         df[,z] <- fin_lst[[names(fin_lst)[z]]][[x]]
       }
       return(df)
@@ -298,14 +298,13 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
     cat("\nExtracting biotype(s) ...")
     
     ## Loop mismatch
-    #for (i in 1:(mismatches+1)){
     for (i in seq.int(mismatches+1)){  
       full_lst  <- reanno$Full_anno[[i]]
       bio_vec_lst <- list(NA)
       strand_lst <- list(NA)
       
       ## Loop biotype
-      for (a in 1:length(bio_search)){
+      for (a in seq.int(length(bio_search))){
         extracted  <-  full_lst[bio_nam[a]]
         
         ## First annotate sense antisense 
@@ -426,11 +425,11 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
   # Fix unique column names
   if(type=="biotype"){
     col_fix <- "bio"
-    colsrch <- c("Mis0_bio", paste0("Mis0_bio", 1:100))
+    colsrch <- c("Mis0_bio", paste0("Mis0_bio",seq.int(100)))
   }
   if(type=="genome"){
     col_fix <- "genome"
-    colsrch <- c("Mis0_genome", paste0("Mis0_genome", 1:100))
+    colsrch <- c("Mis0_genome", paste0("Mis0_genome", seq.int(100)))
   }
   
   
@@ -448,7 +447,7 @@ add_reanno <- function(reanno, mismatches=0, type="genome", bio_search,
     }
     
     cat("\nMerging with PAC ...")
-    reanno <- reanno[,!colnames(reanno) == "seq"]
+    reanno <- reanno[,!colnames(reanno) == "seq", drop=FALSE]
     anno <- merge_pac$Anno
     col_hits <- colnames(anno) %in% colsrch
     if(any(col_hits)){ 

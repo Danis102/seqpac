@@ -83,7 +83,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
              " equally distributed sequence depths."))
   cat(paste0("\nData will be saved for two coverage thresholds at >= ", 
              thresh[1], " counts and >= ", thresh[2], " counts\n")) 
-  resampl_sub_lst <- foreach::foreach(i=1:length(x_vect), 
+  resampl_sub_lst <- foreach::foreach(i=seq.int(length(x_vect)), 
                                       .inorder=FALSE) %dopar% {
     resampl_lst <- vector(mode = "list", length = resample)  
     resampl_lst <- lapply(resampl_lst, function(x){
@@ -99,7 +99,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
     res <- as.data.frame(do.call("rbind", resampl_lst), stringsAsFactors=FALSE)
     res_lst <- as.list(res)
     df_lst <- list(NULL)
-    for(t in 1:length(thresh)){
+    for(t in seq.int(length(thresh))){
       df_lst[[t]] <- data.frame(value=res_lst[[t]], thresh=thresh[t], 
                                 stringsAsFactors=FALSE)
       }         
@@ -110,7 +110,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
   doParallel::stopImplicitCluster()
   dat <- as.data.frame(do.call("rbind", resampl_sub_lst))
   ## Add intercept and fix classes
-  intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),]
+  intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),drop=FALSE]
   intercpt[,!colnames(intercpt)=="thresh"] <- 0
   dat <- rbind(dat, intercpt)
   dat$thresh <- as.factor(dat$thresh)
@@ -121,7 +121,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
   options(scipen=10)
   cat("\nNow fitting the Asymptotic curve and plotting the results...\n")
   plots <- lapply(as.list(thresh), function(thr){
-    dat_sub <- dat[dat$thresh==thr,]
+    dat_sub <- dat[dat$thresh==thr,,drop=FALSE]
     
     ## Calculate Nonlinear Least Squares model 
     ##ta obtain plateau rate using asymptotic regression
@@ -166,26 +166,9 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
           "y ~ s(x)\nmodel was used instead"),
         hjust = "left"))
     }
-    
-    ## Calculate linear model on slope based on size
-    # ggplot2::stat_smooth(method = "gam", 
-    #                     formula = y ~ s(x), size = 1, fullrange=TRUE)+
-    # modl <- mgcv::gam(data=dat[dat$thresh==thr,], 
-    #                   formula = value ~ s(perc,  bs = "cs"), 
-    #                   method = "REML")
-    # y_predct <- unique(modl$fitted.values)
-    # y_predct <- y_predct[order(y_predct, decreasing=TRUE)]
-    # x_val <- unique(modl$model$perc)
-    # x_val <- x_val[order(x_val, decreasing=TRUE)]
-    # slp <- round((y_predct[2]-y_predct[1])/((size*(x_val[2]*0.01))-size), 
-    #               digits=2)
-    # return(p + annotate(geom = "text", x = 120, 
-    #        y = y_predct[1]*0.8, 
-    #        label = paste0("Size normalized\npredicted slope=", slp), 
-    #        hjust = "left"))
   }) 
   
-  names(plots) <- paste("thresh", 1:length(thresh), sep="_")
+  names(plots) <- paste("thresh", seq.int(length(thresh)), sep="_")
   return(plots)
   options(scipen=0)
 }

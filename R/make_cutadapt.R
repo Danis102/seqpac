@@ -52,7 +52,8 @@
 #' ## The first is parsed to cutadapt and the other to fastq_quality_filter 
 #' ## For parallel processes '-j 1' is recommended since seqpac will   
 #' ## parallelize across samples and not within.
-#' ## Run system("cutadapt -h") and system("fastq_quality_filter -h") 
+#' ## Run system2("cutadapt -h", stdout=TRUE) and 
+#' ## system("fastq_quality_filter -h", stdout=TRUE) 
 #' ## for more options.
 #' #   
 #' ## String to parse to cutadapt:
@@ -90,8 +91,14 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   
   # Make dir
   if(!dir.exists(output)){
-    suppressWarnings(dir.create(output))
-    #dir.create(output, showWarnings=FALSE, recursive = TRUE)
+    logi_create <- try(dir.create(output), silent=TRUE)
+    if(!is(logi_create, "try-error")){
+      if(any(!logi_create)){
+        warning("Was unable to create ", output, 
+              "\nProbable reason: Permission denided")  
+      
+      }
+    }
   }
   
   # Make output names and check output folder
@@ -116,7 +123,7 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
   ## cutadapt and fastq_quality_filter
   doParallel::registerDoParallel(threads) #Do not use parallel::makeClusters!!!
   `%dopar%` <- foreach::`%dopar%`
-  prog_report <- foreach::foreach(i=1:length(fls), 
+  prog_report <- foreach::foreach(i=seq.int(length(fls)), 
                                   .export= c("fls", "parse", "out_file", "nam"),
                                   .packages=c("ShortRead"), 
                                   .final = function(x){
@@ -126,15 +133,15 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
     spl_nam <- nam_trim[i]
     temp_out <- gsub("trim.fastq.gz$", "temp.fastq", out_file[i])
     if(!is.null(parse[[1]])){ 
-      log_lst[[1]] <- system(paste0("cutadapt ", parse[[1]], 
+      log_lst[[1]] <- system2(paste0("cutadapt ", parse[[1]], 
                                     " -o ", temp_out, " ", fls[i]), 
-                             intern = TRUE)
+                              stdout=TRUE)
     }
     if(!is.null(parse[[2]])){ 
-      log_lst[[2]] <- system(paste0("fastq_quality_filter ", 
+      log_lst[[2]] <- system2(paste0("fastq_quality_filter ", 
                                     parse[[2]], " -v -i ", temp_out, 
                                     " -o ", out_file[i], " -z"), 
-                             intern = TRUE)
+                              stdout=TRUE)
     }
     
     log_in_trim <- grepl("Total reads processed", log_lst[[1]])

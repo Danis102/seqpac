@@ -158,21 +158,21 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL,
     if(summary=="pheno"){
       x <- split(pheno, pheno[, pheno_target[[1]]])
       data_pheno_shrt <- as.data.frame(data_shrt$Group.1)
-     for(i in 1:length(x)){
+     for(i in seq.int(length(x))){
        names <- as.data.frame(x[i])
        names <- rownames(names)
-       data_pheno <- data_shrt[, colnames(data_shrt) %in% names]
+       data_pheno <- data_shrt[, colnames(data_shrt) %in% names,drop=FALSE]
        data_pheno <- rowMeans(data_pheno)
        data_pheno_shrt <- as.data.frame(cbind(data_pheno_shrt, data_pheno))}
     colnames(data_pheno_shrt) <- c("Group.1", names(x))
     data_shrt <- data_pheno_shrt
-    tot_cnts <- colSums(data_shrt[,-1])
+    tot_cnts <- colSums(data_shrt[,-1,drop=FALSE])
     }
   }  
   
   data_shrt_perc <- data_shrt
   data_shrt_perc[,-1] <- "NA"
-  for (i in 1:length(tot_cnts)){ 
+  for (i in seq.int(length(tot_cnts))){ 
     data_shrt_perc[,1+i]   <- data_shrt[,1+i]/tot_cnts[i]
   }
   
@@ -204,7 +204,7 @@ PAC_stackbar <- function(PAC, anno_target=NULL, pheno_target=NULL, color=NULL,
                                            levels=pheno_target[[2]])))
     data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), 
                                     levels=as.character(sampl_ord))
-    data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
+    data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),,drop=FALSE]
     }
   }
   

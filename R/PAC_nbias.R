@@ -144,7 +144,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL,
     colmn1  <- which(colnames(anno)=="nuc_bias")
     colmn2  <- which(colnames(anno)=="Size")
     colnames(anno)[colmn1] <- paste0(position, "_nuc_bias") 
-    return(anno[,c(colmn2, colmn1)])
+    return(anno[,c(colmn2, colmn1),drop=FALSE])
   }else{
    cat(paste0("\nCounting nucleotides"))
    combin <- c(paste0(range[1]:range[2], "_A"),
@@ -159,7 +159,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL,
      zeros <- combin[!combin %in% as.character(nuc_agg$position_nuc)]
      if(length(zeros) >0){
        nuc_agg <- rbind(nuc_agg, data.frame(position_nuc=zeros, counts=0))}
-     nuc_agg_ord <- nuc_agg[match(combin, nuc_agg$position_nuc),]
+     nuc_agg_ord <- nuc_agg[match(combin, nuc_agg$position_nuc),,drop=FALSE]
      rownames(nuc_agg_ord) <- NULL
      stopifnot(identical(as.character(nuc_agg_ord$position_nuc), combin))
      splt<- do.call("rbind", 
@@ -183,7 +183,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, range=NULL, anno_target=NULL,
   histo_lst <- list(NA)
   if(is.null(summary_target)){samp <- rownames(PAC$Pheno)}
   else{samp <- names(PAC$summary[[summary_target[[1]]]])}
-  for(i in 1:length(nuc_lst)){
+  for(i in seq.int(length(nuc_lst))){
     nuc_lst[[i]]$nucleotide <- factor(nuc_lst[[i]]$nucleotide, 
                                       levels=c("N","C","G","A","T"))
     uni_chr_len <- as.integer(unique(as.character(nuc_lst[[i]]$length)))

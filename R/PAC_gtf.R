@@ -137,15 +137,15 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   seqs <- rownames(PAC$Anno)
   
   ##### Import gtfs ####################################
-  if(!methods::is(gtf, "list")){
+  if(!is.list(gtf)){
     gtf <- list(gtf)
     if(is.null(names(gtf))){
-      names(gtf) <- 1:length(gtf)
+      names(gtf) <- seq.int(length(gtf))
     }
   }
   cat("\nImporting gtf files ...")
   gtf_lst <- lapply(gtf, function(x){
-    if(methods::is(x[1], "character")){    
+    if(is.character(x[1])){    
       if(file.exists(x)){
         gtf <- tibble::as_tibble(rtracklayer::readGFF(x), 
                                  .name_repair="minimal")
@@ -159,9 +159,8 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   
   
   ##### Check gtf file and columns ####################################  
-  for (i in 1:length(gtf_lst)){
+  for (i in seq.int(length(gtf_lst))){
     nam <- names(gtf_lst)[i]
-    #logi_fl <-  "tbl_df" %in% class(gtf_lst[[i]]) #Remove class() Bioc
     logi_fl <-  methods::is(gtf_lst[[i]], "tbl_df")
     if(!logi_fl){
       stop("
@@ -246,8 +245,13 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   nam_col <- gsub("mis0_", "", c_nams[grepl("^mis0_", c_nams)])
   mis_col <- grepl(paste0("^", nam_col), c_nams)
   logi_coord <- rowSums(cbind(logi_col1, logi_col2))==2
-  prefix <- suppressWarnings(do.call("rbind", 
-                                     strsplit(c_nams[logi_coord], "_"))[,1])
+  try_err <-  try(prefix <- do.call("rbind", 
+                                   strsplit(c_nams[logi_coord], "_"))[,1], 
+      silent=TRUE)
+  if(!is(try_err, "try-error")){
+      warning("Faild to generate prefix")
+      }
+  
   if(any(duplicated(prefix))){
     stop(
       "\nFound more than 1 possible genome annotation.",
@@ -275,10 +279,10 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   ##### Organize mapped coordinates ####################################
   cat("\n\nReorganizing coordinates ...")
   coord_lst <- list(NULL)
-  lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size")]
+  lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size"),drop=FALSE]
   mis_incl <- unique(mis_genome[[1]])
   mis_incl <- mis_incl[mis_incl %in% paste0("mis", 0:mismatches)]
-  for(i in 1:nrow(mis_genome)){
+  for(i in seq.int(nrow(mis_genome))){
     mis <- mis_genome[[1]][i]
     lng <- lng_all[i]
     if(!mis %in% mis_incl){
@@ -303,7 +307,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   chrm_nam <- chrm_nam[!is.na(chrm_nam)]
   tot_chrom <- length(chrm_nam)
   
-  for(i in 1:length(gtf_lst)){
+  for(i in seq.int(length(gtf_lst))){
     chrom_in_gtf <- sum(chrm_nam %in% unique(gtf_lst[[i]]$seqid))
     if(chrom_in_gtf==0){
       stop("\nYour chromosome names in 'gtf_", 
@@ -354,7 +358,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   # Convert genome coordinates to gr
   `%dopar%` <- foreach::`%dopar%`
   doParallel::registerDoParallel(threads) # Do not use parallel::makeClusters!!!
-  coord_gr   <- foreach::foreach(i=1:length(coord_lst), 
+  coord_gr   <- foreach::foreach(i=seq.int(length(coord_lst)), 
                                  .packages=c("GenomicRanges"), 
                                  .final = function(x){
                                    names(x) <- names(coord_lst); return(x)
@@ -385,13 +389,13 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   # Extraction loop
   doParallel::registerDoParallel(threads)
   anno_lst <- list(NULL)
-  for(i in 1:length(gtf_gr)){
+  for(i in seq.int(length(gtf_gr))){
     gtf_nam <- names(gtf_gr)[i]
     cat(paste0("\n   |--> Extract and compile '", gtf_nam, "' ..."))  
     trg_cols <- targets[[i]]
 
     # Run overlap and extract anno 
-    coord_anno <-  foreach::foreach(t=1:length(coord_gr), 
+    coord_anno <-  foreach::foreach(t=seq.int(length(coord_gr)), 
                                     .packages=c("GenomicRanges"), 
                                     .final = function(t){
                                       names(t) <- names(coord_gr); return(t)
@@ -403,15 +407,17 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
                                      .name_repair="minimal")
         names(uni_gtf) <- trg_cols
       }else{
-        olap <- suppressWarnings(GenomicRanges::findOverlaps(x, gtf_gr[[i]]))
-        #gtf <- gtf_lst[[i]][olap@to, trg_cols]
+        try_err<- try(olap <- GenomicRanges::findOverlaps(x, gtf_gr[[i]]),
+                      silent=TRUE)
+        if(is(try_err, "try-error")){
+          warning("Soemthing went wrong in GenomicRanges::findOverlaps")
+        }
                 gtf <- gtf_lst[[i]][S4Vectors::subjectHits(olap), trg_cols]
         
         uni_gtf <- data.frame(matrix(NA, nrow=length(x), 
                                      ncol=length(trg_cols)))
         names(uni_gtf) <- trg_cols
         if(!nrow(gtf)==0){
-          #splt <- split(gtf, as.factor(olap@from))
           splt <- split(gtf, as.factor(S4Vectors::queryHits(olap)))
           uni_anno <- lapply(splt, function(z){
             uni <- apply(z, 2, function(y){
@@ -436,11 +442,11 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
     cat("\n\n")
     full_lst <- list(NULL)
     loop <- length(coord_lst)
-    for(i in 1:loop){
+    for(i in seq.int(loop)){
       cat("\rGenerating full annotation list: ", i, "/", loop)
       utils::flush.console() 
       tab <- coord_lst[[i]]
-      for(z in 1:length(anno_lst)){
+      for(z in seq.int(length(anno_lst))){
         tab <- cbind(tab, anno_lst[[z]][[i]])
       }
       full_lst[[i]] <- tibble::as_tibble(tab, .name_repair="minimal")
@@ -452,11 +458,11 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
     cat("\n\n")
     simp_lst <- list(NULL)
     loop <- nrow(coord_genome)
-    for(i in 1:loop){
+    for(i in seq.int(loop)){
       cat("\rGenerating simplified annotation table: ", i, "/", loop)
       utils::flush.console() 
       tab <- coord_genome[i,]
-      for(z in 1:length(anno_lst)){
+      for(z in seq.int(length(anno_lst))){
         simp_tab <- apply(anno_lst[[z]][[i]], 2, function(x){
           simp <- sort(unique(unlist(strsplit(as.character(x), "\\|"), 
                                      use.names = FALSE)))

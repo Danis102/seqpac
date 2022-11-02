@@ -149,7 +149,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
   if(type %in% c("nucleotides", "percent")){
     
     range_types <- map
-    for(i in 1:length(map)){
+    for(i in seq.int(length(map))){
       ref_len <- nchar(paste0(map[[i]]$Ref_seq))
       align   <- map[[i]]$Alignments
       
@@ -222,7 +222,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       logi_breaks <- ss_anno == ""
       breaks <- 1
       fact <- NULL
-      for (i in 1:length(logi_breaks)){
+      for (i in seq.int(length(logi_breaks))){
         if(logi_breaks[i] == TRUE){
           breaks <- breaks+1
         }
@@ -300,7 +300,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       gsub("N", "", paste0(x$Ref_seq))
     }))
     match_ss  <- match(original_refs, fin_ss_df$Ref_seqs)
-    fin_ss_df <- fin_ss_df[match_ss,]
+    fin_ss_df <- fin_ss_df[match_ss,, drop=FALSE]
     
     # Compensate for N_up and N_down
     stopifnot(identical(fin_ss_df$Ref_seqs, 
@@ -309,7 +309,7 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
                         })))))
     stopifnot(identical(names(N_counts), names(map)))
     range_types <- map
-    for(i in 1:nrow(fin_ss_df)){
+    for(i in seq.int(nrow(fin_ss_df))){
       if(!is.null(N_counts[[i]])){
         fin_ss_df$Ref_seqs[i] <- paste0(
           paste(rep("N", times=N_counts[[i]][1]), collapse=""), 
@@ -374,13 +374,13 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
       
       ## Generate fragment classification
       ncl <- ncol(algn_loop)
-      for (k in 1:nrow(code_split)){
+      for (k in seq.int(nrow(code_split))){
         algn_loop[,ncl+k] <-  algn$Align_start %in% seq(code_split$start[k], 
                                                         code_split$end[k])
         colnames(algn_loop)[ncl+k] <- paste0("type_start_loop", k)
       }
       ncl <- ncol(algn_loop)
-      for (k in 1:nrow(code_split)){
+      for (k in seq.int(nrow(code_split))){
         algn_loop[,ncl+k] <-  algn$Align_end %in% seq(code_split$start[k], 
                                                       code_split$end[k])
         colnames(algn_loop)[ncl+k] <- paste0("type_end_loop", k)

@@ -164,7 +164,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
     if(summary %in% c("pheno", "Pheno")){
       x <- split(pheno, pheno[, pheno_target[[1]]])
       data_pheno_shrt <- as.data.frame(data_shrt$Group.1)
-     for(i in 1:length(x)){
+     for(i in seq.int(length(x))){
        names <- as.data.frame(x[i])
        names <- rownames(names)
        data_pheno <- data_shrt[, colnames(data_shrt) %in% names]
@@ -178,7 +178,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   
   data_shrt_perc <- data_shrt
   data_shrt_perc[,-1] <- "NA"
-  for (i in 1:length(tot_cnts)){ 
+  for (i in seq.int(length(tot_cnts))){ 
     data_shrt_perc[,1+i]   <- data_shrt[,1+i]/tot_cnts[i]
   }
   
@@ -190,7 +190,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   # Anno
   bio <- anno_target[[2]] 
   extra  <- which(bio %in% c("no_anno", "other"))
-  bio <- bio[c(extra, (1:length(bio))[!1:length(bio) %in% extra])] 
+  bio <- bio[c(extra, (seq.int(length(bio)))[!seq.int(length(bio)) %in% extra])] 
   data_long_perc$Category <- factor(as.character(data_long_perc$Category), 
                                     levels=bio)
     
@@ -209,19 +209,10 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
                                            levels=pheno_target[[2]])))
     data_long_perc$Sample <- factor(as.character(data_long_perc$Sample), 
                                     levels=as.character(sampl_ord))
-    data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),]
+    data_long_perc <- data_long_perc[!is.na(data_long_perc$Sample),,drop=FALSE]
     }
   }
-  
-  ## Add total counts
-  # tot_cnts <- tot_cnts[match(names(tot_cnts), unique(data_long_perc$Sample))]
-  # data_long_perc$tot_counts <- ""
-  # if(total==TRUE){
-  #   trg_1st <- levels(data_long_perc$Category)[
-  #                     length(levels(data_long_perc$Category))]
-  #   data_long_perc$tot_counts[data_long_perc$Category == trg_1st] <- tot_cnts
-  # }
-  
+
   ### Plot data
   if(is.null(colors)){
     n_extra  <- length(extra)
@@ -233,7 +224,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   
   prec_lst <- split(data_long_perc, data_long_perc$Sample)   
   prec_lst <- lapply(prec_lst, function(x){
-    x <- x[match(levels(x$Category), x$Category),]
+    x <- x[match(levels(x$Category), x$Category),,drop=FALSE]
     x$Category <- factor(levels(x$Category), levels=levels(x$Category))
     x$Percent[is.na(x$Percent)] <- 0
     return(x)
@@ -254,11 +245,9 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
                labels=labs, 
                col=rev(colors), init.angle = angle)
     print(p1)
-    #rp <- grid::grid.grab()
     rp <- grDevices::recordPlot()
     return(rp)
     }))
-  #rp <- grid::grid.grab()
   graphics::plot.new()
   df <- data.frame(types=prec_lst[[1]]$Category, 
                    variables=prec_lst[[1]]$Category, 

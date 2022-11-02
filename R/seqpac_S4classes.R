@@ -105,15 +105,15 @@ setValidity("PAC", function(object){
 # Coercion method PAC
 setAs("PAC", "list",
       function(from){
-        pac <- list(Pheno=from@Pheno,
-                    Anno=from@Anno,
-                    Counts=from@Counts)
+        pac <- list(Pheno=seqpac::pheno(from),
+                    Anno=seqpac::anno(from),
+                    Counts=seqpac::counts(from))
         
-        if(!is.null(from@norm[[1]])){
-         pac <- c(pac, list(norm= from@norm))
+        if(!is.null(seqpac::norm(from)[[1]])){
+         pac <- c(pac, list(norm= seqpac::norm(from)))
         }
-        if(!is.null(from@summary[[1]])){
-         pac <- c(pac, list(summary= from@summary))
+        if(!is.null(seqpac::summary(from)[[1]])){
+         pac <- c(pac, list(summary= seqpac::summary(from)))
         }
         class(pac) <- c("PAC_S3","list")
         return(pac)
@@ -292,15 +292,15 @@ setValidity("reanno", function(object){
     return("Empty object")
   }
   # Test 1
-  seq_nam <- dplyr::pull(object@Overview[1])
-  test1 <- lapply(object@Full_anno, function(y){
+  seq_nam <- dplyr::pull(overview(object)[1])
+  test1 <- lapply(full(object), function(y){
     lapply(y, function(z){identical(seq_nam, dplyr::pull(z[1]))})
   })
   logi_test1   <- unlist(test1)
   # Test 2
-  test2 <- lapply(object@Full_anno, function(y){
-    lapply(y, function(z){"tbl_df" %in%  class(z)})
-  })
+  test2 <- lapply(full(object), function(y){
+    lapply(y, function(z){methods::is(z, c("tbl_df"))})
+    })
   logi_test2   <- unlist(test2)
   # Return
   if(any(!logi_test1)){ 
@@ -321,8 +321,8 @@ setValidity("reanno", function(object){
 #
 setAs("reanno", "list",
       function(from){
-        rn <- list(Overview=from@Overview, 
-                      Full_anno=from@Full_anno)
+        rn <- list(Overview=overview(from), 
+                      Full_anno=full(from))
         class(rn) <- c("reanno_S3", "list")
         return(rn)
         })

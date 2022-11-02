@@ -134,7 +134,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
   ## Entering import loop
   data.table::setDTthreads(threads)
   bowtie_out_lst <- list(NA)
-  for (k in 1:length(files)){
+  for (k in seq.int(length(files))){
     cat(paste0("\n  |--- Import and reorganize ", basename(files)[k]))
     nam <- gsub(paste0(base), "",  basename(files)[k])
     
@@ -198,7 +198,7 @@ import_reanno <- function(bowtie_path, threads=1, coord=FALSE,
         # Do not use parallel::makeClusters!!!
         doParallel::registerDoParallel(threads) 
         `%dopar%` <- foreach::`%dopar%`
-        bowtie_out_lst[[k]] <- foreach::foreach(s=1:length(chnks_rng[[1]]), 
+        bowtie_out_lst[[k]] <- foreach::foreach(s=seq.int(length(chnks_rng[[1]])), 
                 .inorder = FALSE, 
                 .combine = "rbind") %dopar% {
                   compile_lst <- lapply(

@@ -219,15 +219,23 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   print(count_files)
   
   ## Setup temporary folder
-  output <- paste0(tempdir(), "/seqpac/")
+  output <- file.path(tempdir(), "/seqpac/")
   if(!dir.exists(output)){
     dir.create(output)
   }
   if(!is.null(trimming)){
     if(dir.exists(output)){
       out_fls  <- list.files(output)
-      suppressWarnings(file.remove(out_fls)) 
+     logi_rm <- try(file.remove(out_fls), silent=TRUE) 
     }
+    if(any(!logi_rm)){
+      warning("Not all fastq was removed from ", output, 
+              "\nProbable reason: Permission denided")
+    }
+    
+    
+    
+    
   }else{
     trimming <- "trimmed"
   }
@@ -464,14 +472,14 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         # (every 4th; start depends on chunk_size; only the first 1000 rows)
         # Best to identify ID and strand lines in fastq, seqs are inbetween
         if(nrow(fqtxt) > 1000){
-          samp_fq <- fqtxt[1:1000,1]
+          samp_fq <- fqtxt[seq.int(1000),1]
         }else{
-          samp_fq <- fqtxt[1:length(fqtxt),1]
+          samp_fq <- fqtxt[seq.int(length(fqtxt)),1]
         }
         # Find correct sample id and thereby correct id row.
         # Best to use multiple criteria to identify sample name from 1st 4 rows,
         # then use the name to find more rows
-        id_sampl<- as.list(unlist(samp_fq)[1:4])
+        id_sampl<- as.list(unlist(samp_fq)[seq.int(4)])
         # check common characters in id line
         find_id <- unlist(lapply(id_sampl, function(y) {
           sum(grepl("^@", y), grepl(":|.", y), 
@@ -685,7 +693,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       
       gc()
       
-      # Round 1: While-loop to convert UNI to fastq over chunks
+      # Round seq.int( While-loop to convert UNI to fastq over chunks
       n_left <- n_all_uni        # n_left is all UNI from start
       start_chunk <- 0           # Start from 0 and add  best_chunk_size
       current_chunk <- 1         # Which chunk is the current?
@@ -1152,7 +1160,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       }
       stat_mat$uniseqs_pass_evidence <- seqs_pass
       stat_mat$reads_pass_evidence <- sum(n_reads$Freq)
-      n_reads <- n_reads[match(seqs_keep, n_reads$reads_keep),]
+      n_reads <- n_reads[match(seqs_keep, n_reads$reads_keep),,drop=FALSE]
       n_reads$Freq[is.na(n_reads$Freq)] <- 0
       dt <- tibble::tibble(N=n_reads$Freq)
       rm(n_reads)
@@ -1215,7 +1223,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   rownames(stat_dt) <- colnames(ordCount_df)
   stat_dt$sample <- colnames(ordCount_df) 
   if(max(nchar(stat_dt$sample))>15){
-    stat_dt$sample <- paste0("fastq_", 1:length(stat_dt$sample))
+    stat_dt$sample <- paste0("fastq_", seq.int(length(stat_dt$sample)))
   }
   df_long <- reshape2::melt(stat_dt, id.vars="sample")
   df_long$value <- as.numeric(df_long$value)

@@ -243,7 +243,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
       par_ns <- threads
     }
     worst <- sum(sort(file.info(fls)$size, 
-                      decreasing = TRUE)[1:par_ns])/1000000000
+                      decreasing = TRUE)[seq.int(par_ns)])/1000000000
     worst <- round(worst*12, digits=1)
     cat(paste0("\n--- Worst scenario maximum system", 
                " burden is estimated to ",
@@ -280,8 +280,16 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   
   # Make dir
   if(!dir.exists(output)){
-    #suppressWarnings(dir.create(output, recursive = TRUE))
-    dir.create(output, showWarnings=FALSE, recursive = TRUE)
+    if(!dir.exists(output)){
+      logi_create <- try(dir.create(output), silent=TRUE)
+      if(!is(logi_create, "try-error")){
+        if(any(!logi_create)){
+          warning("Was unable to create ", output, 
+                  "\nProbable reason: Permission denided")  
+          
+        }
+      }
+    }
   }
   
   ##### Make adaptor trimming 5' (moves to getTrim in future upgrades) ####
@@ -419,7 +427,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   
   prog_report <-  lapply(nams_prog, function(x){
     lst_type <- list(NULL)
-    for(i in 1:length(prog_report)){
+    for(i in seq.int(length(prog_report))){
       lst_type[[i]] <- cbind(data.frame(file=names(prog_report)[i], 
                                         stringsAsFactors = FALSE), 
                              t(data.frame(prog_report[[i]][x],
@@ -432,7 +440,7 @@ make_trim <- function(input, output, indels=TRUE, concat=12, check_mem=FALSE,
   rownames(report_fin) <- NULL
   colnames(report_fin)[2] <- "input_reads"
   
-  for(i in 1:length(prog_report)){
+  for(i in seq.int(length(prog_report))){
     rprt <- prog_report[[i]]
     rprt_nam <- names(prog_report)[i]
     
@@ -633,7 +641,7 @@ getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){
     }
     start_gone <- unlist(start_gone[!unlist(lapply(start_gone, is.null))])
     trim_mt <- list(NULL)
-    for(z in 1:length(start_gone)){
+    for(z in seq.int(length(start_gone))){
       shrt_ns <- start_gone[z]
       n_Ns <- stringr::str_count(shrt_ns, "N")
       adapt_mis_corr <- (mis*(nchar(shrt_ns)-n_Ns))/nchar(shrt_ns)
@@ -861,7 +869,7 @@ getTrim <- function(fstq, fstq_sav=NULL, in_fl=NULL, out_fl=NULL, par_parse){
   if(!is.null(quality)){
     enc <- Biostrings::encoding(fstq@quality) # Phred score translations
     enc_srch <- as.factor(
-      names(enc))[paste0(enc) %in% as.character(1:quality["threshold"]-1)]
+      names(enc))[paste0(enc) %in% as.character(seq.int(quality["threshold"]-1))]
     enc_srch <- paste0("[", paste(enc_srch, collapse="") , "]")
     # Apply filter if specified
     qual_logi <- stringr::str_count(

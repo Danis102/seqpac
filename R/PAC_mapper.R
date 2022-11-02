@@ -117,7 +117,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
       cat("\nReading reference from fasta file ...")
       full <- Biostrings::readDNAStringSet(ref)
     }else{
-      if(methods::is(ref, "character")){
+      if(is.character(ref)){
         cat("\nTry to import reference from character vector ...")
         full <- Biostrings::DNAStringSet(ref)
       }else{
@@ -133,21 +133,10 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
   }
   
 ## Setup temp folder and convert to windows format
-  #outpath <-  paste0(tempdir(), "/", "seqpac")
-  #ref_path <-  paste0(tempdir(), "/ref/reference.fa")
   outpath <-  file.path(tempdir(), "/", "seqpac")
   ref_path <-  file.path(tempdir(), "/ref/reference.fa")
   
-  # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
-  #     outpath <- gsub("\\", "/", outpath, fixed=TRUE)
-  #     }
-  # suppressWarnings(dir.create(outpath, recursive = TRUE))
   dir.create(outpath, showWarnings=FALSE, recursive = TRUE)
-  
-  # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
-  #     ref_path <- gsub("\\", "/", ref_path, fixed=TRUE)
-  #     }
-  #suppressWarnings(dir.create(dirname(ref_path), recursive = TRUE))
   dir.create(dirname(ref_path), showWarnings=FALSE, recursive = TRUE)
   
   Biostrings::writeXStringSet(full, filepath=ref_path, format="fasta")
@@ -167,7 +156,6 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
     cat("\nBowtie indexes found. Will try to use them...")
   }else{
     if(nchar(paste0(N_up, N_down)) >0|
-     #grepl("DNAString", class(full))| # Remove class() Bioc
      methods::is(full, "DNAString")|
      check_file == TRUE){
       cat("\nNo bowtie indexes.")
@@ -202,7 +190,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
       })
     df_align <- do.call("rbind", lst_align)
   })
-  for(i in 1:length(align_lst)){
+  for(i in seq.int(length(align_lst))){
     align_lst[[i]]$seqs <- gsub("\\.\\d+", "", rownames(align_lst[[i]]))
     align_lst[[i]]$mismatch <- names(align_lst)[i]
   }
@@ -262,7 +250,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
 # Add full length reference
   names(align_lst)[is.na(names(align_lst))] <- splt_nam[is.na(names(align_lst))]
   fin_lst <- list(NULL)
-  for(i in 1:length(align_lst)){
+  for(i in seq.int(length(align_lst))){
     if(is.null(align_lst[[i]])){
       align_lst[[i]] <- data.frame(Mismatch="no_hits", Strand="no_hits", 
                                    Align_start="no_hits", 
@@ -300,7 +288,7 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
             n_ref <- nchar(as.character(ref))
             algn_lst <- split(algn, factor(row.names(algn), 
                                            levels=row.names(algn)))
-            positions_lst <- foreach::foreach(j=1:length(algn_lst), 
+            positions_lst <- foreach::foreach(j=seq.int(length(algn_lst)), 
                                               .final=function(y){
                                                 names(y) <- names(algn_lst)
                                                 return(y)})  %dopar% {

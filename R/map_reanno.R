@@ -13,7 +13,7 @@
 #' using \code{make_reanno} and \code{add_reanno} functions. For increase
 #' compatibility across platforms, the function provides both R internal bowtie
 #' parsing (thorugh the Rbowtie package), as well as external parsing to a
-#' locally installed version of bowtie.
+#' locally installed version of bowtie.F
 #'
 #'
 #' @family PAC reannotation
@@ -268,7 +268,6 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
       }
     }
   if(!dir.exists(output_path)){
-    #suppressWarnings(dir.create(output_path, recursive = TRUE))
     dir.create(output_path, showWarnings=FALSE, recursive = TRUE)
   }else{
     fls_full <- list.files(output_path, recursive = FALSE, full.names=TRUE)
@@ -277,8 +276,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   
   ## Save first input
   Biostrings::writeXStringSet(seq_fst,
-                              #filepath=paste0(output_path, "/anno_mis0.fa"),
-                              filepath=file.path(output_path, "/anno_mis0.fa"), 
+                              filepath=file.path(output_path, "anno_mis0.fa"), 
                               format="fasta")
   
   ## Run bowtie over each reference
@@ -295,28 +293,26 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
   
   if(type=="external"){
     vrs <- stringr::str_split(
-      basename(utils::capture.output(system("bowtie --version", 
-                                     intern=TRUE))[[1]]), "version")
+      basename(utils::capture.output(system2("bowtie --version", 
+                                      stdout=TRUE))[[1]]), "version")
     cat("\nR external mapping depends on correct installation of bowtie.")
     cat("\nIf there are problems using external bowtie, try type='internal'.")
     cat(paste0("\nAn external bowtie installation was found using version", 
                vrs[[1]][2]))
   }
   
-  for(i in 1:length(mis_lst)){
+  for(i in seq.int(length(mis_lst))){
     cat(paste0("\n\n******************************************************"))
     cat(paste0("\n|--- Mismatch ", mis_lst[[i]], 
                " started at ", format(Sys.time(), "%X")))
     cat("\n|--- Bowtie mapping:")
-    #input_file <- paste0(output_path, "/anno_mis", mis_lst[[i]], ".fa")
     # OBS! file.path doesn't work here alone, must have paste
-    input_file <- file.path(output_path, 
-                            paste0("anno_mis",mis_lst[[i]], ".fa"))
-    
-    for (j in 1:length(ref_paths)){
+    mis_fl_nam<- paste0("anno_mis",mis_lst[[i]], ".fa")
+    input_file <- file.path(output_path, mis_fl_nam)
+    for (j in seq.int(length(ref_paths))){
       cat("\n   |--->", paste0(names(ref_paths)[j], "..."))
-      output_file <-  file.path(paste0(output_path, "/", 
-                                       names(ref_paths)[j], ".out"))
+      out_fl_nam <- paste0(output_path, "/", names(ref_paths)[j], ".out")
+      output_file <-  file.path(out_fl_nam)
       # Fix windows path problem
       if(grepl("windows", .Platform$OS.type)){
         output_file <- gsub("\\\\", "/", output_file)
@@ -352,7 +348,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
         bwt_exp <- paste0("bowtie ", parse_external, 
                           " -v ", mis_lst[[i]], " -p ", threads, " ", 
                           ref_paths[[j]], " ", input_file, " ", output_file)
-        system(bwt_exp, intern=FALSE, ignore.stderr=FALSE)
+        system2(bwt_exp, stdout=TRUE)
       }
     }# for j loop ends (references)
     
@@ -372,16 +368,15 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
     reanno_df <- data.table::rbindlist(reanno, fill=FALSE)
     reanno_seqs <- unique(reanno_df$.id)
     anno <- Biostrings::readDNAStringSet(anno_path)
-    new_input <- anno[!paste0(anno) %in% reanno_seqs,]           
+    new_input <- anno[!paste0(anno) %in% reanno_seqs,, drop=FALSE]           
     new_suffix <- paste0("mis", mis_lst[[i]]+1)
     
     ## Write files
-    #save(reanno, file= paste0(output_path, "/Full_reanno_", suffix, ".Rdata"))
-    save(reanno, file= file.path(output_path, paste0("/Full_reanno_", 
-                                                     suffix, ".Rdata")))
+    reanno_fl_nam <- paste0("/Full_reanno_", suffix, ".Rdata")
+    save(reanno, file= file.path(output_path, reanno_fl_nam))
+    sav_fl_nam <- paste0("anno_", new_suffix, ".fa")
     Biostrings::writeXStringSet(new_input, 
-                                filepath=paste0(output_path, 
-                                                "/anno_", new_suffix, ".fa"), 
+                                filepath=file.path(output_path, sav_fl_nam), 
                                 format="fasta")
     if(any(rm_no_hits)){cat(paste0("\n\n|--- All reference but ", 
                                    names(rm_no_hits)[rm_no_hits], 

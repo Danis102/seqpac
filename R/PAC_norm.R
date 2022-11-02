@@ -58,7 +58,7 @@ PAC_norm <- function(PAC, norm="cpm", merge_pac=TRUE){
              ncol=ncol(PAC$Counts)))
     colnames(counts_cpm) <- colnames(PAC$Counts)
     rownames(counts_cpm) <- rownames(PAC$Counts)
-    for (i in 1:length(lib_sizes)){
+    for (i in seq.int(length(lib_sizes))){
       counts_cpm[,i] <- (PAC$Counts[,i]/(lib_sizes[i]/1000000))
     }
     fin <- counts_cpm

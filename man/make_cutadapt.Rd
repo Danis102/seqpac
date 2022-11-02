@@ -54,7 +54,8 @@ and remove sequences with low quality.
 ## The first is parsed to cutadapt and the other to fastq_quality_filter 
 ## For parallel processes '-j 1' is recommended since seqpac will   
 ## parallelize across samples and not within.
-## Run system("cutadapt -h") and system("fastq_quality_filter -h") 
+## Run system2("cutadapt -h", stdout=TRUE) and 
+## system("fastq_quality_filter -h", stdout=TRUE) 
 ## for more options.
 #   
 ## String to parse to cutadapt:

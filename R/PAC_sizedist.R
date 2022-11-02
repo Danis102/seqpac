@@ -154,7 +154,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
                                 !seq_range %in% as.character(y$size)], 
                               data=0))
       }
-      fin <- y[order(y$size),]  
+      fin <- y[order(y$size),,drop=FALSE]
       stopifnot(identical(as.character(fin$size), as.character(seq_range)))
       return(fin)
     })
@@ -171,7 +171,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
     rgb <- colfunc(sum(!anno_target[[2]] %in% c("other", "no_anno")))
     rgb_vec <- NULL
     cnt <- 0
-    for(i in 1:length(anno_target[[2]])){ 
+    for(i in seq.int(length(anno_target[[2]]))){ 
       if(anno_target[[2]][i] == "other"){
         rgb_vec[i] <- "#808080";  cnt <- cnt+1}
       if(anno_target[[2]][i] == "no_anno"){
@@ -194,7 +194,7 @@ PAC_sizedist <- function(PAC, norm="counts", range=NULL, anno_target,
       samp <- paste0(ph[,pheno_target[[1]]],"-", rownames(ph)) 
     }
   }
-  for(i in 1:length(size_lst)){
+  for(i in seq.int(length(size_lst))){
     histo_lst[[i]] <- ggplot2::ggplot(size_lst[[i]], 
                                       ggplot2::aes(x=size, 
                                                    y=data, 

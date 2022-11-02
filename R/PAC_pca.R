@@ -104,15 +104,11 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
   }
   
   if(length(pheno_target)==2){
-    #PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
-    #                                   pheno_target=pheno_target))
     PAC <- PAC_filter(PAC, subset_only=TRUE, 
                                        pheno_target=pheno_target)
     
     }
   if(length(anno_target)==2){
-    #PAC <- suppressMessages(PAC_filter(PAC, subset_only=TRUE, 
-    #                                   anno_target=anno_target))
     PAC <- PAC_filter(PAC, subset_only=TRUE, 
                                        anno_target=anno_target)
     }
@@ -128,7 +124,7 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
       geom <- c("point", "text")
       if(length(labels) > 1){
             if(any(duplicated(labels))){
-              colnames(data) <- paste(labels, 1:ncol(data), sep="_")
+              colnames(data) <- paste(labels, seq.int(ncol(data)), sep="_")
             }else{
               colnames(data) <- as.character(labels)
               }

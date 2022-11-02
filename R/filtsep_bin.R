@@ -65,7 +65,7 @@ filtsep_bin <- function(filtsep_out){
   seqs <- seqs[!is.na(seqs)]
   df <- as.data.frame(matrix(NA, nrow=length(seqs), ncol=length(filtsep_lst)))
   colnames(df) <- names(filtsep_lst)
-  for(i in 1:length(filtsep_lst)){
+  for(i in seq.int(length(filtsep_lst))){
     df[,i]  <- as.numeric(seqs %in% filtsep_lst[[i]])
   }
   rownames(df) <- seqs

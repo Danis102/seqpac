@@ -93,7 +93,6 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
   ### sample_check #############################################################
   if(!is.null(sample_check)){
     ## Provided table
-    #if(class(sample_check) %in% c("data.frame", "matrix")){#Remove class() Bioc
     if(methods::is(sample_check, c("data.frame", "matrix"))){
       if(any(rownames(sample_check)[1] %in% rownames(PAC$Pheno))){
         if(!identical(rownames(PAC$Pheno), rownames(sample_check))){
@@ -115,7 +114,7 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
             if(!methods::is(x, "list")){return(FALSE)}
             if(methods::is(x, "list")){any(grepl(sample_check, names(x)))}})))
           if(length(whr)==1){
-            if(sum(grepl(paste(rownames(PAC$Pheno)[1:2], collapse="|"), 
+            if(sum(grepl(paste(rownames(PAC$Pheno)[seq.int(2)], collapse="|"), 
                          rownames(PAC[[whr]][[sample_check]])))==2){
               if(!identical(rownames(PAC$Pheno), 
                             rownames(PAC[[whr]][[sample_check]]))){
@@ -124,7 +123,7 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
                   "\nwith sample names in the main PAC.\n", sampl)
               }
             }else{
-              if(sum(grepl(paste(rownames(PAC$Pheno)[1:2], collapse="|"), 
+              if(sum(grepl(paste(rownames(PAC$Pheno)[seq.int(2)], collapse="|"), 
                            colnames(PAC[[whr]][[sample_check]])))==2){
                 if(!identical(rownames(PAC$Pheno), 
                               colnames(PAC[[whr]][[sample_check]]))){
@@ -163,7 +162,6 @@ PAC_check <- function(PAC, sample_check=NULL, seq_check=NULL){
   ### seq_check #############################################################
   if(!is.null(seq_check)){
     ## Provided table
-    #if(class(seq_check) %in% c("data.frame", "matrix")){ #Remove class() Bioc 
     if(methods::is(seq_check, c("data.frame", "matrix"))) {
       if(!identical(rownames(PAC$Anno), rownames(seq_check))){
         stop(

@@ -193,7 +193,7 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
   })
   if(any(do.call("c", multi_seq_lst))){
     lst <- list(NA)
-    for(i in 1:length(multi_seq_lst)){
+    for(i in seq.int(length(multi_seq_lst))){
       lst[[i]] <-  sub_map[[i]]$Alignments[multi_seq_lst[[i]],]
     }
     names(lst) <- names(multi_seq_lst)
@@ -242,17 +242,17 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
   })
   
   cov_lst <- list(NA)
-  for(i in 1:length(sub_map)){
+  for(i in seq.int(length(sub_map))){
     df <- data.frame(seqnames="sequence",
                      start=sub_map[[i]]$Alignments$Align_start,
                      end=sub_map[[i]]$Alignments$Align_end,
                      ID=sub_map[[i]]$Alignments$seqs)
     
-    cov_lst[[i]] <- lapply(as.list(1:length(summary_target[[2]])), function(x){
-      df <- df[rep_lst[[i]][[x]],]
+    cov_lst[[i]] <- lapply(as.list(seq.int(length(summary_target[[2]]))), function(x){
+      df <- df[rep_lst[[i]][[x]],,drop=FALSE]
       if(nrow(df)==0){
         fin <- data.frame(
-          Position=as.factor(1:IRanges::width(sub_map[[i]]$Ref_seq)), 
+          Position=as.factor(seq.int(IRanges::width(sub_map[[i]]$Ref_seq))), 
           Coverage=as.numeric(0))
       }
       if(nrow(df)>0){  
@@ -260,7 +260,7 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
         GenomeInfoDb::seqlengths(gr) <- as.numeric(
           IRanges::width(sub_map[[i]]$Ref_seq))
         cov <- as.numeric(GenomicRanges::coverage(gr)[[1]])
-        fin <- data.frame(Position=ordered(as.factor(1:length(cov))), 
+        fin <- data.frame(Position=ordered(as.factor(seq.int(length(cov)))), 
                           Coverage=cov)
       }
       return(fin)
@@ -281,7 +281,7 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
   
   # Plot
   plot_lst <- list(NA)
-  for(i in 1:length(cov_lst)){
+  for(i in seq.int(length(cov_lst))){
     Coverage <- Group <- Position <- NULL
     cov_df <- cbind(data.frame(Position=cov_lst[[i]][[1]][,1]), 
                     do.call("cbind", lapply(cov_lst[[i]], function(x){x[,2]})))

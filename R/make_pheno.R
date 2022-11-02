@@ -101,15 +101,24 @@ make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
       stop("\nCannot find comma seperated header with first column", 
            "\nnamed 'Sample_ID' or you have >1 columns named 'Sample_ID'")
     }
+    # Check separation by comparing1st and 2nd row (should have the same)
     head_1 <- stringr::str_count (lines[header], ",")
     row_1 <- stringr::str_count (lines[header+1], ",")
-    if(row_1-head_1>=0){
+    head_2 <- stringr::str_count (lines[header], ";")
+    row_2 <- stringr::str_count (lines[header+1], ";")
+    head_3 <- stringr::str_count (lines[header], "\t")
+    row_3 <- stringr::str_count (lines[header+1], "\t")
+    
+    if(row_1-head_1==0 & !head_1==0){
       pheno <- utils::read.delim(pheno,  header=TRUE, sep=",")
-    }else{
+    }
+    if(row_2-head_2==0 & !head_2==0){
+      pheno <- utils::read.delim(pheno,  header=TRUE, sep=";")
+    }
+    if(row_3-head_3==0 & !head_3==0){
       pheno <- utils::read.delim(pheno,  header=TRUE, sep="\t")
     }
   }
-  
   #Fixes bug in read.delim that messing up 1st ID_column
   id_col <- grepl("Sample_ID|sample_ID|Sample_id|sample_id", colnames(pheno))
   if(sum(id_col) >1){
@@ -165,14 +174,14 @@ make_pheno<- function(pheno, counts=NULL, progress_report=NULL){
     colnames(df) <- colnames(pheno)
     
     if(typ=="pheno"){
-      for(i in 1:nrow(df)){
+      for(i in seq.int(nrow(df))){
         if(!ord[i] == 0){
           df[i,] <- as.character(t(pheno[ord[i],]))
         }
       }
     }
     if(typ=="counts"){
-      for(i in 1:nrow(df)){
+      for(i in seq.int(nrow(df))){
         df[ord[i],] <- as.character(t(pheno[i,]))
       }
     }

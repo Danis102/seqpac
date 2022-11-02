@@ -19,7 +19,8 @@ abstract: >
     recommended workflow for sRNA analysis, both fastq-processing (e.g. 
     adapter trimming and generating sequence counts) and post-fastq analysis 
     (e.g filtering, genome and sRNA alignment, differential expression 
-    and visualization).
+    and visualization). To assure package quality, Seqpac has been optimized for 
+    Bioconducter. 
     Seqpac package version: `r packageVersion("seqpac")`
 output:
   BiocStyle::html_document:
@@ -27,11 +28,12 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{A guide to small RNA analysis using Seqpac}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{BiocStyle:rmarkdown}
   %\VignetteEncoding{UTF-8}  
 ---
 
 ```{r style, echo = FALSE, results = 'asis'}
+
   BiocStyle::markdown()
 ```
 

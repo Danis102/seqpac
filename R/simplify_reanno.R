@@ -169,7 +169,7 @@ simplify_reanno <- function(input, hierarchy, mismatches=2,
     tp <- "S3"
   }
 
-  if(sum(names(input)[1:3] == c("Pheno", "Anno", "Counts"))==3){
+  if(sum(names(input)[seq.int(3)] == c("Pheno", "Anno", "Counts"))==3){
     anno <- input$Anno
   }else{ 
     anno <- input}
@@ -231,7 +231,7 @@ simplify_reanno <- function(input, hierarchy, mismatches=2,
     Original_biotypes=c(paste(other, collapse=", "), "_"))) 
   catg <- data.frame(
     Simplified_biotype=rownames(catg), 
-    Hierarchy=1:(nrow(catg)), 
+    Hierarchy=seq.int(nrow(catg)), 
     Original_biotypes=catg[,1])
   print(catg)
   
@@ -249,7 +249,7 @@ simplify_reanno <- function(input, hierarchy, mismatches=2,
       "\nPlease double check the asignments.")
     }  
   search_terms <- gsub(", ", "|", search_terms) 
-  for(i in 1:length(search_terms)){
+  for(i in seq.int(length(search_terms))){
     if(search_terms[i]=="xkFTGWQd$[}))$jks"){
       df_hits[,i]  <- "no_hit"
     }else{

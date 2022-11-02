@@ -127,8 +127,8 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
         pheno_target[[2]] <- unique(pheno[, pheno_target[[1]]])
       }}}
   indx <- pheno[, pheno_target[[1]]] %in% pheno_target[[2]]
-  pheno <- pheno[indx,]
-  data <- data[,indx]
+  pheno <- pheno[indx,,drop=FALSE]
+  data <- data[,indx,drop=FALSE]
 
   ### If a group has only one entrance double ###
   ph <- pheno[, pheno_target[[1]]]
@@ -159,7 +159,7 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
                          })
   ### Create pairwise combinations of pheno_target###
   if (length(sub_data_lst) > 1) { 
-    combn_lst <- as.list(data.frame(utils::combn(1:length(sub_data_lst),m = 2)))
+    combn_lst <- as.list(data.frame(utils::combn(seq.int(length(sub_data_lst)),m = 2)))
     }
   if (rev == TRUE) { combn_lst <- lapply(combn_lst, function(x) { 
     c(x[2], x[1]) })
@@ -222,7 +222,6 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
     perc_diff_lst <- lapply(group_means, function(x){
       combn_data <- data.frame(group_means=x, grand_means=grnd_mns)
       perc_diff <- as.data.frame((combn_data[,1]/combn_data[,2])*100)
-      #colnames(perc_diff) <- paste(names(group_means)[x], collapse="_vs_")
       return(perc_diff)
     })
     fin <- do.call("cbind", perc_diff_lst)
@@ -262,9 +261,8 @@ PAC_summary <- function(PAC, norm="counts", type="means", pheno_target=NULL,
   }     
   
   ### Add more summary functions###
-  # if(type=="perc_change"){}
-  # if(type=="mean_diff"){}
-  # etc
+##################################################
+  
   ### Fix names and return object t###
   if(merge_pac==TRUE){
     PAC <- sav

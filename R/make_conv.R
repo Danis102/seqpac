@@ -154,7 +154,7 @@ make_conv <- function(reference_list=NULL,
   # Check md5 between ref1 and ref2
   cat("\nMatching sequences in reference A vs B ...")
   hits1 <- character()
-  for(i in 1:length(ref1_md5_vec)){
+  for(i in seq.int(length(ref1_md5_vec))){
     frst_logi <- unlist(lapply(ref2_md5_lst, function(y){
           identical(paste(ref1_md5_vec[i]), paste(y))
        }))
@@ -189,7 +189,7 @@ make_conv <- function(reference_list=NULL,
     # Check md5 between ref1 and ref3
     cat("\nMatching sequences in reference A vs C ...")
     hits2 <- character()
-    for(i in 1:length(ref1_md5_vec)){
+    for(i in seq.int(length(ref1_md5_vec))){
       frst_logi <- unlist(lapply(ref3_md5_lst, function(y){
             identical(paste(ref1_md5_vec[i]), paste(y))
          }))
@@ -226,7 +226,7 @@ make_conv <- function(reference_list=NULL,
   df <- data.frame(matrix(NA, nrow=length(hits1), ncol=6))
   colnames(df) <- c("name_ref_A", "name_ref_B", "name_ref_C", 
                       "width_ref_A", "width_ref_B", "width_ref_C")
-  for(i in 1:length(hits1)){
+  for(i in seq.int(length(hits1))){
         df$name_ref_A[i] <- names(ref1_md5_vec)[i]
         df$width_ref_A[i] <- sav_width$ref1[i]
         if(nchar(hits1[i])==0){
@@ -264,7 +264,7 @@ make_conv <- function(reference_list=NULL,
            "\nPlease make sure that you use the same genome versions.")
   }
   }
-  df <- df[, !grepl("width", colnames(df))]
+  df <- df[, !grepl("width", colnames(df)), drop=FALSE]
   
   # Fix column names
   colnames(df) <- gsub("ref_A", names(reference_list)[1], colnames(df))
@@ -288,13 +288,12 @@ make_conv <- function(reference_list=NULL,
            "\nPlease provide input in the correct format.")
     }
   
-    for(i in 1:length(skip_after)){
+    for(i in seq.int(length(skip_after))){
       clmn <- which(grepl(names(skip_after)[i],colnames(df))) 
                      
-    #  suppressWarnings(
+
         df[,clmn] <- do.call("rbind", strsplit(df[,clmn], 
                                              split=skip_after[i]))[,1]
-    #  )
     }
   }
   if(output=="tibble"){

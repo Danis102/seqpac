@@ -164,7 +164,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
     if(n_extra==2){colors <- c(colfunc(length(bio)-2), "#6E6E6E", "#BCBCBD")}
     if(n_extra==0){colors <- colfunc(length(bio))}
   }
-  plt_lst <- as.list(1:ncol(df))
+  plt_lst <- as.list(seq.int(ncol(df)))
   names(plt_lst) <- colnames(df)
   plt_lst <- plt_lst[match(summary_target[[2]], names(plt_lst))]
   plot_lst <- lapply(plt_lst, function(num){ 

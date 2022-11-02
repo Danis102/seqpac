@@ -171,9 +171,9 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, output="S4"){
                                "Full_reanno_mis2|",
                                "Full_reanno_mis3"), 
                       full.names = TRUE)
-  seqs <- (seq(1:length(files)))-1
+  seqs <- (seq(seq.int(length(files))))-1
   reanno_lst <- list(NA)
-  for(i in 1:length(files)){
+  for(i in seq.int(length(files))){
     load(files[i])
     reanno_lst[[i]] <- reanno
     names(reanno_lst)[i] <- paste0("mis", seqs[i])
@@ -200,7 +200,7 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, output="S4"){
       match_lst  <- lapply(x,  function(y){
         y$.id <- as.character(y$.id)
         y$ref_hits <- as.character(y$ref_hits)
-        anno_match <- y[match(PAC_seq, y$.id), ]
+        anno_match <- y[match(PAC_seq, y$.id),, drop=FALSE]
         anno_match$.id[is.na(anno_match$.id)] <- PAC_seq[is.na(anno_match$.id)]
         stopifnot(identical(PAC_seq, anno_match$.id))
         names(anno_match)[names(anno_match)==".id"] <- "seq"
@@ -224,12 +224,12 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, output="S4"){
              paste(names(reanno_lst[[1]])[unlist(NA_which)], collapse=" "), 
              "\nProbable reason: No sequences mapped to reference(s).")
     
-    for(j in 1:length(NA_which)){
+    for(j in seq.int(length(NA_which))){
       if(length(NA_which[[j]]) >0){
         empt <- reanno_lst_match[[1]][[1]]
         empt[,2:4] <- NA
         stopifnot(!any(!is.na(empt[,2:4])))
-        for(g in 1:length(NA_which[[j]])){
+        for(g in seq.int(length(NA_which[[j]]))){
           ps <- length(reanno_lst_match[[j]]) + g
           reanno_lst_match[[j]][[ps]] <- empt
           names(reanno_lst_match[[j]])[ps] <- names(
@@ -256,7 +256,7 @@ make_reanno <- function(reanno_path, PAC, mis_fasta_check=FALSE, output="S4"){
   colnames(df_fin) <- names(reanno_lst_match[[1]]) 
   df_fin <- tibble::as_tibble(df_fin)
   
-  for (bio in 1:bio_cat){
+  for (bio in seq.int(bio_cat)){
     df <- do.call("cbind", lapply(reanno_lst_match, function(x){
       return(x[[bio]]$mis_n)
       }))

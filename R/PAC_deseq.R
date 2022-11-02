@@ -122,13 +122,13 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   # Make factors of model columns
   cols <- attr(terms.formula(model), "term.labels")
   cols <- unique(unlist(strsplit(cols, ":")))
-  for (i in 1:length(cols)){
+  for (i in seq.int(length(cols))){
     #Sometime model terms ar complex
     # search for best pheno columns
     trm <- cols[i]
     colnam <- colnames(pheno)
     logi <- NULL
-    for(k in 1:length(colnam)){
+    for(k in seq.int(length(colnam))){
     logi <- c(logi, grepl(colnam[k], trm))
     }
     # Refactor best hit
@@ -166,9 +166,6 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
      target_nam <- res_nam[2]
   }  
   res_DESeq2 <- DESeq2::results(dds_fit, name=target_nam)
-  #original:
-  #comp <- strsplit(
-  #  res_DESeq2@elementMetadata@listData$description[2], ": ")[[1]][2]
   comp <- strsplit(S4Vectors::mcols(res_DESeq2)[2][,1][2], ": ")[[1]][2]
   cat("\n")
   cat("\n")
@@ -178,7 +175,6 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   # Print summary working with different DESeq versions
   test <- try(cat(DESeq2::summary(res_DESeq2)), silent = TRUE)
   if(methods::is(test,"try-error")){ 
-    #cat(DESeq2::summary.DESeqResults(res_DESeq2))
     cat(DESeq2::DESeqResults(res_DESeq2))
   }else{
     print(test)

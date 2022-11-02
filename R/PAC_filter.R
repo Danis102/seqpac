@@ -250,14 +250,14 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
                             paste0(">50_in_", coverage, "%"),
                             paste0(">75_in_", coverage, "%"), 
                             paste0(">100_in_", coverage, "%"))
-      for (i in 1:length(filt_plot$x_graph)){ 
+      for (i in seq.int(length(filt_plot$x_graph))){ 
         tab <- as.data.frame(table(data.frame(
           rowSums(df >= filt_plot$x_graph[i])) >= round(
             ncol(df)*(coverage*0.01))))
         filt_plot[i,2] <- tab$Freq[tab$Var1=="TRUE"]
       }
       ### Plot graph
-      suppressWarnings( 
+      try_err<- try( 
         p <- ggplot2::ggplot(
           filt_plot, ggplot2::aes(x=x_graph, y=n_features, fill=x_graph))+
           ggplot2::geom_line()+
@@ -282,12 +282,17 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
                                                      unit="cm"),
                          plot.title = ggplot2::element_text(color="red", 
                                                             size=10)))
+      
+      if(is(try_err, "try-error")){
+        warning("Was unable to create filtering graph. Probable reason:", 
+                "\nCorrupt PAC or very few reads from start.")
+      }
+      
       Sys.sleep(0.01)
       print(p)
       ### Promt for user input
       cat("\n!!           !!\nUser input needed:\n") 
       answer <- readline(prompt="Continute with this filter? [Y/n]")
-      #if(answer=="N" | answer=="n"){stop("Script was terminated by user.")}
       if(answer=="Y" | answer=="y"){}else{stop("Script was terminated by user.")
       }
     }

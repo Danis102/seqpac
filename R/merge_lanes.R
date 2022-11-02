@@ -93,7 +93,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   test <- list(NULL)
   md5 <- lapply(as.list(fls_full), function(x){
     fstq <- data.table::fread(x, header=FALSE, nrows=1000)
-    test <- digest::digest(fstq, algo="md5")
+   test <- digest::digest(fstq, algo="md5")
     return(test)
   })
   if(any(duplicated(unlist(md5)))){
@@ -120,7 +120,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   # Identify and merge files of unique samples save in output
   doParallel::registerDoParallel(threads)
   `%dopar%` <- foreach::`%dopar%`
-  done <- foreach::foreach(j=1:length(fls_nam)) %dopar% {
+  done <- foreach::foreach(j=seq.int(length(fls_nam))) %dopar% {
     fl_base<- fls_nam[j]
     lns  <- which(grepl(fl_base, fls_full))
     #out_nam  <- paste0(out_path, "/", fl_base, ".fastq.gz")
@@ -128,7 +128,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
     # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
     #     out_nam <- gsub("\\", "/", out_nam, fixed=TRUE)
     #     }
-    for(i in 1:length(lns)){
+    for(i in seq.int(length(lns))){
         if(i == 1){
           file.copy(fls_full[lns[i]], out_nam)
         }else{
