@@ -28,13 +28,14 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{A guide to small RNA analysis using Seqpac}
-  %\VignetteEngine{knitr:rmarkdown}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
 ---
 
 ```{r style, echo = FALSE, results = 'asis'}
 
   BiocStyle::markdown()
+
 ```
 
 <br>
