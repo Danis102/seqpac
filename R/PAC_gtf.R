@@ -279,7 +279,7 @@ PAC_gtf<- function(PAC, genome=NULL, mismatches=3, return="simplify",
   ##### Organize mapped coordinates ####################################
   cat("\n\nReorganizing coordinates ...")
   coord_lst <- list(NULL)
-  lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size"),drop=FALSE]
+  lng_all <- PAC$Anno[,colnames(PAC$Anno) %in% c("Length", "Size"), drop=TRUE]
   mis_incl <- unique(mis_genome[[1]])
   mis_incl <- mis_incl[mis_incl %in% paste0("mis", 0:mismatches)]
   for(i in seq.int(nrow(mis_genome))){

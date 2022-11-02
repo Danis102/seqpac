@@ -110,7 +110,7 @@ PAC_saturation <- function(PAC, resample=10, steps=10,
   doParallel::stopImplicitCluster()
   dat <- as.data.frame(do.call("rbind", resampl_sub_lst))
   ## Add intercept and fix classes
-  intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),drop=FALSE]
+  intercpt <-  dat[!duplicated(paste0(dat$perc, dat$thresh)),,drop=FALSE]
   intercpt[,!colnames(intercpt)=="thresh"] <- 0
   dat <- rbind(dat, intercpt)
   dat$thresh <- as.factor(dat$thresh)
