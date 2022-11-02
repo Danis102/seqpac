@@ -28,7 +28,7 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{A guide to small RNA analysis using Seqpac}
-  %\VignetteEngine{BiocStyle:rmarkdown}
+  %\VignetteEngine{knitr:rmarkdown}
   %\VignetteEncoding{UTF-8}  
 ---
 
