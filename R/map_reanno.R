@@ -13,7 +13,7 @@
 #' using \code{make_reanno} and \code{add_reanno} functions. For increase
 #' compatibility across platforms, the function provides both R internal bowtie
 #' parsing (thorugh the Rbowtie package), as well as external parsing to a
-#' locally installed version of bowtie.F
+#' locally installed version of bowtie.
 #'
 #'
 #' @family PAC reannotation
