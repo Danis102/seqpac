@@ -133,8 +133,8 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
   }
   
 ## Setup temp folder and convert to windows format
-  outpath <-  file.path(tempdir(), "/", "seqpac")
-  ref_path <-  file.path(tempdir(), "/ref/reference.fa")
+  outpath <-  file.path(tempdir(), "seqpac")
+  ref_path <-  file.path(tempdir(), "ref","reference.fa")
   
   dir.create(outpath, showWarnings=FALSE, recursive = TRUE)
   dir.create(dirname(ref_path), showWarnings=FALSE, recursive = TRUE)
@@ -317,7 +317,6 @@ PAC_mapper <- function(PAC, ref, mismatches=0, multi="remove",
     }
   }
   doParallel::stopImplicitCluster()
-  #class(fin_lst) <- c("list", "seqpac_map") # Remove class() Bioc
   #Have not implemented the the map object as a class in other functions yet
   return(fin_lst)
 }

@@ -147,14 +147,14 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
         # Check likely type of data
         n_sampl <- nrow(PAC$Pheno)
         col <- PAC$Pheno[,pheno_target[[1]]]
-        if(is(col, "matrix")){
+        if(is.matrix(col)){
           col <- col[,1]
         }
         rtio <- length(unique(col))/n_sampl
-      if(is(col, "factor")|rtio<0.7){
+      if(is.factor(col)|rtio<0.7){
         col <- as.factor(as.character(col))
       }
-      if(is(col, "numeric")|is(col, "integer")|rtio>0.7){
+      if(is.numeric(col)|is.integer(col)|rtio>0.7){
         col <- as.numeric(col)
       }
     }
@@ -174,7 +174,7 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
 # Build graphs depending on type
     if(type=="pheno"){
     # For gradient/numeric use ggplot2
-      if(is(col, "numeric")){
+      if(is.numeric(col)){
         coord<- as.data.frame(pca_res$ind$coord)
         con<- as.data.frame(pca_res$eig[,"percentage of variance"])
         grphs$PC1_PC2 <- ggplot2::ggplot() +
@@ -233,7 +233,7 @@ PAC_pca <- function(PAC, norm="counts", type="pheno", graphs=TRUE,
   
   if(type=="anno"){
     # For gradient/numeric use ggplot2
-    if(is(col, "numeric")){
+    if(is.numeric(col)){
       coord<- as.data.frame(pca_res$var$coord)
       con<- as.data.frame(pca_res$eig[,"percentage of variance"])
       grphs$PC1_PC2 <- ggplot2::ggplot() +

@@ -219,7 +219,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   print(count_files)
   
   ## Setup temporary folder
-  output <- file.path(tempdir(), "/seqpac/")
+  output <- file.path(tempdir(), "seqpac")
   if(!dir.exists(output)){
     dir.create(output)
   }
@@ -401,15 +401,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     cat("\nOn disk was requested. Progress for file append, see:\n",
         output)
   }
-  #`%do%` <- foreach::`%do%`
-  #if(is.null(chunk_size)){
-  #doParallel::registerDoParallel(threads)
-  #}
-  
-  # seq_lst   <- foreach::foreach(i=seq_along(fls), .final = function(x){
-  #  names(x) <- basename(fls); return(x)}) %dopar% {
-  # seq_lst   <- foreach::foreach(i=seq_along(fls), .final = function(x){
-  #  names(x) <- basename(fls); return(x)}) %do% {
   names(fls) <- basename(fls)
   seq_lst <- lapply(fls, function(i){
     # Initiate
@@ -604,7 +595,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       fl_nam_uni <- paste0(gsub(".fastq.gz", "", 
                                 basename(fl)),"_APPEND_UNI.txt")
       fl_nam_uni <-  file.path(append_path, fl_nam_uni)
-      #file.create(fl_nam_uni)              
       # important; don't quote seqs (all must be handled equal downstream)
       readr::write_delim(as.data.frame(uni), 
                          fl_nam_uni,
@@ -640,8 +630,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     if(length(tempugz_fls)>0){unlink(tempugz_fls)}
     
     
-  })   # -> end for lapply
-  #}   # -> used for doeach
+  })
   Sys.sleep(1)
   
   gc(reset=TRUE)
@@ -673,9 +662,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     }
     
     # Then read  merged UNI/EXTRA and reduce UNI over chunk while loop
-    # Set vroom to maximum lines
-    # Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
-    # Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072*10000)
     n_all_uni <- ShortRead::countLines(fl_all_uni)
     cat("\nOn_disk UNI file with fastq uniques had", n_all_uni, "sequences.")
     
@@ -994,7 +980,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         pfilt_fun <- function(seqs_in, fl_in, fl_out, extract_fun,
                               seq_min, rm_wild, threads){
           # First save seqs_keep
-          fl_seq_sav<- file.path( tempfile(),"_temp_save_seqs.txt")
+          fl_seq_sav<- file.path(tempfile(),"_temp_save_seqs.txt")
           readr::write_delim(as.data.frame(seqs_in),
                              fl_seq_sav,
                              append = FALSE,
@@ -1022,7 +1008,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
           gc()
           reads_keep <- NULL
           fq <- 1
-          #set.seed(123)
           sampler <- ShortRead::FastqStreamer(fl_temp, chunk_size)
           while(length(fq)) {
             fq <- ShortRead::yield(sampler)
@@ -1038,8 +1023,8 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
         
         # Start error handling  
         filt_out <- NULL
-        fl_temp <-  file.path(output, paste0(i, "_temp", 
-                                             basename(fl),".fq"))
+        tmp_fln_nam<- paste0(i, "_temp", basename(fl),".fq")
+        fl_temp <-  file.path(output, tmp_fln_nam)
         gc()
         # Apply panic in rounds, round1=filt, round2=chunk, round3=remove
         # Try filter, if error, apply panic filter to this sample only
@@ -1188,8 +1173,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   }
   # restore vroom env settings and clean up after vroom
   if(on_disk){
-    # Sys.setenv(`_R_S3_METHOD_REGISTRATION_NOTE_OVERWRITES_` = "TRUE")
-    # Sys.setenv(`VROOM_CONNECTION_SIZE` = 131072)
     gc(reset=TRUE)
     temp_fls <- list.files(tempdir(), full.names = TRUE)
     vroom_fls <- temp_fls[grepl("vroom-",temp_fls)]
@@ -1286,10 +1269,6 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   if(plot==FALSE){
     plt_lst <- "Evidence plot was omitted by user input"
   }
-  
-  #prog_report <- cbind(prog_report, 
-  #                     stat_dt[!names(stat_dt) %in% c("uni_seqs", 
-  #                                                    "tot_reads")])
   prog_report <- cbind(prog_report, stat_dt)
   return(list(counts=ordCount_df, progress_report=prog_report, 
               evidence_plots=plt_lst))

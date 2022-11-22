@@ -123,11 +123,8 @@ merge_lanes <- function(in_path, out_path, threads=1){
   done <- foreach::foreach(j=seq.int(length(fls_nam))) %dopar% {
     fl_base<- fls_nam[j]
     lns  <- which(grepl(fl_base, fls_full))
-    #out_nam  <- paste0(out_path, "/", fl_base, ".fastq.gz")
-    out_nam  <- file.path(out_path, paste0(fl_base, ".fastq.gz"))
-    # if(grepl("win|WIN|Win", Sys.info()["sysname"])){
-    #     out_nam <- gsub("\\", "/", out_nam, fixed=TRUE)
-    #     }
+    fsp_nam  <- paste0(fl_base, ".fastq.gz")
+    out_nam  <- file.path(out_path, fsp_nam)
     for(i in seq.int(length(lns))){
         if(i == 1){
           file.copy(fls_full[lns[i]], out_nam)

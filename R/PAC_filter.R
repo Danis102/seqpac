@@ -90,7 +90,10 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     tp <- "S3"
   }
   
-  options(scipen=999)
+  opt_sci <- options(scipen=999)
+  options(scipen=opt_sci)
+  on.exit(options(scipen=opt_sci))
+  
   strt <- nrow(PAC$Counts)
   nsamp <- ncol(PAC$Counts)
   x_graph <- n_features <- NULL
@@ -319,6 +322,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     }
   }
   ## Double check and return
+  on.exit()
   if(PAC_check(PAC)==TRUE){
     if(tp=="S4"){
        return(as.PAC(PAC))

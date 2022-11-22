@@ -119,9 +119,7 @@ tRNA_class <- function(PAC, map, terminal = 5){
   type_vector <- lapply(map, function(x){
     # Setup
     align <- x$Alignments
-    #reference_length <- x$Ref_seq@ranges@width
     reference_length <- IRanges::width(x$Ref_seq)
-    #ref_name <- x$Ref_seq@ranges@NAMES
     ref_name <- names(x$Ref_seq)
     # Classify according to terminal tolerance 
     terminal_type <- ifelse(align$Align_start <= terminal, "5'",

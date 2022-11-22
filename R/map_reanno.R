@@ -306,16 +306,16 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
     cat(paste0("\n|--- Mismatch ", mis_lst[[i]], 
                " started at ", format(Sys.time(), "%X")))
     cat("\n|--- Bowtie mapping:")
-    # OBS! file.path doesn't work here alone, must have paste
+    # OBS! file.path doesn't work alone, must have paste to create file names
     mis_fl_nam<- paste0("anno_mis",mis_lst[[i]], ".fa")
     input_file <- file.path(output_path, mis_fl_nam)
     for (j in seq.int(length(ref_paths))){
       cat("\n   |--->", paste0(names(ref_paths)[j], "..."))
-      out_fl_nam <- paste0(output_path, "/", names(ref_paths)[j], ".out")
-      output_file <-  file.path(out_fl_nam)
+      out_fl_nam <- paste0(names(ref_paths)[j], ".out")
+      output_file <-  file.path(output_path, out_fl_nam)
       # Fix windows path problem
       if(grepl("windows", .Platform$OS.type)){
-        output_file <- gsub("\\\\", "/", output_file)
+        output_file <- gsub("\\\\", "/", output_file) 
         input_file <- gsub("\\\\", "/", input_file)
       }
       ## Internal bowtie
@@ -372,7 +372,7 @@ map_reanno <- function(PAC, type="internal", output_path, ref_paths,
     new_suffix <- paste0("mis", mis_lst[[i]]+1)
     
     ## Write files
-    reanno_fl_nam <- paste0("/Full_reanno_", suffix, ".Rdata")
+    reanno_fl_nam <- paste0("Full_reanno_", suffix, ".Rdata")
     save(reanno, file= file.path(output_path, reanno_fl_nam))
     sav_fl_nam <- paste0("anno_", new_suffix, ".fa")
     Biostrings::writeXStringSet(new_input, 
