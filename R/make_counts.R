@@ -412,7 +412,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       #Uncompress the whole file will save time and space on disk
       # Otherwise vroom will generate a lot of files
       ugz_fl <- gsub(".gz|.gzip|.zip", "",basename(fl))
-      ugz_path <- file.path(output, paste0("_tempugz_", ugz_fl))
+      ugz_path <- file.path(output, "_tempugz_", ugz_fl)
       Sys.sleep(1)
       gc()
       gunzp_con <- R.utils::gunzip(fl, destname=ugz_path, 

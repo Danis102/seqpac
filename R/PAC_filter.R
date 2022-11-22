@@ -92,7 +92,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
   
   opt_sci <- options()
   options(scipen=999)
-  on.exit(options(opt_sci))
+  
   
   strt <- nrow(PAC$Counts)
   nsamp <- ncol(PAC$Counts)
@@ -322,7 +322,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     }
   }
   ## Double check and return
-  on.exit()
+  options(opt_sci)
   if(PAC_check(PAC)==TRUE){
     if(tp=="S4"){
        return(as.PAC(PAC))
