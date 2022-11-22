@@ -90,9 +90,9 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     tp <- "S3"
   }
   
-  opt_sci <- options(scipen=999)
-  options(scipen=opt_sci)
-  on.exit(options(scipen=opt_sci))
+  opt_sci <- options()
+  options(scipen=999)
+  on.exit(options(opt_sci))
   
   strt <- nrow(PAC$Counts)
   nsamp <- ncol(PAC$Counts)
