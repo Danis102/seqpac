@@ -186,6 +186,9 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   anno <- value <- variable <- i <- NULL
   `%>%`<- dplyr::`%>%`
   `%dopar%` <- foreach::`%dopar%`
+  opt_sci <- options()
+  options(scipen=999)
+  
   # Release optimization options
   chunk_size <- optimize[["chunk_size"]]
   on_disk <- optimize[["on_disk"]]
@@ -193,6 +196,8 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
   seq_min <- optimize[["seq_min"]]
   #############################
   ###### Input fastq #######
+  
+  
   cat("Started at ", paste0(Sys.time()), "\n")
   Sys.sleep(1)
   
@@ -412,7 +417,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
       #Uncompress the whole file will save time and space on disk
       # Otherwise vroom will generate a lot of files
       ugz_fl <- gsub(".gz|.gzip|.zip", "",basename(fl))
-      ugz_path <- file.path(output, "_tempugz_", ugz_fl)
+      ugz_path <- file.path(output, paste0("_tempugz_", ugz_fl))
       Sys.sleep(1)
       gc()
       gunzp_con <- R.utils::gunzip(fl, destname=ugz_path, 
@@ -1270,6 +1275,7 @@ make_counts <- function(input, trimming=NULL, threads=1, save_temp=FALSE,
     plt_lst <- "Evidence plot was omitted by user input"
   }
   prog_report <- cbind(prog_report, stat_dt)
+  options(opt_sci)
   return(list(counts=ordCount_df, progress_report=prog_report, 
               evidence_plots=plt_lst))
 }
