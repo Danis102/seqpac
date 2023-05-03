@@ -1,6 +1,8 @@
 # seqpac
 A Framework for small RNA analysis in R using Sequence-Based Counts
 
+We are sorry to inform you that the main developer of Seqpac - Daniel Nätt - passed away in April of 2023. Updates on the future of Seqpac will follow here shortly. 
+
 <br>
 
 ---
