@@ -10,11 +10,11 @@ We are sorry to inform you that the main developer of Seqpac - Daniel Nätt - pa
 In R:<br>
 `devtools::install_github("Danis102/seqpac", dependencies=TRUE)`
 
+OR
 
-if (!require("BiocManager", quietly = TRUE))
+`if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-
-BiocManager::install("seqpac")
+BiocManager::install("seqpac")`
 
 <br>
 
@@ -35,5 +35,6 @@ BiocManager::install("seqpac")
 ---
 ### How to cite
 Seqpac: A Framework for small RNA analysis in R using Sequence-Based Counts
-Signe Skog, Lovisa Örkenby, Unn Kugelberg, Anita Öst, Daniel Nätt
+<br>
+Signe Skog, Lovisa Örkenby, Unn Kugelberg, Anita Öst, Daniel Nätt<br>
 Bioinformatics, Volume 39, Issue 4, April 2023, btad144, https://doi.org/10.1093/bioinformatics/btad144
