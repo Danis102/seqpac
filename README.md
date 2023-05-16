@@ -11,6 +11,11 @@ In R:<br>
 `devtools::install_github("Danis102/seqpac", dependencies=TRUE)`
 
 
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("seqpac")
+
 <br>
 
 
@@ -29,6 +34,6 @@ In R:<br>
 
 ---
 ### How to cite
-Seqpac: A New Framework for small RNA analysis in R using Sequence-Based Counts
-Signe Skog, Lovisa Örkenby, Unn Kugelberg, Kanwal Tariq, Ann-Kristin Östlund Farrants, Anita Öst, Daniel Nätt
-bioRxiv 2021.03.19.436151; doi: https://doi.org/10.1101/2021.03.19.436151 
+Seqpac: A Framework for small RNA analysis in R using Sequence-Based Counts
+Signe Skog, Lovisa Örkenby, Unn Kugelberg, Anita Öst, Daniel Nätt
+Bioinformatics, Volume 39, Issue 4, April 2023, btad144, https://doi.org/10.1093/bioinformatics/btad144
