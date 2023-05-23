@@ -122,6 +122,11 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   # Make factors of model columns
   cols <- attr(terms.formula(model), "term.labels")
   cols <- unique(unlist(strsplit(cols, ":")))
+  compr<-pheno[,colnames(pheno) %in% cols]
+  if((any(apply(combn(ncol(compr), 2), 2, function(x) identical(compr[, x[1]], compr[, x[2]]))))==TRUE) {
+    stop(cat="The column names in model appears to be repeated. \nThis may cause unwanted comparisons. To ensure a correct comparison, please check the colnames in Pheno!")
+  }
+  
   for (i in seq.int(length(cols))){
     #Sometime model terms ar complex
     # search for best pheno columns
@@ -145,7 +150,12 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   if(length(pheno_target)==1){
       pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
+    
   trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
+   if(any(duplicated(trg) | duplicated(trg, fromLast = TRUE))==TRUE){
+    warning(cat="The values in designated pheno_target are not unique. \nThis may cause unwanted comparisons. To ensure a correct comparison, please check the values in Pheno!")
+  }
+  
   mis <- !levels(trg) %in% pheno_target[[2]] 
   pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(
     trg, levels=c(rev(pheno_target[[2]]),levels(trg)[mis]))
