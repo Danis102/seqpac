@@ -80,8 +80,8 @@
 
 merge_lanes <- function(in_path, out_path, threads=1){
   j <- NULL
-  fls <- list.files(in_path, pattern=".fastq.gz")
-  fls_full <- list.files(in_path, pattern=".fastq.gz", full.names = TRUE)
+  fls <- list.files(in_path, pattern=".fastq.gz", recursive  = TRUE)
+  fls_full <- list.files(in_path, pattern=".fastq.gz", full.names = TRUE, recursive  = TRUE)
 
   # Error if no files are found
   if(length(fls) < 1){
@@ -112,7 +112,7 @@ merge_lanes <- function(in_path, out_path, threads=1){
   }
 
   # trim further and test if still valid
-  test <- unique(gsub("_L00$|_L0$|_L$|_$|_lane|_Lane", "", fls_nam))
+  test <- unique(gsub("_L00.*", "", fls_nam))
   if(length(test) == length(fls_nam)){
     fls_nam <- test
   }
