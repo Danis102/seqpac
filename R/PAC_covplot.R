@@ -155,6 +155,11 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
     return(d_sub)
   }))
   uni_map <- as.character(unique(uni_map[!uni_map == "1"]))
+  #the first character may sometimes be empty - check for this and remove
+  if(uni_map[1]==""){
+  uni_map <- uni_map[-1]
+    }
+  
   PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
   if(!nrow(PAC$Anno) == length(uni_map)){
     warning("Only ", 
