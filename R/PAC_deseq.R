@@ -45,7 +45,7 @@
 #'   (Default="Wald")
 #'
 #' @param fitType Character parsed directly to \code{\link[DESeq2]{DESeq}} that
-#'   controls what type of despersion fit that should be used. Alternatives are
+#'   controls what type of dispersion fit that should be used. Alternatives are
 #'   either "parametric" (dispersion-mean relation), "local" (local regression
 #'   of log dispersions), "mean" (mean of gene-wise dispersion). See
 #'   \code{\link[DESeq2]{DESeq}} for more details. (Default="local")
@@ -79,7 +79,7 @@
 #'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch,
 #'                                           threads=2))
 #'
-#'## Using pheno_target we can change focus
+#'## Using pheno_target 
 #'output_deseq <- suppressWarnings(PAC_deseq(pac,model= ~stage + batch, 
 #'                                           pheno_target=list("batch"),
 #'                                           threads=2))
