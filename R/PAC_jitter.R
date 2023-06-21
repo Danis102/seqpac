@@ -90,7 +90,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
                        type="jitter", limits=NULL, ypos_n=NULL, colors=NULL, 
                        box=TRUE){
   
-  ..count.. <- values <- biotype <-  NULL
+   values <- biotype <-  NULL
   
   ## Check S4
   if(isS4(PAC)){
@@ -186,7 +186,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
                               width=0.7, cex=0.4, position = "identity", 
                               col="Black") +
         ggplot2::geom_text(stat="count", ggplot2::aes(
-            label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), 
+            label=paste0("n=", ggplot2::after_stat(count) , "\nup:", perc_up[,num+1], "%")), 
             size=3.5, y=ypos_n, col="Black") +
         ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , 
                       y =  paste0(summary_target[[1]]) ) +
@@ -214,7 +214,7 @@ PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL,
         ggplot2::geom_violin(width=0.9, trim=TRUE, scale="width", 
                              color="black")+
         ggplot2::geom_text(stat="count", ggplot2::aes(
-          label=paste0("n=",..count.., "\nup:", perc_up[,num+1], "%")), 
+          label=paste0("n=", ggplot2::after_stat(count) , "\nup:", perc_up[,num+1], "%")), 
           size=3.5, y=ypos_n, col="Black") +
         ggplot2::labs(title=paste0(colnames(df)[num]) , x="Biotype" , 
                       y =  paste0(summary_target[[1]]) ) +

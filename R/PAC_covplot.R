@@ -149,16 +149,14 @@ PAC_covplot <- function(PAC, map, summary_target=NULL, map_target=NULL,
     sub_map <- map[grepl(paste(map_target, collapse="|"), names(map))]
   }
   
+  sub_map<-sub_map[!unlist(lapply(sub_map, function(x){x[[2]][1,1] == "no_hits"}))]
+  
   uni_map <- do.call("c",lapply(sub_map, function(x){
     d_sub <- gsub("\\.\\d", "", rownames(x$Alignments))
     d_sub <- gsub('[[:digit:]]+', '', d_sub)
     return(d_sub)
   }))
   uni_map <- as.character(unique(uni_map[!uni_map == "1"]))
-  #the first character may sometimes be empty - check for this and remove
-  if(uni_map[1]==""){
-  uni_map <- uni_map[-1]
-    }
   
   PAC <- PAC_filter(PAC, anno_target=uni_map, subset_only=TRUE)
   if(!nrow(PAC$Anno) == length(uni_map)){

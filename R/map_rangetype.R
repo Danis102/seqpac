@@ -159,13 +159,13 @@ map_rangetype <- function(map, type="percent", ss=NULL, min_loop_width=4,
           ref_len <- ref_len - sum(unlist(N_counts[[i]]))
           align$Align_start   <- align$Align_start - N_counts[[i]][1]
           align$Align_end   <- align$Align_end - N_counts[[i]][2]
-          substring(
-            align$Align_string, 1, N_counts[[i]][1]) <- paste(
-              rep("*", times=N_counts[[i]][1]), collapse="")
-          substring(
-            align$Align_string, 
-            (nchar(align$Align_string) - N_counts[[i]][2] + 1)) <- paste(
-              rep("*", times=N_counts[[i]][2]), collapse="")
+          # substring(
+          #   align$Align_string, 1, N_counts[[i]][1]) <- paste(
+          #     rep("*", times=N_counts[[i]][1]), collapse="")
+          # substring(
+          #   align$Align_string, 
+          #   (nchar(align$Align_string) - N_counts[[i]][2] + 1)) <- paste(
+          #     rep("*", times=N_counts[[i]][2]), collapse="")
         }
       }
       
