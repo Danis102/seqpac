@@ -2,7 +2,7 @@
 #'
 #' \code{PAC_norm} generates normalized values from a PAC object
 #' 
-#' Using the counts in a PAC object to generate normalized values in a dataframe
+#' Using the counts in a PAC object to generate normalized values in a data.frame
 #' with the same rownames as in the original PAC object
 #' 
 #' @family PAC analysis
@@ -15,7 +15,7 @@
 #'
 #' @param norm Character indicating what type of normalization method that
 #'   should be applied to the counts(PAC). If norm="cpm", counts per million
-#'   reads) is returned. Each sequence is then divided against the total number
+#'   reads is returned. Each sequence is then divided against the total number
 #'   of counts in a given sample. If norm="vst", counts(PAC) will be imported
 #'   into the \code{\link[DESeq2]{varianceStabilizingTransformation}} function
 #'   in the DESeq2-package with the options blind=TRUE and fitType="mean". If
