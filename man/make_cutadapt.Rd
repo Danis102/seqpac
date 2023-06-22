@@ -21,7 +21,7 @@ filtering will not be applied. Thus, if parse = list(cutadapt=NULL,
 fastq_quality_filter="-q 20 -p 80"), then only the quality filter will be
 applied.}
 
-\item{threads}{Integer stating the number of parallell jobs. Note, that
+\item{threads}{Integer stating the number of parallel jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 file. To avoid crashing the system due to memory shortage, make sure that
 each thread on the machine have at least 10 Gb of memory availabe, unless
@@ -85,6 +85,7 @@ for updates on seqpac.
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{create_PAC}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_pheno}()},

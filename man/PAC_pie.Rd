@@ -9,7 +9,7 @@ PAC_pie(
   anno_target = NULL,
   pheno_target = NULL,
   colors = NULL,
-  labels = "none",
+  labels = "all",
   no_anno = TRUE,
   summary = "sample",
   angle = -25
@@ -41,13 +41,13 @@ categories named "other" or no_anno" will automatically receive a grey
 color.}
 
 \item{labels}{Character that sets what labels to plot in the actual pie
-besides the legend. If lables="all", then the anno_target variables will be
+besides the legend. If lables="all" (default), then the anno_target variables will be
 combined with percentage. If lables="percent" only percentages will be
-plotted with the pie. If labels="none" (default) no lables will be present
+plotted with the pie. If labels="none", no lables will be present
 besides the legend.}
 
 \item{no_anno}{Logical whether PAC sequences without an annotation should be
-removed prior to plotting. Specifically, if no_anno=FALSE then sequences
+removed prior to plotting. Specifically, if no_anno=FALSE, then sequences
 annotated with "no_anno" in the anno_target column will be removed prior to
 plotting. When no_anno=TRUE (default), then all sequences will be included
 (unless excluded in the anno_target object).}

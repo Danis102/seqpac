@@ -2,7 +2,7 @@
 % Please edit documentation in R/PAC_filter.R
 \name{PAC_filter}
 \alias{PAC_filter}
-\title{Filter a PAC object on sequence size and covarage}
+\title{Filter a PAC object on sequence size and coverage}
 \usage{
 PAC_filter(
   PAC,
@@ -18,7 +18,7 @@ PAC_filter(
 }
 \arguments{
 \item{PAC}{PAC-list object containing an Anno data.frame with sequences as
-row names and a Counts table with raw counts or reads per million (cpm).}
+row names and a Counts table with raw counts or counts per million (cpm).}
 
 \item{size}{Integer vector giving the size interval, as c(min,max), that
 should be saved (default=c(min,max)).}
@@ -37,7 +37,7 @@ anno_target should be done. If subset=FALSE (default) both subsetting and
 other filtering will be done.}
 
 \item{stat}{(optional) Logical specifying if a coverage graph should be
-generated and if users should be promted prior to proceeding.
+generated and if users should be prompted prior to proceeding.
 (default=FALSE).}
 
 \item{pheno_target}{(optional) List with: 
@@ -55,7 +55,7 @@ the target Anno column (1st object).
 \value{
 A list of objects: 
               PAC object with filtered data.   
-              (optional) A covarage plot
+              (optional) A coverage plot
 }
 \description{
 \code{PAC_filter} Filter PAC objects.

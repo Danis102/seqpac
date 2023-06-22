@@ -50,6 +50,7 @@ new_Anno <- anno(pac)[-1,]
   package.
 
 Other PAC generation: 
+\code{\link{create_PAC}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},

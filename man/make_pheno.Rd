@@ -26,7 +26,7 @@ metadata for unique samples.
 Given the path to a directory with a single csv file, the function will read
 the file. Alternatively, a data.frame with sample information can be
 provided. If provided with a count table, (see \code{\link{make_counts}}), it
-will attempt to organize the the row names according to the column names in
+will attempt to organize the row names according to the column names in
 the counts table.
 }
 \examples{
@@ -92,6 +92,7 @@ file.remove(fls_temp, showWarnings=FALSE)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{create_PAC}()},
 \code{\link{make_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},

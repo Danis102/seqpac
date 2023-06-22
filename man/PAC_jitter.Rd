@@ -34,7 +34,7 @@ Anno or the name of the annotation column in case of input being a
 dataframe.}
 
 \item{type}{Character. If type="jitter" (default) the jitter-plots will be
-returned. If type="violine"}
+returned. If type="violine", a violin-plot will instead the returned.}
 
 \item{limits}{Integer vector with the y-limits to be parsed to ggplot2.}
 
@@ -55,7 +55,7 @@ Counts tables in a PAC object.
 \details{
 Given a PAC object with grouped summaries the function will use column(s) in
 the Anno object to group the Counts table by row and then plot a jitter plot
-based on
+based on that
 }
 \examples{
 

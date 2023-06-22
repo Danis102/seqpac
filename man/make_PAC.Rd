@@ -19,7 +19,7 @@ function.}
 \item{anno}{Data.frame with unique sequences as row names containing metadata
 about each sequence. If anno=NULL, a simple Anno data.frame will
 automatically be generated from the the sequence names in counts.
-Annotaions for each sequence can be extended using for example the reanno
+Annotations for each sequence can be extended using for example the reanno
 workflow (see vignette).}
 
 \item{output}{Character indicating output format. If type="S4" (default),
@@ -100,6 +100,7 @@ file.remove(fls_temp, showWarnings=FALSE)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{create_PAC}()},
 \code{\link{make_counts}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

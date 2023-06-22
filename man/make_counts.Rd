@@ -28,7 +28,7 @@ runs independently of external software, while \code{trimming="cutadapt"}
 is dependent on an externally installed version of cutadapt and
 fastq_quality_filter. Trimmed fastq files are stored temporarily in the
 systems default temporary folder. Please, run \code{\link{make_trim}} and
-\code{\link{make_cutadapt}} seperately for perminant storage options, or
+\code{\link{make_cutadapt}} separately for permanent storage options, or
 set \code{save_temp=TRUE} to avoid that \code{make_counts} will delete all
 temporary files.  As default trimming=NULL, which indicates that input
 fastq files has already been trimmed.}
@@ -36,7 +36,7 @@ fastq files has already been trimmed.}
 \item{threads}{Integer stating the number of parallel jobs. Note, that
 reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 file. To avoid crashing the system due to memory shortage, make sure that
-each thread on the machine have at least 10 Gb of memory availabe, unless
+each thread on the machine have at least 10 Gb of memory available, unless
 your fastq files are very small. Use \code{parallel::detectcores()} to see
 available threads on the machine.}
 
@@ -65,7 +65,7 @@ recommended for sRNA sequencing.}
 
 \item{evidence}{Character vector with two inputs named 'experiment' and
 'sample' that controls the low-level evidence filter. Users may already at
-this point markly reduce the level of noise in the counts table by
+this point reduce the level of noise in the counts table by
 specifying the number of independent evidence that a specific sequence must
 have to be included. As default,
 \code{evidence=c(experiment=2, sample=1)} will include all sequences that
@@ -126,8 +126,8 @@ A list containing three objects:
 \code{make_counts} uses parallel processing to generate a count table.
 }
 \details{
-Given a paths to fastq this function performs low-level evidence filtering,
-generates a counts table of sequences passing the filter and plots summary
+Given a path to fastq files this function performs low-level evidence filtering,
+generating a counts table of sequences passing the filter and plots summary
 statistics.
 }
 \examples{
@@ -193,6 +193,7 @@ head(counts$progress_report)
 
 Other PAC generation: 
 \code{\link{PAC_check}()},
+\code{\link{create_PAC}()},
 \code{\link{make_PAC}()},
 \code{\link{make_cutadapt}()},
 \code{\link{make_pheno}()},

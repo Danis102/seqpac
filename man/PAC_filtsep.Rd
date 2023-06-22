@@ -50,7 +50,7 @@ A data.frame (see output for details).
 \code{PAC_filtsep} Group seperated filtered name list
 }
 \details{
-Given a PAC object the function will extract sequences within the reach a
+Given a PAC object the function will extract sequences within the
 given filter within a given group.
 }
 \examples{
