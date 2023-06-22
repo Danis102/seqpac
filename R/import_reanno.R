@@ -16,7 +16,7 @@
 #'   The function will not work with other formats such as SAM/BAM formats.
 #'
 #' @section Important: The basenames of the bowtie output will also be used to
-#'   annotated what type of annotation. Example: bowtie -v 3 -a -f
+#'   annotate. Example: bowtie -v 3 -a -f
 #'   '<piRBase.fasta>' '<master_anno.fasta>' piRNA.txt Will annotate sequences
 #'   as piRNA since the txt-file output was named 'piRNA'
 #'
@@ -40,19 +40,19 @@
 #'   extension) that should be exempted from report="full" and instead will
 #'   generate a minimum report.
 #'
-#' @param threads Integer stating the number of parallell jobs.
+#' @param threads Integer stating the number of parallel jobs.
 #'
 #' @return List of data frames with additional information from reannotation
 #'   files generated with bowtie. If \emph{report="minimum"}, the function will
 #'   report each hit only as the number of mismatches for a given reference
 #'   file. If \emph{report="full"} the full name reported in the fasta file used
 #'   as reference in the bowtie reannotation will be reported. If a reference
-#'   name is specified in \emph{reduce}, this reference is excempted from
+#'   name is specified in \emph{reduce}, this reference is excerpted from
 #'   \emph{report="full"} and is instead reported as \emph{report="minimum"}.
 #'
-#'   Caution: Large references with lots of redudancy (such as pirBase in some
+#'   Caution: Large references with lots of redundancy (such as pirBase in some
 #'   species) will cause massive character strings if \emph{report="full"} with
-#'   no restrictions. Specifing such references in
+#'   no restrictions. Specifying such references in
 #'   \emph{reduce=<reference_names>} will circumvent this problem.
 #'
 #' @examples
@@ -84,7 +84,7 @@
 #' output <- paste0(tempdir(),"/seqpac/test")
 #' 
 #' ##  Then map the PAC-object against the fasta references. Warning: if you use
-#' # your own data, you may want override=FALSE, to avoid deleting previous
+#' # your own data, you may want to use override=FALSE, to avoid deleting previous
 #' # mapping by mistake. keep_temp=TRUE can be used to run import_reanno
 #' # independently.
 #' 

@@ -1,7 +1,9 @@
 # seqpac
 A Framework for small RNA analysis in R using Sequence-Based Counts
-
-We are sorry to inform you that the main developer of Seqpac - Daniel Nätt - passed away in April of 2023. Updates on the future of Seqpac will follow here shortly. 
+<br>
+<br>
+We are sad to inform that the main developer of Seqpac - Daniel Nätt - passed away in April of 2023. <br>
+If any issues or questions regarding Seqpac has occured and remains unanswered, please contact Signe Skog (signe.skog@liu.se) for assistance. We are working on getting develpoment back on track and to go through issues. 
 
 <br>
 
@@ -10,6 +12,9 @@ We are sorry to inform you that the main developer of Seqpac - Daniel Nätt - pa
 In R:<br>
 `devtools::install_github("Danis102/seqpac", dependencies=TRUE)`
 
+OR
+
+`BiocManager::install("seqpac")`
 
 <br>
 
@@ -19,6 +24,17 @@ In R:<br>
 ### How to use 
 [A guide to sRNA analysis using sequence-based counts](https://github.com/Danis102/seqpac/raw/D_vingette_updates_21_09_28/vignettes/seqpac_-_A_guide_to_sRNA_analysis_using_sequence-based_counts.pdf)
 
+
+<br>
+
+---
+### How to cite
+Seqpac: A Framework for small RNA analysis in R using Sequence-Based Counts
+<br>
+Signe Skog, Lovisa Örkenby, Unn Kugelberg, Anita Öst, Daniel Nätt
+<br>
+Bioinformatics, Volume 39, Issue 4, April 2023, btad144, https://doi.org/10.1093/bioinformatics/btad144
+
 <br>
 
 ---
@@ -27,8 +43,4 @@ In R:<br>
 
 <br>
 
----
-### How to cite
-Seqpac: A New Framework for small RNA analysis in R using Sequence-Based Counts
-Signe Skog, Lovisa Örkenby, Unn Kugelberg, Kanwal Tariq, Ann-Kristin Östlund Farrants, Anita Öst, Daniel Nätt
-bioRxiv 2021.03.19.436151; doi: https://doi.org/10.1101/2021.03.19.436151 
+

@@ -27,7 +27,7 @@
 #'  fastq_quality_filter="-q 20 -p 80"), then only the quality filter will be
 #'  applied.
 #'
-#'@param threads Integer stating the number of parallell jobs. Note, that
+#'@param threads Integer stating the number of parallel jobs. Note, that
 #'  reading multiple fastq files drains memory fast, using up to 10Gb per fastq
 #'  file. To avoid crashing the system due to memory shortage, make sure that
 #'  each thread on the machine have at least 10 Gb of memory availabe, unless
@@ -95,7 +95,7 @@ make_cutadapt <- function(input, output, parse=NULL, threads=1){
     if(!is(logi_create, "try-error")){
       if(any(!logi_create)){
         warning("Was unable to create ", output, 
-              "\nProbable reason: Permission denided")  
+              "\nProbable reason: Permission denied")  
       
       }
     }

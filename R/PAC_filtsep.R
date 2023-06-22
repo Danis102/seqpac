@@ -2,7 +2,7 @@
 #'
 #' \code{PAC_filtsep} Group seperated filtered name list
 #'
-#' Given a PAC object the function will extract sequences within the reach a
+#' Given a PAC object the function will extract sequences within the
 #' given filter within a given group.
 #' 
 #' @family PAC analysis
@@ -99,7 +99,7 @@ PAC_filtsep <- function(PAC, norm="counts", threshold=10, coverage=100,
             norm, "' in the norm list.",
             "\n  (Hint: Did you forget to normalize the data using for",
             "\n   example PAC_norm, or would you rather run the function",
-            "\n   on raw counts using norm='raw'?)")
+            "\n   on raw counts using norm='counts'?)")
    }  
     data <- PAC$norm[[norm]]
   }

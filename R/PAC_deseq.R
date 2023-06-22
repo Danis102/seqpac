@@ -45,7 +45,7 @@
 #'   (Default="Wald")
 #'
 #' @param fitType Character parsed directly to \code{\link[DESeq2]{DESeq}} that
-#'   controls what type of despersion fit that should be used. Alternatives are
+#'   controls what type of dispersion fit that should be used. Alternatives are
 #'   either "parametric" (dispersion-mean relation), "local" (local regression
 #'   of log dispersions), "mean" (mean of gene-wise dispersion). See
 #'   \code{\link[DESeq2]{DESeq}} for more details. (Default="local")
@@ -79,7 +79,7 @@
 #'output_deseq <- suppressWarnings(PAC_deseq(pac, model= ~stage + batch,
 #'                                           threads=2))
 #'
-#'## Using pheno_target we can change focus
+#'## Using pheno_target 
 #'output_deseq <- suppressWarnings(PAC_deseq(pac,model= ~stage + batch, 
 #'                                           pheno_target=list("batch"),
 #'                                           threads=2))
@@ -122,6 +122,12 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   # Make factors of model columns
   cols <- attr(terms.formula(model), "term.labels")
   cols <- unique(unlist(strsplit(cols, ":")))
+  compr<-pheno[,colnames(pheno) %in% cols]
+  if(class(compr)=="data.frame"){
+  if((any(apply(combn(ncol(compr), 2), 2, function(x) identical(compr[, x[1]], compr[, x[2]]))))==TRUE) {
+    stop(cat="The column names in model appears to be repeated. \nThis may cause unwanted comparisons. To ensure a correct comparison, please check the colnames in Pheno!")
+  }}
+  
   for (i in seq.int(length(cols))){
     #Sometime model terms ar complex
     # search for best pheno columns
@@ -145,7 +151,12 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   if(length(pheno_target)==1){
       pheno_target[[2]] <- as.character(unique(PAC$Pheno[,pheno_target[[1]]]))
     }
+    
   trg <- pheno[,colnames(pheno) == pheno_target[[1]]]
+   if(any(duplicated(trg) | duplicated(trg, fromLast = TRUE))==TRUE){
+    warning(cat="The values in designated pheno_target are not unique. \nThis may cause unwanted comparisons. To ensure a correct comparison, please check the values in Pheno!")
+  }
+  
   mis <- !levels(trg) %in% pheno_target[[2]] 
   pheno[,colnames(pheno) == pheno_target[[1]]] <- factor(
     trg, levels=c(rev(pheno_target[[2]]),levels(trg)[mis]))

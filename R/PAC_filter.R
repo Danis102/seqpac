@@ -1,4 +1,4 @@
-#' Filter a PAC object on sequence size and covarage  
+#' Filter a PAC object on sequence size and coverage  
 #'
 #' \code{PAC_filter} Filter PAC objects.
 #'
@@ -11,7 +11,7 @@
 #'   package.
 #'
 #' @param PAC PAC-list object containing an Anno data.frame with sequences as
-#'   row names and a Counts table with raw counts or reads per million (cpm).
+#'   row names and a Counts table with raw counts or counts per million (cpm).
 #'   
 #' @param size Integer vector giving the size interval, as c(min,max), that
 #'   should be saved (default=c(min,max)).
@@ -26,7 +26,7 @@
 #'   "cpm" or another normalized data table in PAC$norm (default="counts").
 #' 
 #' @param stat (optional) Logical specifying if a coverage graph should be
-#'   generated and if users should be promted prior to proceeding.
+#'   generated and if users should be prompted prior to proceeding.
 #'   (default=FALSE).
 #'
 #' @param subset_only Logical whether only subsetting using pheno_target and/or
@@ -47,7 +47,7 @@
 #'
 #' @return A list of objects: 
 #'               PAC object with filtered data.   
-#'               (optional) A covarage plot 
+#'               (optional) A coverage plot 
 #' @examples
 #' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
 #'                  package = "seqpac", mustWork = TRUE))
@@ -113,7 +113,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     if(any(names(PAC)=="summary")){
       if(!any(sub_pheno)){
         warning(
-          "\nTable(s) were found in PAC$summary that may have been generated",
+          "\nTable(s) were found in PAC@summary that may have been generated",
           "\nwith samples that now are removed. Summary table names has ",
           "\ntherefore been marked.")
         names(PAC$summary) <- paste0(names(PAC$summary), 
@@ -215,7 +215,7 @@ PAC_filter <- function(PAC, size=NULL, threshold=0, coverage=0,
     if(!norm %in% c(names(PAC$norm),"counts", "Counts")){
       stop("\nThe data specified in 'norm' was not avaiable in PAC.",
            "\nMake sure that name in 'norm' specifies a table name in",
-           "\nPAC$Counts or PAC$norm$...")
+           "\nPAC@Counts or PAC@norm$...")
     }
     if(norm %in% c("counts","Counts")){ 
       df <- PAC$Counts
