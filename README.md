@@ -22,7 +22,7 @@ OR
 
 ---
 ### How to use 
-[A guide to sRNA analysis using sequence-based counts]((https://rpubs.com/signeskog/seqpac))
+[A guide to sRNA analysis using sequence-based counts](https://rpubs.com/signeskog/seqpac)
 
 
 <br>
