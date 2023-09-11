@@ -31,14 +31,15 @@
 #' @param output Character indicating path to where output files will be stored, 
 #'   if applicable (such as in merge_lanes). Default=NULL. 
 #'   
+#' @param pheno Option to add directory to a .csv file containing pheno information. Here, the file
+#'    has to have the same rownames as the name of the fasta files, or the function will 
+#'    throw an error!
+#'   
 #' @return PAC object with values in pheno and count
 #'   
 #' @examples
 #' 
 #' ###########################################################
-#' ### test the map_rangetype function
-#' # More complicated examples can be found in the vignette.
-#' ##----------------------------------------
 #' 
 #' # First create an annotation blank PAC with group means
 #' sys_path = system.file("extdata", package = "seqpac", mustWork = TRUE)
@@ -67,17 +68,19 @@
 
 
 
-create_PAC <- function(lanes=NULL, trim=NULL, input, output=NULL){
+create_PAC <- function(lanes=NULL, trim=NULL, input, output=NULL, pheno=NULL){
   
   inpath=input
   outpath=output
   
   if(!is.null(lanes)){
+    cat("Will now merge lanes...")
     merge_lanes(in_path=inpath, out_path = outpath)
   }
   if(!is.null(lanes)){
     
     if(!is.null(trim)){
+      cat("Will now trim adaptors and count sequences...")
       if(trim=="default_neb"){
         counts<-make_counts(input=outpath,
                             trimming = "seqpac",
@@ -94,6 +97,7 @@ create_PAC <- function(lanes=NULL, trim=NULL, input, output=NULL){
   if(is.null(lanes)){
     
     if(!is.null(trim)){
+      cat("Will now trim adaptors and count sequences...")
       if(trim=="default_neb"){
         counts<-make_counts(input=inpath,
                             trimming="seqpac",
@@ -111,10 +115,18 @@ create_PAC <- function(lanes=NULL, trim=NULL, input, output=NULL){
     }
     
   }
-  pheno <- data.frame(row.names = colnames(counts$counts),
-                      Sample_ID= colnames(counts$counts))
-  pheno<-make_pheno(pheno=pheno, progress_report=counts$progress_report,
-                    counts=counts$counts)
+  
+  if(!is.null(pheno)){
+    pheno<-make_pheno(pheno=read.table(file=pheno, header=TRUE), progress_report=counts$progress_report,
+                      counts=counts$counts)
+  }
+  else{ 
+    pheno <- data.frame(row.names = colnames(counts$counts),
+                        Sample_ID= colnames(counts$counts))
+    pheno<-make_pheno(pheno=pheno, progress_report=counts$progress_report,
+                          counts=counts$counts)
+    }
+ 
   pac <- make_PAC(counts, pheno)
   
   return(pac)
