@@ -1275,7 +1275,7 @@ pac_test <- PAC_summary(pac, norm = "counts", type = "means",
 pac       # Structure of PAC before PAC_summary (S4)
 pac_test  # Structure of PAC after PAC_summary  (S4)
 names(summary(pac_test))
-head(summary(pac_test)$countsMeans_stage)
+head(summary(pac_test)@countsMeans_stage)
 ```
 ```{r, eval=TRUE, results=FALSE, message=FALSE, warning=FALSE}
 # You may want to use normalized counts   
