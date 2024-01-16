@@ -202,7 +202,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   }else{
     if(summary %in% c("sample","samples")){
     stopifnot(
-      any(!rownames(PAC$Pheno) %in% as.character(data_long_perc$Sample))==FALSE
+      any(!as.character(data_long_perc$Sample) %in% rownames(PAC$Pheno))==FALSE
       )
     sampl_ord <- do.call("c", split(rownames(PAC$Pheno), 
                                     factor(PAC$Pheno[,pheno_target[[1]]], 
@@ -232,7 +232,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
   plt_lst<- quiet(lapply(prec_lst, function(x){
     # setup labels
     if(labels=="all"){
-      labs <- paste0(x$Category, "_", round(x$Percent, digits=0), "%")
+      labs <- paste0(x$Category, ", ", round(x$Percent, digits=0), "%")
     }
     if(labels=="percent"){  
       labs <- paste0(round(x$Percent, digits=0), "%")
