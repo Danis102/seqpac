@@ -1,13 +1,13 @@
 #' Pie plot from PAC
 #'
-#' \code{PAC_pie} analyses nucleotide bias.
+#' \code{PAC_pie} visualies and summarizes sample or group features.
 #'
-#' Given a PAC object the function will summarize the counts into percent
-#' biotype and plot a pie chart.
+#' Given a PAC object, the function will summarize the counts into percent of a
+#' specified cathegory (anno_target) and plot a pie chart.
 #'
 #' @family PAC analysis
 #'
-#' @seealso \url{https://github.com/Danis102} for updates on the current
+#' @seealso \url{https://github.com/Danis102/seqpac} for updates on the current
 #'   package.
 #'
 #' @param PAC PAC-list object.
@@ -75,11 +75,12 @@
 #' 
 #' # Summary="all" will give a mean of all samples:
 #' PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all")
-#' # Rotate:
+#' 
+#' # Rotate the pie chart:
 #' PAC_pie(pac, anno_target=list("Biotypes_mis0"), summary="all", angle=180)
 #' 
 #' 
-#' #  Make ordered pie charts of grand mean percent of all samples
+#' #  Order anno_target for pie chart
 #' ord_bio <- as.character(sort(unique(anno(pac)$Biotypes_mis3)), 
 #'                                     unique(anno(pac)$Biotypes_mis0))
 #' output_pie_1 <- PAC_pie(pac, anno_target=list("Biotypes_mis0", ord_bio), 
@@ -172,7 +173,7 @@ PAC_pie <- function(PAC, anno_target=NULL, pheno_target=NULL, colors=NULL,
        data_pheno_shrt <- as.data.frame(cbind(data_pheno_shrt,data_pheno))}
     colnames(data_pheno_shrt) <- c("Group.1", names(x))
     data_shrt <- data_pheno_shrt
-    tot_cnts <- colSums(data_shrt[,-1])
+    tot_cnts <- colSums(as.data.frame(data_shrt[,-1]))
     }
   }  
   
