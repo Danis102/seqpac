@@ -26,26 +26,30 @@
 #'   dataframe.
 #' 
 #' @param model Character of model used to run \code{PAC_deseq}.
+#' 
+#' @param output Character defining where to print the pdf containing the results. 
+#' Defaults to the temporary seqpac folder, that may be deleted at system restart!
 #'
-#' @return a list of plots in R, and a pdf file in home directory called
+#' @return a list of plots in R, and a pdf file called
 #' "Results_seqpac.pdf".
 #'
 #' @examples
 #' 
-#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+#' 
+#' load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
 #'                  package = "seqpac", mustWork = TRUE))
-#'
-#'                  
-#' result_list <- PAC_analyze(pac, 
+#' 
+#' 
+#' result_list <- PAC_analyze(pac,
 #'   pheno_target=list("stage"),
-#'   norm="cpm", 
+#'   norm="cpm",
 #'   anno_target=list("Biotypes_mis0"),
 #'   model=~stage+batch)
-#' 
+#'
 #' @export
 
 PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
-                        anno_target=NULL, model=NULL){
+                        anno_target=NULL, model=NULL, output="temp"){
   
   res_list <- list(NA)
   
@@ -58,8 +62,8 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
     sb2<-PAC_stackbar(PAC, anno_target = anno_target, summary_target = list(paste0("cpmMeans_",pheno_target[[1]])), norm = "cpm")
     sd <- PAC_sizedist(PAC, norm="cpm", anno_target = anno_target, nucleotide_range =c(15,75),
                         summary_target = list(paste0("cpmMeans_",pheno_target[[1]])))
-    # pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
-    #                summary="pheno")
+    #pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
+    #               summary="pheno")
     pca <- PAC_pca(PAC, pheno_target = pheno_target)
   }
   else{
@@ -72,8 +76,8 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
                       summary_target= list(paste0("countsMeans_",pheno_target[[1]])))
     sd <- PAC_sizedist(PAC, norm="counts", anno_target = anno_target, nucleotide_range =c(15,75),
                        summary_target = list(paste0("countsMeans_",pheno_target[[1]])))
-    # pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
-    #                summary="pheno")
+   # pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
+    #               summary="pheno")
     pca <- PAC_pca(PAC, pheno_target = pheno_target)
   }
   
@@ -85,16 +89,34 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
   }
   
   #Print all results in a pdf
-  res_list <- c(jitter, list(sb1), list(sb2), sd$Histograms,
-                list(pie),
+  if(output=="temp"){
+    output <- file.path(tempdir(), "seqpac")
+    if(!dir.exists(output)){
+      dir.create(output)
+    }
+    res_list <- c(jitter, list(sb1), list(sb2), sd$Histograms,
+                #list(pie),
                  pca$graphs, list(dsq$plots$volcano))
   
  
-    pdf("Results_Seqpac.pdf", width = 7, height = 5)
+    grDevices::pdf(file=paste0(output, sep="/", "Results_Seqpac.pdf"), width = 7, height = 5)
     for (p in res_list) {
       print(p)
   }
-  dev.off()
+    grDevices::dev.off()
+}
+  else{
+    res_list <- c(jitter, list(sb1), list(sb2), sd$Histograms,
+                 # list(pie),
+                  pca$graphs, list(dsq$plots$volcano))
+    
+    
+    grDevices::pdf(file=paste0(output, sep="/", "Results_Seqpac.pdf"), width = 7, height = 5)
+    for (p in res_list) {
+      print(p)
+    }
+    grDevices::dev.off()
+  }
   
   return(res_list)
 }

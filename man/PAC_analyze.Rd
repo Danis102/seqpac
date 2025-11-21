@@ -9,7 +9,8 @@ PAC_analyze(
   pheno_target = NULL,
   norm = NULL,
   anno_target = NULL,
-  model = NULL
+  model = NULL,
+  output = "temp"
 )
 }
 \arguments{
@@ -33,9 +34,12 @@ Anno or the name of the annotation column in case of input being a
 dataframe.}
 
 \item{model}{Character of model used to run \code{PAC_deseq}.}
+
+\item{output}{Character defining where to print the pdf containing the results. 
+Defaults to the temporary seqpac folder, that may be deleted at system restart!}
 }
 \value{
-a list of plots in R, and a pdf file in home directory called
+a list of plots in R, and a pdf file called
 "Results_seqpac.pdf".
 }
 \description{
@@ -47,13 +51,14 @@ volcano plot based off adjusted p-values and fold changes from a DESeq2 analysis
 }
 \examples{
 
-load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata", 
+
+load(system.file("extdata", "drosophila_sRNA_pac_filt_anno.Rdata",
                  package = "seqpac", mustWork = TRUE))
 
-                 
-result_list <- PAC_analyze(pac, 
+
+result_list <- PAC_analyze(pac,
   pheno_target=list("stage"),
-  norm="cpm", 
+  norm="cpm",
   anno_target=list("Biotypes_mis0"),
   model=~stage+batch)
 
