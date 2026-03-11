@@ -171,21 +171,43 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
   
   ### DEseq analysis and extract result table
   BiocParallel::register(BiocParallel::MulticoreParam(workers=threads))
+  
   dds_fit <- DESeq2::DESeq(dds, test=test, fitType=fitType, parallel = TRUE)
+  
   res_nam <- DESeq2::resultsNames(dds_fit)
+  
   if(!is.null(pheno_target)){
-     target_nam <- res_nam[grepl(pheno_target[[1]], res_nam)]
-     target_nam <- target_nam[1]
+    
+    res_DESeq2 <- DESeq2::results(
+      dds_fit,
+      contrast = c(
+        pheno_target[[1]],
+        pheno_target[[2]][1],
+        pheno_target[[2]][2]
+      )
+    )
+    
+    comp <- paste0(
+      pheno_target[[1]], ": ",
+      pheno_target[[2]][1], " vs ",
+      pheno_target[[2]][2]
+    )
+    
   }else{
-     target_nam <- res_nam[2]
-  }  
-  res_DESeq2 <- DESeq2::results(dds_fit, name=target_nam)
-  comp <- strsplit(S4Vectors::mcols(res_DESeq2)[2][,1][2], ": ")[[1]][2]
-  cat("\n")
-  cat("\n")
+    
+    target_nam <- res_nam[2]
+    res_DESeq2 <- DESeq2::results(dds_fit, name=target_nam)
+    
+    comp <- strsplit(
+      S4Vectors::mcols(res_DESeq2)[2][,1][2],
+      ": "
+    )[[1]][2]
+    
+  }
+  
+  cat("\n\n")
   cat(paste0("** ", comp, " **"))
   cat("\n")
-  
   # Print summary working with different DESeq versions
   test <- try(cat(DESeq2::summary(res_DESeq2)), silent = TRUE)
   if(methods::is(test,"try-error")){ 
@@ -232,8 +254,8 @@ PAC_deseq <- function(PAC, model, deseq_norm=FALSE, test="Wald",
     ggplot2::theme_classic()
   
   vcano <- ggplot2::ggplot(df_plot, ggplot2::aes(x=log2FC, y=neglog_padj)) +
-    ggplot2::geom_hline(yintercept=1, col="black", size=0.1)+
-    ggplot2::geom_vline(xintercept=c(-1, 1), col="black", size=0.1)+
+    ggplot2::geom_hline(yintercept=1, col="black", linewidth=0.1)+
+    ggplot2::geom_vline(xintercept=c(-1, 1), col="black", linewidth=0.1)+
     ggplot2::geom_point(ggplot2::aes(colour = DE), size=1) +
     ggplot2::scale_colour_manual(values = c("not_pass"="grey", "pass"= "red")) +
     ggplot2::labs(title="Volcano plot DE features", 
