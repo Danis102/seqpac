@@ -340,7 +340,9 @@ PAC_filter <- function(PAC, nucleotide_range=NULL, threshold=0, coverage=0,
       ### Promt for user input
       cat("\n!!           !!\nUser input needed:\n") 
       answer <- readline(prompt="Continute with this filter? [Y/n]")
-      if(answer=="Y" | answer=="y"){}else{stop("Script was terminated by user.")
+      if(!(answer %in% c("Y","y"))){
+        cat(paste0("\n-- Script was terminated by user.\n"))
+        return(invisible(NULL))
       }
     }
     
