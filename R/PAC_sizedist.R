@@ -199,7 +199,7 @@ PAC_sizedist <- function(PAC, norm="counts", nucleotide_range=NULL, anno_target,
                                       ggplot2::aes(x=size, 
                                                    y=data, 
                                                    fill=biotype))+
-      ggplot2::geom_bar(width = 0.9, size =0.2, colour="black", stat="identity")+
+      ggplot2::geom_bar(width = 0.9, linewidth =0.2, colour="black", stat="identity")+
       ggplot2::geom_hline(yintercept=0, col="azure4")+
       
       ggplot2::xlab("Size (nt)")+
