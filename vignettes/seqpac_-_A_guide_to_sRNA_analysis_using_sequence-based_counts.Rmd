@@ -439,7 +439,7 @@ pheno <- make_pheno(pheno=pheno_fl,
 
 ```
 
-## make_PAC
+## Generating the PAC object (make_PAC)
 <br>
 Finally, we put everything together as a master PAC object using the `make_PAC`
 function. Conveniently, skipping the `anno=` argument will automatically add a
@@ -891,8 +891,8 @@ downloading some gtf files (e.g. `getGTF`).In addition,  you may create your own
 by downloading/importing different tables, for example using `r
 Biocpkg("rtracklayer")` (see `readGFF`, `getTable`, `ucscTableQuery`) and then
 create a GRanges object (`r Biocpkg("GenomicRanges")` package) where you add
-your preferred table info. Finally you may save it using rtracklayer again
-(`export(<GRanges object>, <destination_path>, format="gtf"`)
+your preferred table info. Finally, you may save it using rtracklayer again
+(`export(<GRanges object>, <destination_path>, format="gtf"`).
 
 <br>
 
@@ -1319,7 +1319,7 @@ Hint: If you are unsure if your manually constructed/manipulated PAC object are
 compatible, you can always run `PAC_check`.
 
 
-## Summarize data over groups
+## Summarize data over groups (PAC_summary)
 To make simple summaries over column categories/groups in the `pheno(PAC)` table
 such as means, standard deviation (SD), standard error (SE), and log2 fold
 changes (log2FC) etc, Seqpac has a convenient function called `PAC_summary`.
@@ -1390,7 +1390,7 @@ head(do.call("cbind", summary(pac_test)))
 
 ```
 
-## Differential Expression using PAC object 
+## Differential Expression using PAC object (PAC_deseq)
 Seqpac has a useful function, `PAC_deseq`, that lets you make omics scale
 expressional analysis on PAC objects using the popular `r Biocpkg("DESeq2")`
 package. This involves fitting generalized linear models with negative binomial
