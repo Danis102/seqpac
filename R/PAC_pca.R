@@ -149,8 +149,14 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
         col <- as.factor(as.character(col))
       }
       if(is.numeric(col)|is.integer(col)|rtio>0.4){
-        col <- as.numeric(col)
-      }
+        suppressWarnings(num_col <- as.numeric(as.character(col)))
+        
+        if(!any(is.na(num_col))){
+          col <- num_col
+        } else {
+          col <- as.factor(col)
+        }}
+
     }
       
       if(style=="anno"){
