@@ -192,7 +192,7 @@ PAC_nbias <- function(PAC, position=1, norm=NULL, nucleotide_range=NULL, anno_ta
     histo_lst[[i]] <- ggplot2::ggplot(nuc_lst[[i]], 
                                       ggplot2::aes(x=length, y=counts, 
                                                    fill=nucleotide))+
-      ggplot2::geom_bar(width = 0.9, cex=0.2, colour="black", stat="identity")+
+      ggplot2::geom_bar(width = 0.9, linewidth =0.2, colour="black", stat="identity")+
       ggplot2::geom_hline(yintercept=0, col="azure4")+
       ggplot2::xlab("Size (nt)")+
       ggplot2::ylab(paste(labl))+

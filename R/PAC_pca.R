@@ -149,8 +149,14 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
         col <- as.factor(as.character(col))
       }
       if(is.numeric(col)|is.integer(col)|rtio>0.4){
-        col <- as.numeric(col)
-      }
+        suppressWarnings(num_col <- as.numeric(as.character(col)))
+        
+        if(!any(is.na(num_col))){
+          col <- num_col
+        } else {
+          col <- as.factor(col)
+        }}
+
     }
       
       if(style=="anno"){
@@ -217,14 +223,6 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
       grphs$PC2_PC3 <- do.call(
         factoextra::fviz_pca_ind,
         modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Pheno"))))
-      
-      grphs <- lapply(grphs, function(x){
-        x <- gginnards::move_layers(x, match_type="GeomPoint",
-                                    position = "top")
-        x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
-                                    position = "top")
-        return(x)
-        })
       }
     }
   
@@ -296,16 +294,6 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
     grphs$PC2_PC3 <- do.call(
       factoextra::fviz_pca_ind,
       modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Biplot"))))
-    
-    grphs <- lapply(grphs, function(x){
-      x <- gginnards::move_layers(x, match_type="GeomPoint", 
-                                  position = "bottom") 
-      x <- gginnards::move_layers(x, match_type="GeomArrow", 
-                                  position = "top")
-      x <- gginnards::move_layers(x, match_type="GeomTextRepel", 
-                                  position = "top")
-      return(x)
-      })
   }
   print(cowplot::plot_grid(plotlist=grphs, ncol=2, nrow=2))
   return(list(graphs=grphs, pca=pca_res))
