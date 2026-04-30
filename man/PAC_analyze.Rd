@@ -9,7 +9,8 @@ PAC_analyze(
   pheno_target = NULL,
   norm = NULL,
   anno_target = NULL,
-  model = NULL
+  model = NULL,
+  pdf = FALSE
 )
 }
 \arguments{
@@ -33,10 +34,12 @@ Anno or the name of the annotation column in case of input being a
 dataframe.}
 
 \item{model}{Character of model used to run \code{PAC_deseq}.}
+
+\item{pdf}{TRUE or FALSE whether to print a PDF of results. Default = FALSE.}
 }
 \value{
 a list of plots in R, and a pdf file in home directory called
-"Results_seqpac.pdf".
+"Results_seqpac.pdf", if pdf=TRUE.
 }
 \description{
 Given a PAC object and targets, this wrapper will perform several analyses of 

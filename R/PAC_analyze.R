@@ -26,9 +26,11 @@
 #'   dataframe.
 #' 
 #' @param model Character of model used to run \code{PAC_deseq}.
+#' 
+#' @param pdf TRUE or FALSE whether to print a PDF of results. Default = FALSE.
 #'
 #' @return a list of plots in R, and a pdf file in home directory called
-#' "Results_seqpac.pdf".
+#' "Results_seqpac.pdf", if pdf=TRUE.
 #'
 #' @examples
 #' 
@@ -42,10 +44,11 @@
 #'   anno_target=list("Biotypes_mis0"),
 #'   model=~stage+batch)
 #' 
+#' @importFrom grDevices dev.off
 #' @export
 
 PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
-                        anno_target=NULL, model=NULL){
+                        anno_target=NULL, model=NULL, pdf=FALSE){
   
   res_list <- list(NA)
   
@@ -58,8 +61,8 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
     sb2<-PAC_stackbar(PAC, anno_target = anno_target, summary_target = list(paste0("cpmMeans_",pheno_target[[1]])), norm = "cpm")
     sd <- PAC_sizedist(PAC, norm="cpm", anno_target = anno_target, nucleotide_range =c(15,75),
                         summary_target = list(paste0("cpmMeans_",pheno_target[[1]])))
-    # pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
-    #                summary="pheno")
+    pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
+                   summary_target = list(paste0("cpmMeans_",pheno_target[[1]])))
     pca <- PAC_pca(PAC, pheno_target = pheno_target)
   }
   else{
@@ -72,8 +75,8 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
                       summary_target= list(paste0("countsMeans_",pheno_target[[1]])))
     sd <- PAC_sizedist(PAC, norm="counts", anno_target = anno_target, nucleotide_range =c(15,75),
                        summary_target = list(paste0("countsMeans_",pheno_target[[1]])))
-    # pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
-    #                summary="pheno")
+    pie <- PAC_pie(PAC, pheno_target = pheno_target, anno_target=anno_target,
+                   summary_target = list(paste0("countsMeans_",pheno_target[[1]])))
     pca <- PAC_pca(PAC, pheno_target = pheno_target)
   }
   
@@ -85,16 +88,16 @@ PAC_analyze <- function(PAC, pheno_target=NULL, norm=NULL,
   }
   
   #Print all results in a pdf
+  if(pdf==TRUE){
   res_list <- c(jitter, list(sb1), list(sb2), sd$Histograms,
                 list(pie),
                  pca$graphs, list(dsq$plots$volcano))
-  
- 
-    pdf("Results_Seqpac.pdf", width = 7, height = 5)
+    grDevices::pdf("Results_Seqpac.pdf", width = 7, height = 5)
     for (p in res_list) {
       print(p)
   }
   dev.off()
+  }
   
   return(res_list)
 }

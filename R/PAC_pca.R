@@ -216,13 +216,13 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
       
       grphs$PC1_PC2 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Pheno"))))
+        utils::modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Pheno"))))
       grphs$PC1_PC3 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Pheno"))))
+        utils::modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Pheno"))))
       grphs$PC2_PC3 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Pheno"))))
+        utils::modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Pheno"))))
       }
     }
   
@@ -269,13 +269,13 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
       
       grphs$PC1_PC2 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Anno"))))
+        utils::modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Anno"))))
       grphs$PC1_PC3 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Anno"))))
+        utils::modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Anno"))))
       grphs$PC2_PC3 <- do.call(
         factoextra::fviz_pca_ind,
-        modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Anno"))))
+        utils::modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Anno"))))
     }
   } 
   if(style=="both"){
@@ -287,13 +287,13 @@ PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE,
     
     grphs$PC1_PC2 <- do.call(
       factoextra::fviz_pca_ind,
-      modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Biplot"))))
+      utils::modifyList(base_args, c(list(axes = c(1, 2), title = "PC1_PC2 - Biplot"))))
     grphs$PC1_PC3 <- do.call(
       factoextra::fviz_pca_ind,
-      modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Biplot"))))
+      utils::modifyList(base_args, c(list(axes = c(1, 3), title = "PC1_PC3 - Biplot"))))
     grphs$PC2_PC3 <- do.call(
       factoextra::fviz_pca_ind,
-      modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Biplot"))))
+      utils::modifyList(base_args, c(list(axes = c(2, 3), title = "PC2_PC3 - Biplot"))))
   }
   print(cowplot::plot_grid(plotlist=grphs, ncol=2, nrow=2))
   return(list(graphs=grphs, pca=pca_res))

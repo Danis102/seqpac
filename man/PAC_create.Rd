@@ -41,8 +41,6 @@ you to run each function on its own!
 \examples{
 
 ###########################################################
-### test the map_rangetype function
-# More complicated examples can be found in the vignette.
 ##----------------------------------------
 
 # First create an annotation blank PAC with group means

@@ -84,11 +84,14 @@
 #' cowplot::plot_grid(plotlist=plots_FC, nrow = 3, ncol = 1)
 #' 
 #' 
+#' @importFrom ggplot2 after_stat
 #' @export
 #'
 PAC_jitter <- function(PAC, summary_target=NULL, anno_target=NULL, 
                        style="jitter", limits=NULL, ypos_n=NULL, colors=NULL, 
                        box=TRUE){
+  
+  count <- NULL
   
    values <- biotype <-  NULL
   
