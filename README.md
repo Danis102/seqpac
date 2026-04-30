@@ -6,11 +6,14 @@ A Framework for small RNA analysis in R using Sequence-Based Counts
 ---
 ### Installation
 In R:<br>
-`devtools::install_github("OestLab/seqpac", dependencies=TRUE)`
+`pak::pak("OestLab/seqpac")`
 
 OR
 
-`BiocManager::install("seqpac")`
+`if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("seqpac")`
 
 <br>
 
