@@ -37,3 +37,4 @@ Meta
 Rplots
 notes.md
 Dockerfile
+.dockerignore
