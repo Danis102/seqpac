@@ -36,7 +36,6 @@ Description: Seqpac provides functions and workflows for analysis of short
 License: GPL-3
 Encoding: UTF-8
 LazyData: false
-RoxygenNote: 7.3.3
 URL: https://github.com/Oestlab/seqpac
 BugReports: https://github.com/OestLab/seqpac/issues
 biocViews:
@@ -54,7 +53,6 @@ Imports:
   BiocParallel (>= 1.12.0),
   cowplot (>= 0.9.4),
   data.table (>= 1.14.0),
-  digest (>= 0.6.27),
   doParallel (>= 1.0.16),
   dplyr (>= 1.0.6),
   factoextra (>= 1.0.7),
@@ -86,3 +84,4 @@ Suggests:
   vroom
 VignetteBuilder:
   knitr
+Config/roxygen2/version: 8.0.0

@@ -71,13 +71,13 @@ pac <- PAC_create(lanes=TRUE, trim="default_neb", input, output)
 \url{https://github.com/OestLab/seqpac} for updates on the current
   package.
 
-Other PAC generation: 
-\code{\link{PAC_check}()},
-\code{\link{make_PAC}()},
-\code{\link{make_counts}()},
-\code{\link{make_cutadapt}()},
-\code{\link{make_pheno}()},
-\code{\link{make_trim}()},
-\code{\link{merge_lanes}()}
+Other PAC generation:
+\code{\link[=PAC_check]{PAC_check()}},
+\code{\link[=make_PAC]{make_PAC()}},
+\code{\link[=make_counts]{make_counts()}},
+\code{\link[=make_cutadapt]{make_cutadapt()}},
+\code{\link[=make_pheno]{make_pheno()}},
+\code{\link[=make_trim]{make_trim()}},
+\code{\link[=merge_lanes]{merge_lanes()}}
 }
 \concept{PAC generation}

@@ -82,8 +82,8 @@
 #' # Extract pca output
 #' pca_cpm_anno$pca
 #' 
-#' @importFrom ggplot2 geom_hline geom_vline geom_point aes 
-#' theme scale_colour_gradient theme_minimal xlab ylab
+#' @importFrom ggplot2 geom_hline geom_vline geom_point aes theme scale_colour_gradient theme_minimal xlab ylab
+#' 
 #' @export
 
 PAC_pca <- function(PAC, norm="counts", style="pheno", graphs=TRUE, 
