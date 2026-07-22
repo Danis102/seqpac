@@ -214,22 +214,13 @@ PAC_map <- function(PAC, type="internal",  mapping="biotype",
       
     }
     
-#here, add return to pac obj    
     
+    #if tRNA is within the bio_String, use that to funnel into pac tRNA!
     
-    #this works but need changes
-    # out<-map_dfc(obj_names, function(obj_name) {
-    #   obj <- level_obj[[obj_name]]
-    #   list_names <- names(obj)
-    #   map_dfc(list_names, function(ln) {
-    #     tib <- obj[[ln]]
-    #     if (ncol(tib) < 4) return(NULL)
-    #     out <- tib[, 4, drop = FALSE]
-    #     names(out) <- paste0(ln, "_", obj_name)
-    #     out
-    #   })
-    # })
+    #we could make one "do you want us to guess the biotypes?" 
+    #also one that starts with genome, then do biotype
     
+    #the "recommended/suggested pipeline"
 
   }
   
