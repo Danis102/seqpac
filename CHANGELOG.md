@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0] – 2026-08-18
+
+### Added
+- **Dedicated Start Page Architecture (`module_startpage.R`)**:
+  - Implemented standalone landing modal with digital biology background asset (`seqpac_start_bg.jpg`).
+  - Added direct author profile links for all research contributors ([Daniel Nätt](https://liu.se/en/employee/danna58), [Signe Isacson](https://liu.se/en/employee/sigis74), [Lovisa Örkenby Kämpe](https://liu.se/en/employee/lovor74), [Alessandro Gozzo](https://liu.se/en/employee/alego91), [Anna Asratian](https://liu.se/en/employee/annas44), and [Anita Öst](https://liu.se/en/employee/anios27)).
+  - Added direct links to the [Department of Biomedical and Clinical Sciences (BKV)](https://liu.se/en/organisation/liu/bkv), [Bioinformatics Paper (DOI)](https://doi.org/10.1093/bioinformatics/btad144), and [GitHub Repository](https://github.com/OestLab/seqpac).
+  - Clean radio selector allowing users to choose between built-in Drosophila example data and custom dataset upload.
+- **Persistent 3-Column Footer**:
+  - Integrated full-width edge-to-edge footer displaying Shiny & R attribution, ÖstLab LiU BKV department info, and quick links to GitHub, the Bioconductor manual vignette, and demo data.
+- **Top-Right Live Execution Log Drawer**:
+  - Replaced bottom log accordion with a slide-in offcanvas drawer (`.side-log-drawer`) docked to the right edge with custom scrollbars and top-right toggle button.
+- **Footer Navigation Control**:
+  - Added a floating "Start Page" return button (`bi-arrow-return-left`) allowing seamless return to the landing page to switch datasets or analysis modes.
+
+### Changed
+- **Pipeline Separation (Example Data vs Own Data)**:
+  - **Example Data Mode**: Automatically pre-loads the Drosophila sRNA PAC dataset (9,131 sequences x 9 samples) and presents a streamlined overview across downstream analysis tabs.
+  - **Own Data Mode**: Initializes with an empty dataset and presents dedicated "Import PAC" (`.rds` / `.RData`) and "Create from FASTQ" pipelines.
+- **Solid High-Contrast Theme & Standard Web Proportions (`style.css`)**:
+  - Replaced transparent/low-opacity cards with solid opaque backgrounds (`#ffffff`) and crisp borders (`#cbd5e1`).
+  - Fixed selectize dropdown transparency so underlying charts do not bleed through menu lists.
+  - Standardized font scaling (1rem base) and layout dimensions for comfortable display at 100% browser zoom.
+  - Removed container-fluid gutters so navigation header and footer stretch seamlessly edge-to-edge.
+  - Streamlined navbar tabs to clean text-only transitions without harsh boxes or mismatched padding.
+
+### Fixed
+- **S4 PAC `.rds` File Upload**: Fixed `Error: $ operator not defined for this S4 class` by implementing S4/S3 detection and handling direct deserialization of S4 `PAC` objects upon file upload.
+- **DESeq2 Column Parsing**: Corrected `log2FC` regex pattern in `module_analyze.R` to ensure up/down-regulated sequence counts calculate accurately.
+
+---
+
 ## [0.0.1] – 2026-06-24
 
 ### Added
